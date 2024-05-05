@@ -98,7 +98,7 @@ namespace Platform
 		//glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE ); // Needed for Mac OS X.
 
 		glfwWindowHint( GLFW_VISIBLE, GLFW_FALSE ); // Start hidden as we will move it shortly.
-		WINDOW = glfwCreateWindow( width_pixels, height_pixels, "TODO: CHANGE PROGRAM TITLE", nullptr, nullptr );
+		WINDOW = glfwCreateWindow( width_pixels, height_pixels, "TODO: CHANGE PROGRAM TITLE BY CALLING Platform::ChangeTitle()", nullptr, nullptr );
 		if( WINDOW == nullptr )
 		{
 			glfwTerminate();
