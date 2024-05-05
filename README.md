@@ -2,7 +2,7 @@
 
 # Graphics-Framework
 
-Personal graphics framework used to study graphics programming topics.
+Personal graphics framework I'm developing, to study graphics programming topics.
 
 ## Credits
 - To get up to speed with OpenGL, I use:
