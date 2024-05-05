@@ -91,11 +91,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Engine.h" />
-    <ClInclude Include="Source\Assert.h" />
-    <ClInclude Include="Source\Graphics.h" />
-    <ClInclude Include="Source\ImGuiSetup.h" />
-    <ClInclude Include="Source\Platform.h" />
+    <ClInclude Include="Engine\Engine.h" />
+    <ClInclude Include="Engine\Assert.h" />
+    <ClInclude Include="Engine\Graphics.h" />
+    <ClInclude Include="Engine\ImGuiSetup.h" />
+    <ClInclude Include="Engine\Platform.h" />
     <ClInclude Include="Vendor\GLAD\glad.h" />
     <ClInclude Include="Vendor\KHR\khrplatform.h" />
     <ClInclude Include="Vendor\GLFW\glfw3.h" />
@@ -111,8 +111,8 @@
     <ClInclude Include="Vendor\ImGui\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\ImGuiSetup.cpp" />
-    <ClCompile Include="Source\Platform.cpp" />
+    <ClCompile Include="Engine\ImGuiSetup.cpp" />
+    <ClCompile Include="Engine\Platform.cpp" />
     <ClCompile Include="Vendor\GLAD\glad.c" />
     <ClCompile Include="Vendor\ImGui\imgui.cpp" />
     <ClCompile Include="Vendor\ImGui\imgui_demo.cpp" />
@@ -121,7 +121,7 @@
     <ClCompile Include="Vendor\ImGui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="Vendor\ImGui\imgui_tables.cpp" />
     <ClCompile Include="Vendor\ImGui\imgui_widgets.cpp" />
-    <ClCompile Include="Source\Engine.cpp" />
+    <ClCompile Include="Engine\Engine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
