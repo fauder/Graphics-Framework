@@ -4,6 +4,12 @@
 class SandboxApplication : public Engine::Application
 {
 public:
-	void DrawImGui() override;
-	//void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
+	SandboxApplication();
+	virtual ~SandboxApplication();
+
+	virtual void Initialize() override;
+	virtual void Shutdown() override;
+
+	virtual void DrawImGui() override;
+	//virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
 };

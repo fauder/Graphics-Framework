@@ -8,6 +8,9 @@ namespace Engine
 	class _declspec( dllexport ) Application
 	{
 	public:
+		Application();
+		virtual ~Application();
+
 		virtual void Initialize();
 		virtual void Shutdown();
 

@@ -11,6 +11,28 @@ Engine::Application* Engine::CreateApplication()
     return new SandboxApplication();
 }
 
+SandboxApplication::SandboxApplication()
+	:
+	Engine::Application()
+{
+	Initialize();
+}
+
+SandboxApplication::~SandboxApplication()
+{
+	Shutdown();
+}
+
+void SandboxApplication::Initialize()
+{
+	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
+}
+
+void SandboxApplication::Shutdown()
+{
+	/* Insert application-specific shutdown code here. */
+}
+
 void SandboxApplication::DrawImGui()
 {
 	if( ImGui::Begin( "Test Window" ) )

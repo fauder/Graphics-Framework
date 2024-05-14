@@ -5,6 +5,16 @@
 
 namespace Engine
 {
+	Application::Application()
+	{
+		Initialize();
+	}
+
+	Application::~Application()
+	{
+		Shutdown();
+	}
+
 	void Application::Initialize()
 	{
 		Platform::InitializeAndCreateWindow( 800, 600 );
@@ -26,8 +36,6 @@ namespace Engine
 
 	void Application::Run()
 	{
-		Initialize();
-
 		/* The render loop. */
 		while( !Platform::ShouldClose() )
 		{
@@ -44,8 +52,6 @@ namespace Engine
 
 			Platform::SwapBuffers();
 		}
-
-		Shutdown();
 	}
 
 	void Application::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
