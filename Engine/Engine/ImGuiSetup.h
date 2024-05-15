@@ -1,9 +1,9 @@
 #pragma once
 
 // Vendor/ImGui includes.
-#include "../Vendor/ImGui/imgui.h"
-#include "../Vendor/ImGui/imgui_impl_glfw.h"
-#include "../Vendor/ImGui/imgui_impl_opengl3.h"
+#include "ImGui/imgui.h"
+#include "ImGui/imgui_impl_glfw.h"
+#include "ImGui/imgui_impl_opengl3.h"
 
 namespace ImGuiSetup
 {

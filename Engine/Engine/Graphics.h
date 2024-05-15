@@ -1,7 +1,7 @@
 #pragma once
 
 // Vendor/GLAD Includes.
-#include <glad/glad.h>
+#include "GLAD/glad.h"
 
 // Engine Includes.
 #include "Assert.h"
