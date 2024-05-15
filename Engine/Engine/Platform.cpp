@@ -1,14 +1,12 @@
-// GLAD Includes.
+// Vendor/GLAD Includes.
 #include <glad/glad.h>
 
-// Project Includes.
+// Engine Includes.
 #include "Platform.h"
 
-// GLFW Includes.
+// Vendor Includes.
 #include <GLFW/glfw3.h>
-
-// ImGui Includes.
-#include "../Vendor/ImGui/imgui_impl_glfw.h"
+#include <ImGui/imgui_impl_glfw.h>
 
 // std Includes.
 #include <stdexcept>

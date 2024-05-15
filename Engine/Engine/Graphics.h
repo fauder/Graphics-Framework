@@ -1,9 +1,9 @@
 #pragma once
 
-// GLAD Includes.
+// Vendor/GLAD Includes.
 #include <glad/glad.h>
 
-// Project Includes.
+// Engine Includes.
 #include "Assert.h"
 
 // std Includes.

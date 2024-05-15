@@ -1,6 +1,6 @@
 #pragma once
 
-// ImGui includes.
+// Vendor/ImGui includes.
 #include "../Vendor/ImGui/imgui.h"
 #include "../Vendor/ImGui/imgui_impl_glfw.h"
 #include "../Vendor/ImGui/imgui_impl_opengl3.h"
