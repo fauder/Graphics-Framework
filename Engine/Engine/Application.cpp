@@ -41,17 +41,20 @@ namespace Engine
 		{
 			Platform::PollEvents();
 
-			GLCALL( glClearColor( 0.55f, 0.55f, 0.55f, 1.0f ) );
-			GLCALL( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
+			Render();
 
 			ImGuiSetup::BeginFrame();
-
 			DrawImGui();
-
 			ImGuiSetup::EndFrame();
 
 			Platform::SwapBuffers();
 		}
+	}
+
+	void Application::Render()
+	{
+		GLCALL( glClearColor( 0.55f, 0.55f, 0.55f, 1.0f ) );
+		GLCALL( glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) );
 	}
 
 	void Application::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )

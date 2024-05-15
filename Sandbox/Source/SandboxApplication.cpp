@@ -3,6 +3,7 @@
 
 // Engine Includes.
 #include "Engine/Assert.h"
+#include "Engine/Graphics.h"
 #include "Engine/ImGuiSetup.h"
 #include "Engine/Platform.h"
 
@@ -31,6 +32,16 @@ void SandboxApplication::Initialize()
 void SandboxApplication::Shutdown()
 {
 	/* Insert application-specific shutdown code here. */
+}
+
+//void SandboxApplication::Run()
+//{
+//
+//}
+
+void SandboxApplication::Render()
+{
+	Engine::Application::Render();
 }
 
 void SandboxApplication::DrawImGui()
