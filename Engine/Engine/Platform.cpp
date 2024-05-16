@@ -1,7 +1,5 @@
-// Vendor/GLAD Includes.
-#include "glad/glad.h"
-
 // Engine Includes.
+#include "Graphics.h"
 #include "Platform.h"
 
 // Vendor Includes.
@@ -24,7 +22,7 @@ namespace Platform
 
 	void OnResize( GLFWwindow* window, const int width_new_pixels, const int height_new_pixels )
 	{
-		glViewport( 0, 0, width_new_pixels, height_new_pixels );
+		GLCALL( glViewport( 0, 0, width_new_pixels, height_new_pixels ) );
 	}
 
 	void OnMouseCursorPositionChanged( GLFWwindow* window, const double x_position, const double y_position )
