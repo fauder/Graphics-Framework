@@ -1,6 +1,9 @@
 // Engine Includes.
 #include "Engine.h"
 
+// std Includes.
+#include <array>
+
 class SandboxApplication : public Engine::Application
 {
 public:
@@ -16,4 +19,8 @@ public:
 
 	virtual void DrawImGui() override;
 	//virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
+
+private:
+	unsigned int vertex_array_object;
+	unsigned int shader_program;
 };
