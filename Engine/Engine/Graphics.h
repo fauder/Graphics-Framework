@@ -34,8 +34,8 @@ static bool GLLogCall( const char* function, const char* file, const int line )
 
 			default:					std::cerr << "UNKNOWN";					break; // This should not be possible, but won't hurt to guard against.
 		}
-		std::cerr << "\n\t in function " << function;
-		std::cerr << "\n\t\tin file [" << file << "::Line " << line << "]";
+		std::cerr << "\n  in file [" << file << "::Line " << line << "]";
+		std::cerr << "\n      in function call " << function;
 
 		return false;
 	}
