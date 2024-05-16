@@ -3,6 +3,9 @@
 #include "Graphics.h"
 #include "ImGuiSetup.h"
 
+// std Includes.
+#include <iostream>
+
 namespace Engine
 {
 	Application::Application()
@@ -19,6 +22,9 @@ namespace Engine
 	{
 		Platform::InitializeAndCreateWindow( 800, 600 );
 		Platform::ChangeTitle( "Graphics Framework" );
+
+		GLCALL( const auto version = glGetString( GL_VERSION ) );
+		std::cout << version << "\n\n";
 
 		ImGuiSetup::Initialize();
 
