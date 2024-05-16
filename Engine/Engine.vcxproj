@@ -160,11 +160,13 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics.h" />
     <ClInclude Include="Engine\ImGuiSetup.h" />
     <ClInclude Include="Engine\Platform.h" />
+    <ClInclude Include="Engine\Utility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Application.cpp" />
     <ClCompile Include="Engine\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Platform.cpp" />
+    <ClCompile Include="Engine\Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vendor\Vendor.vcxproj">
