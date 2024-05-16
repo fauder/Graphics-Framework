@@ -29,10 +29,16 @@ void SandboxApplication::Initialize()
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
 	// Set-up triangle data.
-	float triangle_vertices[ 9 ] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f
+	float rectangle_vertices[] = {
+		 0.5f,  0.5f, 0.0f, // Top right.
+		 0.5f, -0.5f, 0.0f, // Bottom right.
+		-0.5f, -0.5f, 0.0f, // Bottom left.
+		-0.5f,  0.5f, 0.0f  // Top left.
+	};
+	unsigned int rectangle_indices[] =
+	{
+		0, 1, 3, // First triangle.
+		1, 2, 3  // Second triangle.
 	};
 
 	// Create & bind the vertex array object.
@@ -43,13 +49,23 @@ void SandboxApplication::Initialize()
 	unsigned int vertex_buffer_object;
 	GLCALL( glGenBuffers( 1, &vertex_buffer_object ) );
 	GLCALL( glBindBuffer( GL_ARRAY_BUFFER, vertex_buffer_object ) );
-	GLCALL( glBufferData( GL_ARRAY_BUFFER, sizeof( triangle_vertices ), &triangle_vertices, GL_STATIC_DRAW ) );
+	GLCALL( glBufferData( GL_ARRAY_BUFFER, sizeof( rectangle_vertices ), &rectangle_vertices, GL_STATIC_DRAW ) );
+
+	// Create & bind the element buffer object.
+	unsigned int element_buffer_object;
+	GLCALL( glGenBuffers( 1, &element_buffer_object ) );
+	GLCALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, element_buffer_object ) );
+	GLCALL( glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( rectangle_indices ), &rectangle_indices, GL_STATIC_DRAW ) );
 
 	// Define vertex attribute pointers & enable them.
 	GLCALL( glVertexAttribPointer( /* vertex attrib. location: */ 0, /* vector3 so -> */ 3, GL_FLOAT, /* Do not normalize */ GL_FALSE, sizeof( float ) * 3, nullptr ) );
 	GLCALL( glEnableVertexAttribArray( 0 ) );
 
 	GLCALL( glBindBuffer( GL_ARRAY_BUFFER, 0 ) ); // It is safe to unbind the VBO as the glVertexAttribPointer call above registered the VBO to the VAO.
+	
+	/* IMPORTANT NOTE REGARDING UNBINDG STUFF BEFORE UNBINDING VAO:
+	 * But it is NOT safe to unbind the EBO before unbinding the VAO, as this will cause the VAO to NOT store the EBO anymore.
+	 * In the case of VBO, glVertexAttribPointer was the reason we could unbind the VBO before the VAO. */
 
 	GLCALL( glBindVertexArray( 0 ) ); // Unbind to prevent accidentally setting other unwanted staff to VAO.
 
@@ -136,14 +152,15 @@ void SandboxApplication::Render()
 
 	GLCALL( glUseProgram( shader_program ) );
 	GLCALL( glBindVertexArray( vertex_array_object ) );
-	GLCALL( glDrawArrays( GL_TRIANGLES, 0, 3 ) );
+	//GLCALL( glDrawArrays( GL_TRIANGLES, 0, 3 ) );
+	GLCALL( glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr ) );
 }
 
 void SandboxApplication::DrawImGui()
 {
 	if( ImGui::Begin( "Test Window" ) )
 	{
-		ImGui::Text( "Running Sandbox Application:\n\nDrawing a triangle!" );
+		ImGui::Text( "Running Sandbox Application:\n\nDrawing an indexed rectangle!" );
 	}
 
 	ImGui::End();
