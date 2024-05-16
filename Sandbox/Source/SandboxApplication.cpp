@@ -76,7 +76,7 @@ void SandboxApplication::Initialize()
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	gl_Position = vec4( position.x, position.y, position.z, 1.0f );"
+		"	gl_Position = vec4( position.x, position.y, position.z, 1.0f );\n"
 		"}\n";
 
 	unsigned int vertex_shader;
@@ -97,11 +97,12 @@ void SandboxApplication::Initialize()
 	// Create & compile the fragment shader.
 	const char* const fragment_shader_source =
 		"#version 330 core\n"
+		"uniform vec4 final_color;\n"
 		"out vec4 color;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
-		"	color = vec4( 0.85f, 0.69f, 0.44f, 1.0f );\n"
+		"	color = final_color;\n"
 		"}\n";
 
 	unsigned int fragment_shader;
@@ -134,6 +135,8 @@ void SandboxApplication::Initialize()
 	
 	GLCALL( glDeleteShader( vertex_shader ) );
 	GLCALL( glDeleteShader( fragment_shader ) );
+
+	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
 }
 
 void SandboxApplication::Shutdown()
@@ -150,7 +153,15 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
+	const auto current_time = Platform::GetCurrentTime();
+
+	int uniform_location = glGetUniformLocation( shader_program, "final_color" );
+	float red_value = ( cos( current_time ) / 2.0f ) + 0.5f;
+	float green_value = ( sin( current_time ) / 2.0f ) + 0.5f;
+
 	GLCALL( glUseProgram( shader_program ) );
+	glUniform4f( uniform_location, red_value, green_value, 0.0f, 1.0f );
+
 	GLCALL( glBindVertexArray( vertex_array_object ) );
 	//GLCALL( glDrawArrays( GL_TRIANGLES, 0, 3 ) );
 	GLCALL( glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr ) );
