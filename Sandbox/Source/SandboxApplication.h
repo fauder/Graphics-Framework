@@ -1,5 +1,6 @@
 // Engine Includes.
 #include "Engine.h"
+#include "Engine/Shader.h"
 
 // std Includes.
 #include <array>
@@ -25,5 +26,6 @@ private:
 	std::array< unsigned int, 3 > indices;
 
 	unsigned int vertex_array_object;
-	unsigned int shader_program;
+
+	Engine::Shader shader;
 };

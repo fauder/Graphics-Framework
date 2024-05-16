@@ -6,4 +6,8 @@
   <ItemGroup>
     <ClCompile Include="Source\SandboxApplication.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Asset\Shader\Basic.vert" />
+    <None Include="Asset\Shader\Basic.frag" />
+  </ItemGroup>
 </Project>

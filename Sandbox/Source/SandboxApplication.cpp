@@ -78,80 +78,7 @@ void SandboxApplication::Initialize()
 
 	GLCALL( glBindVertexArray( 0 ) ); // Unbind to prevent accidentally setting other unwanted staff to VAO.
 
-	// Create & compile the vertex shader.
-	const char* const vertex_shader_source =
-		"#version 330 core\n"
-		"layout ( location = 0 ) in vec3 position;\n"
-		"layout ( location = 1 ) in vec3 color;\n"
-		"out vec3 vertex_color;\n"
-		"\n"
-		"void main()\n"
-		"{\n"
-		"	gl_Position = vec4( position.x, position.y, position.z, 1.0f );\n"
-		"	vertex_color = color;\n"
-		"}\n";
-
-	unsigned int vertex_shader;
-	GLCALL( vertex_shader = glCreateShader( GL_VERTEX_SHADER ) );
-	GLCALL( glShaderSource( vertex_shader, /* how many strings: */ 1, &vertex_shader_source, NULL ) );
-	GLCALL( glCompileShader( vertex_shader ) );
-
-	int success;
-	GLCALL( glGetShaderiv( vertex_shader, GL_COMPILE_STATUS, &success ) );
-	if( !success )
-	{
-		char info_log[ 512 ];
-		glGetShaderInfoLog( vertex_shader, 512, NULL, info_log );
-		std::cerr << "ERROR::SHADER::VERTEX::COMPILE:" << info_log << "\n";
-		throw std::logic_error( std::string( "ERROR::SHADER::VERTEX::COMPILE:" ) + info_log );
-		return;
-	}
-	
-	// Create & compile the fragment shader.
-	const char* const fragment_shader_source =
-		"#version 330 core\n"
-		"in vec3 vertex_color;\n"
-		"out vec4 color;\n"
-		"\n"
-		"uniform vec4 final_color;\n"
-		"\n"
-		"void main()\n"
-		"{\n"
-		"	color = vec4( vertex_color, 1.0f );\n"
-		"}\n";
-
-	unsigned int fragment_shader;
-	GLCALL( fragment_shader = glCreateShader( GL_FRAGMENT_SHADER ) );
-	GLCALL( glShaderSource( fragment_shader, /* how many strings: */ 1, &fragment_shader_source, NULL ) );
-	GLCALL( glCompileShader( fragment_shader ) );
-
-	GLCALL( glGetShaderiv( fragment_shader, GL_COMPILE_STATUS, &success ) );
-	if( !success )
-	{
-		char info_log[ 512 ];
-		glGetShaderInfoLog( fragment_shader, 512, NULL, info_log );
-		std::cerr << "ERROR::SHADER::FRAGMENT::COMPILE:" << info_log << "\n";
-		throw std::logic_error( std::string( "ERROR::SHADER::FRAGMENT::COMPILE:" ) + info_log );
-		return;
-	}
-
-	shader_program = glCreateProgram();
-	GLCALL( glAttachShader( shader_program, vertex_shader ) );
-	GLCALL( glAttachShader( shader_program, fragment_shader ) );
-	GLCALL( glLinkProgram( shader_program ) );
-
-	GLCALL( glGetProgramiv( shader_program, GL_LINK_STATUS, &success ) );
-	if( !success )
-	{
-		char info_log[ 512 ];
-		glGetShaderInfoLog( shader_program, 512, NULL, info_log );
-		std::cerr << "ERROR::SHADER::PROGRAM::LINK:" << info_log << "\n";
-		throw std::logic_error( std::string( "ERROR::SHADER::PROGRAM::LINK:" ) + info_log );
-		return;
-	}
-	
-	GLCALL( glDeleteShader( vertex_shader ) );
-	GLCALL( glDeleteShader( fragment_shader ) );
+	shader.FromFile( R"(Asset/Shader/Basic.vert)", R"(Asset/Shader/Basic.frag)" );
 
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
 }
@@ -172,12 +99,12 @@ void SandboxApplication::Render()
 
 	const auto current_time = Platform::GetCurrentTime();
 
-	GLCALL( int uniform_location = glGetUniformLocation( shader_program, "final_color" ) );
+	shader.Use();
+
 	float red_value = ( cos( current_time ) / 2.0f ) + 0.5f;
 	float green_value = ( sin( current_time ) / 2.0f ) + 0.5f;
 
-	GLCALL( glUseProgram( shader_program ) );
-	GLCALL( glUniform4f( uniform_location, red_value, green_value, 0.0f, 1.0f ) );
+	shader.SetUniform( "final_color", std::array< float, 4 >{ red_value, green_value, 0.0f, 1.0f } );
 
 	GLCALL( glBindVertexArray( vertex_array_object ) );
 	//GLCALL( glDrawArrays( GL_TRIANGLES, 0, ( int )vertices.size() ) );
@@ -188,7 +115,7 @@ void SandboxApplication::DrawImGui()
 {
 	if( ImGui::Begin( "Test Window" ) )
 	{
-		ImGui::Text( "Running Sandbox Application:\n\nDrawing a colorful triangle\nwith vertex colors!" );
+		ImGui::Text( "Running Sandbox Application:\n\nDrawing a colorful triangle\nwith the new Shader class!" );
 	}
 
 	ImGui::End();
