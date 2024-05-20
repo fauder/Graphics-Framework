@@ -1,11 +1,15 @@
 #version 330 core
-in vec3 vertex_color;
-out vec4 color;
+in vec3 varying_color;
+in vec2 varying_uv;
 
-uniform vec4 final_color;
+out vec4 out_color;
+
+//uniform vec4 uniform_color;
+uniform sampler2D uniform_texture_sampler_container;
 
 void main()
 {
-//	color = vec4( vertex_color, 1.0f );
-	color = vec4( final_color );
+//	out_color = vec4( varying_color, 1.0f );
+	out_color = texture( uniform_texture_sampler_container, varying_uv );
+//	out_color = mix( vec4( uniform_color ), texture( uniform_texture_sampler_container, varying_uv ), 0.5f );
 };

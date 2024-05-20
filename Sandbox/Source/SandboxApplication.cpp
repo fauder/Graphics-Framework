@@ -28,23 +28,19 @@ void SandboxApplication::Initialize()
 {
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
-	// Set-up triangle data.
-	//float rectangle_vertices[] = {
-	//	 0.5f,  0.5f, 0.0f, // Top right.
-	//	 0.5f, -0.5f, 0.0f, // Bottom right.
-	//	-0.5f, -0.5f, 0.0f, // Bottom left.
-	//	-0.5f,  0.5f, 0.0f  // Top left.
-	//};
-	vertices = {
-		/* Position:			Color: */
-		 0.5f, -0.5f, 0.0f,		1.0f, 0.0f, 0.0f,	// Bottom right.
-		-0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,	// Bottom left.
-		 0.0f,  0.5f, 0.0f,		0.0f, 0.0f, 1.0f	// Top right.
+/* Vertex/Index Data: */
+	vertices =
+	{
+	/*	Position:				Color:				UV: */
+		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right.
+		 0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right.
+		-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left.
+		-0.5f,  0.5f, 0.0f,		1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left.
 	};
 	indices =
 	{
 		0, 1, 3, // First triangle.
-		//1, 2, 3  // Second triangle.
+		1, 2, 3  // Second triangle.
 	};
 
 	// Create & bind the vertex array object.
@@ -64,11 +60,13 @@ void SandboxApplication::Initialize()
 	GLCALL( glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( indices ), indices.data(), GL_STATIC_DRAW ) );
 
 	// Define vertex attribute pointers & enable them.
-	constexpr unsigned int vertex_stride = ( 3 + 3 ) * sizeof( float );
+	constexpr unsigned int vertex_stride = VERTEX_ATTRIBUTE_ELEMENT_COUNT * sizeof( float );
 	GLCALL( glVertexAttribPointer( /* vertex attrib. location: */ 0, /* vector3 so -> */ 3, GL_FLOAT, /* Do not normalize */ GL_FALSE, vertex_stride, nullptr ) );
 	GLCALL( glEnableVertexAttribArray( 0 ) );
 	GLCALL( glVertexAttribPointer( /* vertex attrib. location: */ 1, /* vector3 so -> */ 3, GL_FLOAT, /* Do not normalize */ GL_FALSE, vertex_stride, ( char* )0 + 12 ) );
 	GLCALL( glEnableVertexAttribArray( 1 ) );
+	GLCALL( glVertexAttribPointer( /* vertex attrib. location: */ 2, /* vector2 so -> */ 2, GL_FLOAT, /* Do not normalize */ GL_FALSE, vertex_stride, ( char* )0 + 24 ) );
+	GLCALL( glEnableVertexAttribArray( 2 ) );
 
 	GLCALL( glBindBuffer( GL_ARRAY_BUFFER, 0 ) ); // It is safe to unbind the VBO as the glVertexAttribPointer call above registered the VBO to the VAO.
 	
@@ -78,8 +76,13 @@ void SandboxApplication::Initialize()
 
 	GLCALL( glBindVertexArray( 0 ) ); // Unbind to prevent accidentally setting other unwanted staff to VAO.
 
+/* Textures: */
+	wooden_container_texture.FromFile( R"(Asset/Texture/container.jpg)" );
+
+/* Shaders: */
 	shader.FromFile( R"(Asset/Shader/Basic.vert)", R"(Asset/Shader/Basic.frag)" );
 
+/* Other: */
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
 }
 
@@ -104,7 +107,9 @@ void SandboxApplication::Render()
 	float red_value = ( cos( current_time ) / 2.0f ) + 0.5f;
 	float green_value = ( sin( current_time ) / 2.0f ) + 0.5f;
 
-	shader.SetUniform( "final_color", std::array< float, 4 >{ red_value, green_value, 0.0f, 1.0f } );
+	//shader.SetUniform( "uniform_color", std::array< float, 4 >{ red_value, green_value, 0.0f, 1.0f } );
+
+	wooden_container_texture.Use();
 
 	GLCALL( glBindVertexArray( vertex_array_object ) );
 	//GLCALL( glDrawArrays( GL_TRIANGLES, 0, ( int )vertices.size() ) );
@@ -115,7 +120,7 @@ void SandboxApplication::DrawImGui()
 {
 	if( ImGui::Begin( "Test Window" ) )
 	{
-		ImGui::Text( "Running Sandbox Application:\n\nDrawing a colorful triangle\nwith the new Shader class!" );
+		ImGui::Text( "Running Sandbox Application:\n\nDrawing a textured rectangle\nwith the new Texture class!" );
 	}
 
 	ImGui::End();

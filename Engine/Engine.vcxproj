@@ -161,6 +161,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\ImGuiSetup.h" />
     <ClInclude Include="Engine\Platform.h" />
     <ClInclude Include="Engine\Shader.h" />
+    <ClInclude Include="Engine\Texture.h" />
     <ClInclude Include="Engine\Utility.h" />
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +169,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Platform.cpp" />
     <ClCompile Include="Engine\Shader.cpp" />
+    <ClCompile Include="Engine\Texture.cpp" />
     <ClCompile Include="Engine\Utility.cpp" />
   </ItemGroup>
   <ItemGroup>
