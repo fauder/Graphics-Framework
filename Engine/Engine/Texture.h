@@ -16,7 +16,7 @@ namespace Engine
 		static void INITIALIZE();
 
 	private:
-		void Use() const;
+		void Bind() const;
 
 	private:
 		unsigned int id;

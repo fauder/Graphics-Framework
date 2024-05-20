@@ -19,7 +19,7 @@ SandboxApplication::SandboxApplication()
 	Initialize();
 }
 
-SandboxApplication::~SandboxApplication()
+SandboxApplication::~SandboxApplication()	
 {
 	Shutdown();
 }
@@ -29,7 +29,9 @@ void SandboxApplication::Initialize()
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
 /* Vertex/Index Data: */
-	vertices =
+	constexpr const int vertex_attribute_element_count = 3 + 3 + 2;
+
+	std::array< float, 4 * vertex_attribute_element_count > vertices
 	{
 	/*	Position:				Color:				UV: */
 		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right.
@@ -37,44 +39,20 @@ void SandboxApplication::Initialize()
 		-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left.
 		-0.5f,  0.5f, 0.0f,		1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left.
 	};
-	indices =
+	std::array< unsigned int, 6 > indices
 	{
 		0, 1, 3, // First triangle.
 		1, 2, 3  // Second triangle.
 	};
 
-	// Create & bind the vertex array object.
-	GLCALL( glGenVertexArrays( 1, &vertex_array_object ) );
-	GLCALL( glBindVertexArray( vertex_array_object ) );
+	Engine::VertexBuffer vertex_buffer( vertices.data(), sizeof( vertices ), GL_STATIC_DRAW );
+	Engine::VertexBufferLayout vertex_buffer_layout;
+	vertex_buffer_layout.Push< float >( 3 ); // Position.
+	vertex_buffer_layout.Push< float >( 3 ); // Color.
+	vertex_buffer_layout.Push< float >( 2 ); // UV.
+	Engine::IndexBuffer index_buffer( indices.data(), sizeof( indices ), GL_STATIC_DRAW );
 
-	// Create & bind the vertex buffer object.
-	unsigned int vertex_buffer_object;
-	GLCALL( glGenBuffers( 1, &vertex_buffer_object ) );
-	GLCALL( glBindBuffer( GL_ARRAY_BUFFER, vertex_buffer_object ) );
-	GLCALL( glBufferData( GL_ARRAY_BUFFER, sizeof( vertices ), vertices.data(), GL_STATIC_DRAW ) );
-
-	// Create & bind the element buffer object.
-	unsigned int element_buffer_object;
-	GLCALL( glGenBuffers( 1, &element_buffer_object ) );
-	GLCALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, element_buffer_object ) );
-	GLCALL( glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof( indices ), indices.data(), GL_STATIC_DRAW ) );
-
-	// Define vertex attribute pointers & enable them.
-	constexpr unsigned int vertex_stride = VERTEX_ATTRIBUTE_ELEMENT_COUNT * sizeof( float );
-	GLCALL( glVertexAttribPointer( /* vertex attrib. location: */ 0, /* vector3 so -> */ 3, GL_FLOAT, /* Do not normalize */ GL_FALSE, vertex_stride, nullptr ) );
-	GLCALL( glEnableVertexAttribArray( 0 ) );
-	GLCALL( glVertexAttribPointer( /* vertex attrib. location: */ 1, /* vector3 so -> */ 3, GL_FLOAT, /* Do not normalize */ GL_FALSE, vertex_stride, ( char* )0 + 12 ) );
-	GLCALL( glEnableVertexAttribArray( 1 ) );
-	GLCALL( glVertexAttribPointer( /* vertex attrib. location: */ 2, /* vector2 so -> */ 2, GL_FLOAT, /* Do not normalize */ GL_FALSE, vertex_stride, ( char* )0 + 24 ) );
-	GLCALL( glEnableVertexAttribArray( 2 ) );
-
-	GLCALL( glBindBuffer( GL_ARRAY_BUFFER, 0 ) ); // It is safe to unbind the VBO as the glVertexAttribPointer call above registered the VBO to the VAO.
-	
-	/* IMPORTANT NOTE REGARDING UNBINDG STUFF BEFORE UNBINDING VAO:
-	 * But it is NOT safe to unbind the EBO before unbinding the VAO, as this will cause the VAO to NOT store the EBO anymore.
-	 * In the case of VBO, glVertexAttribPointer was the reason we could unbind the VBO before the VAO. */
-
-	GLCALL( glBindVertexArray( 0 ) ); // Unbind to prevent accidentally setting other unwanted staff to VAO.
+	vertex_array = Engine::VertexArray( vertex_buffer, vertex_buffer_layout, index_buffer );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();
@@ -85,7 +63,7 @@ void SandboxApplication::Initialize()
 /* Shaders: */
 	shader.FromFile( R"(Asset/Shader/Basic.vert)", R"(Asset/Shader/Basic.frag)" );
 
-	shader.Use();
+	shader.Bind();
 
 	shader.SetUniform< int >( "uniform_texture_sampler_container", 0 );
 	shader.SetUniform< int >( "uniform_texture_sampler_awesomeface", 1 );
@@ -108,21 +86,15 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	const auto current_time = Platform::GetCurrentTime();
+	//const auto current_time = Platform::GetCurrentTime();
 
-	shader.Use();
-
-	float red_value = ( cos( current_time ) / 2.0f ) + 0.5f;
-	float green_value = ( sin( current_time ) / 2.0f ) + 0.5f;
-
-	//shader.SetUniform( "uniform_color", std::array< float, 4 >{ red_value, green_value, 0.0f, 1.0f } );
+	shader.Bind();
 
 	container_texture.ActivateAndUse( 0 );
 	awesomeface_texture.ActivateAndUse( 1 );
 
-	GLCALL( glBindVertexArray( vertex_array_object ) );
-	//GLCALL( glDrawArrays( GL_TRIANGLES, 0, ( int )vertices.size() ) );
-	GLCALL( glDrawElements( GL_TRIANGLES, ( int )indices.size(), GL_UNSIGNED_INT, nullptr ) );
+	vertex_array.Bind();
+	GLCALL( glDrawElements( GL_TRIANGLES, vertex_array.IndexCount(), GL_UNSIGNED_INT, nullptr ) );
 }
 
 void SandboxApplication::DrawImGui()

@@ -50,7 +50,7 @@ namespace Engine
 
 		bool FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path );
 
-		void Use();
+		void Bind() const;
 
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );

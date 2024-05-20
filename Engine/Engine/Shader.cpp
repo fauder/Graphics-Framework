@@ -57,7 +57,7 @@ namespace Engine
 		return link_result;
 	}
 
-	void Shader::Use()
+	void Shader::Bind() const
 	{
 		GLCALL( glUseProgram( program_id ) );
 	}

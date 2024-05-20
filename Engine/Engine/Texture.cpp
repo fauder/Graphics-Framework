@@ -32,7 +32,7 @@ namespace Engine
 		glDeleteTextures( 1, &id );
 	}
 
-	void Texture::Use() const
+	void Texture::Bind() const
 	{
 		glBindTexture( GL_TEXTURE_2D, id );
 	}
@@ -40,13 +40,13 @@ namespace Engine
 	void Texture::ActivateAndUse( const int slot )
 	{
 		glActiveTexture( GL_TEXTURE0 + slot );
-		Use();
+		Bind();
 	}
 
 	bool Texture::FromFile( const char* file_path, const int format )
 	{
 		glGenTextures( 1, &id );
-		Use();
+		Bind();
 
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );

@@ -1,6 +1,7 @@
 // Engine Includes.
 #include "Engine.h"
 #include "Engine/Shader.h"
+#include "Engine/VertexArray.h"
 #include "Engine/Texture.h"
 
 // std Includes.
@@ -23,13 +24,10 @@ public:
 	//virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
 
 private:
-	static constexpr const int VERTEX_ATTRIBUTE_ELEMENT_COUNT = 3 + 3 + 2;
-	std::array< float, 4 * VERTEX_ATTRIBUTE_ELEMENT_COUNT > vertices;
-	std::array< unsigned int, 6 > indices;
-
-	unsigned int vertex_array_object;
+	Engine::VertexArray vertex_array;
 
 	Engine::Texture container_texture;
 	Engine::Texture awesomeface_texture;
+
 	Engine::Shader shader;
 };
