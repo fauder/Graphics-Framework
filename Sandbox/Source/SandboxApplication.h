@@ -29,6 +29,7 @@ private:
 
 	unsigned int vertex_array_object;
 
-	Engine::Texture wooden_container_texture;
+	Engine::Texture container_texture;
+	Engine::Texture awesomeface_texture;
 	Engine::Shader shader;
 };

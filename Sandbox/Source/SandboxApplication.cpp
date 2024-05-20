@@ -79,10 +79,16 @@ void SandboxApplication::Initialize()
 /* Textures: */
 	Engine::Texture::INITIALIZE();
 
-	wooden_container_texture.FromFile( R"(Asset/Texture/container.jpg)" );
+	container_texture.FromFile( R"(Asset/Texture/container.jpg)", GL_RGB );
+	awesomeface_texture.FromFile( R"(Asset/Texture/awesomeface.png)", GL_RGBA );
 
 /* Shaders: */
 	shader.FromFile( R"(Asset/Shader/Basic.vert)", R"(Asset/Shader/Basic.frag)" );
+
+	shader.Use();
+
+	shader.SetUniform< int >( "uniform_texture_sampler_container", 0 );
+	shader.SetUniform< int >( "uniform_texture_sampler_awesomeface", 1 );
 
 /* Other: */
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
@@ -111,7 +117,8 @@ void SandboxApplication::Render()
 
 	//shader.SetUniform( "uniform_color", std::array< float, 4 >{ red_value, green_value, 0.0f, 1.0f } );
 
-	wooden_container_texture.Use();
+	container_texture.ActivateAndUse( 0 );
+	awesomeface_texture.ActivateAndUse( 1 );
 
 	GLCALL( glBindVertexArray( vertex_array_object ) );
 	//GLCALL( glDrawArrays( GL_TRIANGLES, 0, ( int )vertices.size() ) );
@@ -122,7 +129,7 @@ void SandboxApplication::DrawImGui()
 {
 	if( ImGui::Begin( "Test Window" ) )
 	{
-		ImGui::Text( "Running Sandbox Application:\n\nDrawing a textured rectangle\nwith the new Texture class!" );
+		ImGui::Text( "Running Sandbox Application:\n\nDrawing a rectangle with 2 textures mixed\nwith the new Texture class!" );
 	}
 
 	ImGui::End();

@@ -95,7 +95,7 @@ namespace Engine
 				return true;
 			}
 
-			std::cerr << "ERROR::SHADER::UNIFORM::SET:\n    " << "There is no uniform named \"" << uniform_name << "\".\n";
+			std::cerr << "ERROR::SHADER::UNIFORM::SET:\n" << "    There is no uniform named \"" << uniform_name << "\".\n";
 			return false;
 		}
 
