@@ -9,9 +9,11 @@ namespace Engine
 		Texture( const char* file_path );
 		~Texture();
 
-		void Use();
+		void Use() const;
 
 		bool FromFile( const char* file_path );
+
+		static void INITIALIZE();
 
 	private:
 		unsigned int id;

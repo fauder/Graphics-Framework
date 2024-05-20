@@ -77,6 +77,8 @@ void SandboxApplication::Initialize()
 	GLCALL( glBindVertexArray( 0 ) ); // Unbind to prevent accidentally setting other unwanted staff to VAO.
 
 /* Textures: */
+	Engine::Texture::INITIALIZE();
+
 	wooden_container_texture.FromFile( R"(Asset/Texture/container.jpg)" );
 
 /* Shaders: */
