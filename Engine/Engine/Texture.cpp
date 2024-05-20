@@ -1,6 +1,6 @@
 // Engine Includes.
-#include "Texture.h"
 #include "Graphics.h"
+#include "Texture.h"
 
 // Vendor/stb Includes.
 #include "stb/stb_image.h"
@@ -18,17 +18,18 @@ namespace Engine
 	{
 	}
 
-	Texture::Texture( const char* file_path )
+	Texture::Texture( const char* file_path, const int format )
 		:
 		id( -1 ),
 		width( 0 ),
 		height( 0 )
 	{
-		FromFile( file_path );
+		FromFile( file_path, format );
 	}
 
 	Texture::~Texture()
 	{
+		glDeleteTextures( 1, &id );
 	}
 
 	void Texture::Use() const
@@ -36,7 +37,13 @@ namespace Engine
 		glBindTexture( GL_TEXTURE_2D, id );
 	}
 
-	bool Texture::FromFile( const char* file_path )
+	void Texture::ActivateAndUse( const int slot )
+	{
+		glActiveTexture( GL_TEXTURE0 + slot );
+		Use();
+	}
+
+	bool Texture::FromFile( const char* file_path, const int format )
 	{
 		glGenTextures( 1, &id );
 		Use();
@@ -51,7 +58,7 @@ namespace Engine
 		bool result = image_data;
 		if( result )
 		{
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data );
+			glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, image_data );
 			glGenerateMipmap( GL_TEXTURE_2D );
 		}
 		else

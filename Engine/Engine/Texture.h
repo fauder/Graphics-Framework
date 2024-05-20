@@ -6,14 +6,17 @@ namespace Engine
 	{
 	public:
 		Texture();
-		Texture( const char* file_path );
+		Texture( const char* file_path, const int format );
 		~Texture();
 
-		void Use() const;
+		void ActivateAndUse( const int slot );
 
-		bool FromFile( const char* file_path );
+		bool FromFile( const char* file_path, const int format );
 
 		static void INITIALIZE();
+
+	private:
+		void Use() const;
 
 	private:
 		unsigned int id;
