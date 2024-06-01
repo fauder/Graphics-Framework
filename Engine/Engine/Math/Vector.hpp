@@ -11,6 +11,10 @@ namespace Engine::Math
 	template< typename Component, std::size_t Size > requires( Size > 1 )
 	class Vector
 	{
+		template< Concepts::Arithmetic, std::size_t RowSize, std::size_t ColumnSize >
+			requires Concepts::NonZero< RowSize >&& Concepts::NonZero< ColumnSize >
+		friend class Matrix;
+
 	public:
 	/* Constructors. */
 		constexpr Vector() : data{} {} // Same as the one with Initialization::ZeroInitialization parameter.
@@ -26,7 +30,7 @@ namespace Engine::Math
 		constexpr Vector& operator = ( const Vector & other )		= default;
 		constexpr Vector& operator = ( Vector && donor ) noexcept	= default;
 
-		constexpr ~Vector()											= default;
+		constexpr ~Vector() = default;
 
 		constexpr explicit Vector( Initialization::UniformInitialization, const Component value )
 		{

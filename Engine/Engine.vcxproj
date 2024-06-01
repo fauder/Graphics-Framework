@@ -169,6 +169,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Math\Concepts.h" />
     <ClInclude Include="Engine\Math\Constants.h" />
     <ClInclude Include="Engine\Math\Math.hpp" />
+    <ClInclude Include="Engine\Math\Matrix.hpp" />
     <ClInclude Include="Engine\Math\TypeTraits.h" />
     <ClInclude Include="Engine\Math\Vector.hpp" />
   </ItemGroup>
