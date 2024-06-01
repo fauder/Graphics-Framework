@@ -66,7 +66,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -111,7 +111,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -165,6 +165,10 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\VertexArray.h" />
     <ClInclude Include="Engine\Graphics\VertexBufferLayout.h" />
     <ClInclude Include="Engine\Graphics\VertexBuffer.h" />
+    <ClInclude Include="Engine\Math\Concepts.h" />
+    <ClInclude Include="Engine\Math\Constants.h" />
+    <ClInclude Include="Engine\Math\Math.hpp" />
+    <ClInclude Include="Engine\Math\TypeTraits.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp" />
