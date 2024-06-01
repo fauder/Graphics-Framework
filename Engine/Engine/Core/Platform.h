@@ -158,7 +158,7 @@ namespace Platform
 	void InitializeAndCreateWindow( const int width_pixels = 800, const int height_pixels = 600 );
 
 	/* Operation. */
-	void Resize( const int width_pixels, const int height_pixels );
+	void ResizeWindow( const int width_pixels, const int height_pixels );
 
 	void CenterWindow( const int width_pixels, const int height_pixels );
 

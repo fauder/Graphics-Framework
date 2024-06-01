@@ -20,8 +20,9 @@ namespace Platform
 	bool MOUSE_CAPTURE_ENABLED = false;
 	std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods ) > KEYBOARD_CALLBACK;
 
-	void OnResize( GLFWwindow* window, const int width_new_pixels, const int height_new_pixels )
+	void OnResizeWindow( GLFWwindow* window, const int width_new_pixels, const int height_new_pixels )
 	{
+		glfwSetWindowSize( window, width_new_pixels, height_new_pixels );
 		GLCALL( glViewport( 0, 0, width_new_pixels, height_new_pixels ) );
 	}
 
@@ -71,7 +72,7 @@ namespace Platform
 
 	void RegisterFrameBufferResizeCallback()
 	{
-		glfwSetFramebufferSizeCallback( WINDOW, OnResize );
+		glfwSetFramebufferSizeCallback( WINDOW, OnResizeWindow );
 	}
 
 	void RegisterMousePositionChangeCallback()
@@ -110,16 +111,16 @@ namespace Platform
 		// GLAD needs the created window's context made current BEFORE it is initialized.
 		InitializeGLAD();
 
-		Resize( width_pixels, height_pixels );
+		ResizeWindow( width_pixels, height_pixels );
 
 		RegisterFrameBufferResizeCallback();
 		RegisterMousePositionChangeCallback();
 		RegisterMouseScrollCallback();
 	}
 
-	void Resize( const int width_new_pixels, const int height_new_pixels )
+	void ResizeWindow( const int width_new_pixels, const int height_new_pixels )
 	{
-		OnResize( nullptr, width_new_pixels, height_new_pixels );
+		OnResizeWindow( WINDOW, width_new_pixels, height_new_pixels );
 	}
 
 	void CenterWindow( const int width_pixels, const int height_pixels )
