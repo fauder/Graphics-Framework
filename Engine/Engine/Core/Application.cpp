@@ -3,6 +3,8 @@
 #include "Graphics/Graphics.h"
 #include "ImGuiSetup.h"
 
+#include "Math/Vector.hpp"
+
 // std Includes.
 #include <iostream>
 
@@ -10,6 +12,14 @@ namespace Engine
 {
 	Application::Application()
 	{
+		constexpr Math::Vector< float, 4 > vector4( 1.0f, 2.0f, 3.0f, 4.0f );
+		constexpr Math::Vector< float, 4 > vector4_2( 11.0f, 2.0f, 3.0f, 4.0f );
+		constexpr Math::Vector< float, 2 > vector2( 1.0f );
+		constexpr Math::Vector< float, 3 > vector3( 1.0f, 0.0f, 0.0f );
+		constexpr Math::Vector< float, 3 > vector3_2( 0.0f, 1.0f, 0.0f );
+
+		constexpr auto crossed = Math::Cross( vector3, vector3_2 );
+
 		Initialize();
 	}
 

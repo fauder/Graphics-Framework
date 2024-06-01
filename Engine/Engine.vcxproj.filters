@@ -57,6 +57,12 @@
     <ClInclude Include="Engine\Graphics\VertexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Math\Vector.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Core\Initialization.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Math\Math.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

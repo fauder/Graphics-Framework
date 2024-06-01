@@ -154,6 +154,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Engine\Core\Application.h" />
     <ClInclude Include="Engine\Core\Assert.h" />
+    <ClInclude Include="Engine\Core\Initialization.h" />
     <ClInclude Include="Engine\Graphics\IndexBuffer.h" />
     <ClInclude Include="Engine\Core\EntryPoint.h" />
     <ClInclude Include="Engine\Graphics\Graphics.h" />
@@ -169,6 +170,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Math\Constants.h" />
     <ClInclude Include="Engine\Math\Math.hpp" />
     <ClInclude Include="Engine\Math\TypeTraits.h" />
+    <ClInclude Include="Engine\Math\Vector.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp" />
