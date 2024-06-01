@@ -15,75 +15,75 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Engine\EntryPoint.h">
+    <ClInclude Include="Engine\Core\EntryPoint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Application.h">
+    <ClInclude Include="Engine\Core\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Assert.h">
+    <ClInclude Include="Engine\Core\Assert.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics.h">
+    <ClInclude Include="Engine\Graphics\Graphics.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\ImGuiSetup.h">
+    <ClInclude Include="Engine\Core\ImGuiSetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Platform.h">
+    <ClInclude Include="Engine\Core\Platform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Shader.h">
+    <ClInclude Include="Engine\Graphics\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Utility.h">
+    <ClInclude Include="Engine\Core\Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Texture.h">
+    <ClInclude Include="Engine\Graphics\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\IndexBuffer.h">
+    <ClInclude Include="Engine\Graphics\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\VertexBufferLayout.h">
+    <ClInclude Include="Engine\Graphics\VertexBufferLayout.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\VertexArray.h">
+    <ClInclude Include="Engine\Graphics\VertexArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\VertexBuffer.h">
+    <ClInclude Include="Engine\Graphics\VertexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Engine\Application.cpp">
+    <ClCompile Include="Engine\Core\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\ImGuiSetup.cpp">
+    <ClCompile Include="Engine\Core\ImGuiSetup.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Platform.cpp">
+    <ClCompile Include="Engine\Core\Platform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Shader.cpp">
+    <ClCompile Include="Engine\Graphics\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Utility.cpp">
+    <ClCompile Include="Engine\Core\Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Texture.cpp">
+    <ClCompile Include="Engine\Graphics\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\VertexArray.cpp">
+    <ClCompile Include="Engine\Graphics\VertexArray.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\VertexBuffer.cpp">
+    <ClCompile Include="Engine\Graphics\VertexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\IndexBuffer.cpp">
+    <ClCompile Include="Engine\Graphics\IndexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

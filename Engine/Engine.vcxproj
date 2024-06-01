@@ -45,15 +45,17 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)Vendor;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)Bin\$(Platform)-$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)Bin-Int\$(Platform)-$(Configuration)\$(ProjectName)\</IntDir>
+    <LibraryPath>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Vendor;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(SolutionDir)Vendor\;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)Vendor;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)Bin\$(Platform)-$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)Bin-Int\$(Platform)-$(Configuration)\$(ProjectName)\</IntDir>
+    <LibraryPath>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Vendor;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(SolutionDir)Vendor\;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnabled>false</VcpkgEnabled>
@@ -65,7 +67,6 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Vendor\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
@@ -86,7 +87,6 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     </ProjectReference>
     <Lib>
       <AdditionalDependencies>Vendor.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Vendor\</AdditionalLibraryDirectories>
     </Lib>
     <CustomBuildStep>
       <Message>
@@ -112,7 +112,6 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)Vendor\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -135,7 +134,6 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     </ProjectReference>
     <Lib>
       <AdditionalDependencies>Vendor.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Vendor\</AdditionalLibraryDirectories>
     </Lib>
     <CustomBuildStep>
       <Message>
@@ -154,30 +152,30 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h" />
-    <ClInclude Include="Engine\Application.h" />
-    <ClInclude Include="Engine\Assert.h" />
-    <ClInclude Include="Engine\IndexBuffer.h" />
-    <ClInclude Include="Engine\EntryPoint.h" />
-    <ClInclude Include="Engine\Graphics.h" />
-    <ClInclude Include="Engine\ImGuiSetup.h" />
-    <ClInclude Include="Engine\Platform.h" />
-    <ClInclude Include="Engine\Shader.h" />
-    <ClInclude Include="Engine\Texture.h" />
-    <ClInclude Include="Engine\Utility.h" />
-    <ClInclude Include="Engine\VertexArray.h" />
-    <ClInclude Include="Engine\VertexBufferLayout.h" />
-    <ClInclude Include="Engine\VertexBuffer.h" />
+    <ClInclude Include="Engine\Core\Application.h" />
+    <ClInclude Include="Engine\Core\Assert.h" />
+    <ClInclude Include="Engine\Graphics\IndexBuffer.h" />
+    <ClInclude Include="Engine\Core\EntryPoint.h" />
+    <ClInclude Include="Engine\Graphics\Graphics.h" />
+    <ClInclude Include="Engine\Core\ImGuiSetup.h" />
+    <ClInclude Include="Engine\Core\Platform.h" />
+    <ClInclude Include="Engine\Graphics\Shader.h" />
+    <ClInclude Include="Engine\Graphics\Texture.h" />
+    <ClInclude Include="Engine\Core\Utility.h" />
+    <ClInclude Include="Engine\Graphics\VertexArray.h" />
+    <ClInclude Include="Engine\Graphics\VertexBufferLayout.h" />
+    <ClInclude Include="Engine\Graphics\VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Engine\Application.cpp" />
-    <ClCompile Include="Engine\ImGuiSetup.cpp" />
-    <ClCompile Include="Engine\IndexBuffer.cpp" />
-    <ClCompile Include="Engine\Platform.cpp" />
-    <ClCompile Include="Engine\Shader.cpp" />
-    <ClCompile Include="Engine\Texture.cpp" />
-    <ClCompile Include="Engine\Utility.cpp" />
-    <ClCompile Include="Engine\VertexArray.cpp" />
-    <ClCompile Include="Engine\VertexBuffer.cpp" />
+    <ClCompile Include="Engine\Core\Application.cpp" />
+    <ClCompile Include="Engine\Core\ImGuiSetup.cpp" />
+    <ClCompile Include="Engine\Graphics\IndexBuffer.cpp" />
+    <ClCompile Include="Engine\Core\Platform.cpp" />
+    <ClCompile Include="Engine\Graphics\Shader.cpp" />
+    <ClCompile Include="Engine\Graphics\Texture.cpp" />
+    <ClCompile Include="Engine\Core\Utility.cpp" />
+    <ClCompile Include="Engine\Graphics\VertexArray.cpp" />
+    <ClCompile Include="Engine\Graphics\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vendor\Vendor.vcxproj">

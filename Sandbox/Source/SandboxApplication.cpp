@@ -2,10 +2,10 @@
 #include "SandboxApplication.h"
 
 // Engine Includes.
-#include "Engine/Assert.h"
-#include "Engine/Graphics.h"
-#include "Engine/ImGuiSetup.h"
-#include "Engine/Platform.h"
+#include "Engine/Core/Assert.h"
+#include "Engine/Core/ImGuiSetup.h"
+#include "Engine/Core/Platform.h"
+#include "Engine/Graphics/Graphics.h"
 
 Engine::Application* Engine::CreateApplication()
 {
