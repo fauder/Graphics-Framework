@@ -71,6 +71,12 @@ namespace Engine::Matrix
 		);
 	}
 
+	/* In row-major form. Right-handed. Counter-clockwise rotation. */ Matrix4x4 RotationAroundX( Radians pitch );
+	/* In row-major form. Right-handed. Counter-clockwise rotation. */ Matrix4x4 RotationAroundY( Radians heading );
+	/* In row-major form. Right-handed. Counter-clockwise rotation. */ Matrix4x4 RotationAroundZ( Radians bank );
+	/* In row-major form. Right-handed. Counter-clockwise rotation. */ Matrix4x4 RotationAroundAxis( Radians angle, Vector3 vector );
+	/* In row-major form. Right-handed. Counter-clockwise rotation. */ void RotationAroundAxis( Matrix4x4& matrix, Radians angle, Vector3 vector );
+
 	/* In row-major form. */ constexpr Matrix4x4 TranslationOnX( const float delta )
 	{
 		return Matrix4x4

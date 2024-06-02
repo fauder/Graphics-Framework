@@ -186,6 +186,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Core\Utility.cpp" />
     <ClCompile Include="Engine\Graphics\VertexArray.cpp" />
     <ClCompile Include="Engine\Graphics\VertexBuffer.cpp" />
+    <ClCompile Include="Engine\Math\Matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Vendor\Vendor.vcxproj">
