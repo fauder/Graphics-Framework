@@ -1,17 +1,14 @@
 #pragma once
 
+// Engine Includes.
+#include "Angle.hpp"
+#include "Vector.hpp"
+
 // std Includes.
 #include <cmath>
 
 namespace Engine::Math
 {
-/* Trigonometry. */
-	template< std::floating_point Value >
-	Value Hypothenuse( const Value x, const Value y ) { return std::sqrt( x * x + y * y ); }
-
-	template< std::floating_point Value >
-	Value NonHyptothenuseEdge( const Value edge, const Value hyptothenuse ) { return std::sqrt( hyptothenuse * hyptothenuse - edge * edge ); }
-
 /* Arithmetic. */
 	template< std::floating_point Value >
 	Value SquareOf( Value value ) { return std::pow( value, Value{ 2 } ); }
@@ -27,5 +24,50 @@ namespace Engine::Math
 
 	template< std::totally_ordered Value >
 	[[ nodiscard( "Clamped value is not assigned back to any variable." ) ]]
-	Value Clamp( const Value value, const Value minimum, const Value maximum ){ return value < minimum ? minimum : value > maximum ? maximum : value; }
+	Value Clamp( const Value value, const Value minimum, const Value maximum ) { return value < minimum ? minimum : value > maximum ? maximum : value; }
+
+/* Trigonometry. */
+	template< std::floating_point Value >
+	Value Hypothenuse( const Value x, const Value y ) { return std::sqrt( x * x + y * y ); }
+
+	template< std::floating_point Value >
+	Value NonHyptothenuseEdge( const Value edge, const Value hyptothenuse ) { return std::sqrt( hyptothenuse * hyptothenuse - edge * edge ); }
+
+	template< std::floating_point Value >
+	Value Sin( const Radians< Value > angle ) { return std::sin( Value( angle ) ); }
+
+	template< std::floating_point Value >
+	Value Cos( const Radians< Value > angle ) { return std::cos( Value( angle ) ); }
+
+	template< std::floating_point Value >
+	Value SinFromCos( const Value cos ) { return std::sqrt( Value( 1 ) - cos * cos ); }
+
+	template< std::floating_point Value >
+	Value CosFromSin( const Value sin ) { return std::sqrt( Value( 1 ) - sin * sin ); }
+
+	template< std::floating_point Value >
+	Value Tan( const Radians< Value > angle ) { return std::tan( Value( angle ) ); }
+
+	template< std::floating_point Value >
+	Radians< Value > Acos( const Value cosine ) { return Radians< Value >( std::acos( cosine ) ); }
+
+	template< std::floating_point Value >
+	Radians< Value > Asin( const Value sine ) { return Radians< Value >( std::asin( sine ) ); }
+
+	template< std::floating_point Value >
+	Radians< Value > Atan( const Value slope ) { return Radians< Value >( std::atan( slope ) ); }
+
+	template< std::floating_point Value >
+	Radians< Value > Atan2( const Value y, const Value x ) { return Radians< Value >( std::atan2( y, x ) ); }
+
+	template< Concepts::Arithmetic Value, std::size_t Size >
+	Radians< Value > Angle( const Vector< Value, Size >& a, const Vector< Value, Size >& b )
+	{
+	#ifdef _DEBUG
+		ASSERT( a.IsNormalized() && R"(Math::Angle(): The vector "a" is not normalized!)" );
+		ASSERT( b.IsNormalized() && R"(Math::Angle(): The vector "b" is not normalized!)" );
+	#endif
+
+		return Math::Acos( Math::Clamp( Dot( a, b ), Value( -1 ), Value( +1 ) ) );
+	}
 }
