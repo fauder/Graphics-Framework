@@ -21,7 +21,7 @@ public:
 	//virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
 
 private:
-	Engine::VertexArray vertex_array;
+	Engine::VertexArray vertex_array_crate;
 
 	Engine::Texture container_texture;
 	Engine::Texture awesomeface_texture;

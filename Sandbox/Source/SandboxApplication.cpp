@@ -2,10 +2,10 @@
 #include "SandboxApplication.h"
 
 // Engine Includes.
-#include "Engine/Core/Assert.h"
 #include "Engine/Core/ImGuiSetup.h"
 #include "Engine/Core/Platform.h"
-#include "Engine/Graphics/Graphics.h"
+#include "Engine/Math/Math.hpp"
+#include "Engine/Math/Matrix.h"
 
 Engine::Application* Engine::CreateApplication()
 {
@@ -52,7 +52,7 @@ void SandboxApplication::Initialize()
 	vertex_buffer_layout.Push< float >( 2 ); // UV.
 	Engine::IndexBuffer index_buffer( indices.data(), sizeof( indices ), GL_STATIC_DRAW );
 
-	vertex_array = Engine::VertexArray( vertex_buffer, vertex_buffer_layout, index_buffer );
+	vertex_array_crate = Engine::VertexArray( vertex_buffer, vertex_buffer_layout, index_buffer );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();
@@ -93,15 +93,30 @@ void SandboxApplication::Render()
 	container_texture.ActivateAndUse( 0 );
 	awesomeface_texture.ActivateAndUse( 1 );
 
-	vertex_array.Bind();
-	GLCALL( glDrawElements( GL_TRIANGLES, vertex_array.IndexCount(), GL_UNSIGNED_INT, nullptr ) );
+	const Engine::Radians current_time_as_angle( Platform::GetCurrentTime() );
+
+	vertex_array_crate.Bind();
+
+	/* First crate: */
+
+	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( 0.5f, -0.5f, 0.0f ) );
+	shader.SetUniform( "uniform_transformation", transform );
+
+	GLCALL( glDrawElements( GL_TRIANGLES, vertex_array_crate.IndexCount(), GL_UNSIGNED_INT, nullptr ) );
+
+	/* Second crate: */
+	const auto transform_2( Engine::Matrix::Scaling( Engine::Math::Sin( current_time_as_angle ), Engine::Math::Cos( current_time_as_angle ), Engine::Math::Sin( current_time_as_angle ) )
+						  * Engine::Matrix::Translation( -0.5f, 0.5f, 0.0f ) );
+	shader.SetUniform( "uniform_transformation", transform_2 );
+
+	GLCALL( glDrawElements( GL_TRIANGLES, vertex_array_crate.IndexCount(), GL_UNSIGNED_INT, nullptr ) );
 }
 
 void SandboxApplication::DrawImGui()
 {
 	if( ImGui::Begin( "Test Window" ) )
 	{
-		ImGui::Text( "Running Sandbox Application:\n\nDrawing a rectangle with 2 textures mixed\nwith the new Texture class!" );
+		ImGui::Text( "Running Sandbox Application:\n\nDrawing 2 transforming rectangles each with 2 textures mixed,\nby setting transformation matrices as shader uniforms." );
 	}
 
 	ImGui::End();
