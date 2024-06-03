@@ -8,4 +8,6 @@ namespace Engine::Concepts
 	template< typename T > concept Arithmetic = std::integral< T > || std::floating_point< T >;
 
 	template< std::size_t value > concept NonZero = ( value != 0 );
+
+	template< typename T, typename ... U > concept IsAnyOf = ( std::same_as< T, U > || ... );
 }
