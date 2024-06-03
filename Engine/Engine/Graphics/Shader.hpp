@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Math/Vector.hpp"
 
 // std Includes.
 #include <array>
@@ -73,16 +74,76 @@ namespace Engine
 			GLCALL( glUniform1i( location, value ) );
 		}
 
-		template<>
-		void SetUniform< std::array< float, 3 > >( const int location, const std::array< float, 3 >& value )
+		template< typename Component, std::size_t Size > requires( Size >= 2 && Size <= 4 )
+		void SetUniform( const int location, const Math::Vector< Component, Size >& value )
 		{
-			GLCALL( glUniform3fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.data() ) );
-		}
+			if constexpr( std::is_same_v< Component, bool > )
+			{
+				/* Since sizeof( bool ) != sizeof( int ), we can not just pass a pointer to data and call the v variant of glUniformX functions. */
 
-		template<>
-		void SetUniform< std::array< float, 4 > >( const int location, const std::array< float, 4 >& value )
-		{
-			GLCALL( glUniform4fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.data() ) );
+				if constexpr( Size == 2 )
+				{
+					GLCALL( glUniform2i( location, value.X(), value.Y() ) );
+				}
+				if constexpr( Size == 3 )
+				{
+					GLCALL( glUniform3i( location, value.X(), value.Y(), value.Z() ) );
+				}
+				if constexpr( Size == 4 )
+				{
+					GLCALL( glUniform4i( location, value.X(), value.Y(), value.Z(), value.W() ) );
+				}
+			}
+			else
+			{
+				if constexpr( std::is_same_v< Component, float > )
+				{
+					if constexpr( Size == 2 )
+					{
+						GLCALL( glUniform2fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+					if constexpr( Size == 3 )
+					{
+						GLCALL( glUniform3fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+					if constexpr( Size == 4 )
+					{
+						GLCALL( glUniform4fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+				}
+
+				if constexpr( std::is_same_v< Component, int > )
+				{
+					if constexpr( Size == 2 )
+					{
+						GLCALL( glUniform2iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+					if constexpr( Size == 3 )
+					{
+						GLCALL( glUniform3iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+					if constexpr( Size == 4 )
+					{
+						GLCALL( glUniform4iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+				}
+
+				if constexpr( std::is_same_v< Component, unsigned int > )
+				{
+					if constexpr( Size == 2 )
+					{
+						GLCALL( glUniform2uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+					if constexpr( Size == 3 )
+					{
+						GLCALL( glUniform3uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+					if constexpr( Size == 4 )
+					{
+						GLCALL( glUniform4uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+					}
+				}
+			}
 		}
 
 		template< typename UniformType >
