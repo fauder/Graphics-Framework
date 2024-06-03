@@ -2,6 +2,8 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Math/Concepts.h"
+#include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
 
 // std Includes.
@@ -143,6 +145,25 @@ namespace Engine
 						GLCALL( glUniform4uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
 					}
 				}
+			}
+		}
+
+		/* Only accepts square matrices. */
+		template< Concepts::Arithmetic Type, std::size_t Size >
+		requires Concepts::NonZero< Size >
+		void SetUniform( const int location, const Math:: Matrix< Type, Size, Size >& value )
+		{
+			if constexpr( Size == 2U )
+			{
+				GLCALL( glUniformMatrix2fv( location, 1, GL_TRUE, value.Data() ) );
+			}
+			if constexpr( Size == 3U )
+			{
+				GLCALL( glUniformMatrix3fv( location, 1, GL_TRUE, value.Data() ) );
+			}
+			if constexpr( Size == 4U )
+			{
+				GLCALL( glUniformMatrix4fv( location, 1, GL_TRUE, value.Data() ) );
 			}
 		}
 
