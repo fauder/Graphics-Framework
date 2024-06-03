@@ -1,11 +1,8 @@
 // Engine Includes.
 #include "Engine.h"
-#include "Engine/Graphics/Shader.h"
+#include "Engine/Graphics/Shader.hpp"
 #include "Engine/Graphics/VertexArray.h"
 #include "Engine/Graphics/Texture.h"
-
-// std Includes.
-#include <array>
 
 class SandboxApplication : public Engine::Application
 {
