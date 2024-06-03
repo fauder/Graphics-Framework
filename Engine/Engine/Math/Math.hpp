@@ -2,10 +2,17 @@
 
 // Engine Includes.
 #include "Angle.hpp"
-#include "Vector.hpp"
+#include "Concepts.h"
 
 // std Includes.
 #include <cmath>
+
+/* Forward Declarations. */
+namespace Engine::Math
+{
+	template< typename Component, std::size_t Size > requires( Size > 1 ) 
+	class Vector;
+}
 
 namespace Engine::Math
 {
