@@ -6,7 +6,28 @@
 
 namespace Engine::Matrix
 {
-	/* In row-major form. Right-handed. Clockwise rotation. */
+	/* In row-major form. Coordinates are in a left-handed coordinate system (both before & after multiplication). */
+	Matrix4x4 PerspectiveProjection( const float near_plane_offset, const float far_plane_offset, const float aspect_ratio, const Radians vertical_field_of_view )
+	{
+		const Radians half_v_fov( vertical_field_of_view / 2.0f );
+		const float half_tangent = Math::Tan( half_v_fov );
+
+		const float f_plus_n    = far_plane_offset + near_plane_offset;
+		const float f_minus_n   = far_plane_offset - near_plane_offset;
+		const float f_n			= far_plane_offset * near_plane_offset;
+
+		return Matrix4x4
+		(
+			{
+				1.0f / ( aspect_ratio * half_tangent ),		0.0f,					0.0f,							0.0f,
+				0.0f,										1.0f / half_tangent,	0.0f,							0.0f,
+				0.0f,										0.0f,					f_plus_n / f_minus_n,			1.0f,
+				0.0f,										0.0f,					-2.0f * f_n / f_minus_n,		0.0f
+			}
+		);
+	}
+
+	/* In row-major form. Clockwise rotation. */
 	Matrix4x4 RotationAroundX( Radians pitch )
 	{
 		const auto cosine_term = Math::Cos( pitch );
@@ -23,7 +44,7 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. Right-handed. Clockwise rotation. */
+	/* In row-major form. Clockwise rotation. */
 	Matrix4x4 RotationAroundY( Radians heading )
 	{
 		const auto cosine_term = Math::Cos( heading );
@@ -40,7 +61,7 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. Right-handed. Clockwise rotation. */
+	/* In row-major form. Clockwise rotation. */
 	Matrix4x4 RotationAroundZ( Radians bank )
 	{
 		const auto cosine_term = Math::Cos( bank );
@@ -57,7 +78,7 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. Right-handed. Clockwise rotation. */
+	/* In row-major form. Clockwise rotation. */
 	Matrix4x4 RotationAroundAxis( Radians angle, Vector3 vector )
 	{
 		vector.Normalize();
@@ -89,7 +110,7 @@ namespace Engine::Matrix
 	}
 
 	/* In-place modification of the upper-left 3x3 portion. */
-	/* In row-major form. Right-handed. Clockwise rotation. */
+	/* In row-major form. Clockwise rotation. */
 	void Matrix::RotationAroundAxis( Matrix4x4& matrix, Radians angle, Vector3 vector )
 	{
 		vector.Normalize();
