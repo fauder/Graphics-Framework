@@ -34,10 +34,10 @@ void SandboxApplication::Initialize()
 	std::array< float, 4 * vertex_attribute_element_count > vertices
 	{
 	/*	Position:				Color:				UV: */
-		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right.
-		 0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right.
-		-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left.
-		-0.5f,  0.5f, 0.0f,		1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left.
+		 0.5f,  0.5f, 1.0f,		1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right.
+		 0.5f, -0.5f, 1.0f,		0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right.
+		-0.5f, -0.5f, 1.0f,		0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left.
+		-0.5f,  0.5f, 1.0f,		1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left.
 	};
 	std::array< unsigned int, 6 > indices
 	{
@@ -67,6 +67,10 @@ void SandboxApplication::Initialize()
 
 	shader.SetUniform< int >( "uniform_texture_sampler_container", 0 );
 	shader.SetUniform< int >( "uniform_texture_sampler_awesomeface", 1 );
+
+/* View & Projection: */
+	const auto projection = Engine::Matrix::PerspectiveProjection( 0.1f, 100.0f, 800.0f / 600.0f, Engine::Radians( Engine::Constants< float >::Pi_Over_Two() ) );
+	shader.SetUniform( "uniform_transform_projection", projection );
 
 /* Other: */
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
@@ -100,14 +104,14 @@ void SandboxApplication::Render()
 	/* First crate: */
 
 	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( 0.5f, -0.5f, 0.0f ) );
-	shader.SetUniform( "uniform_transformation", transform );
+	shader.SetUniform( "uniform_transform_world", transform );
 
 	GLCALL( glDrawElements( GL_TRIANGLES, vertex_array_crate.IndexCount(), GL_UNSIGNED_INT, nullptr ) );
 
 	/* Second crate: */
-	const auto transform_2( Engine::Matrix::Scaling( Engine::Math::Sin( current_time_as_angle ), Engine::Math::Cos( current_time_as_angle ), Engine::Math::Sin( current_time_as_angle ) )
+	const auto transform_2( Engine::Matrix::Scaling( Engine::Math::Sin( current_time_as_angle ), Engine::Math::Cos( current_time_as_angle ), 1.0f )
 						  * Engine::Matrix::Translation( -0.5f, 0.5f, 0.0f ) );
-	shader.SetUniform( "uniform_transformation", transform_2 );
+	shader.SetUniform( "uniform_transform_world", transform_2 );
 
 	GLCALL( glDrawElements( GL_TRIANGLES, vertex_array_crate.IndexCount(), GL_UNSIGNED_INT, nullptr ) );
 }
@@ -116,7 +120,12 @@ void SandboxApplication::DrawImGui()
 {
 	if( ImGui::Begin( "Test Window" ) )
 	{
-		ImGui::Text( "Running Sandbox Application:\n\nDrawing 2 transforming rectangles each with 2 textures mixed,\nby setting transformation matrices as shader uniforms." );
+		ImGui::Text( "Running Sandbox Application:\n\n"
+					 
+					 "Drawing 2 transforming rectangles each with 2 textures mixed,\n"
+					 "by setting transformation matrices as shader uniforms,\n"
+					 "via using a perspective projection matris with 4:3 aspect ratio,\n"
+					 "90 degrees vertical FoV & near & far plane at 0.1 & 100.0." );
 	}
 
 	ImGui::End();
