@@ -90,12 +90,18 @@ namespace Engine::Math
 		constexpr Vector& SetZ( const Component value ) requires( Size >= 3 ) { data[ 2 ] = value; return *this; };
 		constexpr Vector& SetW( const Component value ) requires( Size >= 4 ) { data[ 3 ] = value; return *this; };
 
-		template< typename... Values >
+		template< typename... Values > requires( !std::is_pointer_v< Values > && ... )
 		constexpr Vector& Set( Values ... values )
 		{
 			int i = 0;
 			( /* Lambda: */ [ & ] { data[ i++ ] = values; }( ), ... ); // Utilize fold expressions with a lambda to "loop over" the parameter pack.
 
+			return *this;
+		}
+
+		constexpr Vector& Set( const Component array_of_values[ Size ] )
+		{
+			std::copy( array_of_values, array_of_values + Size, data );
 			return *this;
 		}
 
