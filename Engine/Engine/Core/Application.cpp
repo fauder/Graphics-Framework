@@ -31,7 +31,7 @@ namespace Engine
 		Platform::SetKeyboardEventCallback(
 			[ = ]( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
 		{
-			std::bind( &Application::OnKeyboardEventInternal, this, key_code, key_action, key_mods );
+			std::ignore = std::bind( &Application::OnKeyboardEventInternal, this, key_code, key_action, key_mods );
 		} );
 	}
 
