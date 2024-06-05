@@ -164,4 +164,25 @@ namespace Engine::Matrix
 			}
 		);
 	}
+
+	/* In row-major form. Left-handed. */
+	constexpr Matrix4x4 LookAt( const Vector3& camera_position, Vector3 to_target_normalized, const Vector3& world_up_normalized = Vector3::Up() )
+	{
+	#ifdef _DEBUG
+		ASSERT( to_target_normalized.IsNormalized() && R"(Matrix::LookAt(): "to_target_normalized" is not normalized!)" );
+		ASSERT(  world_up_normalized.IsNormalized() && R"(Matrix::LookAt():  "world_up_normalized" is not normalized!)" );
+	#endif
+		const auto to_camera_right_normalized = Math::Cross( world_up_normalized, to_target_normalized );
+		const auto to_camera_up_normalized    = Math::Cross( to_target_normalized, to_camera_right_normalized );
+
+		return Matrix::Translation( -camera_position ) * Matrix4x4
+		{
+			{ // This is the TRANSPOSED rotation matrix, utilizing the basis constructed above.
+				to_camera_right_normalized.X(),		to_camera_up_normalized.X(),	to_target_normalized.X(),	0.0f,
+				to_camera_right_normalized.Y(),		to_camera_up_normalized.Y(),	to_target_normalized.Y(),	0.0f,
+				to_camera_right_normalized.Z(),		to_camera_up_normalized.Z(),	to_target_normalized.Z(),	0.0f,
+				0.0f,								0.0f,							0.0f,						1.0f
+			}
+		};
+	}
 };
