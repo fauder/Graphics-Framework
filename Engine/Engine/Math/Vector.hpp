@@ -15,6 +15,9 @@ namespace Engine::Math
 		friend class Matrix;
 
 	public:
+		using ComponentType = Component;
+
+	public:
 	/* Constructors. */
 		constexpr Vector() : data{} {} // Same as the one with Initialization::ZeroInitialization parameter.
 
