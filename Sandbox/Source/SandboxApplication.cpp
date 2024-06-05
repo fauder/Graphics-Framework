@@ -34,10 +34,10 @@ void SandboxApplication::Initialize()
 	std::array< float, 4 * vertex_attribute_element_count > vertices
 	{
 	/*	Position:				Color:				UV: */
-		 0.5f,  0.5f, 1.0f,		1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right.
-		 0.5f, -0.5f, 1.0f,		0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right.
-		-0.5f, -0.5f, 1.0f,		0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left.
-		-0.5f,  0.5f, 1.0f,		1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left.
+		 0.5f,  0.5f, 0.0f,		1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // Top Right.
+		 0.5f, -0.5f, 0.0f,		0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // Bottom Right.
+		-0.5f, -0.5f, 0.0f,		0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // Bottom Left.
+		-0.5f,  0.5f, 0.0f,		1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // Top Left.
 	};
 	std::array< unsigned int, 6 > indices
 	{
@@ -65,12 +65,16 @@ void SandboxApplication::Initialize()
 
 	shader.Bind();
 
-	shader.SetUniform< int >( "uniform_texture_sampler_container", 0 );
+	shader.SetUniform< int >( "uniform_texture_sampler_container",   0 );
 	shader.SetUniform< int >( "uniform_texture_sampler_awesomeface", 1 );
 
 /* View & Projection: */
-	const auto projection = Engine::Matrix::PerspectiveProjection( 0.1f, 100.0f, 800.0f / 600.0f, Engine::Radians( Engine::Constants< float >::Pi_Over_Two() ) );
-	shader.SetUniform( "uniform_transform_projection", projection );
+	/* To simulate the Camera going backward, the world should move forward instead. */
+	constexpr auto view_transformation = Engine::Matrix::TranslationOnZ( +1.0f ); // Move the camera back on Z axis by 1 unit.
+	shader.SetUniform( "uniform_transform_view", view_transformation );
+
+	const auto projection_transformation = Engine::Matrix::PerspectiveProjection( 0.1f, 100.0f, 800.0f / 600.0f, Engine::Radians( Engine::Constants< float >::Pi_Over_Two() ) );
+	shader.SetUniform( "uniform_transform_projection", projection_transformation );
 
 /* Other: */
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.

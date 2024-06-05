@@ -7,11 +7,12 @@ out vec3 varying_color;
 out vec2 varying_uv;
 
 uniform mat4x4 uniform_transform_world;
+uniform mat4x4 uniform_transform_view;
 uniform mat4x4 uniform_transform_projection;
 
 void main()
 {
-    gl_Position   = vec4( position, 1.0) * uniform_transform_world * uniform_transform_projection;
+    gl_Position   = vec4( position, 1.0 ) * uniform_transform_world * uniform_transform_view * uniform_transform_projection;
     varying_color = color;
     varying_uv    = uv;
 }
