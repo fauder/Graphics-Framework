@@ -9,6 +9,8 @@
 #include "Engine/Math/Math.hpp"
 #include "Engine/Math/Matrix.h"
 
+using namespace Engine::Math::Literals;
+
 Engine::Application* Engine::CreateApplication()
 {
     return new SandboxApplication();
@@ -16,7 +18,14 @@ Engine::Application* Engine::CreateApplication()
 
 SandboxApplication::SandboxApplication()
 	:
-	Engine::Application()
+	Engine::Application(),
+	cube_1_offset( +1.0f, -1.0f, 0.0f ),
+	cube_2_offset( -1.0f, +1.0f, 0.0f ),
+	camera_offset( 0.0f, 0.0f, -3.0f ),
+	near_plane( 0.1f ), far_plane( 100.0f ),
+	aspect_ratio( 4.0f / 3.0f ),
+	vertical_field_of_view( 90_deg )
+
 {
 	Initialize();
 }
@@ -56,12 +65,8 @@ void SandboxApplication::Initialize()
 	shader.SetUniform< int >( "uniform_texture_sampler_awesomeface", 1 );
 
 /* View & Projection: */
-	/* To simulate the Camera going backward, the world should move forward instead. */
-	constexpr auto view_transformation = Engine::Matrix::TranslationOnZ( +3.0f ); // Move the camera back on Z axis by 1 unit.
-	shader.SetUniform( "uniform_transform_view", view_transformation );
-
-	const auto projection_transformation = Engine::Matrix::PerspectiveProjection( 0.1f, 100.0f, 800.0f / 600.0f, Engine::Radians( Engine::Constants< float >::Pi_Over_Two() ) );
-	shader.SetUniform( "uniform_transform_projection", projection_transformation );
+	UpdateViewMatrix();
+	UpdateProjectionMatrix();
 
 /* Other: */
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
@@ -93,7 +98,7 @@ void SandboxApplication::Render()
 	vertex_array_crate.Bind();
 
 	/* First crate: */
-	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( +1.0f, -1.0f, 0.0f ) );
+	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
@@ -103,7 +108,7 @@ void SandboxApplication::Render()
 													 Engine::Math::Abs( Engine::Math::Cos( current_time_as_angle ) ),
 													 1.0f )
 							* Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
-							* Engine::Matrix::Translation( -1.0f, +1.0f, 0.0f ) );
+							* Engine::Matrix::Translation( cube_2_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform_2 );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
@@ -111,7 +116,7 @@ void SandboxApplication::Render()
 
 void SandboxApplication::DrawImGui()
 {
-	if( ImGui::Begin( "Test Window" ) )
+	if( ImGui::Begin( "Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		ImGui::Text( "Running Sandbox Application:\n\n"
 					 
@@ -122,6 +127,86 @@ void SandboxApplication::DrawImGui()
 	}
 
 	ImGui::End();
+
+	if( ImGui::Begin( "Cube Positions", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		if( ImGui::Button( "Reset" ) )
+		{
+			cube_1_offset = { +1.0f, -1.0f, 0.0f };
+			cube_2_offset = { -1.0f, +1.0f, 0.0f };
+		}
+
+		float cube_1_pos_array[ 3 ] = { cube_1_offset.X(), cube_1_offset.Y(), cube_1_offset.Z() };
+		if( ImGui::SliderFloat3( "Cube 1 Position", cube_1_pos_array, -5.0f, +5.0f ) )
+			cube_1_offset.Set( cube_1_pos_array );
+
+		float cube_2_pos_array[ 3 ] = { cube_2_offset.X(), cube_2_offset.Y(), cube_2_offset.Z() };
+		if( ImGui::SliderFloat3( "Cube 2 Position", cube_2_pos_array, -5.0f, +5.0f ) )
+			cube_2_offset.Set( cube_2_pos_array );
+	}
+
+	ImGui::End();
+
+	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		if( ImGui::Button( "Reset" ) )
+		{
+			camera_offset = { 0.0f, 0.0f, -3.0f };
+			UpdateViewMatrix();
+		}
+
+		float camera_pos_array[ 3 ] = { camera_offset.X(), camera_offset.Y(), camera_offset.Z() };
+		if( ImGui::SliderFloat3( "Camera Position", camera_pos_array, -10.0f, +10.0f ) )
+		{
+			camera_offset.Set( camera_pos_array );
+			UpdateViewMatrix();
+		}
+	}
+
+	ImGui::End();
+
+	if( ImGui::Begin( "Projection", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		if( ImGui::Button( "Reset" ) )
+		{
+			near_plane             = 0.1f;
+			far_plane              = 100.0f;
+			aspect_ratio           = 4.0f / 3.0f;
+			vertical_field_of_view = 90_deg;
+			UpdateProjectionMatrix();
+		}
+
+		float v_fov_radians = ( float )vertical_field_of_view;
+
+		bool modified = false;
+
+		/*																Min Value:							Max Value:						Format: */													
+		modified |= ImGui::SliderFloat( "Near Plane",	&near_plane,	0.0f,								std::min( 100.0f, far_plane )					); 
+		modified |= ImGui::SliderFloat( "Far Plane",	&far_plane,		std::max( near_plane, 10.0f ),		1000.0f											);
+		modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,								5.0f											);
+		modified |= ImGui::SliderAngle( "Vertical FoV", &v_fov_radians, 1.0f,								180.0f,							"%.2f degrees"	);
+
+		if( modified )
+		{
+			vertical_field_of_view = Engine::Radians( v_fov_radians );
+			UpdateProjectionMatrix();
+		}
+	}
+
+	ImGui::End();
+}
+
+void SandboxApplication::UpdateViewMatrix()
+{
+	/* To simulate the Camera going backward, the world should move forward instead. */
+	const auto view_transformation = Engine::Matrix::Translation( -camera_offset );
+	shader.SetUniform( "uniform_transform_view", view_transformation );
+}
+
+void SandboxApplication::UpdateProjectionMatrix()
+{
+	const auto projection_transformation = Engine::Matrix::PerspectiveProjection( near_plane, far_plane, aspect_ratio, vertical_field_of_view );
+	shader.SetUniform( "uniform_transform_projection", projection_transformation );
 }
 
 //void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
