@@ -161,6 +161,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\ImGuiSetup.h" />
     <ClInclude Include="Engine\Core\Platform.h" />
     <ClInclude Include="Engine\Graphics\MeshUtility.hpp" />
+    <ClInclude Include="Engine\Graphics\Primitive\Primitive_Cube.h" />
     <ClInclude Include="Engine\Graphics\Shader.hpp" />
     <ClInclude Include="Engine\Graphics\Texture.h" />
     <ClInclude Include="Engine\Core\Utility.h" />
