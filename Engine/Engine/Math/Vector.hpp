@@ -105,6 +105,12 @@ namespace Engine::Math
 			return *this;
 		}
 
+		constexpr Vector& Set( const Component ( &array_of_values )[ Size ] )
+		{
+			std::copy( array_of_values, array_of_values + Size, data );
+			return *this;
+		}
+
 	/* Arithmetic Operations: Unary operators. */
 		constexpr Vector operator- () const
 		{
