@@ -21,7 +21,8 @@ SandboxApplication::SandboxApplication()
 	Engine::Application(),
 	cube_1_offset( +1.0f, -1.0f, 0.0f ),
 	cube_2_offset( -1.0f, +1.0f, 0.0f ),
-	camera_offset( 0.0f, 0.0f, -3.0f ),
+	camera_direction( Engine::Vector3::Forward() ),
+	camera_offset( Engine::Vector3::Backward() * 3.0f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( 4.0f / 3.0f ),
 	vertical_field_of_view( 90_deg )
@@ -161,6 +162,14 @@ void SandboxApplication::DrawImGui()
 			camera_offset.Set( camera_pos_array );
 			UpdateViewMatrix();
 		}
+
+		float camera_rot_array[ 3 ] = { camera_direction.X(), camera_direction.Y(), camera_direction.Z() };
+		if( ImGui::SliderFloat3( "Camera Direction", camera_rot_array, -1.0f, +1.0f ) )
+		{
+			camera_direction.Set( camera_rot_array );
+			camera_direction.Normalize();
+			UpdateViewMatrix();
+		}
 	}
 
 	ImGui::End();
@@ -198,8 +207,7 @@ void SandboxApplication::DrawImGui()
 
 void SandboxApplication::UpdateViewMatrix()
 {
-	/* To simulate the Camera going backward, the world should move forward instead. */
-	const auto view_transformation = Engine::Matrix::Translation( -camera_offset );
+	const auto view_transformation = Engine::Matrix::LookAt( camera_offset, camera_direction );
 	shader.SetUniform( "uniform_transform_view", view_transformation );
 }
 

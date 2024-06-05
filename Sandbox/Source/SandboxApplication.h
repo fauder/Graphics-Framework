@@ -35,7 +35,7 @@ private:
 	Engine::Shader shader;
 
 	Engine::Vector3 cube_1_offset, cube_2_offset;
-	Engine::Vector3 camera_offset;
+	Engine::Vector3 camera_offset, camera_direction;
 
 	float near_plane, far_plane;
 	float aspect_ratio;
