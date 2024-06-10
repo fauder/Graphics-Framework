@@ -27,6 +27,7 @@ SandboxApplication::SandboxApplication()
 	cube_1_color( Engine::Color4::Blue() ),
 	cube_2_color( Engine::Color4::Yellow() ),
 	light_color( Engine::Color4::White() ),
+	light_ambient_strength( +0.5f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( 4.0f / 3.0f ),
 	vertical_field_of_view( 90_deg )
@@ -94,8 +95,9 @@ void SandboxApplication::Render()
 /* Render cubes: */
 	cube_shader.Bind();
 
-	/* Light color: */
+	/* Lighting information: */
 	cube_shader.SetUniform( "uniform_light_color", light_color );
+	cube_shader.SetUniform( "uniform_ambient_strength", light_ambient_strength );
 
 	/* First crate: */
 	const auto cube_1_transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
@@ -143,13 +145,14 @@ void SandboxApplication::DrawImGui()
 
 	ImGui::End();
 
-	if( ImGui::Begin( "Cube & Light Colors", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			cube_1_color = Engine::Color4::Blue();
-			cube_2_color = Engine::Color4::Yellow();
-			light_color  = Engine::Color4::White();
+			cube_1_color           = Engine::Color4::Blue();
+			cube_2_color           = Engine::Color4::Yellow();
+			light_color            = Engine::Color4::White();
+			light_ambient_strength = +0.5f;
 		}
 
 		float cube_1_color_array[ 4 ] = { cube_1_color.R(), cube_1_color.G(), cube_1_color.B(), 1.0f };
@@ -163,6 +166,8 @@ void SandboxApplication::DrawImGui()
 		float light_color_array[ 4 ] = { light_color.R(), light_color.G(), light_color.B(), 1.0f };
 		if( ImGui::ColorEdit3( "Light Color", light_color_array ) )
 			light_color.Set( light_color_array );
+
+		ImGui::SliderFloat( "Ambient Strength", &light_ambient_strength, 0.0f, +1.0f );
 	}
 
 	ImGui::End();

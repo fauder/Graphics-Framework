@@ -40,6 +40,7 @@ private:
 	Engine::Vector3 camera_offset, camera_direction;
 
 	Engine::Color4 cube_1_color, cube_2_color, light_color;
+	float light_ambient_strength;
 
 	float near_plane, far_plane;
 	float aspect_ratio;
