@@ -23,6 +23,9 @@ SandboxApplication::SandboxApplication()
 	cube_2_offset( -1.0f, +1.0f, 0.0f ),
 	camera_direction( Engine::Vector3::Forward() ),
 	camera_offset( Engine::Vector3::Backward() * 3.0f ),
+	cube_1_color( Engine::Color4::Blue() ),
+	cube_2_color( Engine::Color4::Yellow() ),
+	light_color( Engine::Color4::White() ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( 4.0f / 3.0f ),
 	vertical_field_of_view( 90_deg )
@@ -91,12 +94,12 @@ void SandboxApplication::Render()
 	vertex_array_crate.Bind();
 
 	/* Light color: */
-	shader.SetUniform( "uniform_light_color", Engine::Color4::Red() );
+	shader.SetUniform( "uniform_light_color", light_color );
 
 	/* First crate: */
 	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform );
-	shader.SetUniform( "uniform_color", Engine::Color4::Blue() );
+	shader.SetUniform( "uniform_color", cube_1_color );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
@@ -107,7 +110,7 @@ void SandboxApplication::Render()
 							* Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
 							* Engine::Matrix::Translation( cube_2_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform_2 );
-	shader.SetUniform( "uniform_color", Engine::Color4::Yellow() );
+	shader.SetUniform( "uniform_color", cube_2_color );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 }
@@ -123,6 +126,30 @@ void SandboxApplication::DrawImGui()
 					 "by setting transformation matrices as shader uniforms,\n"
 					 "via using a perspective projection matrix with 4:3 aspect ratio,\n"
 					 "90 degrees vertical FoV & near & far plane at 0.1 & 100.0." );
+	}
+
+	ImGui::End();
+
+	if( ImGui::Begin( "Cube & Light Colors", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		if( ImGui::Button( "Reset" ) )
+		{
+			cube_1_color = Engine::Color4::Blue();
+			cube_2_color = Engine::Color4::Yellow();
+			light_color  = Engine::Color4::White();
+		}
+
+		float cube_1_color_array[ 4 ] = { cube_1_color.R(), cube_1_color.G(), cube_1_color.B(), 1.0f };
+		if( ImGui::ColorEdit3( "Cube 1 Color", cube_1_color_array ) )
+			cube_1_color.Set( cube_1_color_array );
+
+		float cube_2_color_array[ 4 ] = { cube_2_color.R(), cube_2_color.G(), cube_2_color.B(), 1.0f };
+		if( ImGui::ColorEdit3( "Cube 2 Color", cube_2_color_array ) )
+			cube_2_color.Set( cube_2_color_array );
+
+		float light_color_array[ 4 ] = { light_color.R(), light_color.G(), light_color.B(), 1.0f };
+		if( ImGui::ColorEdit3( "Light Color", light_color_array ) )
+			light_color.Set( light_color_array );
 	}
 
 	ImGui::End();

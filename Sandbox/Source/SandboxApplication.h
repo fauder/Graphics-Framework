@@ -37,6 +37,8 @@ private:
 	Engine::Vector3 cube_1_offset, cube_2_offset;
 	Engine::Vector3 camera_offset, camera_direction;
 
+	Engine::Color4 cube_1_color, cube_2_color, light_color;
+
 	float near_plane, far_plane;
 	float aspect_ratio;
 	Engine::Radians vertical_field_of_view;
