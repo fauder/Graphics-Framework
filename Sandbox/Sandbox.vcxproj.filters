@@ -11,5 +11,6 @@
     <None Include="Asset\Shader\BasicTextured.frag" />
     <None Include="Asset\Shader\Lighting.frag" />
     <None Include="Asset\Shader\Lighting.vert" />
+    <None Include="Asset\Shader\LightSource.frag" />
   </ItemGroup>
 </Project>

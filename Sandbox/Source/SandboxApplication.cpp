@@ -21,6 +21,7 @@ SandboxApplication::SandboxApplication()
 	Engine::Application(),
 	cube_1_offset( +1.0f, -1.0f, 0.0f ),
 	cube_2_offset( -1.0f, +1.0f, 0.0f ),
+	light_source_offset( 0.0f, +1.0f, 0.0f ),
 	camera_direction( Engine::Vector3::Forward() ),
 	camera_offset( Engine::Vector3::Backward() * 3.0f ),
 	cube_1_color( Engine::Color4::Blue() ),
@@ -59,9 +60,8 @@ void SandboxApplication::Initialize()
 	Engine::Texture::INITIALIZE();
 
 /* Shaders: */
-	shader.FromFile( R"(Asset/Shader/Lighting.vert)", R"(Asset/Shader/Lighting.frag)" );
-
-	shader.Bind();
+	cube_shader.FromFile( R"(Asset/Shader/Lighting.vert)", R"(Asset/Shader/Lighting.frag)" );
+	light_source_shader.FromFile( R"(Asset/Shader/Lighting.vert)", R"(Asset/Shader/LightSource.frag)" );
 
 /* View & Projection: */
 	UpdateViewMatrix();
@@ -87,30 +87,43 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	shader.Bind();
-
 	const Engine::Radians current_time_as_angle( Platform::GetCurrentTime() );
 
 	vertex_array_crate.Bind();
 
+/* Render cubes: */
+	cube_shader.Bind();
+
 	/* Light color: */
-	shader.SetUniform( "uniform_light_color", light_color );
+	cube_shader.SetUniform( "uniform_light_color", light_color );
 
 	/* First crate: */
-	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
-	shader.SetUniform( "uniform_transform_world", transform );
-	shader.SetUniform( "uniform_color", cube_1_color );
+	const auto cube_1_transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
+	cube_shader.SetUniform( "uniform_transform_world", cube_1_transform );
+	cube_shader.SetUniform( "uniform_color", cube_1_color );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
 	/* Second crate: */
-	const auto transform_2( Engine::Matrix::Scaling( Engine::Math::Abs( Engine::Math::Sin( current_time_as_angle ) ),
+	const auto cube_2_transform( Engine::Matrix::Scaling( Engine::Math::Abs( Engine::Math::Sin( current_time_as_angle ) ),
 													 Engine::Math::Abs( Engine::Math::Cos( current_time_as_angle ) ),
 													 1.0f )
 							* Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
 							* Engine::Matrix::Translation( cube_2_offset ) );
-	shader.SetUniform( "uniform_transform_world", transform_2 );
-	shader.SetUniform( "uniform_color", cube_2_color );
+	cube_shader.SetUniform( "uniform_transform_world", cube_2_transform );
+	cube_shader.SetUniform( "uniform_color", cube_2_color );
+
+	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
+
+/* Render the light source: */
+	light_source_shader.Bind();
+
+	/* Light color: */
+	light_source_shader.SetUniform( "uniform_color", light_color );
+
+	/* First crate: */
+	const auto light_source_transform( Engine::Matrix::Translation( light_source_offset ) );
+	light_source_shader.SetUniform( "uniform_transform_world", light_source_transform );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 }
@@ -154,7 +167,7 @@ void SandboxApplication::DrawImGui()
 
 	ImGui::End();
 
-	if( ImGui::Begin( "Cube Positions", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	if( ImGui::Begin( "Cube & Light Positions", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
@@ -169,6 +182,10 @@ void SandboxApplication::DrawImGui()
 		float cube_2_pos_array[ 3 ] = { cube_2_offset.X(), cube_2_offset.Y(), cube_2_offset.Z() };
 		if( ImGui::SliderFloat3( "Cube 2 Position", cube_2_pos_array, -5.0f, +5.0f ) )
 			cube_2_offset.Set( cube_2_pos_array );
+
+		float light_source_pos_array[ 3 ] = { light_source_offset.X(), light_source_offset.Y(), light_source_offset.Z() };
+		if( ImGui::SliderFloat3( "Light Source Position", light_source_pos_array, -5.0f, +5.0f ) )
+			light_source_offset.Set( light_source_pos_array );
 	}
 
 	ImGui::End();
@@ -233,13 +250,19 @@ void SandboxApplication::DrawImGui()
 void SandboxApplication::UpdateViewMatrix()
 {
 	const auto view_transformation = Engine::Matrix::LookAt( camera_offset, camera_direction );
-	shader.SetUniform( "uniform_transform_view", view_transformation );
+	cube_shader.Bind();
+	cube_shader.SetUniform( "uniform_transform_view", view_transformation );
+	light_source_shader.Bind();
+	light_source_shader.SetUniform( "uniform_transform_view", view_transformation );
 }
 
 void SandboxApplication::UpdateProjectionMatrix()
 {
 	const auto projection_transformation = Engine::Matrix::PerspectiveProjection( near_plane, far_plane, aspect_ratio, vertical_field_of_view );
-	shader.SetUniform( "uniform_transform_projection", projection_transformation );
+	cube_shader.Bind();
+	cube_shader.SetUniform( "uniform_transform_projection", projection_transformation );
+	light_source_shader.Bind();
+	light_source_shader.SetUniform( "uniform_transform_projection", projection_transformation );
 }
 
 //void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )

@@ -122,6 +122,7 @@
     <None Include="Asset\Shader\BasicTextured.vert" />
     <None Include="Asset\Shader\Lighting.frag" />
     <None Include="Asset\Shader\Lighting.vert" />
+    <None Include="Asset\Shader\LightSource.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
