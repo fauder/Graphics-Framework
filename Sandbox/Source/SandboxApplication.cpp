@@ -91,12 +91,12 @@ void SandboxApplication::Render()
 	vertex_array_crate.Bind();
 
 	/* Light color: */
-	shader.SetUniform( "uniform_light_color", Engine::Vector4( Engine::UNIFORM_INITIALIZATION, 1.0f ) );
+	shader.SetUniform( "uniform_light_color", Engine::Color4::Red() );
 
 	/* First crate: */
 	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform );
-	shader.SetUniform( "uniform_color", Engine::Vector4( 1.0f, 0.0f, 0.0f, 1.0f ) );
+	shader.SetUniform( "uniform_color", Engine::Color4::Blue() );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
@@ -107,7 +107,7 @@ void SandboxApplication::Render()
 							* Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
 							* Engine::Matrix::Translation( cube_2_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform_2 );
-	shader.SetUniform( "uniform_color", Engine::Vector4( 0.0f, 1.0f, 0.0f, 1.0f ) );
+	shader.SetUniform( "uniform_color", Engine::Color4::Yellow() );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 }
@@ -119,6 +119,7 @@ void SandboxApplication::DrawImGui()
 		ImGui::Text( "Running Sandbox Application:\n\n"
 					 
 					 "Drawing 2 transforming cubes w& the simplest coloring shader ever,\n"
+					 "via using the new Color4 class,\n"
 					 "by setting transformation matrices as shader uniforms,\n"
 					 "via using a perspective projection matrix with 4:3 aspect ratio,\n"
 					 "90 degrees vertical FoV & near & far plane at 0.1 & 100.0." );
