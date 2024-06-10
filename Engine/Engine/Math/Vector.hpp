@@ -400,7 +400,7 @@ namespace Engine::Math
 			return *this;
 		}
 
-	private:
+	protected:
 		Component data[ Size ];
 	};
 

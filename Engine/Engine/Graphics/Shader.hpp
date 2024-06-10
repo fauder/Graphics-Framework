@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Graphics/Color.hpp"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
@@ -146,6 +147,16 @@ namespace Engine
 					}
 				}
 			}
+		}
+
+		void SetUniform( const int location, const Engine::Color3& value )
+		{
+			SetUniform( location, reinterpret_cast< const Vector3& >( value ) );
+		}
+
+		void SetUniform( const int location, const Engine::Color4& value )
+		{
+			SetUniform( location, reinterpret_cast< const Vector4& >( value ) );
 		}
 
 		/* Only accepts square matrices. */
