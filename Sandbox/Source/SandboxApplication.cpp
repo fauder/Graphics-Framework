@@ -41,29 +41,24 @@ void SandboxApplication::Initialize()
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
 /* Vertex/Index Data: */
-	constexpr auto vertices( Engine::MeshUtility::Interleave( Engine::Primitive::NonIndexed::Cube::Positions,
-															  Engine::Primitive::NonIndexed::Cube::UVs ) );
+	/*constexpr auto vertices( Engine::MeshUtility::Interleave( Engine::Primitive::NonIndexed::Cube::Positions,
+															  Engine::Primitive::NonIndexed::Cube::UVs ) );*/
+
+	constexpr auto vertices( Engine::Primitive::NonIndexed::Cube::Positions );
 
 	Engine::VertexBuffer vertex_buffer( vertices.data(), sizeof( vertices ), GL_STATIC_DRAW );
 	Engine::VertexBufferLayout vertex_buffer_layout;
 	vertex_buffer_layout.Push< float >( 3 ); // Position.
-	vertex_buffer_layout.Push< float >( 2 ); // UV.
 
 	vertex_array_crate = Engine::VertexArray( vertex_buffer, vertex_buffer_layout );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();
 
-	container_texture.FromFile( R"(Asset/Texture/container.jpg)", GL_RGB );
-	awesomeface_texture.FromFile( R"(Asset/Texture/awesomeface.png)", GL_RGBA );
-
 /* Shaders: */
-	shader.FromFile( R"(Asset/Shader/Basic.vert)", R"(Asset/Shader/Basic.frag)" );
+	shader.FromFile( R"(Asset/Shader/Lighting.vert)", R"(Asset/Shader/Lighting.frag)" );
 
 	shader.Bind();
-
-	shader.SetUniform< int >( "uniform_texture_sampler_container",   0 );
-	shader.SetUniform< int >( "uniform_texture_sampler_awesomeface", 1 );
 
 /* View & Projection: */
 	UpdateViewMatrix();
@@ -91,16 +86,17 @@ void SandboxApplication::Render()
 
 	shader.Bind();
 
-	container_texture.ActivateAndUse( 0 );
-	awesomeface_texture.ActivateAndUse( 1 );
-
 	const Engine::Radians current_time_as_angle( Platform::GetCurrentTime() );
 
 	vertex_array_crate.Bind();
 
+	/* Light color: */
+	shader.SetUniform( "uniform_light_color", Engine::Vector4( Engine::UNIFORM_INITIALIZATION, 1.0f ) );
+
 	/* First crate: */
 	const auto transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform );
+	shader.SetUniform( "uniform_color", Engine::Vector4( 1.0f, 0.0f, 0.0f, 1.0f ) );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
@@ -111,6 +107,7 @@ void SandboxApplication::Render()
 							* Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
 							* Engine::Matrix::Translation( cube_2_offset ) );
 	shader.SetUniform( "uniform_transform_world", transform_2 );
+	shader.SetUniform( "uniform_color", Engine::Vector4( 0.0f, 1.0f, 0.0f, 1.0f ) );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 }
@@ -121,7 +118,7 @@ void SandboxApplication::DrawImGui()
 	{
 		ImGui::Text( "Running Sandbox Application:\n\n"
 					 
-					 "Drawing 2 transforming cubes each with 2 textures mixed,\n"
+					 "Drawing 2 transforming cubes w& the simplest coloring shader ever,\n"
 					 "by setting transformation matrices as shader uniforms,\n"
 					 "via using a perspective projection matrix with 4:3 aspect ratio,\n"
 					 "90 degrees vertical FoV & near & far plane at 0.1 & 100.0." );

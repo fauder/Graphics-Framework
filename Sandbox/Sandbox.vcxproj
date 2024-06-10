@@ -118,8 +118,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Asset\Shader\Basic.frag" />
-    <None Include="Asset\Shader\Basic.vert" />
+    <None Include="Asset\Shader\BasicTextured.frag" />
+    <None Include="Asset\Shader\BasicTextured.vert" />
+    <None Include="Asset\Shader\Lighting.frag" />
+    <None Include="Asset\Shader\Lighting.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
