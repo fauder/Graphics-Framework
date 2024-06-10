@@ -105,7 +105,7 @@ namespace Engine
 		if( !success )
 		{
 			char info_log[ 512 ];
-			glGetShaderInfoLog( program_id, 512, NULL, info_log );
+			glGetProgramInfoLog( program_id, 512, NULL, info_log );
 			std::cerr << "ERROR::SHADER::PROGRAM::LINK:" << info_log << "\n";
 			throw std::logic_error( std::string( "ERROR::SHADER::PROGRAM::LINK:" ) + info_log );
 			return false;;
