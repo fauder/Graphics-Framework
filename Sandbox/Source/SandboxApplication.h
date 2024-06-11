@@ -23,8 +23,8 @@ public:
 	//virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
 
 private:
-	void UpdateViewMatrix();
-	void UpdateProjectionMatrix();
+	void UpdateViewMatrix( Engine::Shader& shader );
+	void UpdateProjectionMatrix( Engine::Shader& shader );
 
 private:
 	Engine::VertexArray vertex_array_crate;
@@ -32,7 +32,8 @@ private:
 	Engine::Texture container_texture;
 	Engine::Texture awesomeface_texture;
 
-	Engine::Shader cube_shader;
+	Engine::Shader* cube_shader;
+	Engine::Shader gouraud_shader, phong_shader;
 	Engine::Shader light_source_shader;
 
 	Engine::Vector3 cube_1_offset, cube_2_offset;

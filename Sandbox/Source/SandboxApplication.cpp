@@ -19,6 +19,7 @@ Engine::Application* Engine::CreateApplication()
 SandboxApplication::SandboxApplication()
 	:
 	Engine::Application(),
+	cube_shader( nullptr ),
 	cube_1_offset( +1.0f, -1.0f, 0.0f ),
 	cube_2_offset( -1.0f, +1.0f, 0.0f ),
 	light_source_offset( 0.0f, +1.0f, 0.0f ),
@@ -29,12 +30,11 @@ SandboxApplication::SandboxApplication()
 	light_color( Engine::Color4::White() ),
 	light_ambient_strength( 0.1f ),
 	light_diffuse_strength( 1.0f ),
-	light_specular_strength( 0.5f ),
+	light_specular_strength( 1.0f ),
 	light_specular_power( 32.0f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( 4.0f / 3.0f ),
 	vertical_field_of_view( 90_deg )
-
 {
 	Initialize();
 }
@@ -63,12 +63,17 @@ void SandboxApplication::Initialize()
 	Engine::Texture::INITIALIZE();
 
 /* Shaders: */
-	cube_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
+	gouraud_shader.FromFile( R"(Asset/Shader/Gouraud.vert)", R"(Asset/Shader/Gouraud.frag)" );
+	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
+	cube_shader = &phong_shader;
+
 /* View & Projection: */
-	UpdateViewMatrix();
-	UpdateProjectionMatrix();
+	UpdateViewMatrix( gouraud_shader);
+	UpdateProjectionMatrix( gouraud_shader);
+	UpdateViewMatrix( phong_shader );
+	UpdateProjectionMatrix( phong_shader );
 
 /* Other: */
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
@@ -95,21 +100,21 @@ void SandboxApplication::Render()
 	vertex_array_crate.Bind();
 
 /* Render cubes: */
-	cube_shader.Bind();
+	cube_shader->Bind();
 
 	/* Lighting information: */
-	cube_shader.SetUniform( "uniform_light_color",					light_color );
-	cube_shader.SetUniform( "uniform_ambient_strength",				light_ambient_strength );
-	cube_shader.SetUniform( "uniform_diffuse_strength",				light_diffuse_strength );
-	cube_shader.SetUniform( "uniform_specular_strength",			light_specular_strength );
-	cube_shader.SetUniform( "uniform_specular_power",				light_specular_power );
-	cube_shader.SetUniform( "uniform_light_position_world_space",	light_source_offset );
-	//cube_shader.SetUniform( "uniform_camera_position_world",	camera_offset );
+	cube_shader->SetUniform( "uniform_light_color",					light_color );
+	cube_shader->SetUniform( "uniform_ambient_strength",			light_ambient_strength );
+	cube_shader->SetUniform( "uniform_diffuse_strength",			light_diffuse_strength );
+	cube_shader->SetUniform( "uniform_specular_strength",			light_specular_strength );
+	cube_shader->SetUniform( "uniform_specular_power",				light_specular_power );
+	cube_shader->SetUniform( "uniform_light_position_world_space",	light_source_offset );
+	//cube_shader->SetUniform( "uniform_camera_position_world",	camera_offset );
 
 	/* First crate: */
 	const auto cube_1_transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
-	cube_shader.SetUniform( "uniform_transform_world", cube_1_transform );
-	cube_shader.SetUniform( "uniform_color", cube_1_color );
+	cube_shader->SetUniform( "uniform_transform_world", cube_1_transform );
+	cube_shader->SetUniform( "uniform_color", cube_1_color );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
@@ -119,8 +124,8 @@ void SandboxApplication::Render()
 													 1.0f )
 							**/ /*Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
 							**/ Engine::Matrix::Translation( cube_2_offset ) );
-	cube_shader.SetUniform( "uniform_transform_world", cube_2_transform );
-	cube_shader.SetUniform( "uniform_color", cube_2_color );
+	cube_shader->SetUniform( "uniform_transform_world", cube_2_transform );
+	cube_shader->SetUniform( "uniform_color", cube_2_color );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
@@ -139,6 +144,8 @@ void SandboxApplication::Render()
 
 void SandboxApplication::DrawImGui()
 {
+	bool view_matrix_is_dirty = false, projection_matrix_is_dirty = false;
+
 	if( ImGui::Begin( "Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		ImGui::Text( "Running Sandbox Application:\n\n"
@@ -161,8 +168,10 @@ void SandboxApplication::DrawImGui()
 			light_color             = Engine::Color4::White();
 			light_ambient_strength  = 0.1f;
 			light_diffuse_strength  = 1.0f;
-			light_specular_strength = 0.5f;
+			light_specular_strength = 1.0f;
 			light_specular_power    = 32.0f;
+
+			cube_shader = &phong_shader;
 		}
 
 		float cube_1_color_array[ 4 ] = { cube_1_color.R(), cube_1_color.G(), cube_1_color.B(), 1.0f };
@@ -181,6 +190,26 @@ void SandboxApplication::DrawImGui()
 		ImGui::SliderFloat( "Diffuse Strength",		&light_diffuse_strength,	0.0f, 1.0f );
 		ImGui::SliderFloat( "Specular Strength",	&light_specular_strength,	0.0f, 1.0f );
 		ImGui::SliderFloat( "Specular Power",		&light_specular_power,		0.0f, 256.0f );
+
+		enum LightingModel
+		{
+			Gouraud = 0,
+			Phong = 1
+		};
+		ImGui::Text( "Lighting Model" );
+		ImGui::SameLine();
+		static LightingModel lighting_model = LightingModel::Phong;
+		bool lighting_model_changed = false;
+		lighting_model_changed |= ImGui::RadioButton( "Gouraud", ( int* )&lighting_model, LightingModel::Gouraud );
+		ImGui::SameLine();
+		lighting_model_changed |= ImGui::RadioButton( "Phong",	( int* )&lighting_model, LightingModel::Phong );
+
+		if( lighting_model_changed )
+		{
+			cube_shader = lighting_model == LightingModel::Gouraud ? &gouraud_shader : &phong_shader;
+
+			view_matrix_is_dirty = projection_matrix_is_dirty = true;
+		}
 	}
 
 	ImGui::End();
@@ -215,14 +244,14 @@ void SandboxApplication::DrawImGui()
 		{
 			camera_offset = { 0.0f, 0.0f, -3.0f };
 			camera_direction = Engine::Vector3::Forward();
-			UpdateViewMatrix();
+			view_matrix_is_dirty = true;
 		}
 
 		float camera_pos_array[ 3 ] = { camera_offset.X(), camera_offset.Y(), camera_offset.Z() };
 		if( ImGui::SliderFloat3( "Camera Position", camera_pos_array, -10.0f, +10.0f ) )
 		{
 			camera_offset.Set( camera_pos_array );
-			UpdateViewMatrix();
+			view_matrix_is_dirty = true;
 		}
 
 		float camera_rot_array[ 3 ] = { camera_direction.X(), camera_direction.Y(), camera_direction.Z() };
@@ -230,7 +259,7 @@ void SandboxApplication::DrawImGui()
 		{
 			camera_direction.Set( camera_rot_array );
 			camera_direction.Normalize();
-			UpdateViewMatrix();
+			view_matrix_is_dirty = true;
 		}
 	}
 
@@ -244,7 +273,7 @@ void SandboxApplication::DrawImGui()
 			far_plane              = 100.0f;
 			aspect_ratio           = 4.0f / 3.0f;
 			vertical_field_of_view = 90_deg;
-			UpdateProjectionMatrix();
+			projection_matrix_is_dirty = true;
 		}
 
 		float v_fov_radians = ( float )vertical_field_of_view;
@@ -260,27 +289,33 @@ void SandboxApplication::DrawImGui()
 		if( modified )
 		{
 			vertical_field_of_view = Engine::Radians( v_fov_radians );
-			UpdateProjectionMatrix();
+			projection_matrix_is_dirty = true;
 		}
 	}
 
 	ImGui::End();
+
+	if( view_matrix_is_dirty )
+		UpdateViewMatrix( *cube_shader );
+
+	if( projection_matrix_is_dirty )
+		UpdateProjectionMatrix( *cube_shader );
 }
 
-void SandboxApplication::UpdateViewMatrix()
+void SandboxApplication::UpdateViewMatrix( Engine::Shader& shader )
 {
 	const auto view_transformation = Engine::Matrix::LookAt( camera_offset, camera_direction );
-	cube_shader.Bind();
-	cube_shader.SetUniform( "uniform_transform_view", view_transformation );
+	shader.Bind();
+	shader.SetUniform( "uniform_transform_view", view_transformation );
 	light_source_shader.Bind();
 	light_source_shader.SetUniform( "uniform_transform_view", view_transformation );
 }
 
-void SandboxApplication::UpdateProjectionMatrix()
+void SandboxApplication::UpdateProjectionMatrix( Engine::Shader& shader )
 {
 	const auto projection_transformation = Engine::Matrix::PerspectiveProjection( near_plane, far_plane, aspect_ratio, vertical_field_of_view );
-	cube_shader.Bind();
-	cube_shader.SetUniform( "uniform_transform_projection", projection_transformation );
+	shader.Bind();
+	shader.SetUniform( "uniform_transform_projection", projection_transformation );
 	light_source_shader.Bind();
 	light_source_shader.SetUniform( "uniform_transform_projection", projection_transformation );
 }
