@@ -85,6 +85,10 @@ namespace Engine::Math
 		constexpr Component Z() const requires( Size >= 3 ) { return data[ 2 ]; };
 		constexpr Component W() const requires( Size >= 4 ) { return data[ 3 ]; };
 
+		constexpr Vector< Component, 2 > XY()   const requires( Size >= 2 ) { return { data[ 0 ], data[ 1 ] }; };
+		constexpr Vector< Component, 3 > XYZ()  const requires( Size >= 3 ) { return { data[ 0 ], data[ 1 ], data[ 2 ] }; };
+		constexpr Vector< Component, 4 > XYZW() const requires( Size >= 4 ) { return { data[ 0 ], data[ 1 ], data[ 2 ], data[ 3 ] }; };
+
 		constexpr Vector& SetX( const Component value ) requires( Size >= 1 ) { data[ 0 ] = value; return *this; };
 		constexpr Vector& SetY( const Component value ) requires( Size >= 2 ) { data[ 1 ] = value; return *this; };
 		constexpr Vector& SetZ( const Component value ) requires( Size >= 3 ) { data[ 2 ] = value; return *this; };
