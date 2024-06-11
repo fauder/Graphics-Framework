@@ -27,8 +27,10 @@ SandboxApplication::SandboxApplication()
 	cube_1_color( Engine::Color4::Blue() ),
 	cube_2_color( Engine::Color4::Yellow() ),
 	light_color( Engine::Color4::White() ),
-	light_ambient_strength( +0.5f ),
-	light_diffuse_strength( +0.5f ),
+	light_ambient_strength( 0.1f ),
+	light_diffuse_strength( 1.0f ),
+	light_specular_strength( 0.5f ),
+	light_specular_power( 32.0f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( 4.0f / 3.0f ),
 	vertical_field_of_view( 90_deg )
@@ -96,10 +98,13 @@ void SandboxApplication::Render()
 	cube_shader.Bind();
 
 	/* Lighting information: */
-	cube_shader.SetUniform( "uniform_light_color",		light_color );
-	cube_shader.SetUniform( "uniform_ambient_strength", light_ambient_strength );
-	cube_shader.SetUniform( "uniform_diffuse_strength", light_diffuse_strength );
-	cube_shader.SetUniform( "uniform_light_position",	light_source_offset );
+	cube_shader.SetUniform( "uniform_light_color",				light_color );
+	cube_shader.SetUniform( "uniform_ambient_strength",			light_ambient_strength );
+	cube_shader.SetUniform( "uniform_diffuse_strength",			light_diffuse_strength );
+	cube_shader.SetUniform( "uniform_specular_strength",		light_specular_strength );
+	cube_shader.SetUniform( "uniform_specular_power",			light_specular_power );
+	cube_shader.SetUniform( "uniform_light_position_world",		light_source_offset );
+	cube_shader.SetUniform( "uniform_camera_position_world",	camera_offset );
 
 	/* First crate: */
 	const auto cube_1_transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
@@ -112,8 +117,8 @@ void SandboxApplication::Render()
 	const auto cube_2_transform( /*Engine::Matrix::Scaling( Engine::Math::Abs( Engine::Math::Sin( current_time_as_angle ) ),
 													 Engine::Math::Abs( Engine::Math::Cos( current_time_as_angle ) ),
 													 1.0f )
-							**/ Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
-							* Engine::Matrix::Translation( cube_2_offset ) );
+							**/ /*Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
+							**/ Engine::Matrix::Translation( cube_2_offset ) );
 	cube_shader.SetUniform( "uniform_transform_world", cube_2_transform );
 	cube_shader.SetUniform( "uniform_color", cube_2_color );
 
@@ -151,11 +156,13 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			cube_1_color           = Engine::Color4::Blue();
-			cube_2_color           = Engine::Color4::Yellow();
-			light_color            = Engine::Color4::White();
-			light_ambient_strength = +0.5f;
-			light_diffuse_strength = +0.5f;
+			cube_1_color            = Engine::Color4::Blue();
+			cube_2_color            = Engine::Color4::Yellow();
+			light_color             = Engine::Color4::White();
+			light_ambient_strength  = 0.1f;
+			light_diffuse_strength  = 1.0f;
+			light_specular_strength = 0.5f;
+			light_specular_power    = 32.0f;
 		}
 
 		float cube_1_color_array[ 4 ] = { cube_1_color.R(), cube_1_color.G(), cube_1_color.B(), 1.0f };
@@ -170,8 +177,10 @@ void SandboxApplication::DrawImGui()
 		if( ImGui::ColorEdit3( "Light Color", light_color_array ) )
 			light_color.Set( light_color_array );
 
-		ImGui::SliderFloat( "Ambient Strength", &light_ambient_strength, 0.0f, +1.0f );
-		ImGui::SliderFloat( "Diffuse Strength", &light_diffuse_strength, 0.0f, +1.0f );
+		ImGui::SliderFloat( "Ambient Strength",		&light_ambient_strength,	0.0f, 1.0f );
+		ImGui::SliderFloat( "Diffuse Strength",		&light_diffuse_strength,	0.0f, 1.0f );
+		ImGui::SliderFloat( "Specular Strength",	&light_specular_strength,	0.0f, 1.0f );
+		ImGui::SliderFloat( "Specular Power",		&light_specular_power,		0.0f, 256.0f );
 	}
 
 	ImGui::End();
@@ -205,6 +214,7 @@ void SandboxApplication::DrawImGui()
 		if( ImGui::Button( "Reset" ) )
 		{
 			camera_offset = { 0.0f, 0.0f, -3.0f };
+			camera_direction = Engine::Vector3::Forward();
 			UpdateViewMatrix();
 		}
 
