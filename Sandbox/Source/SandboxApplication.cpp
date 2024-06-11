@@ -22,16 +22,18 @@ SandboxApplication::SandboxApplication()
 	cube_shader( nullptr ),
 	cube_1_offset( +1.0f, -1.0f, 0.0f ),
 	cube_2_offset( -1.0f, +1.0f, 0.0f ),
-	light_source_offset( 0.0f, +1.0f, 0.0f ),
+	light_source_offset( 1.5f, +1.0f, -1.5f ),
 	camera_direction( Engine::Vector3::Forward() ),
 	camera_offset( Engine::Vector3::Backward() * 3.0f ),
-	cube_1_color( Engine::Color4::Blue() ),
-	cube_2_color( Engine::Color4::Yellow() ),
-	light_color( Engine::Color4::White() ),
+	cube_1_color( Engine::Color3::Blue() ),
+	cube_2_color( Engine::Color3::Yellow() ),
+	light_color( Engine::Color3::White() ),
 	light_ambient_strength( 0.1f ),
 	light_diffuse_strength( 1.0f ),
 	light_specular_strength( 1.0f ),
 	light_specular_power( 32.0f ),
+	light_is_animated( true ),
+	light_source_animation_radius( 1.5f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( 4.0f / 3.0f ),
 	vertical_field_of_view( 90_deg )
@@ -99,6 +101,30 @@ void SandboxApplication::Render()
 
 	vertex_array_crate.Bind();
 
+/* Render the light source: */
+	light_source_shader.Bind();
+
+	/* Light color: */
+	light_source_shader.SetUniform( "uniform_color", light_color );
+
+	if( light_is_animated )
+	{
+		const auto light_source_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle );
+		const auto light_source_transform( Engine::Matrix::Translation( light_source_animation_radius, 0.0f, light_source_animation_radius ) * light_source_rotation * 
+										   Engine::Matrix::Translation( cube_2_offset + Engine::Vector3::Up() * 0.5f ) );
+		light_source_shader.SetUniform( "uniform_transform_world", light_source_transform );
+
+		light_source_offset = ( Engine::Vector4( light_source_animation_radius, 0.0f, light_source_animation_radius, 1.0f ) * 
+								( light_source_rotation * Engine::Matrix::Translation( cube_2_offset + Engine::Vector3::Up() * 0.5f ) ) ).XYZ();
+	}
+	else
+	{
+		const auto light_source_transform( Engine::Matrix::Translation( light_source_offset ) );
+		light_source_shader.SetUniform( "uniform_transform_world", light_source_transform );
+	}
+
+	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
+
 /* Render cubes: */
 	cube_shader->Bind();
 
@@ -128,18 +154,6 @@ void SandboxApplication::Render()
 	cube_shader->SetUniform( "uniform_color", cube_2_color );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
-
-/* Render the light source: */
-	light_source_shader.Bind();
-
-	/* Light color: */
-	light_source_shader.SetUniform( "uniform_color", light_color );
-
-	/* First crate: */
-	const auto light_source_transform( Engine::Matrix::Translation( light_source_offset ) );
-	light_source_shader.SetUniform( "uniform_transform_world", light_source_transform );
-
-	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 }
 
 void SandboxApplication::DrawImGui()
@@ -163,9 +177,9 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			cube_1_color            = Engine::Color4::Blue();
-			cube_2_color            = Engine::Color4::Yellow();
-			light_color             = Engine::Color4::White();
+			cube_1_color            = Engine::Color3::Blue();
+			cube_2_color            = Engine::Color3::Yellow();
+			light_color             = Engine::Color3::White();
 			light_ambient_strength  = 0.1f;
 			light_diffuse_strength  = 1.0f;
 			light_specular_strength = 1.0f;
@@ -218,9 +232,12 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			cube_1_offset       = { +1.0f, -1.0f, 0.0f };
-			cube_2_offset       = { -1.0f, +1.0f, 0.0f };
-			light_source_offset = {  0.0f, +1.0f, 0.0f };
+			cube_1_offset       = { +1.0f, -1.0f,  0.0f };
+			cube_2_offset       = { -1.0f, +1.0f,  0.0f };
+			light_source_offset = { +1.5f, +1.0f, -1.5f };
+
+			light_is_animated             = true;
+			light_source_animation_radius = 1.5f;
 		}
 
 		float cube_1_pos_array[ 3 ] = { cube_1_offset.X(), cube_1_offset.Y(), cube_1_offset.Z() };
@@ -231,9 +248,16 @@ void SandboxApplication::DrawImGui()
 		if( ImGui::SliderFloat3( "Cube 2 Position", cube_2_pos_array, -5.0f, +5.0f ) )
 			cube_2_offset.Set( cube_2_pos_array );
 
-		float light_source_pos_array[ 3 ] = { light_source_offset.X(), light_source_offset.Y(), light_source_offset.Z() };
-		if( ImGui::SliderFloat3( "Light Source Position", light_source_pos_array, -5.0f, +5.0f ) )
-			light_source_offset.Set( light_source_pos_array );
+		ImGui::Checkbox( "Animate Light", &light_is_animated );
+
+		if( !light_is_animated )
+		{
+			float light_source_pos_array[ 3 ] = { light_source_offset.X(), light_source_offset.Y(), light_source_offset.Z() };
+			if( ImGui::SliderFloat3( "Light Source Position", light_source_pos_array, -5.0f, +5.0f ) )
+				light_source_offset.Set( light_source_pos_array );
+		}
+		else
+			ImGui::SliderFloat( "Light Source Animation Radius", &light_source_animation_radius, 0.1f, +5.0f );
 	}
 
 	ImGui::End();
