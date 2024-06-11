@@ -143,6 +143,51 @@ namespace Engine::Primitive::NonIndexed::Cube
 		{ 0.25f, 1.0f	}  // TOP
 	} );
 
+	constexpr std::array< Vector3, 36 > Normals
+	( {
+		{  0.0f,  0.0f, -1.0f }, // BACK
+		{  0.0f,  0.0f, -1.0f }, // BACK
+		{  0.0f,  0.0f, -1.0f }, // BACK
+		{  0.0f,  0.0f, -1.0f }, // BACK
+		{  0.0f,  0.0f, -1.0f }, // BACK
+		{  0.0f,  0.0f, -1.0f }, // BACK
+
+		{  0.0f,  0.0f, +1.0f }, // FRONT
+		{  0.0f,  0.0f, +1.0f }, // FRONT
+		{  0.0f,  0.0f, +1.0f }, // FRONT
+		{  0.0f,  0.0f, +1.0f }, // FRONT
+		{  0.0f,  0.0f, +1.0f }, // FRONT
+		{  0.0f,  0.0f, +1.0f }, // FRONT
+
+		{ -1.0f,  0.0f,  0.0f }, // LEFT
+		{ -1.0f,  0.0f,  0.0f }, // LEFT
+		{ -1.0f,  0.0f,  0.0f }, // LEFT
+		{ -1.0f,  0.0f,  0.0f }, // LEFT
+		{ -1.0f,  0.0f,  0.0f }, // LEFT
+		{ -1.0f,  0.0f,  0.0f }, // LEFT
+
+		{ +1.0f,  0.0f,  0.0f }, // RIGHT
+		{ +1.0f,  0.0f,  0.0f }, // RIGHT
+		{ +1.0f,  0.0f,  0.0f }, // RIGHT
+		{ +1.0f,  0.0f,  0.0f }, // RIGHT
+		{ +1.0f,  0.0f,  0.0f }, // RIGHT
+		{ +1.0f,  0.0f,  0.0f }, // RIGHT
+
+		{  0.0f, -1.0f,  0.0f }, // BOTTOM
+		{  0.0f, -1.0f,  0.0f }, // BOTTOM
+		{  0.0f, -1.0f,  0.0f }, // BOTTOM
+		{  0.0f, -1.0f,  0.0f }, // BOTTOM
+		{  0.0f, -1.0f,  0.0f }, // BOTTOM
+		{  0.0f, -1.0f,  0.0f }, // BOTTOM
+
+		{  0.0f, +1.0f,  0.0f }, // TOP
+		{  0.0f, +1.0f,  0.0f }, // TOP
+		{  0.0f, +1.0f,  0.0f }, // TOP
+		{  0.0f, +1.0f,  0.0f }, // TOP
+		{  0.0f, +1.0f,  0.0f }, // TOP
+		{  0.0f, +1.0f,  0.0f }  // TOP
+	} );
+
 	constexpr std::array< Vector4, 36 > VertexColors
 	( {
 		{ 1.0f, 0.0f, 0.0f, 1.0f }, // BACK

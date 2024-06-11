@@ -28,6 +28,7 @@ SandboxApplication::SandboxApplication()
 	cube_2_color( Engine::Color4::Yellow() ),
 	light_color( Engine::Color4::White() ),
 	light_ambient_strength( +0.5f ),
+	light_diffuse_strength( +0.5f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( 4.0f / 3.0f ),
 	vertical_field_of_view( 90_deg )
@@ -46,14 +47,13 @@ void SandboxApplication::Initialize()
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
 /* Vertex/Index Data: */
-	/*constexpr auto vertices( Engine::MeshUtility::Interleave( Engine::Primitive::NonIndexed::Cube::Positions,
-															  Engine::Primitive::NonIndexed::Cube::UVs ) );*/
-
-	constexpr auto vertices( Engine::Primitive::NonIndexed::Cube::Positions );
+	constexpr auto vertices( Engine::MeshUtility::Interleave( Engine::Primitive::NonIndexed::Cube::Positions,
+															  Engine::Primitive::NonIndexed::Cube::Normals ) );
 
 	Engine::VertexBuffer vertex_buffer( vertices.data(), sizeof( vertices ), GL_STATIC_DRAW );
 	Engine::VertexBufferLayout vertex_buffer_layout;
 	vertex_buffer_layout.Push< float >( 3 ); // Position.
+	vertex_buffer_layout.Push< float >( 3 ); // Normal.
 
 	vertex_array_crate = Engine::VertexArray( vertex_buffer, vertex_buffer_layout );
 
@@ -96,8 +96,10 @@ void SandboxApplication::Render()
 	cube_shader.Bind();
 
 	/* Lighting information: */
-	cube_shader.SetUniform( "uniform_light_color", light_color );
+	cube_shader.SetUniform( "uniform_light_color",		light_color );
 	cube_shader.SetUniform( "uniform_ambient_strength", light_ambient_strength );
+	cube_shader.SetUniform( "uniform_diffuse_strength", light_diffuse_strength );
+	cube_shader.SetUniform( "uniform_light_position",	light_source_offset );
 
 	/* First crate: */
 	const auto cube_1_transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
@@ -107,10 +109,10 @@ void SandboxApplication::Render()
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
 	/* Second crate: */
-	const auto cube_2_transform( Engine::Matrix::Scaling( Engine::Math::Abs( Engine::Math::Sin( current_time_as_angle ) ),
+	const auto cube_2_transform( /*Engine::Matrix::Scaling( Engine::Math::Abs( Engine::Math::Sin( current_time_as_angle ) ),
 													 Engine::Math::Abs( Engine::Math::Cos( current_time_as_angle ) ),
 													 1.0f )
-							* Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
+							**/ Engine::Matrix::RotationAroundAxis( current_time_as_angle, { 0.707f, 0.707f, 0.0f } )
 							* Engine::Matrix::Translation( cube_2_offset ) );
 	cube_shader.SetUniform( "uniform_transform_world", cube_2_transform );
 	cube_shader.SetUniform( "uniform_color", cube_2_color );
@@ -153,6 +155,7 @@ void SandboxApplication::DrawImGui()
 			cube_2_color           = Engine::Color4::Yellow();
 			light_color            = Engine::Color4::White();
 			light_ambient_strength = +0.5f;
+			light_diffuse_strength = +0.5f;
 		}
 
 		float cube_1_color_array[ 4 ] = { cube_1_color.R(), cube_1_color.G(), cube_1_color.B(), 1.0f };
@@ -168,6 +171,7 @@ void SandboxApplication::DrawImGui()
 			light_color.Set( light_color_array );
 
 		ImGui::SliderFloat( "Ambient Strength", &light_ambient_strength, 0.0f, +1.0f );
+		ImGui::SliderFloat( "Diffuse Strength", &light_diffuse_strength, 0.0f, +1.0f );
 	}
 
 	ImGui::End();
