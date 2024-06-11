@@ -332,9 +332,9 @@ namespace Engine::Math
 
 	/* Vector-matrix multiplication. */
 	template< Concepts::Arithmetic Type_, std::size_t RowSize, std::size_t ColumnSize >
-	constexpr Vector< Type_, RowSize >& operator*= ( const Vector< Type_, RowSize >& vector, const Matrix< Type_, RowSize, ColumnSize >& matrix )
+	constexpr Vector< Type_, RowSize >& operator*= ( Vector< Type_, RowSize >& vector, const Matrix< Type_, RowSize, ColumnSize >& matrix )
 	{
-		return *this = *this * matrix;
+		return vector = vector * matrix;
 	}
 }
 
