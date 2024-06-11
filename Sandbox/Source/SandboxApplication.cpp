@@ -98,13 +98,13 @@ void SandboxApplication::Render()
 	cube_shader.Bind();
 
 	/* Lighting information: */
-	cube_shader.SetUniform( "uniform_light_color",				light_color );
-	cube_shader.SetUniform( "uniform_ambient_strength",			light_ambient_strength );
-	cube_shader.SetUniform( "uniform_diffuse_strength",			light_diffuse_strength );
-	cube_shader.SetUniform( "uniform_specular_strength",		light_specular_strength );
-	cube_shader.SetUniform( "uniform_specular_power",			light_specular_power );
-	cube_shader.SetUniform( "uniform_light_position_world",		light_source_offset );
-	cube_shader.SetUniform( "uniform_camera_position_world",	camera_offset );
+	cube_shader.SetUniform( "uniform_light_color",					light_color );
+	cube_shader.SetUniform( "uniform_ambient_strength",				light_ambient_strength );
+	cube_shader.SetUniform( "uniform_diffuse_strength",				light_diffuse_strength );
+	cube_shader.SetUniform( "uniform_specular_strength",			light_specular_strength );
+	cube_shader.SetUniform( "uniform_specular_power",				light_specular_power );
+	cube_shader.SetUniform( "uniform_light_position_world_space",	light_source_offset );
+	//cube_shader.SetUniform( "uniform_camera_position_world",	camera_offset );
 
 	/* First crate: */
 	const auto cube_1_transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
