@@ -180,8 +180,9 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			cube_1_offset = { +1.0f, -1.0f, 0.0f };
-			cube_2_offset = { -1.0f, +1.0f, 0.0f };
+			cube_1_offset       = { +1.0f, -1.0f, 0.0f };
+			cube_2_offset       = { -1.0f, +1.0f, 0.0f };
+			light_source_offset = {  0.0f, +1.0f, 0.0f };
 		}
 
 		float cube_1_pos_array[ 3 ] = { cube_1_offset.X(), cube_1_offset.Y(), cube_1_offset.Z() };
