@@ -13,6 +13,6 @@ uniform mat4x4 uniform_transform_projection;
 void main()
 {
     varying_position_world = vec4( position, 1.0 ) * uniform_transform_world;
-    varying_normal         = normal;
+    varying_normal         = normal * mat3x3( transpose( inverse( uniform_transform_world ) ) );
     gl_Position            = varying_position_world * uniform_transform_view * uniform_transform_projection;
 }
