@@ -61,8 +61,8 @@ void SandboxApplication::Initialize()
 	Engine::Texture::INITIALIZE();
 
 /* Shaders: */
-	cube_shader.FromFile( R"(Asset/Shader/Lighting.vert)", R"(Asset/Shader/Lighting.frag)" );
-	light_source_shader.FromFile( R"(Asset/Shader/Lighting.vert)", R"(Asset/Shader/LightSource.frag)" );
+	cube_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
+	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
 /* View & Projection: */
 	UpdateViewMatrix();

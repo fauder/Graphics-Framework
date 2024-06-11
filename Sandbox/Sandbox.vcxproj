@@ -120,9 +120,9 @@
   <ItemGroup>
     <None Include="Asset\Shader\BasicTextured.frag" />
     <None Include="Asset\Shader\BasicTextured.vert" />
-    <None Include="Asset\Shader\Lighting.frag" />
-    <None Include="Asset\Shader\Lighting.vert" />
-    <None Include="Asset\Shader\LightSource.frag" />
+    <None Include="Asset\Shader\Phong.frag" />
+    <None Include="Asset\Shader\Phong.vert" />
+    <None Include="Asset\Shader\BasicColor.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
