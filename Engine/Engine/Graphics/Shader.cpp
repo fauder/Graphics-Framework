@@ -1,6 +1,7 @@
 // Engince Includes.
 #include "Core/Utility.h"
 #include "Shader.hpp"
+#include "ShaderTypeInformation.h"
 
 // std Includes.
 #include <fstream>
@@ -53,6 +54,9 @@ namespace Engine
 
 		GLCALL( glDeleteShader( vertex_shader_id ) );
 		GLCALL( glDeleteShader( fragment_shader_id ) );
+
+		if( link_result )
+			ParseUniformData( uniform_info_map );
 
 		return link_result;
 	}
@@ -112,5 +116,54 @@ namespace Engine
 		}
 
 		return true;
+	}
+
+	void Shader::ParseUniformData( std::unordered_map< std::string, UniformInformation >& uniform_information_map )
+	{
+		int active_uniform_count = 0;
+		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &active_uniform_count ) );
+
+		if( active_uniform_count == 0 )
+			return;
+
+		int uniform_name_max_length = 0;
+		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_name_max_length ) );
+		std::string name( uniform_name_max_length, '?' );
+
+		int offset = 0;
+		for( int uniform_index = 0; uniform_index < active_uniform_count; uniform_index++ )
+		{
+			/*
+			 * glGetActiveUniform has a parameter named "size", but its actually the size of the array. So for singular types like int, float, vec2, vec3 etc. the value returned is 1.
+			 */
+			int array_size_dontCare = 0, length = 0;
+			GLenum type;
+			glGetActiveUniform( program_id, uniform_index, uniform_name_max_length, &length, &array_size_dontCare, &type, name.data() );
+			GLCALL( glGetActiveUniform( program_id, uniform_index, uniform_name_max_length, &length, &array_size_dontCare, &type, name.data() ) );
+
+			const int size = GetSizeOfType( type );
+
+			GLClearError();
+			uniform_information_map[ name.data() ] = { glGetUniformLocation( program_id, name.data() ), size, offset, type };
+			ASSERT( GLLogCall( "glGetUniformLocation", __FILE__, __LINE__ ) );
+
+			offset += size;
+		}
+	}
+
+	const Shader::UniformInformation& Shader::GetUniformInformation( const std::string& uniform_name )
+	{
+	#ifdef _DEBUG
+		try
+		{
+			return uniform_info_map.at( uniform_name );
+		}
+		catch( const std::exception& )
+		{
+			throw std::runtime_error( R"(ERROR::SHADER::UNIFORM::")" + std::string( uniform_name ) + R"("::DOES_NOT_EXIST)" );
+		}
+	#else
+		return uniform_info_map[ uniform_name ];
+	#endif // DEBUG
 	}
 }

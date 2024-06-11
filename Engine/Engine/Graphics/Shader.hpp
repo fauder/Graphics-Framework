@@ -12,6 +12,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <unordered_map>
 
 namespace Engine
 {
@@ -46,6 +47,15 @@ namespace Engine
 
 	class Shader
 	{
+	private:
+		struct UniformInformation
+		{
+			int location;
+			int size;
+			int offset;
+			GLenum type;
+		};
+
 	public:
 		/* Will be initialized later with FromFile(). */
 		Shader();
@@ -179,17 +189,11 @@ namespace Engine
 		}
 
 		template< typename UniformType >
-		bool SetUniform( const char* uniform_name, const UniformType& value )
+		void SetUniform( const char* uniform_name, const UniformType& value )
 		{
-			GLCALL( const int location_retrieved = glGetUniformLocation( program_id, uniform_name ) );
-			if( location_retrieved != -1 )
-			{
-				SetUniform( location_retrieved, value );
-				return true;
-			}
+			const auto& uniform_info = GetUniformInformation( uniform_name );
 
-			std::cerr << "ERROR::SHADER::UNIFORM::SET:\n" << "    There is no uniform named \"" << uniform_name << "\".\n";
-			return false;
+			SetUniform( uniform_info.location, value );
 		}
 
 	private:
@@ -198,6 +202,11 @@ namespace Engine
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
+		void ParseUniformData( std::unordered_map< std::string, UniformInformation >& uniform_information_map );
+		const UniformInformation& GetUniformInformation( const std::string& uniform_name );
+
+	private:
 		int program_id;
+		std::unordered_map< std::string, UniformInformation > uniform_info_map;
 	};
 }
