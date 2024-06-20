@@ -3,6 +3,8 @@
 // Engine Includes.
 #include "Graphics.h"
 #include "Graphics/Color.hpp"
+#include "Graphics/Lighting.h"
+#include "Graphics/UniformStruct.h"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
@@ -12,7 +14,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
-#include <unordered_map>
+#include <map>
 
 namespace Engine
 {
@@ -50,10 +52,24 @@ namespace Engine
 	private:
 		struct UniformInformation
 		{
-			int location;
+			int location = -1;
+			int original_order_in_struct = -1; // This will be used to address the correct memory inside the memory blob of the CPU-side uniform struct when uploading uniforms to shader.
 			int size;
-			int offset;
+			int offset; // This will be used in the future; A soon to be created 'Material' class will use these offsets to address uniforms in its blob of memory.
+			int original_offset = -1; // The offset based on the original order. Used for the cpu-side memory-addressing inside the struct's blob.
 			GLenum type;
+
+			std::map< std::string, UniformInformation* > members;
+
+			inline bool IsUserDefinedStruct() const { return !members.empty(); }
+			inline bool HasOriginalOrdersDetermined() const
+			{
+				for( auto& [ member_uniform_name, member_uniform_info ] : members )
+					if( member_uniform_info->original_order_in_struct == -1 )
+						return false;
+
+				return true;
+			}
 		};
 
 	public:
@@ -67,6 +83,8 @@ namespace Engine
 		void Bind() const;
 
 		inline const std::string& GetName() const { return name; }
+
+		const std::map< std::string, UniformInformation >& GetUniformInformations() const { return uniform_info_map; }
 
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );
@@ -167,12 +185,14 @@ namespace Engine
 			}
 		}
 
-		void SetUniform( const int location, const Engine::Color3& value )
+		template<>
+		void SetUniform< Color3 >( const int location, const Engine::Color3& value )
 		{
 			SetUniform( location, reinterpret_cast< const Vector3& >( value ) );
 		}
 
-		void SetUniform( const int location, const Engine::Color4& value )
+		template<>
+		void SetUniform< Color4 >( const int location, const Engine::Color4& value )
 		{
 			SetUniform( location, reinterpret_cast< const Vector4& >( value ) );
 		}
@@ -230,21 +250,38 @@ namespace Engine
 		{
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
-			SetUniform( uniform_info.location, value );
+			if constexpr( std::is_base_of_v< UniformStruct, UniformType > )
+			{
+				ASSERT_DEBUG_ONLY( uniform_info.IsUserDefinedStruct() && "Non-struct uniform attempted to be set via SetUniform< uniform-struct-type >()." );
+
+				for( const auto& [ dont_care_member_uniform_name, member_uniform_info ] : uniform_info.members )
+				{
+					const void* member_uniform_pointer = ( const void* )( ( const char* )&value + member_uniform_info->original_offset );
+
+					SetUniform( *member_uniform_info, member_uniform_pointer );
+				}
+			}
+			else
+			{
+				SetUniform( uniform_info.location, value );
+			}
 		}
 
+		void SetUniform( const UniformInformation& uniform_info, const void* value_pointer );
+
 	private:
-		// Returns shader ID if successfull, -1 if not.
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
-		void ParseUniformData( std::unordered_map< std::string, UniformInformation >& uniform_information_map );
+		void QueryUniformData( std::map< std::string, UniformInformation >& uniform_information_map );
+		std::string ShaderSource_CommentsStripped( const std::string& shader_source );
+		void ParseUniformData_StructMemberCPUOrders( const std::string& shader_source );
 		const UniformInformation& GetUniformInformation( const std::string& uniform_name );
 
 	private:
 		int program_id;
-		std::unordered_map< std::string, UniformInformation > uniform_info_map;
 		std::string name;
+		std::map< std::string, UniformInformation > uniform_info_map;
 	};
 }
