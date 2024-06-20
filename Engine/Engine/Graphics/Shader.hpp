@@ -50,8 +50,15 @@ namespace Engine
 	class Shader
 	{
 	private:
-		struct UniformInformation
+		class UniformInformation
 		{
+		private:
+			friend class Shader;
+
+		public:
+			inline bool IsUserDefinedStruct() const { return !members.empty(); }
+
+		public:
 			int location = -1;
 			int original_order_in_struct = -1; // This will be used to address the correct memory inside the memory blob of the CPU-side uniform struct when uploading uniforms to shader.
 			int size;
@@ -61,7 +68,7 @@ namespace Engine
 
 			std::map< std::string, UniformInformation* > members;
 
-			inline bool IsUserDefinedStruct() const { return !members.empty(); }
+		private:
 			inline bool HasOriginalOrdersDetermined() const
 			{
 				for( auto& [ member_uniform_name, member_uniform_info ] : members )
