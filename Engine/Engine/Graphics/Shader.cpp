@@ -9,13 +9,15 @@
 namespace Engine
 {
 	/* Will be initialized later with FromFile(). */
-	Shader::Shader()
+	Shader::Shader( const char* name )
 		:
-		program_id( 0 )
+		program_id( 0 ),
+		name( name )
 	{
 	}
 
-	Shader::Shader( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
+	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
+		: name( name )
 	{
 		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path );
 	}

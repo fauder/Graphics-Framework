@@ -20,6 +20,9 @@ SandboxApplication::SandboxApplication()
 	:
 	Engine::Application(),
 	cube_shader( nullptr ),
+	gouraud_shader( "Gouraud" ),
+	phong_shader( "Phong" ),
+	light_source_shader( "Basic Color" ),
 	cube_1_offset( +1.0f, -1.0f, 0.0f ),
 	cube_2_offset( -1.0f, +1.0f, 0.0f ),
 	light_source_offset( 1.5f, +1.0f, -1.5f ),

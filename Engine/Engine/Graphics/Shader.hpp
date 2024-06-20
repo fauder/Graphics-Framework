@@ -58,13 +58,15 @@ namespace Engine
 
 	public:
 		/* Will be initialized later with FromFile(). */
-		Shader();
-		Shader( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path );
+		Shader( const char* name );
+		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path );
 		~Shader();
 
 		bool FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path );
 
 		void Bind() const;
+
+		inline const std::string& GetName() const { return name; }
 
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );
@@ -214,5 +216,6 @@ namespace Engine
 	private:
 		int program_id;
 		std::unordered_map< std::string, UniformInformation > uniform_info_map;
+		std::string name;
 	};
 }
