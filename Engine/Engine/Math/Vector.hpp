@@ -3,7 +3,11 @@
 // Engine Includes.
 #include "Core/Initialization.h"
 #include "Math/Concepts.h"
+#include "Math/Math.hpp"
 #include "Math/TypeTraits.h"
+
+// std Includes.
+#include <algorithm>
 
 namespace Engine::Math
 {
@@ -76,6 +80,7 @@ namespace Engine::Math
 		}
 
 	/* Getters & Setters. */
+		Component* Data() { return data; };
 		const Component* Data() const { return data; };
 		constexpr Component& operator[] ( const std::size_t index ) { return data[ index ]; }
 		constexpr const Component& operator[] ( const std::size_t index ) const { return data[ index ]; }
@@ -384,7 +389,7 @@ namespace Engine::Math
 		friend constexpr Vector< Component_, 3 > Cross( const Vector< Component_, 3 >& u, const Vector< Component_, 3 >& v );
 
 		constexpr Component SquareMagnitude() const { return Dot(); }
-		Component Magnitude() const requires( std::floating_point< Component > ) { return std::sqrt( SquareMagnitude() ); }
+		Component Magnitude() const requires( std::floating_point< Component > ) { return Math::Sqrt( SquareMagnitude() ); }
 
 		Vector Normalized() const requires( std::floating_point< Component > )
 		{
@@ -426,8 +431,8 @@ namespace Engine::Math
 	{
 		// u X v = ( u2v3 - u3v2, u3v1 - u1v3, u1v2 - u2v1 )
 		return Vector< Component, 3 >( u.data[ 1 ] * v.data[ 2 ] - u.data[ 2 ] * v.data[ 1 ],
-										u.data[ 2 ] * v.data[ 0 ] - u.data[ 0 ] * v.data[ 2 ],
-										u.data[ 0 ] * v.data[ 1 ] - u.data[ 1 ] * v.data[ 0 ] );
+									   u.data[ 2 ] * v.data[ 0 ] - u.data[ 0 ] * v.data[ 2 ],
+									   u.data[ 0 ] * v.data[ 1 ] - u.data[ 1 ] * v.data[ 0 ] );
 	}
 }
 
