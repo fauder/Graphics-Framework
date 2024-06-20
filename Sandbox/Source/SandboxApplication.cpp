@@ -185,14 +185,9 @@ void SandboxApplication::DrawImGui()
 
 	ImGui::End();
 
-	if( ImGui::Begin( "Shaders", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
-	{
-		Engine::ImGuiDrawer::Draw( gouraud_shader );
-		Engine::ImGuiDrawer::Draw( phong_shader );
-		Engine::ImGuiDrawer::Draw( light_source_shader );
-	}
-
-	ImGui::End();
+	Engine::ImGuiDrawer::Draw( gouraud_shader );
+	Engine::ImGuiDrawer::Draw( phong_shader );
+	Engine::ImGuiDrawer::Draw( light_source_shader );
 
 	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
