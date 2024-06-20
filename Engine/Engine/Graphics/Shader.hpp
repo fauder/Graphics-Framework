@@ -82,6 +82,12 @@ namespace Engine
 		}
 
 		template<>
+		void SetUniform< unsigned int >( const int location, const unsigned int& value )
+		{
+			GLCALL( glUniform1ui( location, value ) );
+		}
+
+		template<>
 		void SetUniform< bool >( const int location, const bool& value )
 		{
 			GLCALL( glUniform1i( location, value ) );
