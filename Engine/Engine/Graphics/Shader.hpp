@@ -177,22 +177,51 @@ namespace Engine
 			SetUniform( location, reinterpret_cast< const Vector4& >( value ) );
 		}
 
-		/* Only accepts square matrices. */
-		template< Concepts::Arithmetic Type, std::size_t Size >
-		requires Concepts::NonZero< Size >
-		void SetUniform( const int location, const Math:: Matrix< Type, Size, Size >& value )
+		template< Concepts::Arithmetic Type, std::size_t RowSize, std::size_t ColumnSize >
+		requires Concepts::NonZero< RowSize > && Concepts::NonZero< ColumnSize >
+		void SetUniform( const int location, const Math:: Matrix< Type, RowSize, ColumnSize >& value )
 		{
-			if constexpr( Size == 2U )
+			if constexpr( RowSize == ColumnSize )
 			{
-				GLCALL( glUniformMatrix2fv( location, 1, GL_TRUE, value.Data() ) );
+				if constexpr( RowSize == 2U )
+				{
+					GLCALL( glUniformMatrix2fv( location, 1, GL_TRUE, value.Data() ) );
+				}
+				if constexpr( RowSize == 3U )
+				{
+					GLCALL( glUniformMatrix3fv( location, 1, GL_TRUE, value.Data() ) );
+				}
+				if constexpr( RowSize == 4U )
+				{
+					GLCALL( glUniformMatrix4fv( location, 1, GL_TRUE, value.Data() ) );
+				}
 			}
-			if constexpr( Size == 3U )
+			else
 			{
-				GLCALL( glUniformMatrix3fv( location, 1, GL_TRUE, value.Data() ) );
-			}
-			if constexpr( Size == 4U )
-			{
-				GLCALL( glUniformMatrix4fv( location, 1, GL_TRUE, value.Data() ) );
+				if constexpr( RowSize == 2U && ColumnSize == 3U )
+				{
+					GLCALL( glUniformMatrix2x3fv( location, 1, GL_TRUE, value.Data() ) );
+				}
+				if constexpr( RowSize == 2U && ColumnSize == 4U )
+				{
+					GLCALL( glUniformMatrix2x4fv( location, 1, GL_TRUE, value.Data() ) );
+				}
+				if constexpr( RowSize == 3U && ColumnSize == 2U )
+				{
+					GLCALL( glUniformMatrix3x2fv( location, 1, GL_TRUE, value.Data() ) );
+				}
+				if constexpr( RowSize == 3U && ColumnSize == 4U )
+				{
+					GLCALL( glUniformMatrix3x4fv( location, 1, GL_TRUE, value.Data() ) );
+				}
+				if constexpr( RowSize == 4U && ColumnSize == 2U )
+				{
+					GLCALL( glUniformMatrix4x2fv( location, 1, GL_TRUE, value.Data() ) );
+				}
+				if constexpr( RowSize == 4U && ColumnSize == 3U )
+				{
+					GLCALL( glUniformMatrix4x3fv( location, 1, GL_TRUE, value.Data() ) );
+				}
 			}
 		}
 
