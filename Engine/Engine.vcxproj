@@ -154,6 +154,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Engine\Core\Application.h" />
     <ClInclude Include="Engine\Core\Assert.h" />
+    <ClInclude Include="Engine\Core\ImGuiDrawer.hpp" />
     <ClInclude Include="Engine\Core\Initialization.h" />
     <ClInclude Include="Engine\Graphics\Color.hpp" />
     <ClInclude Include="Engine\Graphics\IndexBuffer.h" />
@@ -184,6 +185,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp" />
+    <ClCompile Include="Engine\Core\ImGuiDrawer.cpp" />
     <ClCompile Include="Engine\Core\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Graphics\IndexBuffer.cpp" />
     <ClCompile Include="Engine\Core\Platform.cpp" />

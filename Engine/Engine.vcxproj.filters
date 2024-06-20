@@ -102,6 +102,9 @@
     <ClInclude Include="Engine\Graphics\Lighting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Core\ImGuiDrawer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Graphics\UniformStruct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -135,6 +138,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Math\Matrix.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Core\ImGuiDrawer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
