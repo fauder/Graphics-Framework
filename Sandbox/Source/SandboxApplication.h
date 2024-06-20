@@ -1,5 +1,6 @@
 // Engine Includes.
 #include "Engine.h"
+#include "Engine/Graphics/Lighting.h"
 #include "Engine/Graphics/Shader.hpp"
 #include "Engine/Graphics/VertexArray.h"
 #include "Engine/Graphics/Texture.h"
@@ -37,14 +38,12 @@ private:
 	Engine::Shader light_source_shader;
 
 	Engine::Vector3 cube_1_offset, cube_2_offset;
-	Engine::Vector3 light_source_offset;
-	bool light_is_animated;
-	float light_source_animation_radius;
 	Engine::Vector3 camera_offset, camera_direction;
 
-	Engine::Color3 cube_1_color, cube_2_color, light_color;
-	float light_ambient_strength, light_diffuse_strength, light_specular_strength;
-	float light_specular_power;
+	Engine::Lighting::SurfaceData cube_1_surface_data, cube_2_surface_data;
+	Engine::Lighting::LightData light_data;
+	bool light_is_animated;
+	float light_source_animation_radius;
 
 	float near_plane, far_plane;
 	float aspect_ratio;
