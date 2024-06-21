@@ -1,5 +1,6 @@
 // Engine Includes.
 #include "ImGuiDrawer.hpp"
+#include "ImGuiUtility.h"
 #include "Graphics/ShaderTypeInformation.h"
 
 namespace Engine::ImGuiDrawer
@@ -31,15 +32,55 @@ namespace Engine::ImGuiDrawer
 					ImGui::TableSetupColumn( "Offset" );
 					ImGui::TableSetupColumn( "Type" );
 
-					ImGui::TableHeadersRow();
+					ImGui::TableNextRow( ImGuiTableRowFlags_Headers ); // Indicates that the header row will be modified.
+					ImGuiUtility::Table_Header_ManuallySubmit( std::array< int, 3 >{ 0, 2, 4 } );
+					ImGuiUtility::Table_Header_ManuallySubmit_AppendHelpMarker( 1, "For uniform struct members, value in parenthesis shows the original location defined in the struct." );
+					ImGuiUtility::Table_Header_ManuallySubmit_AppendHelpMarker( 3, "For uniform struct members, value in parenthesis shows the original offset of the member in the struct." );
+					ImGui::TableNextRow(); // Done with the header row, skip to normal rows.
 
-					for( auto& [ name, uniform_info ] : uniform_map )
+					for( auto& [ uniform_name, uniform_info ] : uniform_map )
 					{
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( name.c_str() );
-						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location );
-						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
-						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_info.IsUserDefinedStruct() ? "struct" : GetNameOfType(uniform_info.type));
+						/* Skip uniform struct members; They will be drawn under their parent struct name instead. */
+						if( uniform_info.original_order_in_struct != -1 )
+							continue;
+
+						if( uniform_info.IsUserDefinedStruct() )
+						{
+							ImGui::TableNextColumn();
+							if( ImGui::TreeNodeEx( uniform_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+							{
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( "struct" );
+
+								for( const auto& [ uniform_member_name, uniform_member_info ] : uniform_info.members )
+								{
+									ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_member_name.c_str() );
+									ImGui::TableNextColumn(); ImGui::Text( "%d (%d)", uniform_member_info->location, uniform_member_info->original_order_in_struct );
+									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_member_info->size );
+									ImGui::TableNextColumn(); ImGui::Text( "%d (%d)", uniform_member_info->offset, uniform_member_info->original_offset );
+									ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_member_info->type ) );
+								}
+
+								ImGui::TreePop();
+							}
+							else
+							{
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( "struct" );
+							}
+						}
+						else
+						{
+							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_name.c_str() );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
+							ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info.type ) );
+						}
 					}
 
 					ImGui::EndTable();
