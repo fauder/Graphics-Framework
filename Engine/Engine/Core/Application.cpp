@@ -33,6 +33,12 @@ namespace Engine
 			{
 				this->OnKeyboardEventInternal( key_code, key_action, key_mods );
 			} );
+
+		Platform::SetFramebufferResizeCallback(
+			[ = ]( const int width_new_pixels, const int height_new_pixels )
+			{
+				this->OnFramebufferResizeEventInternal( width_new_pixels, height_new_pixels );
+			} );
 	}
 
 	void Application::Shutdown()
@@ -76,12 +82,21 @@ namespace Engine
 		}
 	}
 
+	void Application::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
+	{
+	}
+
 	void Application::OnKeyboardEventInternal( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
 	{
 		if( ImGui::GetIO().WantCaptureKeyboard )
 			return;
 
 		OnKeyboardEvent( key_code, key_action, key_mods );
+	}
+
+	void Application::OnFramebufferResizeEventInternal( const int width_new_pixels, const int height_new_pixels )
+	{
+		OnFramebufferResizeEvent( width_new_pixels, height_new_pixels );
 	}
 
 	void Application::DrawImGui()

@@ -18,12 +18,16 @@ namespace Platform
 	float MOUSE_SENSITIVITY = 0.004f;
 	bool MOUSE_CAPTURE_IS_RESET = true;
 	bool MOUSE_CAPTURE_ENABLED = false;
-	std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods ) > KEYBOARD_CALLBACK;
+	std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods )	> KEYBOARD_CALLBACK;
+	std::function< void( const int width_new_pixels, const int height_new_pixels )				> FRAMEBUFFER_RESIZE_CALLBACK;
 
 	void OnResizeWindow( GLFWwindow* window, const int width_new_pixels, const int height_new_pixels )
 	{
 		glfwSetWindowSize( window, width_new_pixels, height_new_pixels );
 		GLCALL( glViewport( 0, 0, width_new_pixels, height_new_pixels ) );
+
+		if( FRAMEBUFFER_RESIZE_CALLBACK )
+			FRAMEBUFFER_RESIZE_CALLBACK( width_new_pixels, height_new_pixels );
 	}
 
 	void OnMouseCursorPositionChanged( GLFWwindow* window, const double x_position, const double y_position )
@@ -121,6 +125,15 @@ namespace Platform
 	void ResizeWindow( const int width_new_pixels, const int height_new_pixels )
 	{
 		OnResizeWindow( WINDOW, width_new_pixels, height_new_pixels );
+	}
+
+	void SetFramebufferResizeCallback( std::function< void( const int width_new_pixels, const int height_new_pixels ) > callback )
+	{
+		FRAMEBUFFER_RESIZE_CALLBACK = callback;
+
+		ImGui_ImplGlfw_RestoreCallbacks( WINDOW );
+		glfwSetFramebufferSizeCallback( WINDOW, OnResizeWindow );
+		ImGui_ImplGlfw_InstallCallbacks( WINDOW );
 	}
 
 	void CenterWindow( const int width_pixels, const int height_pixels )

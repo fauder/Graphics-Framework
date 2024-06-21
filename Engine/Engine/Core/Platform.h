@@ -157,18 +157,23 @@ namespace Platform
 	/* Initialization. */
 	void InitializeAndCreateWindow( const int width_pixels = 800, const int height_pixels = 600 );
 
-	/* Operation. */
+	/* Window/Framebuffer. */
 	void ResizeWindow( const int width_pixels, const int height_pixels );
+	void SetFramebufferResizeCallback( std::function< void( const int width_new_pixels, const int height_new_pixels ) > callback = {} );
 
 	void CenterWindow( const int width_pixels, const int height_pixels );
 
 	void SwapBuffers();
+
+	/* Events. */
 	void PollEvents();
 
+	/* Keyboard IO. */
 	void SetKeyboardEventCallback( std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods ) > callback = {} );
 	bool IsKeyPressed( const KeyCode key_code );
 	bool IsKeyReleased( const KeyCode key_code );
 
+	/* Mouse IO. */
 	void CaptureMouse( const bool should_capture );
 	float GetMouseSensitivity();
 	void SetMouseSensitivity( const float new_sensitivity );
@@ -179,16 +184,12 @@ namespace Platform
 	/* Time-Keeping Facilities. */
 	float GetCurrentTime();
 
-	void SetShouldClose( const bool value );
-
-	/* Queries. */
-	bool ShouldClose();
-
-	/* Utility. */
-	void ChangeTitle( const char* new_title );
-
 	/* Shutdown. */
 	void CleanUp();
 
+	/* Other. */
+	void ChangeTitle( const char* new_title );
+	void SetShouldClose( const bool value );
+	bool ShouldClose();
 	void* GetWindowHandle();
 }
