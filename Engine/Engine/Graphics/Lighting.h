@@ -13,6 +13,12 @@ namespace Engine::Lighting
 		Vector3 position;
 	};
 
+	struct DirectionalLightData : public UniformStruct
+	{
+		Color3 ambient, diffuse, specular;
+		Vector3 direction;
+	};
+
 	/* This is also named Material in some sources, but since the name Material is more widely used to define [Shader + Uniforms + Textures] instead, this struct is named SurfaceData */
 	struct SurfaceData : public UniformStruct
 	{

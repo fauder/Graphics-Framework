@@ -136,6 +136,48 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
+	bool Draw( Lighting::DirectionalLightData& directional_light_data, const char* light_name, ImGuiWindowFlags window_flags )
+	{
+		bool is_modified = false;
+
+		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			ImGui::SeparatorText( light_name );
+
+			ImGui::PushID( light_name );
+
+			is_modified |= Draw( directional_light_data.ambient,	"Ambient" );
+			is_modified |= Draw( directional_light_data.diffuse,	"Diffuse" );
+			is_modified |= Draw( directional_light_data.specular,	"Specular" );
+			is_modified |= Draw( directional_light_data.direction,	"Direction" );
+
+			ImGui::PopID();
+		}
+
+		ImGui::End();
+
+		return is_modified;
+	}
+
+	void Draw( const Lighting::DirectionalLightData& directional_light_data, const char* light_name, ImGuiWindowFlags window_flags )
+	{
+		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			ImGui::SeparatorText( light_name );
+
+			ImGui::PushID( light_name );
+
+			Draw( directional_light_data.ambient,	"Ambient" );
+			Draw( directional_light_data.diffuse,	"Diffuse" );
+			Draw( directional_light_data.specular,	"Specular" );
+			Draw( directional_light_data.direction, "Position" );
+		
+			ImGui::PopID();
+		}
+
+		ImGui::End();
+	}
+
 	bool Draw( Lighting::SurfaceData& surface_data, const char* surface_name, ImGuiWindowFlags window_flags )
 	{
 		bool is_modified = false;

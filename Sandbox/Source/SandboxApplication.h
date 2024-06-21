@@ -36,13 +36,14 @@ private:
 	Engine::Shader gouraud_shader, phong_shader;
 	Engine::Shader light_source_shader;
 
-	Engine::Vector3 cube_1_offset, cube_2_offset;
 	Engine::Vector3 camera_offset, camera_direction;
+	bool camera_is_animated;
 
-	Engine::Lighting::SurfaceData cube_1_surface_data, cube_2_surface_data;
-	Engine::Lighting::LightData light_data;
-	bool light_is_animated;
-	float light_source_animation_radius;
+	const static constexpr int CUBE_COUNT = 10;
+
+	std::vector< Engine::Lighting::SurfaceData > cube_surface_data;
+	//Engine::Lighting::SurfaceData ground_quad_surface_data;
+	Engine::Lighting::DirectionalLightData light_data_directional;
 
 	float near_plane, far_plane;
 	float aspect_ratio;
