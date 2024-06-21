@@ -161,6 +161,11 @@ namespace Platform
 	void ResizeWindow( const int width_pixels, const int height_pixels );
 	void SetFramebufferResizeCallback( std::function< void( const int width_new_pixels, const int height_new_pixels ) > callback = {} );
 
+	std::pair< int, int > GetFramebufferSizeInPixels();
+	int GetFramebufferWidthInPixels();
+	int GetFramebufferHeightInPixels();
+	float GetAspectRatio();
+
 	void CenterWindow( const int width_pixels, const int height_pixels );
 
 	void SwapBuffers();

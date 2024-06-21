@@ -136,6 +136,30 @@ namespace Platform
 		ImGui_ImplGlfw_InstallCallbacks( WINDOW );
 	}
 
+	std::pair< int, int > GetFramebufferSizeInPixels()
+	{
+		int width, height;
+		glfwGetFramebufferSize( WINDOW, &width, &height );
+		return { width, height };
+	}
+
+	int GetFramebufferWidthInPixels()
+	{
+		return GetFramebufferSizeInPixels().first;
+	}
+
+	int GetFramebufferHeightInPixels()
+	{
+		return GetFramebufferSizeInPixels().second;
+	}
+
+	float GetAspectRatio()
+	{
+		int width, height;
+		glfwGetFramebufferSize( WINDOW, &width, &height );
+		return float( width ) / height;
+	}
+
 	void CenterWindow( const int width_pixels, const int height_pixels )
 	{
 		const GLFWvidmode* mode = glfwGetVideoMode( glfwGetPrimaryMonitor() );
