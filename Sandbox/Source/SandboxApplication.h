@@ -22,6 +22,7 @@ public:
 
 	virtual void DrawImGui() override;
 	//virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
+	virtual void OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels ) override;
 
 private:
 	void UpdateViewMatrix( Engine::Shader& shader );
@@ -48,4 +49,6 @@ private:
 	float near_plane, far_plane;
 	float aspect_ratio;
 	Engine::Radians vertical_field_of_view;
+	bool auto_calculate_aspect_ratio;
+	bool auto_calculate_vfov_based_on_90_hfov;
 };

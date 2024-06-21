@@ -50,8 +50,10 @@ SandboxApplication::SandboxApplication()
 		.direction = {  0.2f, -1.0f,  1.0f }
 	},
 	near_plane( 0.1f ), far_plane( 100.0f ),
-	aspect_ratio( 4.0f / 3.0f ),
-	vertical_field_of_view( 90_deg / aspect_ratio )
+	aspect_ratio( Platform::GetAspectRatio() ),
+	vertical_field_of_view( 90_deg / aspect_ratio ),
+	auto_calculate_aspect_ratio( true ),
+	auto_calculate_vfov_based_on_90_hfov( true )
 {
 	Initialize();
 }
@@ -92,6 +94,8 @@ void SandboxApplication::Initialize()
 	cube_shader = &phong_shader;
 
 /* View & Projection: */
+	aspect_ratio = Platform::GetAspectRatio();
+
 	UpdateViewMatrix( gouraud_shader);
 	UpdateProjectionMatrix( gouraud_shader);
 	UpdateViewMatrix( phong_shader );
@@ -303,17 +307,21 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			near_plane             = 0.1f;
-			far_plane              = 100.0f;
-			aspect_ratio           = 4.0f / 3.0f;
-			vertical_field_of_view = 90_deg;
-			projection_matrix_is_dirty = true;
+			auto_calculate_aspect_ratio          = true;
+			auto_calculate_vfov_based_on_90_hfov = true;
+			near_plane                           = 0.1f;
+			far_plane                            = 100.0f;
+			aspect_ratio                         = Platform::GetAspectRatio();
+			vertical_field_of_view               = 90_deg / aspect_ratio;
+			projection_matrix_is_dirty           = true;
 		}
 
 		float v_fov_radians = ( float )vertical_field_of_view;
 
 		bool modified = false;
 
+		modified |= ImGui::Checkbox( "Auto-calculate Aspect Ratio", &auto_calculate_aspect_ratio );
+		modified |= ImGui::Checkbox( "Auto-calculate Vertical FoV to match 90 degrees Horizontal FoV", &auto_calculate_vfov_based_on_90_hfov );
 		/*																Min Value:							Max Value:						Format: */													
 		modified |= ImGui::SliderFloat( "Near Plane",	&near_plane,	0.0f,								std::min( 100.0f, far_plane )					); 
 		modified |= ImGui::SliderFloat( "Far Plane",	&far_plane,		std::max( near_plane, 10.0f ),		1000.0f											);
@@ -322,7 +330,17 @@ void SandboxApplication::DrawImGui()
 
 		if( modified )
 		{
-			vertical_field_of_view = Engine::Radians( v_fov_radians );
+			if( auto_calculate_aspect_ratio )
+			{
+				aspect_ratio = Platform::GetAspectRatio();
+				view_matrix_is_dirty = true;
+			}
+			
+			if( auto_calculate_vfov_based_on_90_hfov )
+				vertical_field_of_view = 90_deg / aspect_ratio;
+			else
+				vertical_field_of_view = Engine::Radians( v_fov_radians );
+
 			projection_matrix_is_dirty = true;
 		}
 	}
@@ -334,6 +352,20 @@ void SandboxApplication::DrawImGui()
 
 	if( projection_matrix_is_dirty )
 		UpdateProjectionMatrix( *cube_shader );
+}
+
+void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
+{
+	// Re-calculate the aspect ratio:
+	if( auto_calculate_aspect_ratio )
+	{
+		aspect_ratio = float( width_new_pixels ) / height_new_pixels;
+		if( auto_calculate_vfov_based_on_90_hfov )
+			vertical_field_of_view = 90_deg / aspect_ratio;
+
+		UpdateProjectionMatrix( light_source_shader );
+		UpdateProjectionMatrix( *cube_shader );
+	}
 }
 
 void SandboxApplication::UpdateViewMatrix( Engine::Shader& shader )
