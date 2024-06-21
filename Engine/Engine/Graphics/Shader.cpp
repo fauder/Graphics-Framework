@@ -315,7 +315,7 @@ namespace Engine
 											
 										const std::string uniform_member_name( line_view.begin() + last_preceding_whitespace_position + 1, line_view.end() );
 
-										uniform_info.members[ uniform_member_name ]->original_order_in_struct = definition_order++;
+										uniform_info.members[ uniform_name + "." + uniform_member_name ]->original_order_in_struct = definition_order++;
 									}
 									/* Case 2: There ARE commas, i.e., the line contains multiple uniform member definitions. */
 									else
