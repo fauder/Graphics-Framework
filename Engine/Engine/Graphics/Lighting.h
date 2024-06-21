@@ -16,7 +16,7 @@ namespace Engine::Lighting
 	/* This is also named Material in some sources, but since the name Material is more widely used to define [Shader + Uniforms + Textures] instead, this struct is named SurfaceData */
 	struct SurfaceData : public UniformStruct
 	{
-		Color3 ambient, diffuse, specular;
+		int diffuse_map_slot, specular_map_slot;
 		float shininess;
 	};
 }

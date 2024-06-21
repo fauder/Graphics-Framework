@@ -146,9 +146,8 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( surface_name );
 
-			is_modified |= Draw( surface_data.ambient,  "Ambient"  );
-			is_modified |= Draw( surface_data.diffuse,  "Diffuse"  );
-			is_modified |= Draw( surface_data.specular, "Specular" );
+			is_modified |= ImGui::InputInt( "Diffuse Map ID",  &surface_data.diffuse_map_slot  );
+			is_modified |= ImGui::InputInt( "Specular Map ID", &surface_data.specular_map_slot );
 			is_modified |= ImGui::InputFloat( "Shininess", &surface_data.shininess );
 
 			ImGui::PopID();
@@ -167,9 +166,9 @@ namespace Engine::ImGuiDrawer
 			
 			ImGui::PushID( surface_name );
 
-			Draw( surface_data.ambient,  "Ambient" );
-			Draw( surface_data.diffuse,  "Diffuse" );
-			Draw( surface_data.specular, "Specular" );
+			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
+			ImGui::InputInt( "Diffuse Map ID",  const_cast< int* >( &surface_data.diffuse_map_slot  ), 0, 0, ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputInt( "Specular Map ID", const_cast< int* >( &surface_data.specular_map_slot ), 0, 0, ImGuiInputTextFlags_ReadOnly );
 
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputFloat( "Shininess", const_cast< float* >( &surface_data.shininess ), 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_ReadOnly );

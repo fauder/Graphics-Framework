@@ -30,17 +30,15 @@ SandboxApplication::SandboxApplication()
 	camera_offset( Engine::Vector3::Backward() * 3.0f ),
 	cube_1_surface_data
 	{ 
-		.ambient  = { 1.0f, 0.5f, 0.31f },
-		.diffuse  = { 1.0f, 0.5f, 0.31f },
-		.specular = { 0.5f, 0.5f, 0.5f  },
-		.shininess = 32.0f 
+		.diffuse_map_slot  = 0,
+		.specular_map_slot = 1,
+		.shininess         = 32.0f 
 	},
 	cube_2_surface_data
 	{
-		.ambient   = { 0.5f, 1.0f, 0.18f },
-		.diffuse   = { 0.5f, 1.0f, 0.18f },
-		.specular  = { 0.5f, 0.5f, 0.5f },
-		.shininess = 32.0f
+		.diffuse_map_slot  = 0,
+		.specular_map_slot = 1,
+		.shininess         = 32.0f
 	},
 	light_data
 	{
@@ -69,17 +67,22 @@ void SandboxApplication::Initialize()
 
 /* Vertex/Index Data: */
 	constexpr auto vertices( Engine::MeshUtility::Interleave( Engine::Primitive::NonIndexed::Cube::Positions,
-															  Engine::Primitive::NonIndexed::Cube::Normals ) );
+															  Engine::Primitive::NonIndexed::Cube::Normals,
+															  Engine::Primitive::NonIndexed::Cube::UVs ) );
 
 	Engine::VertexBuffer vertex_buffer( vertices.data(), sizeof( vertices ), GL_STATIC_DRAW );
 	Engine::VertexBufferLayout vertex_buffer_layout;
 	vertex_buffer_layout.Push< float >( 3 ); // Position.
 	vertex_buffer_layout.Push< float >( 3 ); // Normal.
+	vertex_buffer_layout.Push< float >( 2 ); // UVs.
 
 	vertex_array_crate = Engine::VertexArray( vertex_buffer, vertex_buffer_layout );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();
+	
+	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
+	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
 
 /* Shaders: */
 	gouraud_shader.FromFile( R"(Asset/Shader/Gouraud.vert)", R"(Asset/Shader/Gouraud.frag)" );
@@ -148,6 +151,9 @@ void SandboxApplication::Render()
 	/* Lighting information: */
 	cube_shader->SetUniform( "uniform_light_data", light_data );
 
+	container_texture_diffuse_map.ActivateAndUse( 0 );
+	container_texture_specular_map.ActivateAndUse( 1 );
+
 	/* First crate: */
 	const auto cube_1_transform( Engine::Matrix::RotationAroundZ( current_time_as_angle ) * Engine::Matrix::Translation( cube_1_offset ) );
 	cube_shader->SetUniform( "uniform_transform_world", cube_1_transform );
@@ -202,17 +208,15 @@ void SandboxApplication::DrawImGui()
 			};
 			cube_1_surface_data = Engine::Lighting::SurfaceData
 			{
-				.ambient   = { 1.0f, 0.5f, 0.31f },
-				.diffuse   = { 1.0f, 0.5f, 0.31f },
-				.specular  = { 0.5f, 0.5f, 0.5f  },
-				.shininess = 32.0f
+				.diffuse_map_slot  = 0,
+				.specular_map_slot = 1,
+				.shininess         = 32.0f
 			};
 			cube_2_surface_data = Engine::Lighting::SurfaceData
 			{
-				.ambient   = { 0.5f, 1.0f, 0.18f },
-				.diffuse   = { 0.5f, 1.0f, 0.18f },
-				.specular  = { 0.5f, 0.5f, 0.5f },
-				.shininess = 32.0f
+				.diffuse_map_slot  = 0,
+				.specular_map_slot = 1,
+				.shininess         = 32.0f
 			};
 
 			cube_shader = &phong_shader;

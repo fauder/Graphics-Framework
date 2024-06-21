@@ -30,8 +30,7 @@ private:
 private:
 	Engine::VertexArray vertex_array_crate;
 
-	Engine::Texture container_texture;
-	Engine::Texture awesomeface_texture;
+	Engine::Texture container_texture_diffuse_map, container_texture_specular_map;
 
 	Engine::Shader* cube_shader;
 	Engine::Shader gouraud_shader, phong_shader;
