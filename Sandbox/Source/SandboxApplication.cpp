@@ -44,23 +44,25 @@ SandboxApplication::SandboxApplication()
 	},
 	light_directional_data
 	{
-		.ambient   = {  0.05f,  0.05f,  0.05f },
-		.diffuse   = {  0.4f,   0.4f,   0.4f  },
-		.specular  = {  0.5f,   0.5f,   0.5f  },
-		.direction = {  0.2f,  -1.0f,   1.0f  }
+		.ambient               = {  0.05f,  0.05f,  0.05f },
+		.diffuse               = {  0.4f,   0.4f,   0.4f  },
+		.specular              = {  0.5f,   0.5f,   0.5f  },
+		.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+		.direction_world_space = {  0.2f,  -1.0f,   1.0f  } 
 	},
 	light_point_data
 	{
 		.ambient               = {  0.05f,  0.05f,  0.05f },
 		.diffuse               = {  0.8f,   0.8f,   0.8f  },
 		.specular              = {  1.0f,   1.0f,   1.0f  },
-		.position              = {  0.2f,  -1.0f,   1.0f  },
+		.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
 		.attenuation_constant  = 1.0f,
 		.attenuation_linear    = 0.09f,
 		.attenuation_quadratic = 0.032f,
+		.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
 	},
 	light_point_is_animated( true ),
-	light_point_orbit_radius( 12.5f ),
+	light_point_orbit_radius( 13.25f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( Platform::GetAspectRatio() ),
 	vertical_field_of_view( 90_deg / aspect_ratio ),
@@ -182,13 +184,13 @@ void SandboxApplication::Render()
 	{
 		const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f );
 
-		light_point_data.position = ( ( Engine::Vector4::Forward() * light_point_orbit_radius ) *
-									  ( point_light_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin ) ) ).XYZ();
-		light_point_data.position.SetY( 2.0f );
+		light_point_data.position_world_space = ( ( Engine::Vector4::Forward() * light_point_orbit_radius ) *
+												  ( point_light_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin ) ) ).XYZ();
+		light_point_data.position_world_space.SetY( 2.0f );
 	}
 
 	/* Light color: */
-	light_source_shader.SetUniform( "uniform_transform_world",	Engine::Matrix::Translation( light_point_data.position ) );
+	light_source_shader.SetUniform( "uniform_transform_world",	Engine::Matrix::Translation( light_point_data.position_world_space ) );
 	light_source_shader.SetUniform( "uniform_color",			light_point_data.diffuse );
 
 	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
@@ -201,19 +203,13 @@ void SandboxApplication::Render()
 /* Lighting information: */
 	{
 		// Shaders expect the directional light direction in view space.
-		const auto directional_light_original_direction = light_directional_data.direction;
-		light_directional_data.direction *= view_transformation.SubMatrix< 3 >();
+		light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 		cube_shader->SetUniform( "uniform_directional_light_data", light_directional_data );
-		light_directional_data.direction = directional_light_original_direction;
-	}
-
-	{
+	
 		// Shaders expect the point light positions in view space.
-		const auto point_light_original_position = light_point_data.position;
-		light_point_data.position = ( Engine::Vector4( light_point_data.position.X(), light_point_data.position.Y(), light_point_data.position.Z(), 1.0f ) *
-									  view_transformation ).XYZ();
+		light_point_data.position_view_space = ( Engine::Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
+												 view_transformation ).XYZ();
 		cube_shader->SetUniform( "uniform_point_light_data", light_point_data );
-		light_point_data.position = point_light_original_position;
 	}
 
 	container_texture_diffuse_map.ActivateAndUse( 0 );
@@ -275,23 +271,25 @@ void SandboxApplication::DrawImGui()
 		{
 			light_directional_data =
 			{
-				.ambient   = {  0.05f,  0.05f,  0.05f },
-				.diffuse   = {  0.4f,   0.4f,   0.4f  },
-				.specular  = {  0.5f,   0.5f,   0.5f  },
-				.direction = {  0.2f,  -1.0f,   1.0f  }
+				.ambient               = {  0.05f,  0.05f,  0.05f },
+				.diffuse               = {  0.4f,   0.4f,   0.4f  },
+				.specular              = {  0.5f,   0.5f,   0.5f  },
+				.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+				.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
 			};
 			light_point_data =
 			{
 				.ambient               = {  0.05f,  0.05f,  0.05f },
 				.diffuse               = {  0.8f,   0.8f,   0.8f  },
 				.specular              = {  1.0f,   1.0f,   1.0f  },
-				.position              = {  0.2f,  -1.0f,   1.0f  },
+				.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
 				.attenuation_constant  = 1.0f,
 				.attenuation_linear    = 0.09f,
 				.attenuation_quadratic = 0.032f,
+				.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
 			};
 			light_point_is_animated  = true;
-			light_point_orbit_radius = 1.5f;
+			light_point_orbit_radius = 13.25f;
 
 			for( auto& data : cube_surface_data )
 			{
@@ -349,7 +347,7 @@ void SandboxApplication::DrawImGui()
 			camera_offset        = { 0.0f, 0.0f, -3.0f };
 			camera_direction     = Engine::Vector3::Forward();
 			
-			camera_is_animated   = true;
+			camera_is_animated   = false;
 
 			view_matrix_is_dirty = true;
 

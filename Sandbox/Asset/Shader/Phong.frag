@@ -85,7 +85,7 @@ vec3 CalculateColorFromPointLight( PointLightData point_light_data,
 	float distance_view_space = distance( fragment_position_view_space.xyz, point_light_data.position_view_space );
 	float attenuation         = CalculateAttenuation( point_light_data, distance_view_space );
 
-//	ambient  *= attenuation;
+	ambient  *= attenuation;
 	diffuse  *= attenuation;
 	specular *= attenuation;
 

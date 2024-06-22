@@ -107,7 +107,7 @@ namespace Engine::ImGuiDrawer
 			is_modified |= Draw( point_light_data.diffuse,  "Diffuse"  );
 			is_modified |= Draw( point_light_data.specular, "Specular" );
 			if( !hide_position )
-				is_modified |= Draw( point_light_data.position, "Position" );
+				is_modified |= Draw( point_light_data.position_world_space, "Position" );
 			is_modified |= ImGui::InputFloat( "Attenuation: Constant",	&point_light_data.attenuation_constant );
 			is_modified |= ImGui::InputFloat( "Attenuation: Linear",	&point_light_data.attenuation_linear );
 			is_modified |= ImGui::InputFloat( "Attenuation: Quadratic", &point_light_data.attenuation_quadratic );
@@ -131,7 +131,7 @@ namespace Engine::ImGuiDrawer
 			Draw( point_light_data.ambient,  "Ambient"  );
 			Draw( point_light_data.diffuse,  "Diffuse"  );
 			Draw( point_light_data.specular, "Specular" );
-			Draw( point_light_data.position, "Position" );
+			Draw( point_light_data.position_world_space, "Position" );
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.attenuation_constant ),  0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
 			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.attenuation_linear ),    0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
@@ -153,10 +153,10 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			is_modified |= Draw( directional_light_data.ambient,	"Ambient" );
-			is_modified |= Draw( directional_light_data.diffuse,	"Diffuse" );
-			is_modified |= Draw( directional_light_data.specular,	"Specular" );
-			is_modified |= Draw( directional_light_data.direction,	"Direction" );
+			is_modified |= Draw( directional_light_data.ambient,				"Ambient" );
+			is_modified |= Draw( directional_light_data.diffuse,				"Diffuse" );
+			is_modified |= Draw( directional_light_data.specular,				"Specular" );
+			is_modified |= Draw( directional_light_data.direction_world_space,	"Direction" );
 
 			ImGui::PopID();
 		}
@@ -174,10 +174,10 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			Draw( directional_light_data.ambient,	"Ambient" );
-			Draw( directional_light_data.diffuse,	"Diffuse" );
-			Draw( directional_light_data.specular,	"Specular" );
-			Draw( directional_light_data.direction, "Position" );
+			Draw( directional_light_data.ambient,				"Ambient" );
+			Draw( directional_light_data.diffuse,				"Diffuse" );
+			Draw( directional_light_data.specular,				"Specular" );
+			Draw( directional_light_data.direction_world_space, "Position" );
 		
 			ImGui::PopID();
 		}
