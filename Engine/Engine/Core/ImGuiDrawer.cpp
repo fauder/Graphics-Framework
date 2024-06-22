@@ -93,7 +93,7 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
-	bool Draw( Lighting::LightData& light_data, const char* light_name, const bool hide_position, ImGuiWindowFlags window_flags )
+	bool Draw( Lighting::PointLightData& point_light_data, const char* light_name, const bool hide_position, ImGuiWindowFlags window_flags )
 	{
 		bool is_modified = false;
 
@@ -103,11 +103,14 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			is_modified |= Draw( light_data.ambient,  "Ambient"  );
-			is_modified |= Draw( light_data.diffuse,  "Diffuse"  );
-			is_modified |= Draw( light_data.specular, "Specular" );
+			is_modified |= Draw( point_light_data.ambient,  "Ambient"  );
+			is_modified |= Draw( point_light_data.diffuse,  "Diffuse"  );
+			is_modified |= Draw( point_light_data.specular, "Specular" );
 			if( !hide_position )
-				is_modified |= Draw( light_data.position, "Position" );
+				is_modified |= Draw( point_light_data.position, "Position" );
+			is_modified |= ImGui::InputFloat( "Attenuation: Constant",	&point_light_data.attenuation_constant );
+			is_modified |= ImGui::InputFloat( "Attenuation: Linear",	&point_light_data.attenuation_linear );
+			is_modified |= ImGui::InputFloat( "Attenuation: Quadratic", &point_light_data.attenuation_quadratic );
 
 			ImGui::PopID();
 		}
@@ -117,7 +120,7 @@ namespace Engine::ImGuiDrawer
 		return is_modified;
 	}
 
-	void Draw( const Lighting::LightData& light_data, const char* light_name, ImGuiWindowFlags window_flags )
+	void Draw( const Lighting::PointLightData& point_light_data, const char* light_name, ImGuiWindowFlags window_flags )
 	{
 		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
@@ -125,11 +128,15 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			Draw( light_data.ambient,  "Ambient"  );
-			Draw( light_data.diffuse,  "Diffuse"  );
-			Draw( light_data.specular, "Specular" );
-			Draw( light_data.position, "Position" );
-		
+			Draw( point_light_data.ambient,  "Ambient"  );
+			Draw( point_light_data.diffuse,  "Diffuse"  );
+			Draw( point_light_data.specular, "Specular" );
+			Draw( point_light_data.position, "Position" );
+			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
+			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.attenuation_constant ),  0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.attenuation_linear ),    0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.attenuation_quadratic ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+
 			ImGui::PopID();
 		}
 

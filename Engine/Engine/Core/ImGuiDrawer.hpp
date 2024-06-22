@@ -94,8 +94,8 @@ namespace Engine::ImGuiDrawer
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	// TODO: Remove LightData & SurfaceData overloads; Implement a generic uniform struct drawer instead, similar to Shader's implementation.
-	bool Draw(		 Lighting::LightData&				light_data,				const char* light_name,		const bool hide_position = false,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const Lighting::LightData&				light_data,				const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw(		 Lighting::PointLightData&			point_light_data,		const char* light_name,		const bool hide_position = false,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const Lighting::PointLightData&			point_light_data,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	bool Draw(		 Lighting::DirectionalLightData&	directional_light_data, const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Lighting::DirectionalLightData&	directional_light_data, const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	bool Draw(		 Lighting::SurfaceData&				surface_data,			const char* surface_name,										ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );

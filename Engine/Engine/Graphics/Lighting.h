@@ -7,10 +7,12 @@
 
 namespace Engine::Lighting
 {
-	struct LightData : public UniformStruct
+	struct PointLightData : public UniformStruct
 	{
 		Color3 ambient, diffuse, specular;
 		Vector3 position;
+
+		float attenuation_constant, attenuation_linear, attenuation_quadratic;
 	};
 
 	struct DirectionalLightData : public UniformStruct

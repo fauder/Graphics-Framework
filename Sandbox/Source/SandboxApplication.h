@@ -43,8 +43,11 @@ private:
 	const static constexpr int CUBE_COUNT = 10;
 
 	std::vector< Engine::Lighting::SurfaceData > cube_surface_data;
-	//Engine::Lighting::SurfaceData ground_quad_surface_data;
-	Engine::Lighting::DirectionalLightData light_data_directional;
+	Engine::Lighting::SurfaceData ground_quad_surface_data;
+	Engine::Lighting::DirectionalLightData light_directional_data;
+	Engine::Lighting::PointLightData light_point_data;
+	float light_point_orbit_radius;
+	bool light_point_is_animated;
 
 	float near_plane, far_plane;
 	float aspect_ratio;

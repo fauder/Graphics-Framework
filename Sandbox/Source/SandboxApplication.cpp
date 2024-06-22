@@ -27,28 +27,40 @@ SandboxApplication::SandboxApplication()
 	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
-	camera_direction( Engine::Vector3::Forward() ),
-	camera_offset( Engine::Vector3::Backward() * 10.0f ),
-	camera_is_animated( true ),
+	camera_direction( Engine::Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ),
+	camera_offset( 0.0f, 10.0f, -20.0f ),
+	camera_is_animated( false ),
 	cube_surface_data( CUBE_COUNT,
 	{ 
 		.diffuse_map_slot  = 0,
 		.specular_map_slot = 1,
 		.shininess         = 32.0f 
 	} ),
-	/*ground_quad_surface_data
+	ground_quad_surface_data
 	{
 		.diffuse_map_slot  = 0,
 		.specular_map_slot = 1,
 		.shininess         = 32.0f
-	},*/
-	light_data_directional
-	{
-		.ambient   = {  0.2f,  0.2f,  0.2f },
-		.diffuse   = {  1.0f,  1.0f,  1.0f },
-		.specular  = {  1.0f,  1.0f,  1.0f },
-		.direction = {  0.2f, -1.0f,  1.0f }
 	},
+	light_directional_data
+	{
+		.ambient   = {  0.05f,  0.05f,  0.05f },
+		.diffuse   = {  0.4f,   0.4f,   0.4f  },
+		.specular  = {  0.5f,   0.5f,   0.5f  },
+		.direction = {  0.2f,  -1.0f,   1.0f  }
+	},
+	light_point_data
+	{
+		.ambient               = {  0.05f,  0.05f,  0.05f },
+		.diffuse               = {  0.8f,   0.8f,   0.8f  },
+		.specular              = {  1.0f,   1.0f,   1.0f  },
+		.position              = {  0.2f,  -1.0f,   1.0f  },
+		.attenuation_constant  = 1.0f,
+		.attenuation_linear    = 0.09f,
+		.attenuation_quadratic = 0.032f,
+	},
+	light_point_is_animated( true ),
+	light_point_orbit_radius( 12.5f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( Platform::GetAspectRatio() ),
 	vertical_field_of_view( 90_deg / aspect_ratio ),
@@ -127,24 +139,7 @@ void SandboxApplication::Render()
 
 	vertex_array_crate.Bind();
 
-/* Render the light source: */
-	light_source_shader.Bind();
-
-	/* Light color: */
-	light_source_shader.SetUniform( "uniform_color", light_data_directional.diffuse );
-
-	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
-
-/* Render cubes: */
-	cube_shader->Bind();
-
-	/* Lighting information: */
-	cube_shader->SetUniform( "uniform_directional_light_data", light_data_directional );
-
-	container_texture_diffuse_map.ActivateAndUse( 0 );
-	container_texture_specular_map.ActivateAndUse( 1 );
-
-	static constexpr std::array< Engine::Vector3, CUBE_COUNT > cube_positions =
+	constexpr std::array< Engine::Vector3, CUBE_COUNT > cube_positions =
 	{ {
 		{  0.0f,  0.0f,  0.0f	},
 		{  2.0f,  5.0f, +15.0f	},
@@ -160,6 +155,8 @@ void SandboxApplication::Render()
 
 	constexpr Engine::Vector3 cubes_origin = std::accumulate( cube_positions.cbegin(), cube_positions.cend(), Engine::Vector3::Zero() ) / CUBE_COUNT;
 
+	Engine::Matrix4x4 view_transformation;
+
 	/* Camera transform: */
 	if( camera_is_animated )
 	{
@@ -170,9 +167,57 @@ void SandboxApplication::Render()
 
 		const auto new_camera_direction = camera_direction * camera_rotation.SubMatrix< 3 >();
 
-		const auto view_transformation = Engine::Matrix::LookAt( new_camera_offset, new_camera_direction.Normalized() );
-		cube_shader->SetUniform( "uniform_transform_view", view_transformation );
+		view_transformation = Engine::Matrix::LookAt( new_camera_offset, new_camera_direction.Normalized() );
 	}
+	else
+		view_transformation = Engine::Matrix::LookAt( camera_offset, camera_direction.Normalized() );
+
+/* Render the light source: */
+	light_source_shader.Bind();
+
+	light_source_shader.SetUniform( "uniform_transform_view", view_transformation );
+
+	/* Light source transform: */
+	if( light_point_is_animated )
+	{
+		const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f );
+
+		light_point_data.position = ( ( Engine::Vector4::Forward() * light_point_orbit_radius ) *
+									  ( point_light_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin ) ) ).XYZ();
+		light_point_data.position.SetY( 2.0f );
+	}
+
+	/* Light color: */
+	light_source_shader.SetUniform( "uniform_transform_world",	Engine::Matrix::Translation( light_point_data.position ) );
+	light_source_shader.SetUniform( "uniform_color",			light_point_data.diffuse );
+
+	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
+
+/* Render cubes: */
+	cube_shader->Bind();
+
+	cube_shader->SetUniform( "uniform_transform_view", view_transformation );
+
+/* Lighting information: */
+	{
+		// Shaders expect the directional light direction in view space.
+		const auto directional_light_original_direction = light_directional_data.direction;
+		light_directional_data.direction *= view_transformation.SubMatrix< 3 >();
+		cube_shader->SetUniform( "uniform_directional_light_data", light_directional_data );
+		light_directional_data.direction = directional_light_original_direction;
+	}
+
+	{
+		// Shaders expect the point light positions in view space.
+		const auto point_light_original_position = light_point_data.position;
+		light_point_data.position = ( Engine::Vector4( light_point_data.position.X(), light_point_data.position.Y(), light_point_data.position.Z(), 1.0f ) *
+									  view_transformation ).XYZ();
+		cube_shader->SetUniform( "uniform_point_light_data", light_point_data );
+		light_point_data.position = point_light_original_position;
+	}
+
+	container_texture_diffuse_map.ActivateAndUse( 0 );
+	container_texture_specular_map.ActivateAndUse( 1 );
 
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
@@ -189,17 +234,17 @@ void SandboxApplication::Render()
 	}
 
 /* Ground quad: */
-	//{
-	//	constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 0.01f, 25.0f ) );
+	{
+		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 0.01f, 25.0f ) );
 
-	//	/* Lighting: */
-	//	cube_shader->SetUniform( "uniform_surface_data", ground_quad_surface_data );
+		/* Lighting: */
+		cube_shader->SetUniform( "uniform_surface_data", ground_quad_surface_data );
 
-	//	/* Transform: */
-	//	cube_shader->SetUniform( "uniform_transform_world", transform );
+		/* Transform: */
+		cube_shader->SetUniform( "uniform_transform_world", transform );
 
-	//	glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
-	//}
+		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
+	}
 }
 
 void SandboxApplication::DrawImGui()
@@ -228,13 +273,25 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			light_data_directional = Engine::Lighting::DirectionalLightData
+			light_directional_data =
 			{
-				.ambient   = {  0.2f,  0.2f,  0.2f },
-				.diffuse   = {  0.5f,  0.5f,  0.5f },
-				.specular  = {  1.0f,  1.0f,  1.0f },
-				.direction = { -0.2f, -1.0f, -0.3f }
+				.ambient   = {  0.05f,  0.05f,  0.05f },
+				.diffuse   = {  0.4f,   0.4f,   0.4f  },
+				.specular  = {  0.5f,   0.5f,   0.5f  },
+				.direction = {  0.2f,  -1.0f,   1.0f  }
 			};
+			light_point_data =
+			{
+				.ambient               = {  0.05f,  0.05f,  0.05f },
+				.diffuse               = {  0.8f,   0.8f,   0.8f  },
+				.specular              = {  1.0f,   1.0f,   1.0f  },
+				.position              = {  0.2f,  -1.0f,   1.0f  },
+				.attenuation_constant  = 1.0f,
+				.attenuation_linear    = 0.09f,
+				.attenuation_quadratic = 0.032f,
+			};
+			light_point_is_animated  = true;
+			light_point_orbit_radius = 1.5f;
 
 			for( auto& data : cube_surface_data )
 			{
@@ -249,7 +306,13 @@ void SandboxApplication::DrawImGui()
 			cube_shader = &phong_shader;
 		}
 
-		Engine::ImGuiDrawer::Draw( light_data_directional,	"Directional Light Properties" );
+		Engine::ImGuiDrawer::Draw( light_directional_data, "Directional Light Properties" );
+		ImGui::Separator();
+		ImGui::Checkbox( "Animate (Rotate) Point Light", &light_point_is_animated );
+		if( light_point_is_animated )
+			ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
+		Engine::ImGuiDrawer::Draw( light_point_data, "Point Light Properties", light_point_is_animated /* hide position. */ );
+
 		for( auto i = 0; i < CUBE_COUNT; i++ )
 		{
 			auto& surface_data = cube_surface_data[ i ];
