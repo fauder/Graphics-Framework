@@ -44,7 +44,17 @@ namespace Engine
 				return source; // No trailing whitespace found.
 			}
 
-			std::string_view FindPreviousWord( const std::string_view& source, const std::size_t offset )
+			void Replace( std::string& source, const std::string_view find_this, const std::string_view replace_with_this )
+			{
+				size_t start_pos = 0;
+				while( ( start_pos = source.find( find_this, start_pos ) ) != std::string::npos )
+				{
+					source.replace( start_pos, find_this.length(), replace_with_this );
+					start_pos += replace_with_this.length(); // Handles the case where 'replace_with_this' is a substring of 'find_this'.
+				}
+			}
+
+			std::string_view FindPreviousWord( const std::string_view source, const std::size_t offset )
 			{
 				const std::size_t last_char_pos = source.find_last_not_of( " \t", offset - 1 );
 
