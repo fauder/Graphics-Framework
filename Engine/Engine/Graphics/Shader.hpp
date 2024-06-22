@@ -286,6 +286,10 @@ namespace Engine
 		void ParseUniformData_StructMemberCPUOrders( const std::string& shader_source );
 		const UniformInformation& GetUniformInformation( const std::string& uniform_name );
 
+		void LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const;
+		void LogErrors_Linking( const int program_id ) const;
+		std::string FormatErrorLog( const char* log ) const;
+
 	private:
 		int program_id;
 		std::string name;

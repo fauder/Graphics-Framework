@@ -1,3 +1,9 @@
+// Platform-specific Debug API includes.
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#include <windows.h> // For Visual Studio's OutputDebugString().
+#endif // _WIN32
+
 // Engince Includes.
 #include "Core/Utility.h"
 #include "Shader.hpp"
@@ -116,7 +122,7 @@ namespace Engine
 
 	std::optional< std::string > Shader::ParseShaderFromFile( const char* file_path, const ShaderType shader_type )
 	{
-		std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::FILE_NOT_SUCCESSFULLY_READ" );
+		std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::FILE_NOT_SUCCESSFULLY_READ\nShader name: " + name + "\n" );
 
 		if( const auto source = Engine::Utility::ReadFileIntoString( file_path, error_prompt.c_str() );
 			source )
@@ -135,10 +141,7 @@ namespace Engine
 		GLCALL( glGetShaderiv( shader_id, GL_COMPILE_STATUS, &success ) );
 		if( !success )
 		{
-			char info_log[ 512 ];
-			glGetShaderInfoLog( shader_id, 512, NULL, info_log );
-			std::cerr << "ERROR::SHADER::" << ShaderTypeString( shader_type ) << "::COMPILE:" << "\n    " << info_log << "\n";
-			throw std::logic_error( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::COMPILE:\n    " + info_log );
+			LogErrors_Compilation( shader_id, shader_type );
 			return false;
 		}
 
@@ -156,11 +159,8 @@ namespace Engine
 		GLCALL( glGetProgramiv( program_id, GL_LINK_STATUS, &success ) );
 		if( !success )
 		{
-			char info_log[ 512 ];
-			glGetProgramInfoLog( program_id, 512, NULL, info_log );
-			std::cerr << "ERROR::SHADER::PROGRAM::LINK:" << info_log << "\n";
-			throw std::logic_error( std::string( "ERROR::SHADER::PROGRAM::LINK:" ) + info_log );
-			return false;;
+			LogErrors_Linking( program_id );
+			return false;
 		}
 
 		return true;
@@ -399,5 +399,40 @@ namespace Engine
 	#else
 		return uniform_info_map[ uniform_name ];
 	#endif // DEBUG
+	}
+
+	void Shader::LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const
+	{
+		char info_log[ 512 ];
+		glGetShaderInfoLog( shader_id, 512, NULL, info_log );
+
+		const std::string complete_error_string( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::COMPILE:\nShader name: " + name + FormatErrorLog( info_log ) );
+		std::cerr << complete_error_string;
+#if defined( _WIN32 ) && defined( _DEBUG )
+		if( IsDebuggerPresent() )
+			OutputDebugStringA( ( "\n" + complete_error_string + "\n" ).c_str() );
+#endif // _WIN32 && _DEBUG
+		throw std::logic_error( complete_error_string );
+	}
+
+	void Shader::LogErrors_Linking( const int program_id ) const
+	{
+		char info_log[ 512 ];
+		glGetProgramInfoLog( program_id, 512, NULL, info_log );
+
+		const std::string complete_error_string( "ERROR::SHADER::PROGRAM::LINK:\nShader name: " + name + FormatErrorLog( info_log ) );
+		std::cerr << complete_error_string;
+#if defined( _WIN32 ) && defined( _DEBUG )
+		if( IsDebuggerPresent() )
+			OutputDebugStringA( ( "\n" + complete_error_string + "\n" ).c_str() );
+#endif // _WIN32 && _DEBUG
+		throw std::logic_error( complete_error_string );
+	}
+
+	std::string Shader::FormatErrorLog( const char* log ) const
+	{
+		std::string error_log_string( log );
+		Utility::String::Replace( error_log_string, "\n", "\n    " );
+		return "\n    " + error_log_string;
 	}
 }
