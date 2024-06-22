@@ -127,6 +127,21 @@ namespace Platform
 		OnResizeWindow( WINDOW, width_new_pixels, height_new_pixels );
 	}
 
+	void MinimizeWindow()
+	{
+		glfwIconifyWindow( WINDOW );
+	}
+
+	void MaximizeWindow()
+	{
+		glfwMaximizeWindow( WINDOW );
+	}
+
+	void RestoreWindow()
+	{
+		glfwRestoreWindow( WINDOW );
+	}
+
 	void SetFramebufferResizeCallback( std::function< void( const int width_new_pixels, const int height_new_pixels ) > callback )
 	{
 		FRAMEBUFFER_RESIZE_CALLBACK = callback;

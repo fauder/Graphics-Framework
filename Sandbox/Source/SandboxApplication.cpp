@@ -105,6 +105,8 @@ void SandboxApplication::Initialize()
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
 
 	GLCALL( glEnable( GL_DEPTH_TEST ) );
+
+	Platform::MaximizeWindow();
 }
 
 void SandboxApplication::Shutdown()

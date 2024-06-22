@@ -159,6 +159,9 @@ namespace Platform
 
 	/* Window/Framebuffer. */
 	void ResizeWindow( const int width_pixels, const int height_pixels );
+	void MinimizeWindow();
+	void MaximizeWindow();
+	void RestoreWindow();
 	void SetFramebufferResizeCallback( std::function< void( const int width_new_pixels, const int height_new_pixels ) > callback = {} );
 
 	std::pair< int, int > GetFramebufferSizeInPixels();
