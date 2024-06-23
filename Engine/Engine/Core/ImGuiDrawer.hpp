@@ -64,7 +64,7 @@ namespace Engine::ImGuiDrawer
 	}
 
 	template< Concepts::Arithmetic Component, std::size_t Size > requires( Size > 1 )
-	bool Draw( Math::Vector< Component, Size >& vector, const char* name = "##vector<>", const bool is_read_only = false )
+	bool Draw( Math::Vector< Component, Size >& vector, const char* name = "##vector<>" )
 	{
 		bool is_modified = false;
 
@@ -89,8 +89,10 @@ namespace Engine::ImGuiDrawer
 		return is_modified;
 	}
 
-	void Draw( const Color3& color );
-	void Draw( const Color4& color );
+	bool Draw(		 Color3& color, const char* name = "##color3" );
+	void Draw( const Color3& color, const char* name = "##color3" );
+	bool Draw(		 Color4& color, const char* name = "##color4" );
+	void Draw( const Color4& color, const char* name = "##color4" );
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	// TODO: Remove LightData & SurfaceData overloads; Implement a generic uniform struct drawer instead, similar to Shader's implementation.

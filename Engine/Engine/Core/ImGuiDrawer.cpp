@@ -5,14 +5,26 @@
 
 namespace Engine::ImGuiDrawer
 {
-	void Draw( const Color3& color )
+	bool Draw( Color3& color, const char* name )
 	{
-		Draw( reinterpret_cast< const Vector3& >( color ) );
+		return ImGui::ColorEdit3( name, color.Data() );
 	}
 
-	void Draw( const Color4& color )
+	void Draw( const Color3& color, const char* name )
 	{
-		Draw( reinterpret_cast< const Vector4& >( color ) );
+		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::ColorEdit3( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
+	}
+
+	bool Draw( Color4& color, const char* name )
+	{
+		return ImGui::ColorEdit4( name, color.Data() );
+	}
+
+	void Draw( const Color4& color, const char* name )
+	{
+		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::ColorEdit4( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
 	}
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags )
@@ -108,9 +120,9 @@ namespace Engine::ImGuiDrawer
 			is_modified |= Draw( point_light_data.specular, "Specular" );
 			if( !hide_position )
 				is_modified |= Draw( point_light_data.position_world_space, "Position" );
-			is_modified |= ImGui::InputFloat( "Attenuation: Constant",	&point_light_data.attenuation_constant );
-			is_modified |= ImGui::InputFloat( "Attenuation: Linear",	&point_light_data.attenuation_linear );
-			is_modified |= ImGui::InputFloat( "Attenuation: Quadratic", &point_light_data.attenuation_quadratic );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.attenuation_constant,		0.0f, 5.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.attenuation_linear,		0.0f, 1.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.attenuation_quadratic,	0.0f, 1.0f, "%.5g" );
 
 			ImGui::PopID();
 		}
