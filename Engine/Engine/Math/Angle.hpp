@@ -50,6 +50,10 @@ namespace Engine
 				Base::value = angle - FloatType( 360 ) * std::floor( ( angle + FloatType( 180 ) ) / FloatType( 360 ) );
 				return *this;
 			}
+
+		/* String Utility. */
+			template< std::size_t Length >
+			constexpr static auto Format( const char( &number_format )[ Length ] ) { return Utility::String::ConstexprConcatenate( number_format, " degrees" ); }
 		};
 
 		template< std::floating_point FloatType >
@@ -86,6 +90,10 @@ namespace Engine
 				Base::value = angle - FloatType( Constants< FloatType >::Two_Pi() ) * std::floor( ( angle + FloatType( Constants< FloatType >::Pi() ) ) / FloatType( Constants< FloatType >::Two_Pi() ) );
 				return *this;
 			}
+
+		/* String Utility. */
+			template< std::size_t Length >
+			constexpr static const char* Format( const char( &number_format )[ Length ] ) { return Utility::String::ConstexprConcatenate( number_format, " radians" ); }
 		};
 
 		namespace Literals
