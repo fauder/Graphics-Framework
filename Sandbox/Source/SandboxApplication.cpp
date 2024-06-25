@@ -186,7 +186,7 @@ void SandboxApplication::Render()
 
 		// Also need to convert the angles to cosines.
 		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Engine::Radians( light_spot_data.cutoff_angle_inner ) );
-		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Engine::Radians( light_spot_data.cutoff_angle_inner ) );
+		light_spot_data.cos_cutoff_angle_outer = Engine::Math::Cos( Engine::Radians( light_spot_data.cutoff_angle_outer ) );
 
 		cube_shader->SetUniform( "uniform_spot_light_data", light_spot_data );
 	}
@@ -197,7 +197,7 @@ void SandboxApplication::Render()
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
 		Engine::Degrees angle( 20.0f * i );
-		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( cube_positions[ i ] ) );
+		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( cube_positions[ i ] + Engine::Vector3::Up() * 5.0f ) );
 
 		/* Lighting: */
 		cube_shader->SetUniform( "uniform_surface_data", cube_surface_data[ i ] );
