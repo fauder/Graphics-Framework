@@ -74,7 +74,7 @@ namespace Engine
 
 		constexpr DerivedType& operator-= ( const DerivedType right_hand_side )
 		{
-			value -= right_hand_side;
+			value -= right_hand_side.value;
 
 			return ( DerivedType& )*this;
 		}
@@ -88,7 +88,7 @@ namespace Engine
 				result.value /= right_hand_side.value; // Divide directly as division of 1/right_hand_side will give zero when right_hand_side > 1.
 			else
 			{
-				const auto inverse_of_right_hand_side = Type( 1 ) / right_hand_side; // We can calculate the inverse safely.
+				const auto inverse_of_right_hand_side = Type( 1 ) / right_hand_side.value; // We can calculate the inverse safely.
 				result.value *= inverse_of_right_hand_side;
 			}
 
@@ -101,7 +101,7 @@ namespace Engine
 				value /= right_hand_side.value; // Divide directly as division of 1/right_hand_side will give zero when right_hand_side > 1.
 			else
 			{
-				const auto inverse_of_right_hand_side = Type( 1 ) / right_hand_side; // We can calculate the inverse safely.
+				const auto inverse_of_right_hand_side = Type( 1 ) / right_hand_side.value; // We can calculate the inverse safely.
 				value *= inverse_of_right_hand_side;
 			}
 
