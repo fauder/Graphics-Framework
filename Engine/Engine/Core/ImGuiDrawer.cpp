@@ -257,9 +257,9 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( surface_name );
 
-			is_modified |= ImGui::InputInt( "Diffuse Map ID",  &surface_data.diffuse_map_slot  );
-			is_modified |= ImGui::InputInt( "Specular Map ID", &surface_data.specular_map_slot );
-			is_modified |= ImGui::InputFloat( "Shininess", &surface_data.shininess );
+			is_modified |= ImGui::SliderInt( "Diffuse Map ID",	&surface_data.diffuse_map_slot,		0,		16 );
+			is_modified |= ImGui::SliderInt( "Specular Map ID", &surface_data.specular_map_slot,	0,		16 );
+			is_modified |= ImGui::SliderFloat( "Shininess",		&surface_data.shininess,			0.1f,	64.0f, "%.2f", ImGuiSliderFlags_Logarithmic );
 
 			ImGui::PopID();
 		}
