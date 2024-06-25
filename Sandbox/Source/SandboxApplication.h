@@ -29,6 +29,8 @@ private:
 	void UpdateProjectionMatrix( Engine::Shader& shader );
 
 	void ResetLightingData();
+	Engine::Radians CalculateVerticalFieldOfView( const Engine::Radians horizontal_field_of_view ) const;
+
 private:
 	Engine::VertexArray vertex_array_crate;
 

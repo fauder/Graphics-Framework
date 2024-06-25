@@ -32,7 +32,7 @@ SandboxApplication::SandboxApplication()
 	camera_is_animated( false ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( Platform::GetAspectRatio() ),
-	vertical_field_of_view( 90_deg / aspect_ratio ),
+	vertical_field_of_view( CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() ) ),
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true )
 {
@@ -341,7 +341,7 @@ void SandboxApplication::DrawImGui()
 			near_plane                           = 0.1f;
 			far_plane                            = 100.0f;
 			aspect_ratio                         = Platform::GetAspectRatio();
-			vertical_field_of_view               = 90_deg / aspect_ratio;
+			vertical_field_of_view               = CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() );
 			projection_matrix_is_dirty           = true;
 		}
 
@@ -355,7 +355,7 @@ void SandboxApplication::DrawImGui()
 		modified |= ImGui::SliderFloat( "Near Plane",	&near_plane,	0.0f,								std::min( 100.0f, far_plane )					); 
 		modified |= ImGui::SliderFloat( "Far Plane",	&far_plane,		std::max( near_plane, 10.0f ),		1000.0f											);
 		modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,								5.0f											);
-		modified |= ImGui::SliderAngle( "Vertical FoV", &v_fov_radians, 1.0f,								180.0f,							"%.2f degrees"	);
+		modified |= ImGui::SliderAngle( "Vertical FoV", &v_fov_radians, 1.0f,								180.0f,							"%.3f degrees"	);
 
 		if( modified )
 		{
@@ -366,7 +366,7 @@ void SandboxApplication::DrawImGui()
 			}
 			
 			if( auto_calculate_vfov_based_on_90_hfov )
-				vertical_field_of_view = 90_deg / aspect_ratio;
+				vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() );
 			else
 				vertical_field_of_view = Engine::Radians( v_fov_radians );
 
@@ -455,6 +455,11 @@ void SandboxApplication::ResetLightingData()
 		.specular_map_slot = 1,
 		.shininess         = 32.0f
 	};
+}
+
+Engine::Radians SandboxApplication::CalculateVerticalFieldOfView( const Engine::Radians horizontal_field_of_view ) const
+{
+	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), aspect_ratio );
 }
 
 void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
