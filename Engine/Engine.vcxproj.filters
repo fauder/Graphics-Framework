@@ -39,7 +39,7 @@
     <ClInclude Include="Engine\Graphics\Shader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Core\Utility.h">
+    <ClInclude Include="Engine\Core\Utility.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\Texture.h">

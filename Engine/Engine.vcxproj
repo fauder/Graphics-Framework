@@ -169,7 +169,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Shader.hpp" />
     <ClInclude Include="Engine\Graphics\ShaderTypeInformation.h" />
     <ClInclude Include="Engine\Graphics\Texture.h" />
-    <ClInclude Include="Engine\Core\Utility.h" />
+    <ClInclude Include="Engine\Core\Utility.hpp" />
     <ClInclude Include="Engine\Graphics\UniformStruct.h" />
     <ClInclude Include="Engine\Graphics\VertexArray.h" />
     <ClInclude Include="Engine\Graphics\VertexBufferLayout.h" />
