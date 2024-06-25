@@ -30,39 +30,6 @@ SandboxApplication::SandboxApplication()
 	camera_direction( Engine::Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ),
 	camera_offset( 0.0f, 10.0f, -20.0f ),
 	camera_is_animated( false ),
-	cube_surface_data( CUBE_COUNT,
-	{ 
-		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1,
-		.shininess         = 32.0f 
-	} ),
-	ground_quad_surface_data
-	{
-		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1,
-		.shininess         = 32.0f
-	},
-	light_directional_data
-	{
-		.ambient               = {  0.05f,  0.05f,  0.05f },
-		.diffuse               = {  0.4f,   0.4f,   0.4f  },
-		.specular              = {  0.5f,   0.5f,   0.5f  },
-		.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.direction_world_space = {  0.2f,  -1.0f,   1.0f  } 
-	},
-	light_point_data
-	{
-		.ambient               = {  0.05f,  0.05f,  0.05f },
-		.diffuse               = {  0.8f,   0.8f,   0.8f  },
-		.specular              = {  1.0f,   1.0f,   1.0f  },
-		.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.attenuation_constant  = 1.0f,
-		.attenuation_linear    = 0.09f,
-		.attenuation_quadratic = 0.032f,
-		.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
-	},
-	light_point_is_animated( true ),
-	light_point_orbit_radius( 13.25f ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( Platform::GetAspectRatio() ),
 	vertical_field_of_view( 90_deg / aspect_ratio ),
@@ -79,6 +46,8 @@ SandboxApplication::~SandboxApplication()
 
 void SandboxApplication::Initialize()
 {
+	ResetLightingData();
+
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
 /* Vertex/Index Data: */
@@ -202,14 +171,24 @@ void SandboxApplication::Render()
 
 /* Lighting information: */
 	{
-		// Shaders expect the directional light direction in view space.
+		/* Shaders expect the lights' position & direction in view space. */
+
 		light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 		cube_shader->SetUniform( "uniform_directional_light_data", light_directional_data );
 	
-		// Shaders expect the point light positions in view space.
 		light_point_data.position_view_space = ( Engine::Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
 												 view_transformation ).XYZ();
 		cube_shader->SetUniform( "uniform_point_light_data", light_point_data );
+
+		light_spot_data.direction_view_space = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
+		light_spot_data.position_view_space = ( Engine::Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) *
+												 view_transformation ).XYZ();
+
+		// Also need to convert the angles to cosines.
+		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Engine::Radians( light_spot_data.cutoff_angle_inner ) );
+		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Engine::Radians( light_spot_data.cutoff_angle_inner ) );
+
+		cube_shader->SetUniform( "uniform_spot_light_data", light_spot_data );
 	}
 
 	container_texture_diffuse_map.ActivateAndUse( 0 );
@@ -231,10 +210,23 @@ void SandboxApplication::Render()
 
 /* Ground quad: */
 	{
-		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 0.01f, 25.0f ) );
+		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 25.0f, 0.01f ) * Engine::Matrix::TranslationOnZ( 5.0f ) );
 
 		/* Lighting: */
 		cube_shader->SetUniform( "uniform_surface_data", ground_quad_surface_data );
+
+		/* Transform: */
+		cube_shader->SetUniform( "uniform_transform_world", transform );
+
+		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
+	}
+
+/* Front wall quad: */
+	{
+		constexpr auto transform( Engine::Matrix::Scaling( 1.0f, 1.0f, 0.01f ) * Engine::Matrix::Translation( 17.5f, 0.0f, 5.0f ) );
+
+		/* Lighting: */
+		cube_shader->SetUniform( "uniform_surface_data", front_wall_quad_surface_data );
 
 		/* Transform: */
 		cube_shader->SetUniform( "uniform_transform_world", transform );
@@ -269,37 +261,7 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			light_directional_data =
-			{
-				.ambient               = {  0.05f,  0.05f,  0.05f },
-				.diffuse               = {  0.4f,   0.4f,   0.4f  },
-				.specular              = {  0.5f,   0.5f,   0.5f  },
-				.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-				.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
-			};
-			light_point_data =
-			{
-				.ambient               = {  0.05f,  0.05f,  0.05f },
-				.diffuse               = {  0.8f,   0.8f,   0.8f  },
-				.specular              = {  1.0f,   1.0f,   1.0f  },
-				.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-				.attenuation_constant  = 1.0f,
-				.attenuation_linear    = 0.09f,
-				.attenuation_quadratic = 0.032f,
-				.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
-			};
-			light_point_is_animated  = true;
-			light_point_orbit_radius = 13.25f;
-
-			for( auto& data : cube_surface_data )
-			{
-				data = Engine::Lighting::SurfaceData
-				{
-					.diffuse_map_slot  = 0,
-					.specular_map_slot = 1,
-					.shininess         = 32.0f
-				};
-			}
+			ResetLightingData();
 
 			cube_shader = &phong_shader;
 		}
@@ -310,12 +272,16 @@ void SandboxApplication::DrawImGui()
 		if( light_point_is_animated )
 			ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
 		Engine::ImGuiDrawer::Draw( light_point_data, "Point Light Properties", light_point_is_animated /* hide position. */ );
+		Engine::ImGuiDrawer::Draw( light_spot_data, "Spot Light Properties" );
 
 		for( auto i = 0; i < CUBE_COUNT; i++ )
 		{
 			auto& surface_data = cube_surface_data[ i ];
 			Engine::ImGuiDrawer::Draw( surface_data, ( "Cube #" + std::to_string( i + 1 ) + " Surface Properties" ).c_str() );
 		}
+
+		Engine::ImGuiDrawer::Draw( ground_quad_surface_data,	 "Ground Quad Surface Properties" );
+		Engine::ImGuiDrawer::Draw( front_wall_quad_surface_data,  "Front Wall Surface Properties" );
 
 		enum LightingModel
 		{
@@ -462,3 +428,57 @@ void SandboxApplication::UpdateProjectionMatrix( Engine::Shader& shader )
 //			break;
 //	}
 //}
+void SandboxApplication::ResetLightingData()
+{
+	light_point_is_animated  = true;
+	light_point_orbit_radius = 13.25f;
+
+	light_directional_data =
+	{
+		.ambient               = {  0.05f,  0.05f,  0.05f },
+		.diffuse               = {  0.4f,   0.4f,   0.4f  },
+		.specular              = {  0.5f,   0.5f,   0.5f  },
+		.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+		.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
+	};
+	light_point_data =
+	{
+		.ambient               = {  0.05f,  0.05f,  0.05f },
+		.diffuse               = {  0.8f,   0.8f,   0.8f  },
+		.specular              = {  1.0f,   1.0f,   1.0f  },
+		.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+		.attenuation_constant  = 1.0f,
+		.attenuation_linear    = 0.09f,
+		.attenuation_quadratic = 0.032f,
+		.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
+	};
+	light_spot_data =
+	{
+		.ambient                = {  0.05f,  0.05f,  0.05f },
+		.diffuse                = {  0.4f,   0.4f,   0.4f  },
+		.specular               = {  0.5f,   0.5f,   0.5f  },
+		.position_view_space    = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+		.direction_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+		.cos_cutoff_angle_inner = Engine::Math::Cos( Engine::Radians( 12.5_deg ) ),
+		.cos_cutoff_angle_outer = Engine::Math::Cos( Engine::Radians( 17.5_deg ) ),
+		/* End of GLSL equivalence. */
+		.position_world_space   = camera_offset,
+		.direction_world_space  = camera_direction,
+		.cutoff_angle_inner     = 12.5_deg,
+		.cutoff_angle_outer     = 17.5_deg
+	};
+
+	cube_surface_data = std::vector< Engine::Lighting::SurfaceData >( CUBE_COUNT, 
+	{
+		.diffuse_map_slot  = 0,
+		.specular_map_slot = 1,
+		.shininess         = 32.0f
+	} );
+
+	ground_quad_surface_data = front_wall_quad_surface_data =
+	{
+		.diffuse_map_slot  = 0,
+		.specular_map_slot = 1,
+		.shininess         = 32.0f
+	};
+}

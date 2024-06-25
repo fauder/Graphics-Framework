@@ -28,6 +28,7 @@ private:
 	void UpdateViewMatrix( Engine::Shader& shader );
 	void UpdateProjectionMatrix( Engine::Shader& shader );
 
+	void ResetLightingData();
 private:
 	Engine::VertexArray vertex_array_crate;
 
@@ -44,8 +45,10 @@ private:
 
 	std::vector< Engine::Lighting::SurfaceData > cube_surface_data;
 	Engine::Lighting::SurfaceData ground_quad_surface_data;
+	Engine::Lighting::SurfaceData front_wall_quad_surface_data;
 	Engine::Lighting::DirectionalLightData light_directional_data;
 	Engine::Lighting::PointLightData light_point_data;
+	Engine::Lighting::SpotLightData light_spot_data;
 	float light_point_orbit_radius;
 	bool light_point_is_animated;
 

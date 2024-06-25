@@ -155,6 +155,56 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
+	bool Draw( Lighting::SpotLightData& spot_light_data, const char* light_name, ImGuiWindowFlags window_flags )
+	{
+		bool is_modified = false;
+
+		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			ImGui::SeparatorText( light_name );
+
+			ImGui::PushID( light_name );
+
+			using namespace Engine::Math::Literals;
+
+			is_modified |= Draw( spot_light_data.ambient,				"Ambient"				);
+			is_modified |= Draw( spot_light_data.diffuse,				"Diffuse"				);
+			is_modified |= Draw( spot_light_data.specular,				"Specular"				);
+			is_modified |= Draw( spot_light_data.position_world_space,	"Position"				);
+			is_modified |= Draw( spot_light_data.direction_world_space, "Direction"				);
+			is_modified |= Draw( spot_light_data.cutoff_angle_inner,	"Cutoff Angle: Inner", 0.0_deg, spot_light_data.cutoff_angle_outer );
+			is_modified |= Draw( spot_light_data.cutoff_angle_outer,	"Cutoff Angle: Outer", spot_light_data.cutoff_angle_inner, 180.0_deg );
+
+			ImGui::PopID();
+		}
+
+		ImGui::End();
+
+		return is_modified;
+	}
+
+	void Draw( const Lighting::SpotLightData& spot_light_data, const char* light_name, ImGuiWindowFlags window_flags )
+	{
+		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			ImGui::SeparatorText( light_name );
+
+			ImGui::PushID( light_name );
+
+			Draw( spot_light_data.ambient,					"Ambient"				);
+			Draw( spot_light_data.diffuse,					"Diffuse"				);
+			Draw( spot_light_data.specular,					"Specular"				);
+			Draw( spot_light_data.position_world_space,		"Position"				);
+			Draw( spot_light_data.direction_world_space,	"Direction"				);
+			Draw( spot_light_data.cutoff_angle_inner,		"Cutoff Angle: Inner"   );
+			Draw( spot_light_data.cutoff_angle_outer,		"Cutoff Angle: Outer"	);
+
+			ImGui::PopID();
+		}
+
+		ImGui::End();
+	}
+
 	bool Draw( Lighting::DirectionalLightData& directional_light_data, const char* light_name, ImGuiWindowFlags window_flags )
 	{
 		bool is_modified = false;
