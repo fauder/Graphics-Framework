@@ -47,7 +47,8 @@ namespace Engine
 
 	/* Arithmetic Operations: Unary operators. */
 		/* Return the value as-is. */
-		constexpr DerivedType operator+ () const { return *this; }
+		constexpr DerivedType operator+ () const { return ( DerivedType& )*this;
+		}
 		constexpr DerivedType operator- () const requires( std::is_floating_point_v< Type > || std::is_signed_v< Type > )
 		{
 			return DerivedType( Type( -1 ) * value );
@@ -63,7 +64,7 @@ namespace Engine
 		{
 			value += right_hand_side.value;
 
-			return *this;
+			return ( DerivedType& )*this;
 		}
 
 		constexpr DerivedType operator- ( const DerivedType right_hand_side ) const
@@ -75,7 +76,7 @@ namespace Engine
 		{
 			value -= right_hand_side;
 
-			return *this;
+			return ( DerivedType& )*this;
 		}
 
 		/* No operators * and *= are NOT defined on purpose; This is because the multiplication of 2 Units would return UnitSquared (or some other name), which is clearly not of type Unit. */
@@ -104,7 +105,7 @@ namespace Engine
 				value *= inverse_of_right_hand_side;
 			}
 
-			return *this;
+			return ( DerivedType& )*this;
 		}
 
 	/* Arithmetic Operations: Binary operators (with a scalar), of the the form unit-operator-scalar. */
@@ -116,7 +117,7 @@ namespace Engine
 		constexpr DerivedType operator+= ( const Type right_hand_side )
 		{
 			value += right_hand_side;
-			return *this;
+			return ( DerivedType& )*this;
 		}
 
 		constexpr DerivedType operator- ( const Type right_hand_side ) const
@@ -127,7 +128,7 @@ namespace Engine
 		constexpr DerivedType operator-= ( const Type right_hand_side )
 		{
 			value -= right_hand_side;
-			return *this;
+			return ( DerivedType& )*this;
 		}
 
 		constexpr DerivedType operator* ( const Type right_hand_side ) const
@@ -138,7 +139,7 @@ namespace Engine
 		constexpr DerivedType operator*= ( const Type right_hand_side )
 		{
 			value *= right_hand_side;
-			return *this;
+			return ( DerivedType& )*this;
 		}
 
 		constexpr DerivedType operator/ ( const Type right_hand_side ) const
@@ -149,7 +150,7 @@ namespace Engine
 		constexpr DerivedType operator/= ( const Type right_hand_side )
 		{
 			value /= right_hand_side;
-			return *this;
+			return ( DerivedType& )*this;
 		}
 
 	/* Arithmetic Operations: Binary operators (with a scalar), of the the form scalar-operator-unit. */
