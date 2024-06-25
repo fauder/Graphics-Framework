@@ -29,6 +29,9 @@ namespace Engine
 
 		constexpr ~Unit() = default;
 
+	/* Queries. */
+		constexpr const Type& Value() const { return value; }
+
 	/* Comparison Operators. */
 		constexpr auto operator<=> ( const Unit< Type, Derived >& ) const = default;
 
