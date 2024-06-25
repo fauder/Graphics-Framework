@@ -142,7 +142,7 @@ namespace Engine
 	{
 		Constants() = delete;
 
-		static constexpr Degrees Pi()				{ return Degrees( Constants< float >::Pi() );	}
+		static constexpr Degrees Pi()				{ return Degrees( 180.0f );						}
 		static constexpr Degrees Pi_Over_Two()		{ return Pi() / 2.0f;							}
 		static constexpr Degrees Pi_Over_Three()	{ return Pi() / 3.0f;							}
 		static constexpr Degrees Pi_Over_Four()		{ return Pi() / 4.0f;							}
@@ -166,7 +166,7 @@ namespace Engine
 	{
 		Constants() = delete;
 
-		static constexpr DegreesD Pi()				{ return DegreesD( Constants< double >::Pi() );	}
+		static constexpr DegreesD Pi()				{ return DegreesD( 180.0 );						}
 		static constexpr DegreesD Pi_Over_Two()		{ return Pi() / 2.0;							}
 		static constexpr DegreesD Pi_Over_Three()	{ return Pi() / 3.0;							}
 		static constexpr DegreesD Pi_Over_Four()	{ return Pi() / 4.0;							}
