@@ -210,10 +210,10 @@ void SandboxApplication::Render()
 
 /* Ground quad: */
 	{
-		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 25.0f, 0.01f ) * Engine::Matrix::TranslationOnZ( 5.0f ) );
+		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 0.01f, 25.0f ) );
 
 		/* Lighting: */
-		cube_shader->SetUniform( "uniform_surface_data", ground_quad_surface_data );
+		cube_shader->SetUniform( "uniform_surface_data", front_wall_quad_surface_data );
 
 		/* Transform: */
 		cube_shader->SetUniform( "uniform_transform_world", transform );
@@ -223,10 +223,10 @@ void SandboxApplication::Render()
 
 /* Front wall quad: */
 	{
-		constexpr auto transform( Engine::Matrix::Scaling( 1.0f, 1.0f, 0.01f ) * Engine::Matrix::Translation( 17.5f, 0.0f, 5.0f ) );
+		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 25.0f, 0.01f ) * Engine::Matrix::TranslationOnZ( 5.0f ) );
 
 		/* Lighting: */
-		cube_shader->SetUniform( "uniform_surface_data", front_wall_quad_surface_data );
+		cube_shader->SetUniform( "uniform_surface_data", ground_quad_surface_data );
 
 		/* Transform: */
 		cube_shader->SetUniform( "uniform_transform_world", transform );
