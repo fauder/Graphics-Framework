@@ -94,6 +94,21 @@ namespace Engine::ImGuiDrawer
 	bool Draw(		 Color4& color, const char* name = "##color4" );
 	void Draw( const Color4& color, const char* name = "##color4" );
 
+	template< template< class > class AngleType, typename FloatType >
+	bool Draw( AngleType< FloatType >& angle, const char* name,
+			   const AngleType< FloatType >& min = AngleType< FloatType >( 0 ), const AngleType< FloatType >& max = Constants< AngleType< FloatType > >::Two_Pi(),
+			   const char* format = AngleType< FloatType >::Format( "%.4g" ).data() )
+	{
+		return ImGui::SliderFloat( name, ( float* )&angle, ( float )min, ( float )max, format );
+	}
+
+	template< template< class > class AngleType, typename FloatType >
+	void Draw( const AngleType< FloatType >& angle, const char* name = "##angle", const char* format = AngleType< FloatType >::Format( "%.4g" ).data() )
+	{
+		/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::InputFloat( name, const_cast< float* >( &angle.Value() ), 0, 0, format, ImGuiInputTextFlags_ReadOnly );
+	}
+
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	// TODO: Remove LightData & SurfaceData overloads; Implement a generic uniform struct drawer instead, similar to Shader's implementation.
 	bool Draw(		 Lighting::PointLightData&			point_light_data,		const char* light_name,		const bool hide_position = false,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
