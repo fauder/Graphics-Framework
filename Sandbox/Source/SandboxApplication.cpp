@@ -383,20 +383,6 @@ void SandboxApplication::DrawImGui()
 		UpdateProjectionMatrix( *cube_shader );
 }
 
-void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
-{
-	// Re-calculate the aspect ratio:
-	if( auto_calculate_aspect_ratio )
-	{
-		aspect_ratio = float( width_new_pixels ) / height_new_pixels;
-		if( auto_calculate_vfov_based_on_90_hfov )
-			vertical_field_of_view = 90_deg / aspect_ratio;
-
-		UpdateProjectionMatrix( light_source_shader );
-		UpdateProjectionMatrix( *cube_shader );
-	}
-}
-
 void SandboxApplication::UpdateViewMatrix( Engine::Shader& shader )
 {
 	const auto view_transformation = Engine::Matrix::LookAt( camera_offset, camera_direction.Normalized() );
@@ -416,18 +402,6 @@ void SandboxApplication::UpdateProjectionMatrix( Engine::Shader& shader )
 	light_source_shader.SetUniform( "uniform_transform_projection", projection_transformation );
 }
 
-//void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
-//{
-//	switch( key_code )
-//	{
-//		case Platform::KeyCode::KEY_ESCAPE:
-//			if( key_action == Platform::KeyAction::PRESS )
-//				Platform::SetShouldClose( true );
-//			break;
-//		default:
-//			break;
-//	}
-//}
 void SandboxApplication::ResetLightingData()
 {
 	light_point_is_animated  = true;
@@ -481,4 +455,39 @@ void SandboxApplication::ResetLightingData()
 		.specular_map_slot = 1,
 		.shininess         = 32.0f
 	};
+}
+
+void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
+{
+	switch( key_code )
+	{
+		case Platform::KeyCode::KEY_ESCAPE:
+			if( key_action == Platform::KeyAction::PRESS )
+				Platform::SetShouldClose( true );
+			break;
+		case Platform::KeyCode::KEY_W:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				light_spot_data.cutoff_angle_inner += 0.33_deg;
+			break;
+		case Platform::KeyCode::KEY_S:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				light_spot_data.cutoff_angle_inner -= 0.33_deg;
+			break;
+		default:
+			break;
+	}
+}
+
+void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
+{
+	// Re-calculate the aspect ratio:
+	if( auto_calculate_aspect_ratio )
+	{
+		aspect_ratio = float( width_new_pixels ) / height_new_pixels;
+		if( auto_calculate_vfov_based_on_90_hfov )
+			vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() );
+
+		UpdateProjectionMatrix( light_source_shader );
+		UpdateProjectionMatrix( *cube_shader );
+	}
 }
