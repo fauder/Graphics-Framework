@@ -113,32 +113,6 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. */ constexpr Matrix4x4 Translation( const float delta_x, const float delta_y, const float delta_z )
-	{
-		return Matrix4x4
-		(
-			{
-				1.0f,		0.0f,		0.0f,		0.0f,
-				0.0f,		1.0f,		0.0f,		0.0f,
-				0.0f,		0.0f,		1.0f,		0.0f,
-				delta_x,	delta_y,	delta_z,	1.0f
-			}
-		);
-	}
-
-	/* In row-major form. */ constexpr Matrix4x4 Translation( const Vector3 delta )
-	{
-		return Matrix4x4
-		(
-			{
-				1.0f,		0.0f,		0.0f,		0.0f,
-				0.0f,		1.0f,		0.0f,		0.0f,
-				0.0f,		0.0f,		1.0f,		0.0f,
-				delta.X(),	delta.Y(),	delta.Z(),	1.0f
-			}
-		);
-	}
-
 	/* In row-major form. */ constexpr Matrix4x4 TranslationOnY( const float delta )
 	{
 		return Matrix4x4
@@ -161,6 +135,32 @@ namespace Engine::Matrix
 				0.0f,		1.0f,		0.0f,		0.0f,
 				0.0f,		0.0f,		1.0f,		0.0f,
 				0.0f,		0.0f,		delta,		1.0f
+			}
+		);
+	}
+
+	/* In row-major form. */ constexpr Matrix4x4 Translation( const float delta_x, const float delta_y, const float delta_z )
+	{
+		return Matrix4x4
+		(
+			{
+				1.0f,		0.0f,		0.0f,		0.0f,
+				0.0f,		1.0f,		0.0f,		0.0f,
+				0.0f,		0.0f,		1.0f,		0.0f,
+				delta_x,	delta_y,	delta_z,	1.0f
+			}
+		);
+	}
+
+	/* In row-major form. */ constexpr Matrix4x4 Translation( const Vector3 delta )
+	{
+		return Matrix4x4
+		(
+			{
+				1.0f,		0.0f,		0.0f,		0.0f,
+				0.0f,		1.0f,		0.0f,		0.0f,
+				0.0f,		0.0f,		1.0f,		0.0f,
+				delta.X(),	delta.Y(),	delta.Z(),	1.0f
 			}
 		);
 	}
