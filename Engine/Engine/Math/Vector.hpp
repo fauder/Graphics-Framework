@@ -116,15 +116,17 @@ namespace Engine::Math
 			return *this;
 		}
 
-		constexpr Vector& Set( const Component array_of_values[ Size ] )
+		template< std::size_t OtherSize > requires( OtherSize > 1 && OtherSize <= Size )
+		constexpr Vector& Set( const Component array_of_values[ OtherSize ] )
 		{
-			std::copy( array_of_values, array_of_values + Size, data );
+			std::copy( array_of_values, array_of_values + OtherSize, data );
 			return *this;
 		}
 
-		constexpr Vector& Set( const Component ( &array_of_values )[ Size ] )
+		template< std::size_t OtherSize > requires( OtherSize > 1 && OtherSize <= Size )
+		constexpr Vector& Set( const Component ( &array_of_values )[ OtherSize ] )
 		{
-			std::copy( array_of_values, array_of_values + Size, data );
+			std::copy( array_of_values, array_of_values + OtherSize, data );
 			return *this;
 		}
 
