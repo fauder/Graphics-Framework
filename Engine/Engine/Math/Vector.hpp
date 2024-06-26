@@ -323,7 +323,7 @@ namespace Engine::Math
 		static consteval std::size_t Dimension() { return Size; }
 
 		static consteval Vector Zero()		{ return Vector{ ZERO_INITIALIZATION }; }
-		static consteval Vector One()		{ return Vector{ Component( 1 ) }; }
+		static consteval Vector One()		{ return Vector{ UNIFORM_INITIALIZATION, Component( 1 ) }; }
 
 		static consteval Vector Left()		requires( Size >= 1 ) { return Vector{ -Component( 1 ) }; }
 		static consteval Vector Right()		requires( Size >= 1 ) { return Vector{ +Component( 1 ) }; }
