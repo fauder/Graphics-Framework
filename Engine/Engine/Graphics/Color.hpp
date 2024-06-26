@@ -46,6 +46,9 @@ namespace Engine
 		static constexpr Color3 Magenta()							{ return Color3( 1.0f, 0.0f, 1.0f ); }
 		static constexpr Color3 Yellow()							{ return Color3( 1.0f, 1.0f, 0.0f ); }
 		static constexpr Color3 Clear_Default()						{ return Gray(); }
+
+		static constexpr Color3 Zero()								{ return Black(); }
+		static constexpr Color3 One()								{ return White(); }
 	};
 
 	class Color4 : public Vector4
@@ -89,5 +92,8 @@ namespace Engine
 		static constexpr Color4 Magenta( float alpha = 1.0f )						{ return Color4( 1.0f, 0.0f, 1.0f, alpha ); }
 		static constexpr Color4 Yellow( float alpha = 1.0f )						{ return Color4( 1.0f, 1.0f, 0.0f, alpha ); }
 		static constexpr Color4 Clear_Default()										{ return Gray(); }
+
+		static constexpr Color4 Zero()												{ return Black( 0.0f ); }
+		static constexpr Color4 One()												{ return White(); }
 	};
 }
