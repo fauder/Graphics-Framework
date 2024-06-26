@@ -43,10 +43,10 @@ namespace Engine::Math
 			std::fill_n( data, Size, value );
 		}
 
-	#pragma warning(disable:26495) // Suppress "variable is uninitialized" warning, as not initializing it is the whole point of this constructor.
+#pragma warning(disable:26495) // Suppress "variable is uninitialized" warning, as not initializing it is the whole point of this constructor.
 		constexpr explicit Vector( Initialization::NoInitialization )
 		{}
-	#pragma warning(default:26495)
+#pragma warning(default:26495)
 
 		constexpr explicit Vector( const Component x )
 			:
@@ -70,6 +70,14 @@ namespace Engine::Math
 			:
 			data{ x, y, z, w }
 		{
+		}
+
+		template< typename SmallerVectorType > requires( SmallerVectorType::Dimension() > 1 && SmallerVectorType::Dimension() < Size )
+		constexpr Vector( const SmallerVectorType& vector_of_smaller_dimension )
+			:
+			data{} // This is needed, else the compiler complains about "failure was caused by a read of an uninitialized symbol".
+		{
+			std::copy( &vector_of_smaller_dimension[ 0 ], &vector_of_smaller_dimension[ 0 ] + SmallerVectorType::Dimension(), data );
 		}
 
 		template< typename ... Values >
