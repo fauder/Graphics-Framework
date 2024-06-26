@@ -44,12 +44,13 @@ private:
 	bool camera_is_animated;
 
 	const static constexpr int CUBE_COUNT = 10;
+	const static constexpr int LIGHT_POINT_COUNT = 15;
 
-	std::vector< Engine::Lighting::SurfaceData > cube_surface_data;
+	std::vector< Engine::Lighting::SurfaceData > cube_surface_data_array;
 	Engine::Lighting::SurfaceData ground_quad_surface_data;
 	Engine::Lighting::SurfaceData front_wall_quad_surface_data;
 	Engine::Lighting::DirectionalLightData light_directional_data;
-	Engine::Lighting::PointLightData light_point_data;
+	std::vector< Engine::Lighting::PointLightData > light_point_data_array;
 	Engine::Lighting::SpotLightData light_spot_data;
 	float light_point_orbit_radius;
 	bool light_point_is_animated;

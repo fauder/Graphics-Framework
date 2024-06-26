@@ -33,8 +33,10 @@ struct SurfaceData
 	float shininess;
 };
 
+#define POINT_LIGHT_COUNT 15
+
 uniform DirectionalLightData	uniform_directional_light_data;
-uniform PointLightData			uniform_point_light_data;
+uniform PointLightData			uniform_point_light_data[ POINT_LIGHT_COUNT ];
 uniform SpotLightData			uniform_spot_light_data;
 
 uniform SurfaceData				uniform_surface_data;
@@ -142,10 +144,14 @@ void main()
 																	  normal_view_space, viewing_direction_view_space,
 																	  diffuse_sample, specular_sample );
 
-	vec3 from_point_light = CalculateColorFromPointLight( uniform_point_light_data, 
+	vec3 from_point_light = vec3( 0 );																		
+	for( int i = 0; i < POINT_LIGHT_COUNT; i++ )
+	{
+		from_point_light += CalculateColorFromPointLight( uniform_point_light_data[ i ], 
 														  normal_view_space, viewing_direction_view_space,
 														  varying_position_view_space,
 														  diffuse_sample, specular_sample );
+	}
 
 	vec3 from_spot_light = CalculateColorFromSpotLight( uniform_spot_light_data, 
 													    normal_view_space, viewing_direction_view_space,

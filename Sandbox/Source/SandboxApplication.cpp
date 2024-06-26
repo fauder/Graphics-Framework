@@ -9,6 +9,7 @@
 #include "Engine/Graphics/Primitive/Primitive_Cube.h"
 #include "Engine/Math/Math.hpp"
 #include "Engine/Math/Matrix.h"
+#include "Engine/Math/Random.hpp"
 
 // std Includes.
 #include <numeric> // std::accumulate().
@@ -46,6 +47,8 @@ SandboxApplication::~SandboxApplication()
 
 void SandboxApplication::Initialize()
 {
+	//Engine::Math::Random::SeedRandom();
+
 	ResetLightingData();
 
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
@@ -148,21 +151,27 @@ void SandboxApplication::Render()
 
 	light_source_shader.SetUniform( "uniform_transform_view", view_transformation );
 
-	/* Light source transform: */
-	if( light_point_is_animated )
+	constexpr Engine::Radians angle_increment( Engine::Constants< Engine::Radians >::Two_Pi() / LIGHT_POINT_COUNT );
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
-		const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f );
+		auto& light_point_data = light_point_data_array[ i ];
 
-		light_point_data.position_world_space = ( ( Engine::Vector4::Forward() * light_point_orbit_radius ) *
-												  ( point_light_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin ) ) ).XYZ();
-		light_point_data.position_world_space.SetY( 2.0f );
+		/* Light source transform: */
+		if( light_point_is_animated )
+		{
+			const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f + angle_increment * ( float )i );
+
+			light_point_data.position_world_space = ( ( Engine::Vector4::Forward() * light_point_orbit_radius ) *
+													  ( point_light_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin ) ) ).XYZ();
+			light_point_data.position_world_space.SetY( 2.0f );
+		}
+
+		/* Light color: */
+		light_source_shader.SetUniform( "uniform_transform_world",	Engine::Matrix::Translation( light_point_data.position_world_space ) );
+		light_source_shader.SetUniform( "uniform_color",			light_point_data.diffuse );
+
+		GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 	}
-
-	/* Light color: */
-	light_source_shader.SetUniform( "uniform_transform_world",	Engine::Matrix::Translation( light_point_data.position_world_space ) );
-	light_source_shader.SetUniform( "uniform_color",			light_point_data.diffuse );
-
-	GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 
 /* Render cubes: */
 	cube_shader->Bind();
@@ -176,9 +185,14 @@ void SandboxApplication::Render()
 		light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 		cube_shader->SetUniform( "uniform_directional_light_data", light_directional_data );
 	
-		light_point_data.position_view_space = ( Engine::Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
-												 view_transformation ).XYZ();
-		cube_shader->SetUniform( "uniform_point_light_data", light_point_data );
+		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		{
+			auto& light_point_data = light_point_data_array[ i ];
+			light_point_data.position_view_space = ( Engine::Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
+													 view_transformation ).XYZ();
+			const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
+			cube_shader->SetUniform( uniform_name.c_str(), light_point_data );
+		}
 
 		light_spot_data.direction_view_space = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 		light_spot_data.position_view_space = ( Engine::Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) *
@@ -200,7 +214,7 @@ void SandboxApplication::Render()
 		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( cube_positions[ i ] + Engine::Vector3::Up() * 5.0f ) );
 
 		/* Lighting: */
-		cube_shader->SetUniform( "uniform_surface_data", cube_surface_data[ i ] );
+		cube_shader->SetUniform( "uniform_surface_data", cube_surface_data_array[ i ] );
 
 		/* Transform: */
 		cube_shader->SetUniform( "uniform_transform_world", transform );
@@ -271,12 +285,16 @@ void SandboxApplication::DrawImGui()
 		ImGui::Checkbox( "Animate (Rotate) Point Light", &light_point_is_animated );
 		if( light_point_is_animated )
 			ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
-		Engine::ImGuiDrawer::Draw( light_point_data, "Point Light Properties", light_point_is_animated /* hide position. */ );
+		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		{
+			const std::string name( "Point Light Properties##" + std::to_string( i ) );
+			Engine::ImGuiDrawer::Draw( light_point_data_array[ i ], name.c_str(), light_point_is_animated /* hide position. */ );
+		}
 		Engine::ImGuiDrawer::Draw( light_spot_data, "Spot Light Properties" );
 
 		for( auto i = 0; i < CUBE_COUNT; i++ )
 		{
-			auto& surface_data = cube_surface_data[ i ];
+			auto& surface_data = cube_surface_data_array[ i ];
 			Engine::ImGuiDrawer::Draw( surface_data, ( "Cube #" + std::to_string( i + 1 ) + " Surface Properties" ).c_str() );
 		}
 
@@ -415,17 +433,21 @@ void SandboxApplication::ResetLightingData()
 		.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
 		.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
 	};
-	light_point_data =
+	light_point_data_array = std::vector< Engine::Lighting::PointLightData >( LIGHT_POINT_COUNT );
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
-		.ambient               = {  0.05f,  0.05f,  0.05f },
-		.diffuse               = {  0.8f,   0.8f,   0.8f  },
-		.specular              = {  1.0f,   1.0f,   1.0f  },
-		.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.attenuation_constant  = 1.0f,
-		.attenuation_linear    = 0.09f,
-		.attenuation_quadratic = 0.032f,
-		.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
-	};
+		light_point_data_array[ i ] =
+		{
+			.ambient               = {  0.05f,  0.05f,  0.05f },
+			.diffuse               = Engine::Math::Random::Generate< Engine::Color3 >(),
+			.specular              = {  1.0f,   1.0f,   1.0f  },
+			.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+			.attenuation_constant  = 1.0f,
+			.attenuation_linear    = 0.09f,
+			.attenuation_quadratic = 0.032f,
+			.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
+		};
+	}
 	light_spot_data =
 	{
 		.ambient                = {  0.05f,  0.05f,  0.05f },
@@ -442,7 +464,7 @@ void SandboxApplication::ResetLightingData()
 		.cutoff_angle_outer     = 17.5_deg
 	};
 
-	cube_surface_data = std::vector< Engine::Lighting::SurfaceData >( CUBE_COUNT, 
+	cube_surface_data_array = std::vector< Engine::Lighting::SurfaceData >( CUBE_COUNT, 
 	{
 		.diffuse_map_slot  = 0,
 		.specular_map_slot = 1,
