@@ -194,6 +194,7 @@ namespace Engine
 #ifdef _DEBUG
 			if( array_size_dontCare > 1 )
 			{
+				// TODO: Implement parsing of arrays of non-struct uniforms.
 				throw std::logic_error( "Uniform arrays are not implemented yet." );
 			}
 #endif // _DEBUG
@@ -276,7 +277,10 @@ namespace Engine
 		{
 			if( uniform_info.IsUserDefinedStruct() && !uniform_info.HasOriginalOrdersDetermined() )
 			{
-				if( const auto uniform_struct_name_pos = shader_source.find( uniform_name );
+				std::string uniform_name_without_square_brackets;
+				const auto square_bracket_pos = uniform_name.find( '[' );
+
+				if( const auto uniform_struct_name_pos = shader_source.find( uniform_name.substr( 0, square_bracket_pos ) );
 					uniform_struct_name_pos != std::string::npos )
 				{
 					const auto uniform_struct_type_name( Utility::String::FindPreviousWord( shader_source, uniform_struct_name_pos ) );
