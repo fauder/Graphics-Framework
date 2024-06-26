@@ -181,6 +181,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Math\Math.hpp" />
     <ClInclude Include="Engine\Math\Matrix.h" />
     <ClInclude Include="Engine\Math\Matrix.hpp" />
+    <ClInclude Include="Engine\Math\Random.hpp" />
     <ClInclude Include="Engine\Math\TypeTraits.h" />
     <ClInclude Include="Engine\Math\Unit.hpp" />
     <ClInclude Include="Engine\Math\Vector.hpp" />
