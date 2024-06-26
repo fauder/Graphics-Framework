@@ -26,6 +26,12 @@ namespace Engine
 			Base( r, g, b )
 		{}
 
+		template< std::size_t VectorSize > requires( VectorSize <= Base::Dimension() )
+		constexpr Color3( const Vector< float, VectorSize >& vector )
+			:
+			Base( vector )
+		{}
+
 		constexpr float R() const { return data[ 0 ]; };
 		constexpr float G() const { return data[ 1 ]; };
 		constexpr float B() const { return data[ 2 ]; };
@@ -60,6 +66,12 @@ namespace Engine
 		constexpr Color4( const float r, const float g, const float b, const float a )
 			:
 			Base( r, g, b, a )
+		{}
+
+		template< std::size_t VectorSize > requires( VectorSize <= Base::Dimension() )
+		constexpr Color4( const Vector< float, VectorSize >& vector )
+			:
+			Base( vector )
 		{}
 
 		constexpr float R() const { return data[ 0 ]; };
