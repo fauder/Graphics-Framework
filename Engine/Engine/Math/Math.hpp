@@ -10,8 +10,17 @@
 /* Forward Declarations. */
 namespace Engine::Math
 {
+	class Polar2;
+	class Polar3_Spherical_Game;
+
 	template< typename Component, std::size_t Size > requires( Size > 1 ) 
 	class Vector;
+}
+
+namespace Engine
+{
+	using Vector2 = Math::Vector< float, 2 >;
+	using Vector3 = Math::Vector< float, 3 >;
 }
 
 namespace Engine::Math
@@ -77,4 +86,10 @@ namespace Engine::Math
 
 		return Math::Acos( Math::Clamp( Dot( a, b ), Value( -1 ), Value( +1 ) ) );
 	}
+
+/* Conversions Between Cartesian, Polar, Cylindrical & Spherical Coordinates. */
+	Polar2 ToPolar2( const Vector2& cartesian );
+	Vector2 ToVector2( const Polar2& polar2 );
+	Polar3_Spherical_Game ToPolar3_Spherical_Game( const Vector3& cartesian );
+	Vector3 ToVector3( const Polar3_Spherical_Game& polar3 );
 }
