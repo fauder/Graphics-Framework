@@ -212,7 +212,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="Framework.natvis" />
+    <Natvis Include="Engine.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -172,6 +172,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Natvis Include="Framework.natvis" />
+    <Natvis Include="Engine.natvis" />
   </ItemGroup>
 </Project>
