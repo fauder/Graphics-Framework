@@ -1,10 +1,66 @@
 // Engine Includes.
 #include "Math.hpp"
+#include "Matrix.hpp"
 #include "Polar.h"
 #include "Vector.hpp"
 
 namespace Engine::Math
 {
+/* Conversions Between Rotation Representations. */
+
+	/* In row-major form. Results in counter-clockwise rotation.
+	 * Describes the intrinsic  (body-axis) rotation, in the order:	 heading (around y) -> pitch (around x) ->    bank (around z),
+	 * equal to  the extrinsic (fixed-axis) rotation, in the order:		bank (around z) -> pitch (around x) -> heading (around y). */
+	Engine::Matrix4x4 EulerToMatrix( Engine::Radians heading_around_y, Engine::Radians pitch_around_x, Engine::Radians bank_around_z )
+	{
+		const auto sin_pitch   = Math::Sin( pitch_around_x );
+		const auto sin_heading = Math::Sin( heading_around_y );
+		const auto sin_bank    = Math::Sin( bank_around_z );
+
+		const auto cos_pitch   = Math::Cos( pitch_around_x );
+		const auto cos_heading = Math::Cos( heading_around_y );
+		const auto cos_bank    = Math::Cos( bank_around_z );
+
+		const auto cos_bank_cos_heading  = cos_bank * cos_heading;
+		const auto sin_pitch_sin_heading = sin_pitch * sin_heading;
+
+		return Engine::Matrix4x4
+		(
+			{
+				cos_bank_cos_heading + sin_bank * sin_pitch_sin_heading,		sin_bank * cos_pitch,		-cos_bank * sin_heading + sin_bank * sin_pitch * cos_heading,	0.0f,
+				-sin_bank * cos_heading + cos_bank * sin_pitch_sin_heading,		cos_bank * cos_pitch,		sin_bank * sin_heading + sin_pitch * cos_bank_cos_heading,		0.0f,
+				cos_pitch * sin_heading,										-sin_pitch,					cos_pitch * cos_heading,										0.0f,
+				0.0f,															0.0f,						0.0f,															1.0f
+			}
+		);
+	}
+
+	/* In row-major form. Results in counter-clockwise rotation.
+	 * Describes the intrinsic  (body-axis) rotation, in the order:	 heading (around y) -> pitch (around x) ->    bank (around z),
+	 * equal to  the extrinsic (fixed-axis) rotation, in the order:		bank (around z) -> pitch (around x) -> heading (around y). */
+	Engine::Matrix3x3 EulerToMatrix3x3( Engine::Radians heading_around_y, Engine::Radians pitch_around_x, Engine::Radians bank_around_z )
+	{
+		const auto sin_pitch   = Math::Sin( pitch_around_x );
+		const auto sin_heading = Math::Sin( heading_around_y );
+		const auto sin_bank    = Math::Sin( bank_around_z );
+
+		const auto cos_pitch   = Math::Cos( pitch_around_x );
+		const auto cos_heading = Math::Cos( heading_around_y );
+		const auto cos_bank    = Math::Cos( bank_around_z );
+
+		const auto cos_bank_cos_heading  = cos_bank * cos_heading;
+		const auto sin_pitch_sin_heading = sin_pitch * sin_heading;
+
+		return Engine::Matrix3x3
+		(
+			{
+				cos_bank_cos_heading + sin_bank * sin_pitch_sin_heading,		sin_bank * cos_pitch,		-cos_bank * sin_heading + sin_bank * sin_pitch * cos_heading,
+				-sin_bank * cos_heading + cos_bank * sin_pitch_sin_heading,		cos_bank * cos_pitch,		sin_bank * sin_heading + sin_pitch * cos_bank_cos_heading,	
+				cos_pitch * sin_heading,										-sin_pitch,					cos_pitch * cos_heading
+			}
+		);
+	}
+
 /* Conversions Between Cartesian <=> Polar/Spherical Coordinates. */
 
 	Polar2 ToPolar2( const Vector2& cartesian )

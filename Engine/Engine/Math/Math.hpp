@@ -15,12 +15,19 @@ namespace Engine::Math
 
 	template< typename Component, std::size_t Size > requires( Size > 1 ) 
 	class Vector;
+
+	template< Concepts::Arithmetic Type, std::size_t RowSize, std::size_t ColumnSize >
+		requires Concepts::NonZero< RowSize >&& Concepts::NonZero< ColumnSize >
+	class Matrix;
 }
 
 namespace Engine
 {
 	using Vector2 = Math::Vector< float, 2 >;
 	using Vector3 = Math::Vector< float, 3 >;
+
+	using Matrix3x3 = Math::Matrix< float, 3, 3 >;
+	using Matrix4x4 = Math::Matrix< float, 4, 4 >;
 }
 
 namespace Engine::Math
@@ -85,6 +92,115 @@ namespace Engine::Math
 	#endif
 
 		return Math::Acos( Math::Clamp( Dot( a, b ), Value( -1 ), Value( +1 ) ) );
+	}
+
+/* Conversions Between Rotation Representations. */
+
+	/* In row-major form. Results in counter-clockwise rotation.
+	 * Describes the intrinsic  (body-axis) rotation, in the order:	 heading (around y) -> pitch (around x) ->    bank (around z),
+	 * equal to  the extrinsic (fixed-axis) rotation, in the order:		bank (around z) -> pitch (around x) -> heading (around y). */
+	Engine::Matrix4x4 EulerToMatrix( Engine::Radians heading_around_y, Engine::Radians pitch_around_x, Engine::Radians bank_around_z );
+	/* In row-major form. Results in counter-clockwise rotation.
+	 * Describes the intrinsic  (body-axis) rotation, in the order:	 heading (around y) -> pitch (around x) ->    bank (around z),
+	 * equal to  the extrinsic (fixed-axis) rotation, in the order:		bank (around z) -> pitch (around x) -> heading (around y). */
+	Engine::Matrix3x3 EulerToMatrix3x3( Engine::Radians heading_around_y, Engine::Radians pitch_around_x, Engine::Radians bank_around_z );
+	
+	/* In-place modification of the upper-left 3x3 portion.
+	 *
+	 * In row-major form. Results in counter-clockwise rotation.
+	 * Describes the intrinsic  (body-axis) rotation, in the order:	 heading (around y) -> pitch (around x) ->    bank (around z),
+	 * equal to  the extrinsic (fixed-axis) rotation, in the order:		bank (around z) -> pitch (around x) -> heading (around y). */
+	template< Concepts::Arithmetic Type, std::size_t MatrixSize >
+	void EulerToMatrix( Matrix< Type, MatrixSize, MatrixSize >& matrix, Engine::Radians heading_around_y, Engine::Radians pitch_around_x, Engine::Radians bank_around_z ) requires( MatrixSize >= 3 )
+	{
+		const auto sin_pitch   = Math::Sin( pitch_around_x );
+		const auto sin_heading = Math::Sin( heading_around_y );
+		const auto sin_bank    = Math::Sin( bank_around_z );
+
+		const auto cos_pitch   = Math::Cos( pitch_around_x );
+		const auto cos_heading = Math::Cos( heading_around_y );
+		const auto cos_bank    = Math::Cos( bank_around_z );
+
+		const auto cos_bank_cos_heading = cos_bank * cos_heading;
+		const auto sin_pitch_sin_heading = sin_pitch * sin_heading;
+
+		matrix[ 0 ][ 0 ] = cos_bank_cos_heading + sin_bank * sin_pitch_sin_heading;		matrix[ 0 ][ 1 ] = sin_bank * cos_pitch;	matrix[ 0 ][ 2 ] = -cos_bank * sin_heading + sin_bank * sin_pitch * cos_heading;
+		matrix[ 1 ][ 0 ] = -sin_bank * cos_heading + cos_bank * sin_pitch_sin_heading;	matrix[ 1 ][ 1 ] = cos_bank * cos_pitch;	matrix[ 1 ][ 2 ] = sin_bank * sin_heading + sin_pitch * cos_bank_cos_heading;	
+		matrix[ 2 ][ 0 ] = cos_pitch * sin_heading;										matrix[ 2 ][ 1 ] = -sin_pitch;				matrix[ 2 ][ 2 ] = cos_pitch * cos_heading;									
+	}
+
+	/* Expects matrix in row-major form. Counter-clockwise rotation.
+	 * The matrix should describe  an intrinsic  (body-axis) rotation, in the order:	 heading (around y) -> pitch (around x) ->    bank (around z),
+	 * which would be the same as the extrinsic (fixed-axis) rotation, in the order:		bank (around z) -> pitch (around x) -> heading (around y). */
+	template< Concepts::Arithmetic Type, std::size_t MatrixSize >
+	void MatrixToEuler( const Matrix< Type, MatrixSize, MatrixSize >& matrix, Engine::Radians& heading_around_y, Engine::Radians& pitch_around_x, Engine::Radians& bank_around_z ) requires( MatrixSize >= 3 )
+	{
+		/* The matrix' values for reference:
+		{
+			matrix[ 0 ][ 0 ] = cos_bank_cos_heading + sin_bank * sin_pitch_sin_heading		matrix[ 0 ][ 1 ] = sin_bank * cos_pitch		matrix[ 0 ][ 2 ] = -cos_bank * sin_heading + sin_bank * sin_pitch * cos_heading
+			matrix[ 1 ][ 0 ] = -sin_bank * cos_heading + cos_bank * sin_pitch_sin_heading	matrix[ 1 ][ 1 ] = cos_bank * cos_pitch		matrix[ 1 ][ 2 ] = sin_bank * sin_heading + sin_pitch * cos_bank_cos_heading
+			matrix[ 2 ][ 0 ] = cos_pitch * sin_heading										matrix[ 2 ][ 1 ] = -sin_pitch				matrix[ 2 ][ 2 ] = cos_pitch * cos_heading
+		}*/
+
+		using namespace Math::Literals;
+
+		const auto sin_pitch = -matrix[ 2 ][ 1 ];
+
+		if( sin_pitch <= -1.0f )
+			pitch_around_x = Radians( -Constants< float >::Pi_Over_Two() );
+		else if( sin_pitch >= +1.0f )
+			pitch_around_x = Radians( Constants< float >::Pi_Over_Two() );
+		else
+			pitch_around_x = Math::Asin( sin_pitch );
+
+		const auto cos_pitch = Math::Cos( pitch_around_x );
+
+		if( Math::IsZero( cos_pitch ) ) // Which means pitch is +90 or -90 -> gimbal lock!
+		{
+			// Set bank to zero & assign all rotation around the vertical axis to heading.
+			bank_around_z = 0.0_rad;
+
+			// Since bank = 0, it means that cos_bank = 1 & sin_bank = 0. Reminder: cos_pitch is also 0.
+
+			/* Updated matrix' values for reference:
+			{
+				matrix[ 0 ][ 0 ] = cos_heading					matrix[ 0 ][ 1 ] = 0				matrix[ 0 ][ 2 ] = -sin_heading
+				matrix[ 1 ][ 0 ] = sin_pitch_sin_heading		matrix[ 1 ][ 1 ] = 0				matrix[ 1 ][ 2 ] = sin_pitch * cos_heading
+				matrix[ 2 ][ 0 ] = 0							matrix[ 2 ][ 1 ] = -sin_pitch		matrix[ 2 ][ 2 ] = 0
+			}*/
+
+			heading_around_y = Math::Atan2( -matrix[ 0 ][ 2 ], matrix[ 0 ][ 0 ] );
+		}
+		else
+		{
+			/*
+			const auto sin_heading = matrix[ 2 ][ 0 ] / cos_pitch;
+			const auto cos_heading = matrix[ 2 ][ 2 ] / cos_pitch;
+			*/
+
+			/* Since cos_pitch is a common denominator between these two terms, we can directly pass the numerators of these fractions to atan2() instead. */
+
+			heading_around_y = Math::Atan2( matrix[ 2 ][ 0 ], matrix[ 2 ][ 2 ] );
+
+			/* Similar method for bank: */
+
+			bank_around_z = Math::Atan2( matrix[ 0 ][ 1 ], matrix[ 1 ][ 1 ] );
+		}
+	}
+
+	/* Expects matrix in row-major form. Counter-clockwise rotation.
+	 * The matrix should describe  an intrinsic  (body-axis) rotation, in the order:	 heading (around y) -> pitch (around x) ->    bank (around z),
+	 * which would be the same as the extrinsic (fixed-axis) rotation, in the order:		bank (around z) -> pitch (around x) -> heading (around y). */
+	template< Concepts::Arithmetic Type, std::size_t MatrixSize >
+	void MatrixToEuler( const Matrix< Type, MatrixSize, MatrixSize >& matrix, Engine::Degrees& heading_around_y, Engine::Degrees& pitch_around_x, Engine::Degrees& bank_around_z ) requires( MatrixSize >= 3 )
+	{
+		Engine::Radians heading( heading_around_y ), pitch( pitch_around_x ), bank( bank_around_z );
+
+		MatrixToEuler( matrix, heading, pitch, bank );
+
+		heading_around_y = Engine::Degrees( heading );
+		pitch_around_x   = Engine::Degrees( pitch );
+		bank_around_z    = Engine::Degrees( bank );
 	}
 
 /* Conversions Between Cartesian, Polar, Cylindrical & Spherical Coordinates. */
