@@ -28,12 +28,12 @@ SandboxApplication::SandboxApplication()
 	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
-	camera_direction( Engine::Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ),
+	camera_direction( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ),
 	camera_offset( 0.0f, 10.0f, -20.0f ),
 	camera_is_animated( false ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( Platform::GetAspectRatio() ),
-	vertical_field_of_view( CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() ) ),
+	vertical_field_of_view( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true )
 {
@@ -109,11 +109,11 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	const Engine::Radians current_time_as_angle( Platform::GetCurrentTime() );
+	const Radians current_time_as_angle( Platform::GetCurrentTime() );
 
 	vertex_array_crate.Bind();
 
-	constexpr std::array< Engine::Vector3, CUBE_COUNT > cube_positions =
+	constexpr std::array< Vector3, CUBE_COUNT > cube_positions =
 	{ {
 		{  0.0f,  0.0f,  0.0f	},
 		{  2.0f,  5.0f, +15.0f	},
@@ -127,17 +127,17 @@ void SandboxApplication::Render()
 		{ -1.3f,  1.0f, +1.5f	}
 	} };
 
-	constexpr Engine::Vector3 cubes_origin = std::accumulate( cube_positions.cbegin(), cube_positions.cend(), Engine::Vector3::Zero() ) / CUBE_COUNT;
+	constexpr Vector3 cubes_origin = std::accumulate( cube_positions.cbegin(), cube_positions.cend(), Vector3::Zero() ) / CUBE_COUNT;
 
-	Engine::Matrix4x4 view_transformation;
+	Matrix4x4 view_transformation;
 
 	/* Camera transform: */
 	if( camera_is_animated )
 	{
 		const auto camera_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f );
 
-		const auto new_camera_offset = ( Engine::Vector4( camera_offset.X(), camera_offset.Y(), camera_offset.Z(), 1.0f ) *
-										 ( camera_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin + Engine::Vector3::Up() * 0.5f ) ) ).XYZ();
+		const auto new_camera_offset = ( Vector4( camera_offset.X(), camera_offset.Y(), camera_offset.Z(), 1.0f ) *
+										 ( camera_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin + Vector3::Up() * 0.5f ) ) ).XYZ();
 
 		const auto new_camera_direction = camera_direction * camera_rotation.SubMatrix< 3 >();
 
@@ -151,7 +151,7 @@ void SandboxApplication::Render()
 
 	light_source_shader.SetUniform( "uniform_transform_view", view_transformation );
 
-	constexpr Engine::Radians angle_increment( Engine::Constants< Engine::Radians >::Two_Pi() / LIGHT_POINT_COUNT );
+	constexpr Radians angle_increment( Engine::Constants< Radians >::Two_Pi() / LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
 		auto& light_point_data = light_point_data_array[ i ];
@@ -161,7 +161,7 @@ void SandboxApplication::Render()
 		{
 			const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f + angle_increment * ( float )i );
 
-			light_point_data.position_world_space = ( ( Engine::Vector4::Forward() * light_point_orbit_radius ) *
+			light_point_data.position_world_space = ( ( Vector4::Forward() * light_point_orbit_radius ) *
 													  ( point_light_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin ) ) ).XYZ();
 			light_point_data.position_world_space.SetY( 2.0f );
 		}
@@ -188,19 +188,19 @@ void SandboxApplication::Render()
 		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		{
 			auto& light_point_data = light_point_data_array[ i ];
-			light_point_data.position_view_space = ( Engine::Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
+			light_point_data.position_view_space = ( Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
 													 view_transformation ).XYZ();
 			const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
 			cube_shader->SetUniform( uniform_name.c_str(), light_point_data );
 		}
 
 		light_spot_data.direction_view_space = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
-		light_spot_data.position_view_space = ( Engine::Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) *
+		light_spot_data.position_view_space = ( Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) *
 												 view_transformation ).XYZ();
 
 		// Also need to convert the angles to cosines.
-		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Engine::Radians( light_spot_data.cutoff_angle_inner ) );
-		light_spot_data.cos_cutoff_angle_outer = Engine::Math::Cos( Engine::Radians( light_spot_data.cutoff_angle_outer ) );
+		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
+		light_spot_data.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
 
 		cube_shader->SetUniform( "uniform_spot_light_data", light_spot_data );
 	}
@@ -210,8 +210,8 @@ void SandboxApplication::Render()
 
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
-		Engine::Degrees angle( 20.0f * i );
-		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( cube_positions[ i ] + Engine::Vector3::Up() * 5.0f ) );
+		Degrees angle( 20.0f * i );
+		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( cube_positions[ i ] + Vector3::Up() * 5.0f ) );
 
 		/* Lighting: */
 		cube_shader->SetUniform( "uniform_surface_data", cube_surface_data_array[ i ] );
@@ -329,7 +329,7 @@ void SandboxApplication::DrawImGui()
 		if( ImGui::Button( "Reset" ) )
 		{
 			camera_offset        = { 0.0f, 0.0f, -3.0f };
-			camera_direction     = Engine::Vector3::Forward();
+			camera_direction     = Vector3::Forward();
 			
 			camera_is_animated   = false;
 
@@ -359,7 +359,7 @@ void SandboxApplication::DrawImGui()
 			near_plane                           = 0.1f;
 			far_plane                            = 100.0f;
 			aspect_ratio                         = Platform::GetAspectRatio();
-			vertical_field_of_view               = CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() );
+			vertical_field_of_view               = CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() );
 			projection_matrix_is_dirty           = true;
 		}
 
@@ -384,9 +384,9 @@ void SandboxApplication::DrawImGui()
 			}
 			
 			if( auto_calculate_vfov_based_on_90_hfov )
-				vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() );
+				vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() );
 			else
-				vertical_field_of_view = Engine::Radians( v_fov_radians );
+				vertical_field_of_view = Radians( v_fov_radians );
 
 			projection_matrix_is_dirty = true;
 		}
@@ -455,8 +455,8 @@ void SandboxApplication::ResetLightingData()
 		.specular               = {  0.5f,   0.5f,   0.5f  },
 		.position_view_space    = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
 		.direction_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.cos_cutoff_angle_inner = Engine::Math::Cos( Engine::Radians( 12.5_deg ) ),
-		.cos_cutoff_angle_outer = Engine::Math::Cos( Engine::Radians( 17.5_deg ) ),
+		.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( 12.5_deg ) ),
+		.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( 17.5_deg ) ),
 		/* End of GLSL equivalence. */
 		.position_world_space   = camera_offset,
 		.direction_world_space  = camera_direction,
@@ -479,7 +479,7 @@ void SandboxApplication::ResetLightingData()
 	};
 }
 
-Engine::Radians SandboxApplication::CalculateVerticalFieldOfView( const Engine::Radians horizontal_field_of_view ) const
+SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
 {
 	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), aspect_ratio );
 }
@@ -512,7 +512,7 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	{
 		aspect_ratio = float( width_new_pixels ) / height_new_pixels;
 		if( auto_calculate_vfov_based_on_90_hfov )
-			vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Engine::Radians >::Pi_Over_Two() );
+			vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() );
 
 		UpdateProjectionMatrix( light_source_shader );
 		UpdateProjectionMatrix( *cube_shader );

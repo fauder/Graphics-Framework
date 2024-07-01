@@ -4,11 +4,13 @@
 #include "Engine/Graphics/Shader.hpp"
 #include "Engine/Graphics/VertexArray.h"
 #include "Engine/Graphics/Texture.h"
-#include "Engine/Math/Angle.hpp"
-#include "Engine/Math/Vector.hpp"
+
+#include "Engine/DefineMathTypes.h"
 
 class SandboxApplication : public Engine::Application
 {
+	DEFINE_MATH_TYPES()
+
 public:
 	SandboxApplication();
 	virtual ~SandboxApplication();
@@ -29,7 +31,7 @@ private:
 	void UpdateProjectionMatrix( Engine::Shader& shader );
 
 	void ResetLightingData();
-	Engine::Radians CalculateVerticalFieldOfView( const Engine::Radians horizontal_field_of_view ) const;
+	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
 
 private:
 	Engine::VertexArray vertex_array_crate;
@@ -40,7 +42,7 @@ private:
 	Engine::Shader gouraud_shader, phong_shader;
 	Engine::Shader light_source_shader;
 
-	Engine::Vector3 camera_offset, camera_direction;
+	Vector3 camera_offset, camera_direction;
 	bool camera_is_animated;
 
 	const static constexpr int CUBE_COUNT = 10;
@@ -57,7 +59,7 @@ private:
 
 	float near_plane, far_plane;
 	float aspect_ratio;
-	Engine::Radians vertical_field_of_view;
+	Radians vertical_field_of_view;
 	bool auto_calculate_aspect_ratio;
 	bool auto_calculate_vfov_based_on_90_hfov;
 };
