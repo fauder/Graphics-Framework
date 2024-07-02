@@ -6,6 +6,7 @@
 #include "Graphics/Lighting.h"
 #include "Graphics/Shader.hpp"
 #include "Math/Quaternion.hpp"
+#include "Scene/Transform.h"
 
 // Vendor Includes.
 #include "ImGui/imgui.h"
@@ -146,6 +147,9 @@ namespace Engine::ImGuiDrawer
 
 		ImGui::PopStyleColor();
 	}
+
+	bool Draw( Transform& transform, const char* name = "##transform" );
+	void Draw( const Transform& transform, const char* name = "##transform" );
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	// TODO: Remove LightData & SurfaceData overloads; Implement a generic uniform struct drawer instead, similar to Shader's implementation.

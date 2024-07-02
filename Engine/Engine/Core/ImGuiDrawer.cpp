@@ -30,6 +30,68 @@ namespace Engine::ImGuiDrawer
 		ImGui::ColorEdit4( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
 		ImGui::PopStyleColor();
 	}
+
+	void Draw( const Engine::Transform& transform, const char* name )
+	{
+		if( ImGui::Begin( "Transforms", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			{
+				ImGui::PushID( name );
+
+				Draw( transform.GetTranslation(), "Position" );
+				Draw( transform.GetRotation(), "Rotation" );
+				Draw( transform.GetScaling(), "Scale" );
+
+				ImGui::PopID();
+
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::End();
+	}
+
+	bool Draw( Transform& transform, const char* name )
+	{
+		bool is_modified = false;
+
+		if( ImGui::Begin( "Transforms", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			{
+				ImGui::PushID( name );
+
+				Vector3 translation = transform.GetTranslation();
+				if( Draw( translation, "Position" ) )
+				{
+					is_modified = true;
+					transform.SetTranslation( translation );
+				}
+
+				Quaternion rotation = transform.GetRotation();
+				if( Draw( rotation, "Rotation" ) )
+				{
+					is_modified = true;
+					transform.SetRotation( rotation );
+				}
+
+				Vector3 scale = transform.GetScaling();
+				if( Draw( scale, "Scale" ) )
+				{
+					is_modified = true;
+					transform.SetScaling( scale );
+				}
+
+				ImGui::PopID();
+
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::End();
+
+		return is_modified;
 	}
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags )

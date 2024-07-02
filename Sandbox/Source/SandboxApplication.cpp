@@ -129,9 +129,9 @@ void SandboxApplication::Update()
 	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_S ) )
 		camera_transform.OffsetTranslation( camera_transform.Forward() * -camera_move_speed * time_delta );
 	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_A ) )
-		camera_transform.OffsetTranslation( camera_transform.Right() * -camera_move_speed * time_delta );
+		camera_transform.OffsetTranslation( camera_transform.Right()   * -camera_move_speed * time_delta );
 	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_D ) )
-		camera_transform.OffsetTranslation( camera_transform.Right() * +camera_move_speed * time_delta );
+		camera_transform.OffsetTranslation( camera_transform.Right()   * +camera_move_speed * time_delta );
 
 	UpdateViewMatrix( *cube_shader );
 }
@@ -322,6 +322,9 @@ void SandboxApplication::DrawImGui()
 
 	ImGui::End();
 
+	if( Engine::ImGuiDrawer::Draw( camera_transform, "Camera" ) )
+		view_matrix_is_dirty = true;
+
 	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
@@ -333,17 +336,6 @@ void SandboxApplication::DrawImGui()
 
 			view_matrix_is_dirty = true;
 		}
-
-		/*if( Engine::ImGuiDrawer::Draw( camera_transform.GetTranslation(), "Camera Position" ) )
-			view_matrix_is_dirty = true;
-
-		if( Engine::ImGuiDrawer::Draw( camera_transform.Forward(), "Camera Direction" ) )
-		{
-			view_matrix_is_dirty = true;
-		}*/
-
-		Engine::ImGuiDrawer::Draw( camera_transform.GetTranslation(),	"Camera Position" );
-		Engine::ImGuiDrawer::Draw( camera_transform.Forward(),			"Camera Direction" );
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 	}
