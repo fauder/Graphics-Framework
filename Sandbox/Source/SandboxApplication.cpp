@@ -27,8 +27,9 @@ SandboxApplication::SandboxApplication()
 	light_source_shader( "Basic Color" ),
 	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
+	camera_rotation_speed( 5.0f ),
 	camera_move_speed( 5.0f ),
-	camera_controller( &camera, camera_move_speed ),
+	camera_controller( &camera, camera_rotation_speed ),
 	camera_is_animated( false ),
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
@@ -122,6 +123,15 @@ void SandboxApplication::Update()
 					.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
 		}
 	}
+
+	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_W ) )
+		camera_transform.OffsetTranslation( camera_transform.Forward() * +camera_move_speed * time_delta );
+	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_S ) )
+		camera_transform.OffsetTranslation( camera_transform.Forward() * -camera_move_speed * time_delta );
+	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_A ) )
+		camera_transform.OffsetTranslation( camera_transform.Right() * -camera_move_speed * time_delta );
+	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_D ) )
+		camera_transform.OffsetTranslation( camera_transform.Right() * +camera_move_speed * time_delta );
 
 	UpdateViewMatrix( *cube_shader );
 }
@@ -237,6 +247,8 @@ void SandboxApplication::Render()
 
 void SandboxApplication::DrawImGui()
 {
+	Application::DrawImGui(); 
+
 	bool view_matrix_is_dirty = false, projection_matrix_is_dirty = false;
 
 	if( ImGui::Begin( "Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
@@ -479,9 +491,25 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 			break;
 		case Platform::KeyCode::KEY_W:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				light_spot_data.cutoff_angle_inner += 0.33_deg;
+				camera_transform.OffsetTranslation( camera_transform.Forward() * +camera_move_speed * time_delta );
 			break;
 		case Platform::KeyCode::KEY_S:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				camera_transform.OffsetTranslation( camera_transform.Forward() * -camera_move_speed * time_delta );
+			break;
+		case Platform::KeyCode::KEY_A:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				camera_transform.OffsetTranslation( camera_transform.Right() * -camera_move_speed * time_delta );
+			break;
+		case Platform::KeyCode::KEY_D:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				camera_transform.OffsetTranslation( camera_transform.Right() * +camera_move_speed * time_delta );
+			break;
+		case Platform::KeyCode::KEY_U:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				light_spot_data.cutoff_angle_inner += 0.33_deg;
+			break;
+		case Platform::KeyCode::KEY_Y:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
 				light_spot_data.cutoff_angle_inner -= 0.33_deg;
 			break;

@@ -54,6 +54,7 @@ private:
 /* Camera: */
 	Engine::Transform camera_transform;
 	Engine::Camera camera;
+	float camera_rotation_speed;
 	float camera_move_speed;
 	Engine::CameraController_Flight camera_controller;
 
