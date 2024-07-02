@@ -62,30 +62,18 @@ namespace Engine
 	{
 	}
 
-	Transform& Transform::SetScaling( const Vector3& scale )
+	Transform& Transform::SetScaling( const Vector3& new_scale )
 	{
-		this->scale = scale;
+		this->scale = new_scale;
 		scaling_needsUpdate = final_matrix_needsUpdate = is_dirty = true;
 
 		return *this;
 	}
 
-	Transform& Transform::SetRotation( const Quaternion& rotation )
+	Transform& Transform::SetScaling( const float new_x_scale, const float new_y_scale, const float new_z_scale )
 	{
-#ifdef _DEBUG
-		ASSERT( rotation.IsNormalized() && R"(Transform::SetRotation(): The quaternion "rotation" is not normalized!)" );
-#endif // _DEBUG
-
-		this->rotation = rotation;
-		rotation_needsUpdate = final_matrix_needsUpdate = is_dirty = true;
-
-		return *this;
-	}
-
-	Transform& Transform::SetTranslation( const Vector3& translation )
-	{
-		this->translation = translation;
-		translation_needsUpdate = final_matrix_needsUpdate = is_dirty = true;
+		this->scale.Set( new_x_scale, new_y_scale, new_z_scale );
+		scaling_needsUpdate = final_matrix_needsUpdate = is_dirty = true;
 
 		return *this;
 	}
@@ -93,6 +81,11 @@ namespace Engine
 	Transform& Transform::OffsetScaling( const Vector3& delta )
 	{
 		return SetScaling( scale + delta );
+	}
+
+	Transform& Transform::OffsetScaling( const float delta_x_scale, const float delta_y_scale, const float delta_z_scale )
+	{
+		return SetScaling( scale.X() + delta_x_scale, scale.Y() + delta_y_scale, scale.Z() + delta_z_scale );
 	}
 
 	Transform& Transform::MultiplyScaling( const Vector3& multiplier )
@@ -105,9 +98,42 @@ namespace Engine
 		return SetScaling( scale * multiplier );
 	}
 
+	Transform& Transform::SetRotation( const Quaternion& new_rotation )
+	{
+#ifdef _DEBUG
+		ASSERT( new_rotation.IsNormalized() && R"(Transform::SetRotation(): The quaternion "new_rotation" is not normalized!)" );
+#endif // _DEBUG
+
+		this->rotation = new_rotation;
+		rotation_needsUpdate = final_matrix_needsUpdate = is_dirty = true;
+
+		return *this;
+	}
+
+	Transform& Transform::SetTranslation( const Vector3& new_translation )
+	{
+		this->translation = new_translation;
+		translation_needsUpdate = final_matrix_needsUpdate = is_dirty = true;
+
+		return *this;
+	}
+
+	Transform& Transform::SetTranslation( const float new_x, const float new_y, const float new_z )
+	{
+		this->translation.Set( new_x, new_y, new_z );
+		translation_needsUpdate = final_matrix_needsUpdate = is_dirty = true;
+
+		return *this;
+	}
+
 	Transform& Transform::OffsetTranslation( const Vector3& delta )
 	{
 		return SetTranslation( translation + delta );
+	}
+
+	Transform& Transform::OffsetTranslation( const float delta_x, const float delta_y, const float delta_z )
+	{
+		return SetTranslation( translation.X() + delta_x, translation.Y() + delta_y, translation.Z() + delta_z );
 	}
 
 	Transform& Transform::MultiplyTranslation( const Vector3& multiplier )

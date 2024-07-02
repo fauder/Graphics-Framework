@@ -17,15 +17,19 @@ namespace Engine
 		Transform( const Vector3& scale, const Quaternion& rotation, const Vector3& translation );
 		~Transform();
 
-		Transform& SetScaling( const Vector3& scale );
-		Transform& SetRotation( const Quaternion& quaternion );
-		Transform& SetTranslation( const Vector3& translation );
-
+		Transform& SetScaling( const Vector3& new_scale );
+		Transform& SetScaling( const float new_x_scale, const float new_y_scale, const float new_z_scale );
 		Transform& OffsetScaling( const Vector3& delta );
+		Transform& OffsetScaling( const float delta_x_scale, const float delta_y_scale, const float delta_z_scale );
 		Transform& MultiplyScaling( const Vector3& multiplier );
 		Transform& MultiplyScaling( const float multiplier );
 
+		Transform& SetRotation( const Quaternion& new_rotation );
+
+		Transform& SetTranslation( const Vector3& new_translation );
+		Transform& SetTranslation( const float new_x, const float new_y, const float new_z );
 		Transform& OffsetTranslation( const Vector3& delta );
+		Transform& OffsetTranslation( const float delta_x, const float delta_y, const float delta_z );
 		Transform& MultiplyTranslation( const Vector3& multiplier );
 		Transform& MultiplyTranslation( const float multiplier );
 
