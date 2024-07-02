@@ -26,10 +26,10 @@ SandboxApplication::SandboxApplication()
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
 	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
+	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
+	camera_move_speed( 5.0f ),
+	camera_controller( &camera, camera_move_speed ),
 	camera_is_animated( false ),
-	near_plane( 0.1f ), far_plane( 100.0f ),
-	aspect_ratio( Platform::GetAspectRatio() ),
-	vertical_field_of_view( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true )
 {
@@ -76,8 +76,6 @@ void SandboxApplication::Initialize()
 	cube_shader = &phong_shader;
 
 /* View & Projection: */
-	aspect_ratio = Platform::GetAspectRatio();
-
 	UpdateViewMatrix( gouraud_shader);
 	UpdateProjectionMatrix( gouraud_shader);
 	UpdateViewMatrix( phong_shader );
@@ -108,9 +106,17 @@ void SandboxApplication::Update()
 	/* Camera transform: */
 	if( camera_is_animated )
 	{
-		// Orbito motion:
+		// Orbit motion:
 		camera_transform.SetRotation( Engine::Math::EulerToQuaternion( -current_time_as_angle * 0.33f, 0_rad, 0_rad ) );
 		camera_transform.SetTranslation( CUBES_ORIGIN + Vector3::Up() * 0.5f + -camera_transform.Forward() * 30.0f );
+	}
+	else
+	{
+		// Control via mouse:
+		const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
+		camera_controller
+				.OffsetHeading( Radians( +mouse_x_delta_pos ) )
+				.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
 	}
 
 	UpdateViewMatrix( *cube_shader );
@@ -334,37 +340,30 @@ void SandboxApplication::DrawImGui()
 		{
 			auto_calculate_aspect_ratio          = true;
 			auto_calculate_vfov_based_on_90_hfov = true;
-			near_plane                           = 0.1f;
-			far_plane                            = 100.0f;
-			aspect_ratio                         = Platform::GetAspectRatio();
-			vertical_field_of_view               = CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() );
+			camera                               = Engine::Camera( &camera_transform, Platform::GetAspectRatio(),
+																   CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
 			projection_matrix_is_dirty           = true;
 		}
 
-		float v_fov_radians = ( float )vertical_field_of_view;
+		float v_fov_radians = ( float )camera.GetFieldOfView();
 
 		bool modified = false;
 
 		modified |= ImGui::Checkbox( "Auto-calculate Aspect Ratio", &auto_calculate_aspect_ratio );
 		modified |= ImGui::Checkbox( "Auto-calculate Vertical FoV to match 90 degrees Horizontal FoV", &auto_calculate_vfov_based_on_90_hfov );
-		/*																Min Value:							Max Value:						Format: */													
-		modified |= ImGui::SliderFloat( "Near Plane",	&near_plane,	0.0f,								std::min( 100.0f, far_plane )					); 
-		modified |= ImGui::SliderFloat( "Far Plane",	&far_plane,		std::max( near_plane, 10.0f ),		1000.0f											);
-		modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,								5.0f											);
-		modified |= ImGui::SliderAngle( "Vertical FoV", &v_fov_radians, 1.0f,								180.0f,							"%.3f degrees"	);
 
 		if( modified )
 		{
 			if( auto_calculate_aspect_ratio )
 			{
-				aspect_ratio = Platform::GetAspectRatio();
+				camera.SetAspectRatio( Platform::GetAspectRatio() );
 				view_matrix_is_dirty = true;
 			}
 			
 			if( auto_calculate_vfov_based_on_90_hfov )
-				vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() );
+				camera.SetFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
 			else
-				vertical_field_of_view = Radians( v_fov_radians );
+				camera.SetFieldOfView( Radians( v_fov_radians ) );
 
 			projection_matrix_is_dirty = true;
 		}
@@ -390,8 +389,7 @@ void SandboxApplication::UpdateViewMatrix( Engine::Shader& shader )
 
 void SandboxApplication::UpdateProjectionMatrix( Engine::Shader& shader )
 {
-	//const auto projection_transformation = Engine::Matrix::OrthographicProjection( -16, +16, -9, +9, -10, +10 );
-	const auto projection_transformation = Engine::Matrix::PerspectiveProjection( near_plane, far_plane, aspect_ratio, vertical_field_of_view );
+	const auto& projection_transformation = camera.GetProjectionMatrix();
 	shader.Bind();
 	shader.SetUniform( "uniform_transform_projection", projection_transformation );
 	light_source_shader.Bind();
@@ -459,7 +457,7 @@ void SandboxApplication::ResetLightingData()
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
 {
-	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), aspect_ratio );
+	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), camera.GetAspectRatio() );
 }
 
 void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
@@ -488,9 +486,9 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	// Re-calculate the aspect ratio:
 	if( auto_calculate_aspect_ratio )
 	{
-		aspect_ratio = float( width_new_pixels ) / height_new_pixels;
+		camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
 		if( auto_calculate_vfov_based_on_90_hfov )
-			vertical_field_of_view = CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() );
+			camera.SetFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
 
 		UpdateProjectionMatrix( light_source_shader );
 		UpdateProjectionMatrix( *cube_shader );

@@ -4,7 +4,8 @@
 #include "Engine/Graphics/Shader.hpp"
 #include "Engine/Graphics/VertexArray.h"
 #include "Engine/Graphics/Texture.h"
-#include "Engine/Scene/Transform.h"
+#include "Engine/Scene/Camera.h"
+#include "Engine/Scene/CameraController_Flight.h"
 
 #include "Engine/DefineMathTypes.h"
 
@@ -52,9 +53,17 @@ private:
 
 /* Camera: */
 	Engine::Transform camera_transform;
+	Engine::Camera camera;
+	float camera_move_speed;
+	Engine::CameraController_Flight camera_controller;
+
 	bool camera_is_animated;
 
 	Matrix4x4 view_transformation;
+
+/* Projection: */
+	bool auto_calculate_aspect_ratio;
+	bool auto_calculate_vfov_based_on_90_hfov;
 
 /* Lighting: */
 	const static constexpr int LIGHT_POINT_COUNT = 15;
@@ -69,13 +78,6 @@ private:
 
 	float light_point_orbit_radius;
 	bool light_point_is_animated;
-
-/* Projection: */
-	float near_plane, far_plane;
-	float aspect_ratio;
-	Radians vertical_field_of_view;
-	bool auto_calculate_aspect_ratio;
-	bool auto_calculate_vfov_based_on_90_hfov;
 
 /* Frame statistics: */
 	Radians current_time_as_angle;
