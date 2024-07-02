@@ -4,13 +4,13 @@
 
 namespace Engine
 {
-	Camera::Camera( Transform* const transform, float aspect_ratio, const float near_plane, const float far_plane, Degrees field_of_view )
+	Camera::Camera( Transform* const transform, float aspect_ratio, Degrees vertical_field_of_view, const float near_plane, const float far_plane)
 		:
 		transform( transform ),
 		plane_near( near_plane ),
 		plane_far( far_plane ),
 		aspect_ratio( aspect_ratio ),
-		field_of_view( field_of_view ),
+		vertical_field_of_view( vertical_field_of_view ),
 		projection_matrix_needs_update( true ),
 		view_projection_matrix_needs_update( true )
 	{}
@@ -27,7 +27,7 @@ namespace Engine
 	{
 		if( projection_matrix_needs_update )
 		{
-			projection_matrix = Matrix::PerspectiveProjection( plane_near, plane_far, aspect_ratio, field_of_view );
+			projection_matrix = Matrix::PerspectiveProjection( plane_near, plane_far, aspect_ratio, vertical_field_of_view );
 			projection_matrix_needs_update = false;
 		}
 
@@ -87,7 +87,7 @@ namespace Engine
 	Camera& Camera::SetFieldOfView( const Degrees new_fov )
 	{
 		SetProjectionMatrixDirty();
-		field_of_view = new_fov;
+		vertical_field_of_view = new_fov;
 		return *this;
 	}
 

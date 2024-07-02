@@ -8,7 +8,12 @@ namespace Engine
 	class Camera
 	{
 	public:
-		Camera( Transform* const transform, float aspect_ratio, const float near_plane = 0.1f, const float far_plane = 100.0f, Degrees field_of_view = Degrees( 45.0f ) );
+		Camera( Transform* const transform, float aspect_ratio, Degrees vertical_field_of_view, const float near_plane = 0.1f, const float far_plane = 100.0f );
+
+		Camera( const Camera& rhs )              = default;
+		Camera( Camera&& donor )                 = default;
+		Camera& operator = ( const Camera& rhs ) = default;
+		Camera& operator = ( Camera&& donor )    = default;
 
 		inline const Matrix4x4& GetViewMatrix();
 		inline const Matrix4x4& GetProjectionMatrix();
@@ -26,7 +31,7 @@ namespace Engine
 		inline const float GetAspectRatio() const { return aspect_ratio; }
 		Camera& SetAspectRatio( const float new_aspect_ratio );
 
-		inline const Degrees& GetFieldOfView() const { return field_of_view; }
+		inline const Degrees& GetFieldOfView() const { return vertical_field_of_view; }
 		Camera& SetFieldOfView( const Degrees new_fov );
 
 		Camera& SetLookRotation( const Vector3& look_at, const Vector3& up = Vector3::Up() );
@@ -42,11 +47,11 @@ namespace Engine
 		Matrix4x4 projection_matrix;
 		Matrix4x4 view_projection_matrix;
 
-		Transform* const transform;
+		Transform* transform;
 
 		float plane_near, plane_far;
 		float aspect_ratio;
-		Degrees field_of_view;
+		Degrees vertical_field_of_view;
 
 		/* Do not need the flag below, as Transform's data is the only data needed to update the view matrix and it has IsDirty() query already. */
 		//bool view_matrix_needs_update;
