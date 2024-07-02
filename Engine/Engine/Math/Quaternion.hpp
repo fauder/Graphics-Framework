@@ -636,7 +636,7 @@ namespace Engine::Math
 		// Check for gimbal lock, giving slight tolerance for numerical imprecision.
 		if( Abs( sin_pitch ) > TypeTraits< ComponentType >::OneMinusEpsilon() )
 		{
-			pitch_around_x = Radians( Constants< ComponentType >::Half_Pi() * sin_pitch );
+			pitch_around_x = Radians( Constants< ComponentType >::Pi_Over_Two() * sin_pitch );
 
 			// Compute heading, slam bank to zero.
 			heading_around_y = Atan2( -x * z + w * y, ComponentType( 0.5 ) - y * y - z * z );
