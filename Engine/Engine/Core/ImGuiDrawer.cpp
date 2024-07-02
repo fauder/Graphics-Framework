@@ -13,7 +13,9 @@ namespace Engine::ImGuiDrawer
 	void Draw( const Color3& color, const char* name )
 	{
 		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		ImGui::ColorEdit3( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
+		ImGui::PopStyleColor();
 	}
 
 	bool Draw( Color4& color, const char* name )
@@ -24,7 +26,10 @@ namespace Engine::ImGuiDrawer
 	void Draw( const Color4& color, const char* name )
 	{
 		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		ImGui::ColorEdit4( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
+		ImGui::PopStyleColor();
+	}
 	}
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags )
@@ -49,6 +54,8 @@ namespace Engine::ImGuiDrawer
 					ImGuiUtility::Table_Header_ManuallySubmit_AppendHelpMarker( 1, "For uniform struct members, value in parenthesis shows the original location defined in the struct." );
 					ImGuiUtility::Table_Header_ManuallySubmit_AppendHelpMarker( 3, "For uniform struct members, value in parenthesis shows the original offset of the member in the struct." );
 					ImGui::TableNextRow(); // Done with the header row, skip to normal rows.
+
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
 					for( auto& [ uniform_name, uniform_info ] : uniform_map )
 					{
@@ -94,6 +101,8 @@ namespace Engine::ImGuiDrawer
 							ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info.type ) );
 						}
 					}
+
+					ImGui::PopStyleColor();
 
 					ImGui::EndTable();
 				}
@@ -145,9 +154,11 @@ namespace Engine::ImGuiDrawer
 			Draw( point_light_data.specular, "Specular" );
 			Draw( point_light_data.position_world_space, "Position" );
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
-			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.attenuation_constant ),  0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.attenuation_linear ),    0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.attenuation_constant  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.attenuation_linear	  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
 			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.attenuation_quadratic ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::PopStyleColor();
 
 			ImGui::PopID();
 		}
@@ -277,12 +288,16 @@ namespace Engine::ImGuiDrawer
 			
 			ImGui::PushID( surface_name );
 
+			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputInt( "Diffuse Map ID",  const_cast< int* >( &surface_data.diffuse_map_slot  ), 0, 0, ImGuiInputTextFlags_ReadOnly );
 			ImGui::InputInt( "Specular Map ID", const_cast< int* >( &surface_data.specular_map_slot ), 0, 0, ImGuiInputTextFlags_ReadOnly );
 
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputFloat( "Shininess", const_cast< float* >( &surface_data.shininess ), 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_ReadOnly );
+
+			ImGui::PopStyleColor();
 
 			ImGui::PopID();
 		}

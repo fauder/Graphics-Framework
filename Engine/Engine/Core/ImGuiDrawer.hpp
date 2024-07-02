@@ -40,6 +40,8 @@ namespace Engine::ImGuiDrawer
 	template< Concepts::Arithmetic Component, std::size_t Size > requires( Size > 1 )
 	void Draw( const Math::Vector< Component, Size >& vector, const char* name = "##vector<>" )
 	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
 		if constexpr( std::is_same_v< Component, bool > )
 		{
 			if constexpr( Size >= 2 )
@@ -61,6 +63,8 @@ namespace Engine::ImGuiDrawer
 		else
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputScalarN( name, GetImGuiDataType< Component >(), const_cast< Component* >( vector.Data() ), Size, NULL, NULL, GetFormat< Component >(), ImGuiInputTextFlags_ReadOnly );
+
+		ImGui::PopStyleColor();
 	}
 
 	template< Concepts::Arithmetic Component, std::size_t Size > requires( Size > 1 )
@@ -105,8 +109,12 @@ namespace Engine::ImGuiDrawer
 	template< template< class > class AngleType, typename FloatType >
 	void Draw( const AngleType< FloatType >& angle, const char* name = "##angle", const char* format = AngleType< FloatType >::Format( "%.4g" ).data() )
 	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
 		/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::InputFloat( name, const_cast< float* >( &angle.Value() ), 0, 0, format, ImGuiInputTextFlags_ReadOnly );
+
+		ImGui::PopStyleColor();
 	}
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
