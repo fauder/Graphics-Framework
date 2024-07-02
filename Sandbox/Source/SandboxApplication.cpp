@@ -11,9 +11,6 @@
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
 
-// std Includes.
-#include <numeric> // std::accumulate().
-
 using namespace Engine::Math::Literals;
 
 Engine::Application* Engine::CreateApplication()
@@ -28,8 +25,7 @@ SandboxApplication::SandboxApplication()
 	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
-	camera_direction( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ),
-	camera_offset( 0.0f, 10.0f, -20.0f ),
+	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
 	camera_is_animated( false ),
 	near_plane( 0.1f ), far_plane( 100.0f ),
 	aspect_ratio( Platform::GetAspectRatio() ),
@@ -105,46 +101,26 @@ void SandboxApplication::Shutdown()
 //
 //}
 
-void SandboxApplication::Render()
+void SandboxApplication::Update()
 {
-	Engine::Application::Render();
-
-	const Radians current_time_as_angle( Platform::GetCurrentTime() );
-
-	vertex_array_crate.Bind();
-
-	constexpr std::array< Vector3, CUBE_COUNT > cube_positions =
-	{ {
-		{  0.0f,  0.0f,  0.0f	},
-		{  2.0f,  5.0f, +15.0f	},
-		{ -1.5f, -2.2f, +2.5f	},
-		{ -3.8f, -2.0f, +12.3f	},
-		{  2.4f, -0.4f, +3.5f	},
-		{ -1.7f,  3.0f, +7.5f	},
-		{  1.3f, -2.0f, +2.5f	},
-		{  1.5f,  2.0f, +2.5f	},
-		{  1.5f,  0.2f, +1.5f	},
-		{ -1.3f,  1.0f, +1.5f	}
-	} };
-
-	constexpr Vector3 cubes_origin = std::accumulate( cube_positions.cbegin(), cube_positions.cend(), Vector3::Zero() ) / CUBE_COUNT;
-
-	Matrix4x4 view_transformation;
+	current_time_as_angle = Radians( Platform::GetCurrentTime() );
 
 	/* Camera transform: */
 	if( camera_is_animated )
 	{
-		const auto camera_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f );
-
-		const auto new_camera_offset = ( Vector4( camera_offset.X(), camera_offset.Y(), camera_offset.Z(), 1.0f ) *
-										 ( camera_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin + Vector3::Up() * 0.5f ) ) ).XYZ();
-
-		const auto new_camera_direction = camera_direction * camera_rotation.SubMatrix< 3 >();
-
-		view_transformation = Engine::Matrix::LookAt( new_camera_offset, new_camera_direction.Normalized() );
+		// Orbito motion:
+		camera_transform.SetRotation( Engine::Math::EulerToQuaternion( -current_time_as_angle * 0.33f, 0_rad, 0_rad ) );
+		camera_transform.SetTranslation( CUBES_ORIGIN + Vector3::Up() * 0.5f + -camera_transform.Forward() * 30.0f );
 	}
-	else
-		view_transformation = Engine::Matrix::LookAt( camera_offset, camera_direction.Normalized() );
+
+	UpdateViewMatrix( *cube_shader );
+}
+
+void SandboxApplication::Render()
+{
+	Engine::Application::Render();
+
+	vertex_array_crate.Bind();
 
 /* Render the light source: */
 	light_source_shader.Bind();
@@ -162,7 +138,7 @@ void SandboxApplication::Render()
 			const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f + angle_increment * ( float )i );
 
 			light_point_data.position_world_space = ( ( Vector4::Forward() * light_point_orbit_radius ) *
-													  ( point_light_rotation * Engine::Matrix::Translation( /*camera_offset*/ cubes_origin ) ) ).XYZ();
+													  ( point_light_rotation * Engine::Matrix::Translation( CUBES_ORIGIN ) ) ).XYZ();
 			light_point_data.position_world_space.SetY( 2.0f );
 		}
 
@@ -211,7 +187,7 @@ void SandboxApplication::Render()
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
 		Degrees angle( 20.0f * i );
-		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( cube_positions[ i ] + Vector3::Up() * 5.0f ) );
+		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( CUBE_POSITIONS[ i ] + Vector3::Up() * 5.0f ) );
 
 		/* Lighting: */
 		cube_shader->SetUniform( "uniform_surface_data", cube_surface_data_array[ i ] );
@@ -328,22 +304,25 @@ void SandboxApplication::DrawImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 		{
-			camera_offset        = { 0.0f, 0.0f, -3.0f };
-			camera_direction     = Vector3::Forward();
+			camera_transform.SetTranslation( 0.0f, 0.0f, -3.0f );
+			camera_transform.SetRotation( Quaternion::LookRotation( Vector3::Forward() ) );
 			
-			camera_is_animated   = false;
+			camera_is_animated = false;
 
 			view_matrix_is_dirty = true;
 
 		}
 
-		if( Engine::ImGuiDrawer::Draw( camera_offset, "Camera Position" ) )
+		/*if( Engine::ImGuiDrawer::Draw( camera_transform.GetTranslation(), "Camera Position" ) )
 			view_matrix_is_dirty = true;
 
-		if( Engine::ImGuiDrawer::Draw( camera_direction, "Camera Direction" ) )
+		if( Engine::ImGuiDrawer::Draw( camera_transform.Forward(), "Camera Direction" ) )
 		{
 			view_matrix_is_dirty = true;
-		}
+		}*/
+
+		Engine::ImGuiDrawer::Draw( camera_transform.GetTranslation(),	"Camera Position" );
+		Engine::ImGuiDrawer::Draw( camera_transform.Forward(),			"Camera Direction" );
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 	}
@@ -403,7 +382,7 @@ void SandboxApplication::DrawImGui()
 
 void SandboxApplication::UpdateViewMatrix( Engine::Shader& shader )
 {
-	const auto view_transformation = Engine::Matrix::LookAt( camera_offset, camera_direction.Normalized() );
+	view_transformation = camera_transform.GetInverseOfFinalMatrix_NoScale();
 	shader.Bind();
 	shader.SetUniform( "uniform_transform_view", view_transformation );
 	light_source_shader.Bind();
@@ -458,8 +437,8 @@ void SandboxApplication::ResetLightingData()
 		.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( 12.5_deg ) ),
 		.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( 17.5_deg ) ),
 		/* End of GLSL equivalence. */
-		.position_world_space   = camera_offset,
-		.direction_world_space  = camera_direction,
+		.position_world_space   = camera_transform.GetTranslation(),
+		.direction_world_space  = camera_transform.Forward(),
 		.cutoff_angle_inner     = 12.5_deg,
 		.cutoff_angle_outer     = 17.5_deg
 	};
