@@ -5,6 +5,7 @@
 #include "Graphics/Color.hpp"
 #include "Graphics/Lighting.h"
 #include "Graphics/Shader.hpp"
+#include "Math/Quaternion.hpp"
 
 // Vendor Includes.
 #include "ImGui/imgui.h"
@@ -91,6 +92,35 @@ namespace Engine::ImGuiDrawer
 			is_modified |= ImGui::DragScalarN( name, GetImGuiDataType< Component >(), vector.Data(), Size, 1.0f, NULL, NULL, GetFormat< Component >() );
 
 		return is_modified;
+	}
+
+	template< Concepts::Arithmetic Component >
+	void Draw( const Math::Quaternion< Component >& quaternion, const char* name = "##quaternion<>" )
+	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
+		Math::Vector< Math::Degrees< Component >, 3 > euler;
+		Math::QuaternionToEuler( quaternion, euler );
+
+		/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::InputScalarN( name, GetImGuiDataType< Component >(), euler.Data(), euler.Dimension(), NULL, NULL, GetFormat< Component >(), ImGuiInputTextFlags_ReadOnly );
+
+		ImGui::PopStyleColor();
+	}
+
+	template< Concepts::Arithmetic Component >
+	bool Draw( Math::Quaternion< Component >& quaternion, const char* name = "##quaternion<>" )
+	{
+		Math::Vector< Math::Degrees< Component >, 3 > euler;
+		Math::QuaternionToEuler( quaternion, euler );
+
+		if( ImGui::DragScalarN( name, GetImGuiDataType< Component >(), euler.Data(), euler.Dimension(), 1.0f, NULL, NULL, GetFormat< Component >() ) )
+		{
+			quaternion = Math::EulerToQuaternion( euler );
+			return true;
+		}
+
+		return false;
 	}
 
 	bool Draw(		 Color3& color, const char* name = "##color3" );
