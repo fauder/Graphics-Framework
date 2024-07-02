@@ -31,27 +31,6 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
-	void Draw( const Engine::Transform& transform, const char* name )
-	{
-		if( ImGui::Begin( "Transforms", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
-			{
-				ImGui::PushID( name );
-
-				Draw( transform.GetTranslation(), "Position" );
-				Draw( transform.GetRotation(), "Rotation" );
-				Draw( transform.GetScaling(), "Scale" );
-
-				ImGui::PopID();
-
-				ImGui::TreePop();
-			}
-		}
-
-		ImGui::End();
-	}
-
 	bool Draw( Transform& transform, const char* name )
 	{
 		bool is_modified = false;
@@ -94,6 +73,72 @@ namespace Engine::ImGuiDrawer
 		return is_modified;
 	}
 
+	void Draw( const Engine::Transform& transform, const char* name )
+	{
+		if( ImGui::Begin( "Transforms", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			{
+				ImGui::PushID( name );
+
+				Draw( transform.GetTranslation(),	"Position"  );
+				Draw( transform.GetRotation(),		"Rotation"  );
+				Draw( transform.GetScaling(),		"Scale"		);
+
+				ImGui::PopID();
+
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::End();
+	}
+
+	bool Draw( Camera& camera, const char* name )
+	{
+		bool is_modified = false;
+
+		if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+		{
+			float near_plane = camera.GetNearPlaneOffset();
+			float far_plane = camera.GetFarPlaneOffset();
+			float aspect_ratio = camera.GetAspectRatio();
+			float vertical_fov = ( float )camera.GetVerticalFieldOfView();
+
+			/*																		Min Value:		Max Value:		Format: */
+			if( is_modified |= ImGui::SliderFloat( "Near Plane",	&near_plane,	0.0f,			far_plane						) )
+				camera.SetNearPlaneOffset( near_plane );
+			if( is_modified |= ImGui::SliderFloat( "Far Plane",		&far_plane,		near_plane,		1000.0f							) )
+				camera.SetFarPlaneOffset( far_plane );
+			if( is_modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,			5.0f							) )
+				camera.SetAspectRatio( aspect_ratio );
+			if( is_modified |= ImGui::SliderAngle( "Vertical FoV",	&vertical_fov,	1.0f,			180.0f,			"%.3f degrees"	) )
+				camera.SetVerticalFieldOfView( Radians( vertical_fov ) );
+
+			ImGui::TreePop();
+		}
+
+		return is_modified;
+	}
+
+	void Draw( const Camera& camera, const char* name )
+	{
+		if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+		{
+			float near_plane = camera.GetNearPlaneOffset();
+			float far_plane = camera.GetFarPlaneOffset();
+			float aspect_ratio = camera.GetAspectRatio();
+			float vertical_fov = ( float )camera.GetVerticalFieldOfView();
+
+			ImGui::InputFloat( "Near Plane",	&near_plane,	0, 0, "%.3f",			ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Far Plane",		&far_plane,		0, 0, "%.3f",			ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Aspect Ratio",	&aspect_ratio,	0, 0, "%.3f",			ImGuiInputTextFlags_ReadOnly );
+			ImGui::SliderAngle( "Vertical FoV", &vertical_fov,	0, 0, "%.3f degrees",	ImGuiInputTextFlags_ReadOnly );
+		
+			ImGui::TreePop();
+		}
+	}
+
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags )
 	{
 		if( ImGui::Begin( "Shaders", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
@@ -105,11 +150,11 @@ namespace Engine::ImGuiDrawer
 				ImGui::SeparatorText( "Uniforms" );
 				if( ImGui::BeginTable( "Uniforms", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 				{
-					ImGui::TableSetupColumn( "Name" );
+					ImGui::TableSetupColumn( "Name"		);
 					ImGui::TableSetupColumn( "Location" );
-					ImGui::TableSetupColumn( "Size" );
-					ImGui::TableSetupColumn( "Offset" );
-					ImGui::TableSetupColumn( "Type" );
+					ImGui::TableSetupColumn( "Size"		);
+					ImGui::TableSetupColumn( "Offset"	);
+					ImGui::TableSetupColumn( "Type"		);
 
 					ImGui::TableNextRow( ImGuiTableRowFlags_Headers ); // Indicates that the header row will be modified.
 					ImGuiUtility::Table_Header_ManuallySubmit( std::array< int, 3 >{ 0, 2, 4 } );
@@ -215,8 +260,8 @@ namespace Engine::ImGuiDrawer
 			Draw( point_light_data.diffuse,  "Diffuse"  );
 			Draw( point_light_data.specular, "Specular" );
 			Draw( point_light_data.position_world_space, "Position" );
-			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.attenuation_constant  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
 			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.attenuation_linear	  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
 			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.attenuation_quadratic ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );

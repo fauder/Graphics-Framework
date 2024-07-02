@@ -6,7 +6,7 @@
 #include "Graphics/Lighting.h"
 #include "Graphics/Shader.hpp"
 #include "Math/Quaternion.hpp"
-#include "Scene/Transform.h"
+#include "Scene/Camera.h"
 
 // Vendor Includes.
 #include "ImGui/imgui.h"
@@ -154,6 +154,9 @@ namespace Engine::ImGuiDrawer
 
 		ImGui::PopStyleColor();
 	}
+
+	bool Draw( Camera& camera, const char* name = "##camera" );
+	void Draw( const Camera& camera, const char* name = "##camera" );
 
 	bool Draw( Transform& transform, const char* name = "##transform" );
 	void Draw( const Transform& transform, const char* name = "##transform" );
