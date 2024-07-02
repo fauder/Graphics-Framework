@@ -40,6 +40,12 @@ namespace Engine::Math
 	Value Abs( const Value value ) { return std::abs( value ); }
 
 	template< std::floating_point Value >
+	Value Min( const Value left, const Value right ) { return left < right ? left : right; }
+
+	template< std::floating_point Value >
+	Value Max( const Value left, const Value right ) { return left > right ? left : right; }
+
+	template< std::floating_point Value >
 	Value Sqrt( const Value value ) { return std::sqrt( value ); }
 
 	template< typename Value, std::floating_point PercentType >
