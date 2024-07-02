@@ -84,7 +84,7 @@ namespace Engine::ImGuiDrawer
 			}
 		}
 		else
-			is_modified |= ImGui::InputScalarN( name, GetImGuiDataType< Component >(), vector.Data(), Size, NULL, NULL, GetFormat< Component >() );
+			is_modified |= ImGui::DragScalarN( name, GetImGuiDataType< Component >(), vector.Data(), Size, 1.0f, NULL, NULL, GetFormat< Component >() );
 
 		return is_modified;
 	}
