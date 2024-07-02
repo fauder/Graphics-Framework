@@ -652,6 +652,28 @@ namespace Engine::Math
 	}
 
 	template< std::floating_point ComponentType >
+	constexpr void QuaternionToEuler( const Quaternion< ComponentType >& quaternion, Vector< Radians< ComponentType >, 3 >& euler_angles )
+	{
+		QuaternionToEuler( quaternion, euler_angles[ 0 ], euler_angles[ 1 ], euler_angles[ 2 ] );
+	}
+
+	template< std::floating_point ComponentType >
+	constexpr void QuaternionToEuler( const Quaternion< ComponentType >& quaternion, Degrees< ComponentType >& heading_around_y, Degrees< ComponentType >& pitch_around_x, Degrees< ComponentType >& bank_around_z )
+	{
+		Radians< ComponentType > heading, pitch, bank;
+		QuaternionToEuler( quaternion, heading, pitch, bank );
+		heading_around_y = Degrees( heading );
+		pitch_around_x   = Degrees( pitch );
+		bank_around_z    = Degrees( bank );
+	}
+
+	template< std::floating_point ComponentType >
+	constexpr void QuaternionToEuler( const Quaternion< ComponentType >& quaternion, Vector< Degrees< ComponentType >, 3 >& euler_angles )
+	{
+		QuaternionToEuler( quaternion, euler_angles[ 0 ], euler_angles[ 1 ], euler_angles[ 2 ] );
+	}
+
+	template< std::floating_point ComponentType >
 	constexpr Quaternion< ComponentType > EulerToQuaternion( const Radians< ComponentType > heading_around_y, const Radians< ComponentType > pitch_around_x, const Radians< ComponentType > bank_around_z )
 	{
 		const auto half_heading( heading_around_y / ComponentType( 2 ) );
@@ -682,9 +704,21 @@ namespace Engine::Math
 	}
 
 	template< std::floating_point ComponentType >
+	constexpr Quaternion< ComponentType > EulerToQuaternion( const Vector< Radians< ComponentType >, 3 > euler_angles )
+	{
+		return EulerToQuaternion< ComponentType >( euler_angles[ 0 ], euler_angles[ 1 ], euler_angles[ 2 ] );
+	}
+
+	template< std::floating_point ComponentType >
 	constexpr Quaternion< ComponentType > EulerToQuaternion( const Degrees< ComponentType > heading_around_y, const Degrees< ComponentType > pitch_around_x, const Degrees< ComponentType > bank_around_z )
 	{
 		return EulerToQuaternion< ComponentType >( Radians( heading_around_y ), Radians( pitch_around_x ), Radians( bank_around_z ) );
+	}
+
+	template< std::floating_point ComponentType >
+	constexpr Quaternion< ComponentType > EulerToQuaternion( const Vector< Degrees< ComponentType >, 3 > euler_angles )
+	{
+		return EulerToQuaternion< ComponentType >( euler_angles[ 0 ], euler_angles[ 1 ], euler_angles[ 2 ] );
 	}
 }
 
