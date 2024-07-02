@@ -39,10 +39,10 @@ namespace Engine::Math
 	template< std::floating_point Value >
 	Value Abs( const Value value ) { return std::abs( value ); }
 
-	template< std::floating_point Value >
+	template< typename Value >
 	Value Min( const Value left, const Value right ) { return left < right ? left : right; }
 
-	template< std::floating_point Value >
+	template< typename Value >
 	Value Max( const Value left, const Value right ) { return left > right ? left : right; }
 
 	template< std::floating_point Value >
