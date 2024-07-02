@@ -53,6 +53,8 @@ namespace Engine
 		{
 			Platform::PollEvents();
 
+			Update();
+
 			Render();
 
 			ImGuiSetup::BeginFrame();
@@ -61,6 +63,10 @@ namespace Engine
 
 			Platform::SwapBuffers();
 		}
+	}
+
+	void Application::Update()
+	{
 	}
 
 	void Application::Render()

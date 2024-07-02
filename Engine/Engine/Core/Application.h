@@ -16,6 +16,8 @@ namespace Engine
 
 		virtual void Run();
 
+		virtual void Update();
+
 		virtual void Render();
 
 		virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods );
