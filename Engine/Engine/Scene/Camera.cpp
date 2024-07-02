@@ -4,7 +4,7 @@
 
 namespace Engine
 {
-	Camera::Camera( Transform* const transform, float aspect_ratio, Degrees vertical_field_of_view, const float near_plane, const float far_plane)
+	Camera::Camera( Transform* const transform, float aspect_ratio, Radians vertical_field_of_view, const float near_plane, const float far_plane)
 		:
 		transform( transform ),
 		plane_near( near_plane ),
@@ -84,7 +84,7 @@ namespace Engine
 		return *this;
 	}
 
-	Camera& Camera::SetFieldOfView( const Degrees new_fov )
+	Camera& Camera::SetVerticalFieldOfView( const Radians new_fov )
 	{
 		SetProjectionMatrixDirty();
 		vertical_field_of_view = new_fov;

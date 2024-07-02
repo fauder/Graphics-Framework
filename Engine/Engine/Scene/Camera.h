@@ -8,7 +8,7 @@ namespace Engine
 	class Camera
 	{
 	public:
-		Camera( Transform* const transform, float aspect_ratio, Degrees vertical_field_of_view, const float near_plane = 0.1f, const float far_plane = 100.0f );
+		Camera( Transform* const transform, float aspect_ratio, Radians vertical_field_of_view, const float near_plane = 0.1f, const float far_plane = 100.0f );
 
 		Camera( const Camera& rhs )              = default;
 		Camera( Camera&& donor )                 = default;
@@ -31,8 +31,8 @@ namespace Engine
 		inline const float GetAspectRatio() const { return aspect_ratio; }
 		Camera& SetAspectRatio( const float new_aspect_ratio );
 
-		inline const Degrees& GetFieldOfView() const { return vertical_field_of_view; }
-		Camera& SetFieldOfView( const Degrees new_fov );
+		inline const Radians& GetVerticalFieldOfView() const { return vertical_field_of_view; }
+		Camera& SetVerticalFieldOfView( const Radians new_fov );
 
 		Camera& SetLookRotation( const Vector3& look_at, const Vector3& up = Vector3::Up() );
 
@@ -51,7 +51,7 @@ namespace Engine
 
 		float plane_near, plane_far;
 		float aspect_ratio;
-		Degrees vertical_field_of_view;
+		Radians vertical_field_of_view;
 
 		/* Do not need the flag below, as Transform's data is the only data needed to update the view matrix and it has IsDirty() query already. */
 		//bool view_matrix_needs_update;
