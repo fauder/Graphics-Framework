@@ -111,7 +111,7 @@
     <ClInclude Include="Engine\Core\ImGuiUtility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\Camera.h">
+    <ClInclude Include="Engine\Scene\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Math\Random.hpp">
@@ -167,7 +167,7 @@
     <ClCompile Include="Engine\Core\ImGuiUtility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\Camera.cpp">
+    <ClCompile Include="Engine\Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Math\Math.cpp">
