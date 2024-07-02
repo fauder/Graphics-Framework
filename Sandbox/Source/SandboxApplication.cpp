@@ -31,7 +31,8 @@ SandboxApplication::SandboxApplication()
 	camera_controller( &camera, camera_move_speed ),
 	camera_is_animated( false ),
 	auto_calculate_aspect_ratio( true ),
-	auto_calculate_vfov_based_on_90_hfov( true )
+	auto_calculate_vfov_based_on_90_hfov( true ),
+	ui_interaction_enabled( false )
 {
 	Initialize();
 }
@@ -112,11 +113,14 @@ void SandboxApplication::Update()
 	}
 	else
 	{
-		// Control via mouse:
-		const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
-		camera_controller
-				.OffsetHeading( Radians( +mouse_x_delta_pos ) )
-				.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
+		if( !ui_interaction_enabled )
+		{
+			// Control via mouse:
+			const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
+			camera_controller
+					.OffsetHeading( Radians( +mouse_x_delta_pos ) )
+					.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
+		}
 	}
 
 	UpdateViewMatrix( *cube_shader );
@@ -467,6 +471,11 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 		case Platform::KeyCode::KEY_ESCAPE:
 			if( key_action == Platform::KeyAction::PRESS )
 				Platform::SetShouldClose( true );
+			break;
+		/* Use the key below ESC to toggle between game & menu/UI. */
+		case Platform::KeyCode::KEY_GRAVE_ACCENT:
+			if( key_action == Platform::KeyAction::PRESS )
+				ui_interaction_enabled = !ui_interaction_enabled;
 			break;
 		case Platform::KeyCode::KEY_W:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
