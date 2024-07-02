@@ -171,6 +171,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\ShaderTypeInformation.h" />
     <ClInclude Include="Engine\Graphics\Texture.h" />
     <ClInclude Include="Engine\Core\Utility.hpp" />
+    <ClInclude Include="Engine\Scene\CameraController_Flight.h" />
     <ClInclude Include="Engine\Scene\Transform.h" />
     <ClInclude Include="Engine\Graphics\UniformStruct.h" />
     <ClInclude Include="Engine\Graphics\VertexArray.h" />
@@ -201,6 +202,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Graphics\Shader.cpp" />
     <ClCompile Include="Engine\Graphics\Texture.cpp" />
     <ClCompile Include="Engine\Core\Utility.cpp" />
+    <ClCompile Include="Engine\Scene\CameraController_Flight.cpp" />
     <ClCompile Include="Engine\Scene\Transform.cpp" />
     <ClCompile Include="Engine\Graphics\VertexArray.cpp" />
     <ClCompile Include="Engine\Graphics\VertexBuffer.cpp" />
