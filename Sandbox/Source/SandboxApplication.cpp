@@ -305,12 +305,11 @@ void SandboxApplication::DrawImGui()
 		if( ImGui::Button( "Reset" ) )
 		{
 			camera_transform.SetTranslation( 0.0f, 0.0f, -3.0f );
-			camera_transform.SetRotation( Quaternion::LookRotation( Vector3::Forward() ) );
+			camera_transform.LookAt( Vector3::Forward() );
 			
 			camera_is_animated = false;
 
 			view_matrix_is_dirty = true;
-
 		}
 
 		/*if( Engine::ImGuiDrawer::Draw( camera_transform.GetTranslation(), "Camera Position" ) )

@@ -161,57 +161,6 @@ namespace Engine
 		return translation;
 	}
 
-	void Transform::UpdateScalingMatrixIfDirty()
-	{
-		if( scaling_needsUpdate )
-		{
-			scaling_matrix.SetDiagonals( scale );
-			scaling_needsUpdate = false;
-		}
-	}
-
-	void Transform::UpdateRotationPartOfMatrixIfDirty()
-	{
-		if( rotation_needsUpdate )
-		{
-			rotation_and_translation_matrix = Matrix4x4( Math::QuaternionToMatrix3x3( rotation ), rotation_and_translation_matrix.GetRow< 3 >( 3 ) );
-			rotation_needsUpdate = false;
-		}
-	}
-
-	void Transform::UpdateTranslationPartOfMatrixIfDirty()
-	{
-		if( translation_needsUpdate )
-		{
-			rotation_and_translation_matrix.SetTranslation( translation );
-			translation_needsUpdate = false;
-		}
-	}
-
-	void Transform::UpdateFinalMatrixIfDirty()
-	{
-		if( final_matrix_needsUpdate )
-		{
-			final_matrix = GetScalingMatrix() * GetRotationAndTranslationMatrix();
-			final_matrix_needsUpdate = false;
-		}
-	}
-
-	const Matrix4x4& Transform::GetScalingMatrix()
-	{
-		UpdateScalingMatrixIfDirty();
-
-		return scaling_matrix;
-	}
-
-	const Matrix4x4& Transform::GetRotationAndTranslationMatrix()
-	{
-		UpdateRotationPartOfMatrixIfDirty();
-		UpdateTranslationPartOfMatrixIfDirty();
-
-		return rotation_and_translation_matrix;
-	}
-
 	const Matrix4x4& Transform::GetFinalMatrix()
 	{
 		UpdateFinalMatrixIfDirty();
@@ -275,5 +224,61 @@ namespace Engine
 	{
 		UpdateRotationPartOfMatrixIfDirty();
 		return rotation_and_translation_matrix.GetRow< 3 >( 2 );
+	}
+
+	void Transform::LookAt( const Vector3& direction, const Vector3& up )
+	{
+		SetRotation( Quaternion::LookRotation( direction, up ) );
+	}
+
+	void Transform::UpdateScalingMatrixIfDirty()
+	{
+		if( scaling_needsUpdate )
+		{
+			scaling_matrix.SetDiagonals( scale );
+			scaling_needsUpdate = false;
+		}
+	}
+
+	void Transform::UpdateRotationPartOfMatrixIfDirty()
+	{
+		if( rotation_needsUpdate )
+		{
+			rotation_and_translation_matrix = Matrix4x4( Math::QuaternionToMatrix3x3( rotation ), rotation_and_translation_matrix.GetRow< 3 >( 3 ) );
+			rotation_needsUpdate = false;
+		}
+	}
+
+	void Transform::UpdateTranslationPartOfMatrixIfDirty()
+	{
+		if( translation_needsUpdate )
+		{
+			rotation_and_translation_matrix.SetTranslation( translation );
+			translation_needsUpdate = false;
+		}
+	}
+
+	void Transform::UpdateFinalMatrixIfDirty()
+	{
+		if( final_matrix_needsUpdate )
+		{
+			final_matrix = GetScalingMatrix() * GetRotationAndTranslationMatrix();
+			final_matrix_needsUpdate = false;
+		}
+	}
+
+	const Matrix4x4& Transform::GetScalingMatrix()
+	{
+		UpdateScalingMatrixIfDirty();
+
+		return scaling_matrix;
+	}
+
+	const Matrix4x4& Transform::GetRotationAndTranslationMatrix()
+	{
+		UpdateRotationPartOfMatrixIfDirty();
+		UpdateTranslationPartOfMatrixIfDirty();
+
+		return rotation_and_translation_matrix;
 	}
 }

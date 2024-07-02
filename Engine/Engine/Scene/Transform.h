@@ -17,6 +17,7 @@ namespace Engine
 		Transform( const Vector3& scale, const Quaternion& rotation, const Vector3& translation );
 		~Transform();
 
+	/* Modification: */
 		Transform& SetScaling( const Vector3& new_scale );
 		Transform& SetScaling( const float new_x_scale, const float new_y_scale, const float new_z_scale );
 		Transform& OffsetScaling( const Vector3& delta );
@@ -33,6 +34,16 @@ namespace Engine
 		Transform& MultiplyTranslation( const Vector3& multiplier );
 		Transform& MultiplyTranslation( const float multiplier );
 
+		void LookAt( const Vector3& direction, const Vector3& up = Vector3::Up() );
+
+		/* For cases where a custom matrix needs to be used. */
+		inline void SetFinalMatrix( const Matrix4x4& matrix )
+		{
+			final_matrix = matrix;
+			final_matrix_needsUpdate = scaling_needsUpdate = rotation_needsUpdate = translation_needsUpdate = false;
+		}
+
+	/* Queries: */
 		const Vector3& GetScaling() const;
 		const Quaternion& GetRotation() const;
 		const Vector3& GetTranslation() const;
@@ -46,15 +57,10 @@ namespace Engine
 		const Vector3& Up();
 		const Vector3& Forward();
 
+	/* Dirty Flags: */
 		/* This must be reset (via ResetDirtyFlag()) at the beginning of every frame. */
 		inline bool IsDirty() const { return is_dirty; }
 		inline bool ResetDirtyFlag() { return is_dirty = false; }
-
-		inline void SetFinalMatrix( const Matrix4x4& matrix )
-		{
-			final_matrix = matrix;
-			final_matrix_needsUpdate = scaling_needsUpdate = rotation_needsUpdate = translation_needsUpdate = false;
-		}
 
 	private:
 		void UpdateScalingMatrixIfDirty();
