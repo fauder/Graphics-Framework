@@ -247,7 +247,9 @@ void SandboxApplication::Render()
 
 void SandboxApplication::DrawImGui()
 {
-	Application::DrawImGui(); 
+	Application::DrawImGui();
+
+	ImGui::ShowDemoWindow();
 
 	bool view_matrix_is_dirty = false, projection_matrix_is_dirty = false;
 
@@ -501,11 +503,11 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 			break;
 		case Platform::KeyCode::KEY_U:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				light_spot_data.cutoff_angle_inner += 0.33_deg;
+				light_spot_data.cutoff_angle_inner = Engine::Math::Min( light_spot_data.cutoff_angle_inner + 0.33_deg, light_spot_data.cutoff_angle_outer );
 			break;
 		case Platform::KeyCode::KEY_Y:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				light_spot_data.cutoff_angle_inner -= 0.33_deg;
+				light_spot_data.cutoff_angle_inner = Engine::Math::Max( light_spot_data.cutoff_angle_inner - 0.33_deg, 0_deg );
 			break;
 		default:
 			break;
