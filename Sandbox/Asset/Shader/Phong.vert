@@ -20,6 +20,6 @@ void main()
     varying_position_view_space        = vec4( position, 1.0 ) * world_view_transform;
     varying_normal_view_space          = vec4( normalize( normal * world_view_transform_for_normals ), 0.0 );
     varying_tex_coords                 = tex_coords;
-
+    
     gl_Position                        = varying_position_view_space * uniform_transform_projection;
 }

@@ -26,4 +26,4 @@ void main()
 	vec3 specular = specular_sample * varying_specular_from_light;
 
 	out_color = vec4( ambient + diffuse + specular, 1.0 );
-};
+}

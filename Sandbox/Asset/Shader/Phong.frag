@@ -158,4 +158,4 @@ void main()
 													    diffuse_sample, specular_sample );
 
 	out_color = vec4( from_directional_light + from_point_light + from_spot_light, 1.0 );
-};
+}
