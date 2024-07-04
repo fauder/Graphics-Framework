@@ -100,9 +100,7 @@ namespace Engine
 
 	Transform& Transform::SetRotation( const Quaternion& new_rotation )
 	{
-#ifdef _DEBUG
-		ASSERT( new_rotation.IsNormalized() && R"(Transform::SetRotation(): The quaternion "new_rotation" is not normalized!)" );
-#endif // _DEBUG
+		ASSERT_DEBUG_ONLY( new_rotation.IsNormalized() && R"(Transform::SetRotation(): The quaternion "new_rotation" is not normalized!)" );
 
 		this->rotation = new_rotation;
 		rotation_needsUpdate = final_matrix_needsUpdate = is_dirty = true;

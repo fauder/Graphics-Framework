@@ -1,15 +1,12 @@
 #pragma once
 
 // Engine Includes.
+#include "Core/Assert.h"
 #include "Angle.hpp"
 #include "Concepts.h"
 #include "Math.hpp"
 #include "TypeTraits.h"
 #include "Vector.hpp"
-
-#ifdef _DEBUG
-#include "Core/Assert.h"
-#endif // _DEBUG
 
 namespace Engine::Math
 {
@@ -73,9 +70,7 @@ namespace Engine::Math
 			w   = Cos( half_angle );
 			xyz = SinFromCos( w ) * rotation_axis_normalized;
 
-	#ifdef _DEBUG
-			ASSERT( rotation_axis_normalized.IsNormalized() && "QuaternionBase::QuaternionBase( angle, axis ): The axis vector provided is not normalized!" );
-	#endif // _DEBUG
+			ASSERT_DEBUG_ONLY( rotation_axis_normalized.IsNormalized() && "QuaternionBase::QuaternionBase( angle, axis ): The axis vector provided is not normalized!" );
 		}
 
 	/* Comparison Operators. */
@@ -102,9 +97,7 @@ namespace Engine::Math
 
 		constexpr RadiansType HalfAngle() const
 		{
-		#ifdef _DEBUG
-			ASSERT( IsNormalized() && R"(QuaternionBase::HalfAngle(): The quaternion "*this" is not normalized!)" );
-		#endif // _DEBUG
+			ASSERT_DEBUG_ONLY( IsNormalized() && R"(QuaternionBase::HalfAngle(): The quaternion "*this" is not normalized!)" );
 
 			return RadiansType( Acos( w ) );
 		}
@@ -112,10 +105,8 @@ namespace Engine::Math
 		// Returns half the angular displacement between *this Quaternion and the other.
 		constexpr RadiansType HalfAngleBetween( const Quaternion& other ) const
 		{
-		#ifdef _DEBUG
-			ASSERT( this->IsNormalized() && R"(Quaternion::HalfAngleBetween(other) : The quaternion "*this" is not normalized!)" );
-			ASSERT( other.IsNormalized() && R"(Quaternion::HalfAngleBetween(other) : The quaternion "other" is not normalized!)" );
-		#endif
+			ASSERT_DEBUG_ONLY( this->IsNormalized() && R"(Quaternion::HalfAngleBetween(other) : The quaternion "*this" is not normalized!)" );
+			ASSERT_DEBUG_ONLY( other.IsNormalized() && R"(Quaternion::HalfAngleBetween(other) : The quaternion "other" is not normalized!)" );
 
 			return RadiansType( Acos( Math::Dot( *this, other ) ) );
 		}
@@ -134,9 +125,7 @@ namespace Engine::Math
 		/* Returns a NaN vector when the half angle represented by *this is zero. */
 		constexpr VectorType Axis() const
 		{
-		#ifdef _DEBUG
-			ASSERT( IsNormalized() && R"(QuaternionBase::Axis(): The quaternion "*this" is not normalized!)" );
-		#endif // _DEBUG
+			ASSERT_DEBUG_ONLY( IsNormalized() && R"(QuaternionBase::Axis(): The quaternion "*this" is not normalized!)" );
 
 			// Instead of incurring the cost of sin(HalfAngle()), sin(theta/2) can be derived by sqrt(1-w*w), as we know w = cos(theta/2).
 			return VectorType( xyz / SinFromCos( w ) );
@@ -170,7 +159,7 @@ namespace Engine::Math
 		constexpr Quaternion& operator+= ( const Quaternion other )
 		{
 			xyz += other.xyz;
-			w   += other.w;
+			w += other.w;
 
 			return *this;
 		}
@@ -183,7 +172,7 @@ namespace Engine::Math
 
 		constexpr Quaternion& operator*= ( const ComponentType scalar )
 		{
-			w   *= scalar;
+			w *= scalar;
 			xyz *= scalar;
 
 			return *this;
@@ -198,7 +187,7 @@ namespace Engine::Math
 		constexpr Quaternion& operator/= ( const ComponentType scalar )
 		{
 			const auto inverse_of_scalar = ComponentType( 1 ) / scalar; // We can calculate the inverse safely.
-			w   *= inverse_of_scalar;
+			w *= inverse_of_scalar;
 			xyz *= inverse_of_scalar;
 
 			return *this;
@@ -218,19 +207,17 @@ namespace Engine::Math
 							   w * other.w - Math::Dot( xyz, other.xyz ) );
 		}
 
-		/* Do not use this as it is slow. 
+		/* Do not use this as it is slow.
 		 * Use Transform(), as it is faster. */
 		constexpr Vector3 Transform_Naive( const Vector3& vector_to_rotate ) const
 		{
-			 return ( *this * Quaternion( vector_to_rotate ) * Inverse() ).xyz;
+			return ( *this * Quaternion( vector_to_rotate ) * Inverse() ).xyz;
 		}
 
 		/* Use this as it is faster than Transform_Naive(). */
 		constexpr Vector3 Transform( const Vector3& vector_to_rotate ) const
 		{
-		#ifdef _DEBUG
-			ASSERT( IsNormalized() && R"(QuaternionBase::Transform(): The quaternion "*this" is not normalized!)" ); // The derivation assumes unit quaternions.
-		#endif // _DEBUG
+			ASSERT_DEBUG_ONLY( IsNormalized() && R"(QuaternionBase::Transform(): The quaternion "*this" is not normalized!)" ); // The derivation assumes unit quaternions.
 
 			/* Derivation can be found at https://gamesandsimulations.fandom.com/wiki/Quaternions, which is dead but can be retrieved via wayback machine at
 			 * https://web.archive.org/web/20191115092410/https://gamesandsimulations.fandom.com/wiki/Quaternions. */
@@ -282,9 +269,7 @@ namespace Engine::Math
 		 * Simply returns the conjugate since inverse = conjugate / magnitude, where magnitude = 1 for a unit quaternion. */
 		constexpr Quaternion Inverse_Normalized() const
 		{
-		#ifdef _DEBUG
-			ASSERT( IsNormalized() && R"(Quaternion::Inverse_Normalized() : The quaternion "*this" is not normalized!)" );
-		#endif
+			ASSERT_DEBUG_ONLY( IsNormalized() && R"(Quaternion::Inverse_Normalized() : The quaternion "*this" is not normalized!)" );
 
 			return Conjugate();
 		}
@@ -311,9 +296,8 @@ namespace Engine::Math
 		/* Taken from https://gamemath.com/book/orient.html#quaternions. */
 		constexpr Quaternion Exp( const ComponentType exponent ) const
 		{
-		#ifdef _DEBUG
-			ASSERT( IsNormalized() && R"(Quaternion::Exp() : The quaternion "*this" is not normalized!)" );
-		#endif
+			ASSERT_DEBUG_ONLY( IsNormalized() && R"(Quaternion::Exp() : The quaternion "*this" is not normalized!)" );
+			
 			Quaternion result( *this );
 
 			// Check for the case of an identity quaternion. This will protect against divide by zero.
@@ -325,7 +309,7 @@ namespace Engine::Math
 				// Compute new alpha, w & xyz values.
 				const RadiansType new_alpha = alpha * exponent;
 
-				result.w    = Cos( new_alpha );
+				result.w = Cos( new_alpha );
 				result.xyz *= SinFromCos( result.w ) / SinFromCos( w ); // Optimize: Use SinFromCos( w ) instead of Sin( Alpha ).
 			}
 
@@ -354,9 +338,9 @@ namespace Engine::Math
 
 		/* Source: https://gamemath.com/book/orient.html#euler_to_matrix. */
 		template< std::floating_point ComponentType_, std::size_t MatrixSize_ > requires( MatrixSize_ > 3 )
-		friend constexpr Quaternion< ComponentType_ > MatrixToQuaternion( const Matrix< ComponentType_, MatrixSize_, MatrixSize_ >& matrix );
+			friend constexpr Quaternion< ComponentType_ > MatrixToQuaternion( const Matrix< ComponentType_, MatrixSize_, MatrixSize_ >& matrix );
 
-		/* Source: https://gamemath.com/book/orient.html#quaternion_to_euler_angles. */
+			/* Source: https://gamemath.com/book/orient.html#quaternion_to_euler_angles. */
 		template< std::floating_point ComponentType_ >
 		friend constexpr void QuaternionToEuler( const Quaternion< ComponentType_ >& quaternion,
 												 Radians< ComponentType_ >& heading_around_y, Radians< ComponentType_ >& pitch_around_x, Radians< ComponentType_ >& bank_around_z );
@@ -370,31 +354,27 @@ namespace Engine::Math
 		template< std::floating_point ComponentType >
 		static constexpr Quaternion< ComponentType > LookRotation_Naive( const Vector< ComponentType, 3 >& to_target_normalized, const Vector< ComponentType, 3 >& world_up_normalized = Vector< ComponentType, 3 >::Up() )
 		{
-		#ifdef _DEBUG
-			ASSERT( to_target_normalized.IsNormalized() && R"(Math::LookRotation(): "to_target_normalized" is not normalized!)" );
-			ASSERT(  world_up_normalized.IsNormalized() && R"(Math::LookRotation():  "world_up_normalized" is not normalized!)" );
-		#endif // _DEBUG
+			ASSERT_DEBUG_ONLY( to_target_normalized.IsNormalized() && R"(Math::LookRotation(): "to_target_normalized" is not normalized!)" );
+			ASSERT_DEBUG_ONLY( world_up_normalized.IsNormalized() && R"(Math::LookRotation():  "world_up_normalized" is not normalized!)" );
 
-			const auto to_right_normalized = Math::Cross( world_up_normalized,  to_target_normalized ).Normalized();
-			const auto to_up_normalized    = Math::Cross( to_target_normalized,	 to_right_normalized ).Normalized();
+			const auto to_right_normalized = Math::Cross( world_up_normalized, to_target_normalized ).Normalized();
+			const auto to_up_normalized = Math::Cross( to_target_normalized, to_right_normalized ).Normalized();
 
 			return Quaternion< ComponentType >
 			{
 				Math::Angle( to_target_normalized, Vector< ComponentType, 3 >::Forward() ),				// 1 Dot() + 1 Acos().
-				Math::Cross( to_target_normalized, Vector< ComponentType, 3 >::Forward() ).Normalized() // 1 Cross() + 1 Vector3::Normalized().
+					Math::Cross( to_target_normalized, Vector< ComponentType, 3 >::Forward() ).Normalized() // 1 Cross() + 1 Vector3::Normalized().
 			};
 		}
 
 		template< std::floating_point ComponentType >
 		static constexpr Quaternion< ComponentType > LookRotation( const Vector< ComponentType, 3 >& to_target_normalized, const Vector< ComponentType, 3 >& world_up_normalized = Vector< ComponentType, 3 >::Up() )
 		{
-		#ifdef _DEBUG
-			ASSERT( to_target_normalized.IsNormalized() && R"(Math::LookRotation(): "to_target_normalized" is not normalized!)" );
-			ASSERT(  world_up_normalized.IsNormalized() && R"(Math::LookRotation():  "world_up_normalized" is not normalized!)" );
-		#endif // _DEBUG
+			ASSERT_DEBUG_ONLY( to_target_normalized.IsNormalized() && R"(Math::LookRotation(): "to_target_normalized" is not normalized!)" );
+			ASSERT_DEBUG_ONLY( world_up_normalized.IsNormalized() && R"(Math::LookRotation():  "world_up_normalized" is not normalized!)" );
 
-			const auto to_right_normalized = Math::Cross( world_up_normalized,  to_target_normalized ).Normalized();
-			const auto to_up_normalized    = Math::Cross( to_target_normalized,	 to_right_normalized ).Normalized();
+			const auto to_right_normalized = Math::Cross( world_up_normalized, to_target_normalized ).Normalized();
+			const auto to_up_normalized = Math::Cross( to_target_normalized, to_right_normalized ).Normalized();
 
 			return MatrixToQuaternion( Matrix< ComponentType, 3, 3 >( to_right_normalized, to_up_normalized, to_target_normalized ) ).Normalized();
 		}
@@ -403,7 +383,7 @@ namespace Engine::Math
 		union
 		{
 			struct { VectorType xyz; };
-			struct { float x, y, z;  };
+			struct { float x, y, z; };
 		};
 		ComponentType w;
 	};
@@ -435,10 +415,8 @@ namespace Engine::Math
 	template< std::floating_point ComponentType >
 	constexpr Quaternion< ComponentType > Nlerp( const Quaternion< ComponentType > q1, const Quaternion< ComponentType >& q2, const ComponentType t )
 	{
-	#ifdef _DEBUG
-		ASSERT( q1.IsNormalized() && R"(Quaternion::Nlerp() : The quaternion q1 is not normalized!)" );
-		ASSERT( q2.IsNormalized() && R"(Quaternion::Nlerp() : The quaternion q2 is not normalized!)" );
-	#endif
+		ASSERT_DEBUG_ONLY( q1.IsNormalized() && R"(Quaternion::Nlerp() : The quaternion q1 is not normalized!)" );
+		ASSERT_DEBUG_ONLY( q2.IsNormalized() && R"(Quaternion::Nlerp() : The quaternion q2 is not normalized!)" );
 
 		return Lerp( q1, q2, t ).Normalized();
 	}
@@ -447,10 +425,8 @@ namespace Engine::Math
 	template< std::floating_point ComponentType >
 	constexpr Quaternion< ComponentType > Slerp_Naive( const Quaternion< ComponentType >& q1, const Quaternion< ComponentType >& q2, const ComponentType t )
 	{
-	#ifdef _DEBUG
-		ASSERT( q1.IsNormalized() && R"(Quaternion::Slerp_Naive() : The quaternion q1 is not normalized!)" );
-		ASSERT( q2.IsNormalized() && R"(Quaternion::Slerp_Naive() : The quaternion q2 is not normalized!)" );
-	#endif
+		ASSERT_DEBUG_ONLY( q1.IsNormalized() && R"(Quaternion::Slerp_Naive() : The quaternion q1 is not normalized!)" );
+		ASSERT_DEBUG_ONLY( q2.IsNormalized() && R"(Quaternion::Slerp_Naive() : The quaternion q2 is not normalized!)" );
 
 		return q1.DifferenceBetween( q2 ).Exp( t ) * q1;
 	}
@@ -459,10 +435,8 @@ namespace Engine::Math
 	template< std::floating_point ComponentType >
 	constexpr Quaternion< ComponentType > Slerp( const Quaternion< ComponentType >& q1, Quaternion< ComponentType > q2, const ComponentType t )
 	{
-	#ifdef _DEBUG
-		ASSERT( q1.IsNormalized() && R"(Quaternion::Slerp() : The quaternion q1 is not normalized!)" );
-		ASSERT( q2.IsNormalized() && R"(Quaternion::Slerp() : The quaternion q2 is not normalized!)" );
-	#endif
+		ASSERT_DEBUG_ONLY( q1.IsNormalized() && R"(Quaternion::Slerp() : The quaternion q1 is not normalized!)" );
+		ASSERT_DEBUG_ONLY( q2.IsNormalized() && R"(Quaternion::Slerp() : The quaternion q2 is not normalized!)" );
 
 		using RadiansType = Radians< ComponentType >;
 
@@ -487,19 +461,17 @@ namespace Engine::Math
 		const auto one_over_sin_theta = ComponentType{ 1 } / Sin( theta );
 
 		return ( q1 * Sin( ( ComponentType{ 1 } - t ) * theta ) + q2 * Sin( t * theta ) )
-				* one_over_sin_theta;
+			* one_over_sin_theta;
 	}
 
 	template< std::floating_point ComponentType >
 	constexpr Matrix< ComponentType, 4, 4 > QuaternionToMatrix( const Quaternion< ComponentType >& quaternion )
 	{
-	#ifdef _DEBUG
-		ASSERT( quaternion.IsNormalized() && R"(Math::QuaternionToMatrix(): The quaternion is not normalized!)" );
-	#endif // _DEBUG
+		ASSERT_DEBUG_ONLY( quaternion.IsNormalized() && R"(Math::QuaternionToMatrix(): The quaternion is not normalized!)" );
 
-		const auto two_x2  = ComponentType( 2 ) * quaternion.x * quaternion.x;
-		const auto two_y2  = ComponentType( 2 ) * quaternion.y * quaternion.y;
-		const auto two_z2  = ComponentType( 2 ) * quaternion.z * quaternion.z;
+		const auto two_x2 = ComponentType( 2 ) * quaternion.x * quaternion.x;
+		const auto two_y2 = ComponentType( 2 ) * quaternion.y * quaternion.y;
+		const auto two_z2 = ComponentType( 2 ) * quaternion.z * quaternion.z;
 		const auto two_x_y = ComponentType( 2 ) * quaternion.x * quaternion.y;
 		const auto two_x_z = ComponentType( 2 ) * quaternion.x * quaternion.z;
 		const auto two_y_z = ComponentType( 2 ) * quaternion.y * quaternion.z;
@@ -508,22 +480,20 @@ namespace Engine::Math
 		const auto two_w_z = ComponentType( 2 ) * quaternion.w * quaternion.z;
 
 		return Matrix< ComponentType, 4, 4 >
-		(
-			{
-				ComponentType( 1 ) - two_y2 - two_z2,		two_x_y + two_w_z,							two_x_z - two_w_y,							ComponentType( 0 ),
-				two_x_y - two_w_z,							ComponentType( 1 ) - two_x2 - two_z2,		two_y_z + two_w_x,							ComponentType( 0 ),
-				two_x_z + two_w_y,							two_y_z - two_w_x,							ComponentType( 1 ) - two_x2 - two_y2,		ComponentType( 0 ),
-				ComponentType( 0 ),							ComponentType( 0 ),							ComponentType( 0 ),							ComponentType( 1 )
-			}
+			(
+				{
+					ComponentType( 1 ) - two_y2 - two_z2,		two_x_y + two_w_z,							two_x_z - two_w_y,							ComponentType( 0 ),
+					two_x_y - two_w_z,							ComponentType( 1 ) - two_x2 - two_z2,		two_y_z + two_w_x,							ComponentType( 0 ),
+					two_x_z + two_w_y,							two_y_z - two_w_x,							ComponentType( 1 ) - two_x2 - two_y2,		ComponentType( 0 ),
+					ComponentType( 0 ),							ComponentType( 0 ),							ComponentType( 0 ),							ComponentType( 1 )
+				}
 		);
 	}
 
 	template< std::floating_point ComponentType >
 	constexpr Matrix< ComponentType, 3, 3 > QuaternionToMatrix3x3( const Quaternion< ComponentType >& quaternion )
 	{
-	#ifdef _DEBUG
-		ASSERT( quaternion.IsNormalized() && R"(Math::QuaternionToMatrix(): The quaternion is not normalized!)" );
-	#endif // _DEBUG
+		ASSERT_DEBUG_ONLY( quaternion.IsNormalized() && R"(Math::QuaternionToMatrix(): The quaternion is not normalized!)" );
 
 		const auto two_x2  = ComponentType( 2 ) * quaternion.x * quaternion.x;
 		const auto two_y2  = ComponentType( 2 ) * quaternion.y * quaternion.y;
@@ -622,9 +592,7 @@ namespace Engine::Math
 		/* Method is to convert a matrix to euler angles, where the matrix is the angle - axis rotation matrix re - arranged to use x, y, z, w of a Quaternion.
 		 * So basically, it is kind it is QuaternionToMatrix() & then MatrixToEuler(). */
 
-	#ifdef _DEBUG
-		ASSERT( quaternion.IsNormalized() && R"(Math::QuaternionToEuler(): The quaternion is not normalized!)" );
-	#endif // _DEBUG
+		ASSERT_DEBUG_ONLY( quaternion.IsNormalized() && R"(Math::QuaternionToEuler(): The quaternion is not normalized!)" );
 
 		const auto x = quaternion.x;
 		const auto y = quaternion.y;

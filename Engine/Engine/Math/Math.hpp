@@ -92,10 +92,8 @@ namespace Engine::Math
 	template< Concepts::Arithmetic Value, std::size_t Size >
 	Radians< Value > Angle( const Vector< Value, Size >& a, const Vector< Value, Size >& b )
 	{
-	#ifdef _DEBUG
-		ASSERT( a.IsNormalized() && R"(Math::Angle(): The vector "a" is not normalized!)" );
-		ASSERT( b.IsNormalized() && R"(Math::Angle(): The vector "b" is not normalized!)" );
-	#endif
+		ASSERT_DEBUG_ONLY( a.IsNormalized() && R"(Math::Angle(): The vector "a" is not normalized!)" );
+		ASSERT_DEBUG_ONLY( b.IsNormalized() && R"(Math::Angle(): The vector "b" is not normalized!)" );
 
 		return Math::Acos( Math::Clamp( Dot( a, b ), Value( -1 ), Value( +1 ) ) );
 	}
