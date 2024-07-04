@@ -49,6 +49,7 @@
     <IntDir>$(SolutionDir)Bin-Int\$(Platform)-$(Configuration)\$(ProjectName)\</IntDir>
     <IncludePath>$(SolutionDir)Vendor;$(SolutionDir)Engine;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Engine;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -56,6 +57,7 @@
     <IntDir>$(SolutionDir)Bin-Int\$(Platform)-$(Configuration)\$(ProjectName)\</IntDir>
     <IncludePath>$(SolutionDir)Vendor;$(SolutionDir)Engine;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
     <LibraryPath>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Engine;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <PostBuildEventUseInBuild>true</PostBuildEventUseInBuild>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnabled>false</VcpkgEnabled>
@@ -80,6 +82,9 @@
     <BuildLog>
       <Path />
     </BuildLog>
+    <PostBuildEvent>
+      <Command>CALL "$(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.bat</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -105,6 +110,9 @@
     <BuildLog>
       <Path />
     </BuildLog>
+    <PostBuildEvent>
+      <Command>CALL "$(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.bat</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Source\SandboxApplication.h" />
@@ -136,4 +144,7 @@
     <RemoveDir Directories="$(IntDir)" />
     <!-- obj -->
   </Target>
+  <!-- <Target Name="MyCustomPostBuildEvent" AfterTargets="PostBuildEvent">
+    <Exec Command="call $(ProjectDir)\PostBuild_ValidateShaders.bat" ContinueOnError="false" />
+  </Target> -->
 </Project>
