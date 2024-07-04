@@ -56,13 +56,13 @@ void SandboxApplication::Initialize()
 															  Engine::Primitive::NonIndexed::Cube::Normals,
 															  Engine::Primitive::NonIndexed::Cube::UVs ) );
 
-	Engine::VertexBuffer vertex_buffer( vertices.data(), sizeof( vertices ), GL_STATIC_DRAW );
+	vertex_buffer_crate = Engine::VertexBuffer( vertices.data(), sizeof( vertices ), GL_STATIC_DRAW );
 	Engine::VertexBufferLayout vertex_buffer_layout;
 	vertex_buffer_layout.Push< float >( 3 ); // Position.
 	vertex_buffer_layout.Push< float >( 3 ); // Normal.
 	vertex_buffer_layout.Push< float >( 2 ); // UVs.
 
-	vertex_array_crate = Engine::VertexArray( vertex_buffer, vertex_buffer_layout );
+	vertex_array_crate = Engine::VertexArray( vertex_buffer_crate, vertex_buffer_layout );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();

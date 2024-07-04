@@ -42,6 +42,7 @@ private:
 
 private:
 /* Vertex Info.: */
+	Engine::VertexBuffer vertex_buffer_crate;
 	Engine::VertexArray vertex_array_crate;
 
 /* Shaders & Textures: */
