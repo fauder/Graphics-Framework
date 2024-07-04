@@ -10,6 +10,8 @@ namespace Engine
 	VertexArray::VertexArray()
 		:
 		id( -1 ),
+		vertex_buffer_id( -1 ),
+		index_buffer_id( -1 ),
 		vertex_count( 0 ),
 		index_count( 0 )
 	{
@@ -18,6 +20,8 @@ namespace Engine
 	VertexArray::VertexArray( VertexArray&& donor )
 		:
 		id( std::exchange( donor.id, -1 ) ),
+		vertex_buffer_id( std::exchange( donor.vertex_buffer_id, -1 ) ),
+		index_buffer_id( std::exchange( donor.index_buffer_id, -1 ) ),
 		vertex_count( std::exchange( donor.vertex_count, 0 ) ),
 		index_count( std::exchange( donor.index_count, 0 ) )
 	{
@@ -25,9 +29,11 @@ namespace Engine
 
 	VertexArray& VertexArray::operator=( VertexArray&& donor )
 	{
-		id           = std::exchange( donor.id, -1 );
-		vertex_count = std::exchange( donor.vertex_count, 0 );
-		index_count  = std::exchange( donor.index_count, 0 );
+		id               = std::exchange( donor.id,					-1 );
+		vertex_buffer_id = std::exchange( donor.vertex_buffer_id,	-1 );
+		index_buffer_id  = std::exchange( donor.index_buffer_id,	-1 );
+		vertex_count     = std::exchange( donor.vertex_count,		 0 );
+		index_count      = std::exchange( donor.index_count,		 0 );
 
 		return *this;
 	}
@@ -35,18 +41,21 @@ namespace Engine
 	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout )
 		:
 		id( -1 ),
+		vertex_buffer_id( vertex_buffer.Id() ),
+		index_buffer_id( -1 ),
 		vertex_count( vertex_buffer.Size() / vertex_buffer_layout.Stride() ),
 		index_count( 0 )
 	{
 		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
 
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
-
 	}
 
 	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer& index_buffer )
 		:
 		id( -1 ),
+		vertex_buffer_id( vertex_buffer.Id() ),
+		index_buffer_id( index_buffer.Id() ),
 		vertex_count( vertex_buffer.Size() / vertex_buffer_layout.Stride() ),
 		index_count( index_buffer.Size() / sizeof( unsigned int ) )
 	{

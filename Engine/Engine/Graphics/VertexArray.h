@@ -30,8 +30,13 @@ namespace Engine
 
 	private:
 		unsigned int id;
+
+		unsigned int vertex_buffer_id;
+		unsigned int index_buffer_id;
+
 		unsigned int vertex_count;
 		unsigned int index_count;
+
 		bool is_valid;
 	};
 }
