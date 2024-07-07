@@ -4,7 +4,7 @@
 #include "Core/ImGuiSetup.h"
 #include "Graphics/Color.hpp"
 #include "Graphics/Lighting.h"
-#include "Graphics/Shader.hpp"
+#include "Graphics/Material.hpp"
 #include "Math/Quaternion.hpp"
 #include "Scene/Camera.h"
 
@@ -38,6 +38,22 @@ namespace Engine::ImGuiDrawer
 		if constexpr( std::is_same_v< Type, double > )
 			return "%.3lf";
 	}
+
+	bool Draw( const GLenum type,	    void* value_pointer, const char* name );
+	void Draw( const GLenum type, const void* value_pointer, const char* name );
+
+	bool Draw( int& scalar,					const char* name = "##scalar_int" 	 );
+	bool Draw( int& scalar,					const int min, const int max, const char* name = "##scalar_int" );
+	void Draw( const int& scalar,			const char* name = "##scalar_int"    );
+	bool Draw( unsigned int& scalar,		const char* name = "##scalar_uint"	 );
+	bool Draw( unsigned int& scalar,		const unsigned int min, const unsigned int max, const char* name = "##scalar_uint" );
+	void Draw( const unsigned int& scalar,	const char* name = "##scalar_uint"	 );
+	bool Draw( float& scalar,				const char* name = "##scalar_float"  );
+	void Draw( const float& scalar,			const char* name = "##scalar_float"  );
+	bool Draw( double& scalar,				const char* name = "##scalar_double" );
+	void Draw( const double& scalar,		const char* name = "##scalar_double" );
+	bool Draw( bool& value,					const char* name = "##bool" );
+	void Draw( const bool& value,			const char* name = "##bool" );
 
 	template< Concepts::Arithmetic Component, std::size_t Size > requires( Size > 1 )
 	void Draw( const Math::Vector< Component, Size >& vector, const char* name = "##vector<>" )
@@ -78,15 +94,15 @@ namespace Engine::ImGuiDrawer
 		{
 			if constexpr( Size >= 2 )
 			{
-				is_modified |= ImGui::Checkbox( "", &vector.X() ); ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector.Y() );
+				is_modified |= ImGui::Checkbox( "", &vector[ 0 ] ); ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 1 ] );
 			}
 			if constexpr( Size >= 3 )
 			{
-				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector.Z() );
+				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 2 ] );
 			}
 			if constexpr( Size >= 4 )
 			{
-				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector.W() );
+				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 3 ] );
 			}
 		}
 		else
@@ -155,13 +171,16 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
-	bool Draw( Camera& camera, const char* name = "##camera" );
+	bool Draw(		 Camera& camera, const char* name = "##camera" );
 	void Draw( const Camera& camera, const char* name = "##camera" );
 
-	bool Draw( Transform& transform, const char* name = "##transform" );
+	bool Draw(		 Transform& transform, const char* name = "##transform" );
 	void Draw( const Transform& transform, const char* name = "##transform" );
 
-	void Draw( const Shader& shader, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const Shader& shader,		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+
 	// TODO: Remove LightData & SurfaceData overloads; Implement a generic uniform struct drawer instead, similar to Shader's implementation.
 	bool Draw(		 Lighting::DirectionalLightData&	directional_light_data, const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Lighting::DirectionalLightData&	directional_light_data, const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );

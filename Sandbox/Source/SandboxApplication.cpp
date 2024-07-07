@@ -45,11 +45,36 @@ SandboxApplication::~SandboxApplication()
 
 void SandboxApplication::Initialize()
 {
+	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
+
 	//Engine::Math::Random::SeedRandom();
 
+/* Shaders: */
+	gouraud_shader.FromFile( R"(Asset/Shader/Gouraud.vert)", R"(Asset/Shader/Gouraud.frag)" );
+	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
+	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
+
+	cube_shader = &phong_shader;
+
+/* Lighting: */
 	ResetLightingData();
 
-	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
+/* Materials: */
+	ResetMaterialData();
+	cube_shader->Bind();
+	ground_quad_material.Set( "uniform_surface_data", ground_quad_surface_data );
+	front_wall_quad_material.Set( "uniform_surface_data", front_wall_quad_surface_data );
+	for( auto i = 0; i < CUBE_COUNT; i++ )
+		cube_material_array[ i ].Set( "uniform_surface_data", cube_surface_data_array[ i ] );
+	light_source_shader.Bind();
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse );
+
+/* Textures: */
+	Engine::Texture::INITIALIZE();
+
+	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
+	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
 
 /* Vertex/Index Data: */
 	constexpr auto vertices( Engine::MeshUtility::Interleave( Engine::Primitive::NonIndexed::Cube::Positions,
@@ -63,19 +88,6 @@ void SandboxApplication::Initialize()
 	vertex_buffer_layout.Push< float >( 2 ); // UVs.
 
 	vertex_array_crate = Engine::VertexArray( vertex_buffer_crate, vertex_buffer_layout );
-
-/* Textures: */
-	Engine::Texture::INITIALIZE();
-	
-	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
-	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
-
-/* Shaders: */
-	gouraud_shader.FromFile( R"(Asset/Shader/Gouraud.vert)", R"(Asset/Shader/Gouraud.frag)" );
-	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
-	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
-
-	cube_shader = &phong_shader;
 
 /* View & Projection: */
 	UpdateViewMatrix( gouraud_shader);
@@ -103,7 +115,7 @@ void SandboxApplication::Shutdown()
 
 void SandboxApplication::Update()
 {
-	current_time_as_angle = Radians( Platform::GetCurrentTime() );
+	current_time_as_angle = Radians( time_current );
 
 	/* Camera transform: */
 	if( camera_is_animated )
@@ -144,8 +156,7 @@ void SandboxApplication::Render()
 
 /* Render the light source: */
 	light_source_shader.Bind();
-
-	light_source_shader.SetUniform( "uniform_transform_view", view_transformation );
+	light_source_material_array.front().Set( "uniform_transform_view", view_transformation ); // Setting this for the first element is enough as it will stay the same for the rest.
 
 	constexpr Radians angle_increment( Engine::Constants< Radians >::Two_Pi() / LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -163,8 +174,8 @@ void SandboxApplication::Render()
 		}
 
 		/* Light color: */
-		light_source_shader.SetUniform( "uniform_transform_world",	Engine::Matrix::Translation( light_point_data.position_world_space ) );
-		light_source_shader.SetUniform( "uniform_color",			light_point_data.diffuse );
+		light_source_material_array[ i ].Set( "uniform_transform_world", Engine::Matrix::Translation( light_point_data.position_world_space ) );
+		light_source_material_array[ i ].Set( "uniform_color" ); // Use the value stored in the material.
 
 		GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
 	}
@@ -172,14 +183,18 @@ void SandboxApplication::Render()
 /* Render cubes: */
 	cube_shader->Bind();
 
-	cube_shader->SetUniform( "uniform_transform_view", view_transformation );
+	// TODO: 1) When the Renderer is implemented, maybe make it so that Set() will just update the CPU side buffer & the Renderer will issue SetUniform() calls when it is finally submitting the frame.
 
-/* Lighting information: */
+	auto& first_cube_material = cube_material_array.front();
+	first_cube_material.Set( "uniform_transform_view", view_transformation ); // Setting this for the first element is enough as it will stay the same for the rest.
+
+	/* We can set these for the first cube and do not bother with the rest, as the information is the same for all.*/
+	/* Lighting information: */
 	{
 		/* Shaders expect the lights' position & direction in view space. */
 
 		light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
-		cube_shader->SetUniform( "uniform_directional_light_data", light_directional_data );
+		first_cube_material.Set( "uniform_directional_light_data", light_directional_data );
 	
 		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		{
@@ -187,7 +202,7 @@ void SandboxApplication::Render()
 			light_point_data.position_view_space = ( Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
 													 view_transformation ).XYZ();
 			const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
-			cube_shader->SetUniform( uniform_name.c_str(), light_point_data );
+			first_cube_material.Set( uniform_name.c_str(), light_point_data );
 		}
 
 		light_spot_data.direction_view_space = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
@@ -198,7 +213,7 @@ void SandboxApplication::Render()
 		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
 		light_spot_data.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
 
-		cube_shader->SetUniform( "uniform_spot_light_data", light_spot_data );
+		first_cube_material.Set( "uniform_spot_light_data", light_spot_data );
 	}
 
 	container_texture_diffuse_map.ActivateAndUse( 0 );
@@ -210,23 +225,24 @@ void SandboxApplication::Render()
 		const auto transform( Engine::Matrix::RotationAroundAxis( angle, { 1.0f, 0.3f, 0.5f } ) * Engine::Matrix::Translation( CUBE_POSITIONS[ i ] + Vector3::Up() * 5.0f ) );
 
 		/* Lighting: */
-		cube_shader->SetUniform( "uniform_surface_data", cube_surface_data_array[ i ] );
+		cube_material_array[ i ].Set( "uniform_surface_data"/*, cube_surface_data_array[ i ]*/ );
 
 		/* Transform: */
-		cube_shader->SetUniform( "uniform_transform_world", transform );
+		cube_material_array[ i ].Set( "uniform_transform_world", transform );
 
 		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
 	}
 
 /* Ground quad: */
 	{
-		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 0.01f, 25.0f ) );
+		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 0.01f, 125.0f ) );
 
 		/* Lighting: */
-		cube_shader->SetUniform( "uniform_surface_data", front_wall_quad_surface_data );
+		ground_quad_material.Set( "uniform_directional_light_data" ); // Use the value stored in the material.
+		ground_quad_material.Set( "uniform_surface_data" ); // Use the value stored in the material.
 
 		/* Transform: */
-		cube_shader->SetUniform( "uniform_transform_world", transform );
+		ground_quad_material.Set( "uniform_transform_world", transform );
 
 		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
 	}
@@ -236,10 +252,11 @@ void SandboxApplication::Render()
 		constexpr auto transform( Engine::Matrix::Scaling( 25.0f, 25.0f, 0.01f ) * Engine::Matrix::TranslationOnZ( 5.0f ) );
 
 		/* Lighting: */
-		cube_shader->SetUniform( "uniform_surface_data", ground_quad_surface_data );
+		front_wall_quad_material.Set( "uniform_directional_light_data" ); // Use the value stored in the material.
+		front_wall_quad_material.Set( "uniform_surface_data" ); // Use the value stored in the material.
 
 		/* Transform: */
-		cube_shader->SetUniform( "uniform_transform_world", transform );
+		front_wall_quad_material.Set( "uniform_transform_world", transform );
 
 		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
 	}
@@ -249,27 +266,18 @@ void SandboxApplication::DrawImGui()
 {
 	Application::DrawImGui();
 
-	ImGui::ShowDemoWindow();
-
 	bool view_matrix_is_dirty = false, projection_matrix_is_dirty = false;
-
-	if( ImGui::Begin( "Test Window", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
-	{
-		ImGui::Text( "Running Sandbox Application:\n\n"
-					 
-					 "Drawing 2 transforming cubes w& the simplest coloring shader ever,\n"
-					 "via using the new Color4 class,\n"
-					 "by setting transformation matrices as shader uniforms,\n"
-					 "& setting Light & Surface uniform data (structs) via a generic SetUniform< Struct >(),\n"
-					 "via using a perspective projection matrix with 4:3 aspect ratio,\n"
-					 "90 degrees vertical FoV & near & far plane at 0.1 & 100.0." );
-	}
-
-	ImGui::End();
 
 	Engine::ImGuiDrawer::Draw( gouraud_shader );
 	Engine::ImGuiDrawer::Draw( phong_shader );
 	Engine::ImGuiDrawer::Draw( light_source_shader );
+
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ] );
+	Engine::ImGuiDrawer::Draw( ground_quad_material );
+	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
+	for( auto& cube_material : cube_material_array )
+		Engine::ImGuiDrawer::Draw( cube_material );
 
 	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
@@ -278,6 +286,7 @@ void SandboxApplication::DrawImGui()
 			ResetLightingData();
 
 			cube_shader = &phong_shader;
+			ground_quad_material.SetShader( cube_shader );
 		}
 
 		Engine::ImGuiDrawer::Draw( light_directional_data, "Directional Light Properties" );
@@ -287,8 +296,9 @@ void SandboxApplication::DrawImGui()
 			ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
 		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		{
-			const std::string name( "Point Light Properties##" + std::to_string( i ) );
-			Engine::ImGuiDrawer::Draw( light_point_data_array[ i ], name.c_str(), light_point_is_animated /* hide position. */ );
+			const std::string name( "Point Light # " + std::to_string( i ) + " Properties##");
+			if( Engine::ImGuiDrawer::Draw( light_point_data_array[ i ], name.c_str(), light_point_is_animated /* hide position. */ ) )
+				light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse );
 		}
 		Engine::ImGuiDrawer::Draw( light_spot_data, "Spot Light Properties" );
 
@@ -317,6 +327,7 @@ void SandboxApplication::DrawImGui()
 		if( lighting_model_changed )
 		{
 			cube_shader = lighting_model == LightingModel::Gouraud ? &gouraud_shader : &phong_shader;
+			ground_quad_material.SetShader( cube_shader );
 
 			view_matrix_is_dirty = projection_matrix_is_dirty = true;
 		}
@@ -465,6 +476,19 @@ void SandboxApplication::ResetLightingData()
 		.specular_map_slot = 1,
 		.shininess         = 32.0f
 	};
+}
+
+void SandboxApplication::ResetMaterialData()
+{
+	light_source_material_array.resize( LIGHT_POINT_COUNT );
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &light_source_shader );
+	
+	cube_material_array.resize( CUBE_COUNT );
+	for( auto i = 0; i < CUBE_COUNT; i++ )
+		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), cube_shader );
+	ground_quad_material     = Engine::Material( "Ground", cube_shader );
+	front_wall_quad_material = Engine::Material( "Front Wall", cube_shader );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

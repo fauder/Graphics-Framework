@@ -5,6 +5,180 @@
 
 namespace Engine::ImGuiDrawer
 {
+	bool Draw( const GLenum type, void* value_pointer, const char* name )
+	{
+		switch( type )
+		{
+			/* Scalars & vectors: */
+			case GL_FLOAT				: return Draw( *reinterpret_cast< float*		>( value_pointer ), name );
+			case GL_FLOAT_VEC2			: return Draw( *reinterpret_cast< Vector2*		>( value_pointer ), name );
+			case GL_FLOAT_VEC3			: return Draw( *reinterpret_cast< Vector3*		>( value_pointer ), name );
+			case GL_FLOAT_VEC4			: return Draw( *reinterpret_cast< Vector4*		>( value_pointer ), name );
+			case GL_DOUBLE				: return Draw( *reinterpret_cast< double*		>( value_pointer ), name );
+			case GL_INT					: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
+			case GL_INT_VEC2			: return Draw( *reinterpret_cast< Vector2I*		>( value_pointer ), name );
+			case GL_INT_VEC3			: return Draw( *reinterpret_cast< Vector3I*		>( value_pointer ), name );
+			case GL_INT_VEC4			: return Draw( *reinterpret_cast< Vector4I*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT		: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC2	: return Draw( *reinterpret_cast< Vector2U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC3	: return Draw( *reinterpret_cast< Vector3U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC4	: return Draw( *reinterpret_cast< Vector4U*		>( value_pointer ), name );
+			case GL_BOOL				: return Draw( *reinterpret_cast< bool*			>( value_pointer ), name );
+			case GL_BOOL_VEC2			: return Draw( *reinterpret_cast< Vector2B*		>( value_pointer ), name );
+			case GL_BOOL_VEC3			: return Draw( *reinterpret_cast< Vector3B*		>( value_pointer ), name );
+			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< Vector4B*		>( value_pointer ), name );
+			
+			/* Matrices: */
+			/*case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< Matrix2x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< Matrix3x3*	>( value_pointer ), name );
+			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< Matrix4x4*	>( value_pointer ), name );
+			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< Matrix2x3*	>( value_pointer ), name );
+			case GL_FLOAT_MAT2x4 		: return Draw( *reinterpret_cast< Matrix2x4*	>( value_pointer ), name );
+			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< Matrix3x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< Matrix3x4*	>( value_pointer ), name );
+			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< Matrix4x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );*/
+			case GL_FLOAT_MAT2 			: return false;
+			case GL_FLOAT_MAT3 			: return false;
+			case GL_FLOAT_MAT4 			: return false;
+			case GL_FLOAT_MAT2x3 		: return false;
+			case GL_FLOAT_MAT2x4 		: return false;
+			case GL_FLOAT_MAT3x2 		: return false;
+			case GL_FLOAT_MAT3x4 		: return false;
+			case GL_FLOAT_MAT4x2 		: return false;
+			case GL_FLOAT_MAT4x3 		: return false;
+
+			/* Other: */
+			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
+			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
+			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
+		}
+
+		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, void* value_pointer ) called for an undefined GL type!" );
+	}
+
+	void Draw( const GLenum type, const void* value_pointer, const char* name )
+	{
+		switch( type )
+		{
+			/* Scalars & vectors: */
+			case GL_FLOAT				: return Draw( *reinterpret_cast< const float*			>( value_pointer ), name );
+			case GL_FLOAT_VEC2			: return Draw( *reinterpret_cast< const Vector2*		>( value_pointer ), name );
+			case GL_FLOAT_VEC3			: return Draw( *reinterpret_cast< const Vector3*		>( value_pointer ), name );
+			case GL_FLOAT_VEC4			: return Draw( *reinterpret_cast< const Vector4*		>( value_pointer ), name );
+			case GL_DOUBLE				: return Draw( *reinterpret_cast< const double*			>( value_pointer ), name );
+			case GL_INT					: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
+			case GL_INT_VEC2			: return Draw( *reinterpret_cast< const Vector2I*		>( value_pointer ), name );
+			case GL_INT_VEC3			: return Draw( *reinterpret_cast< const Vector3I*		>( value_pointer ), name );
+			case GL_INT_VEC4			: return Draw( *reinterpret_cast< const Vector4I*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT		: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC2	: return Draw( *reinterpret_cast< const Vector2U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC3	: return Draw( *reinterpret_cast< const Vector3U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC4	: return Draw( *reinterpret_cast< const Vector4U*		>( value_pointer ), name );
+			case GL_BOOL				: return Draw( *reinterpret_cast< const bool*			>( value_pointer ), name );
+			case GL_BOOL_VEC2			: return Draw( *reinterpret_cast< const Vector2B*		>( value_pointer ), name );
+			case GL_BOOL_VEC3			: return Draw( *reinterpret_cast< const Vector3B*		>( value_pointer ), name );
+			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< const Vector4B*		>( value_pointer ), name );
+
+			/* Matrices: */
+			/*case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< const Matrix2x2*		>( value_pointer ), name ); return;
+			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< const Matrix3x3*		>( value_pointer ), name );
+			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< const Matrix4x4*		>( value_pointer ), name );
+			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< const Matrix2x3*		>( value_pointer ), name );
+			case GL_FLOAT_MAT2x4 		: return Draw( *reinterpret_cast< const Matrix2x4*		>( value_pointer ), name );
+			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< const Matrix3x2*		>( value_pointer ), name );
+			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< const Matrix3x4*		>( value_pointer ), name );
+			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< const Matrix4x2*		>( value_pointer ), name );
+			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );*/
+			case GL_FLOAT_MAT2 			: return;
+			case GL_FLOAT_MAT3 			: return;
+			case GL_FLOAT_MAT4 			: return;
+			case GL_FLOAT_MAT2x3 		: return;
+			case GL_FLOAT_MAT2x4 		: return;
+			case GL_FLOAT_MAT3x2 		: return;
+			case GL_FLOAT_MAT3x4 		: return;
+			case GL_FLOAT_MAT4x2 		: return;
+			case GL_FLOAT_MAT4x3 		: return;
+
+			/* Other: */
+			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
+			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
+			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
+		}
+
+		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, const void* value_pointer ) called for an undefined GL type!" );
+	}
+
+	bool Draw( int& scalar, const char* name )
+	{
+		return ImGui::DragInt( name, &scalar );
+	}
+
+	bool Draw( int& scalar, const int min, const int max, const char* name )
+	{
+		return ImGui::SliderInt( name, &scalar, min, max );
+	}
+
+	void Draw( const int& scalar, const char* name )
+	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		ImGui::InputInt( name, const_cast< int* >( &scalar ), 0, 0, ImGuiInputTextFlags_ReadOnly );
+		ImGui::PopStyleColor();
+	}
+
+	bool Draw( unsigned int& scalar, const char* name )
+	{
+		return ImGui::DragScalar( name, GetImGuiDataType< unsigned int >(), &scalar, 1.0f, 0, 0, GetFormat< unsigned int >() );
+	}
+
+	bool Draw( unsigned int& scalar, const unsigned int min, const unsigned int max, const char* name )
+	{
+		return ImGui::SliderScalar( name, GetImGuiDataType< unsigned int >(), &scalar, &min, &max, GetFormat< unsigned int >() );
+	}
+
+	void Draw( const unsigned int& scalar, const char* name )
+	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		ImGui::InputScalar( name, GetImGuiDataType< unsigned int >(), const_cast< unsigned int* >( &scalar ), 0, 0, GetFormat< unsigned int >(), ImGuiInputTextFlags_ReadOnly );
+		ImGui::PopStyleColor();
+	}
+
+	bool Draw( float& scalar, const char* name )
+	{
+		return ImGui::DragFloat( name, &scalar );
+	}
+
+	void Draw( const float& scalar, const char* name )
+	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		ImGui::InputFloat( name, const_cast< float* >( &scalar ), 0.0f, 0.0f, GetFormat< float >(), ImGuiInputTextFlags_ReadOnly );
+		ImGui::PopStyleColor();
+	}
+
+	bool Draw( double& scalar, const char* name )
+	{
+		return ImGui::DragScalar( name, GetImGuiDataType< double >(), &scalar );
+	}
+
+	void Draw( const double& scalar, const char* name )
+	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		ImGui::InputScalar( name, GetImGuiDataType< double >(), const_cast< double* >( &scalar ), 0, 0, GetFormat< double >(), ImGuiInputTextFlags_ReadOnly );
+		ImGui::PopStyleColor();
+	}
+
+	bool Draw( bool& value, const char* name )
+	{
+		return ImGui::Checkbox( name, &value );
+	}
+
+	void Draw( const bool& value, const char* name )
+	{
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		ImGui::Checkbox( name, const_cast< bool* >( &value ) );
+		ImGui::PopStyleColor();
+	}
+
 	bool Draw( Color3& color, const char* name )
 	{
 		return ImGui::ColorEdit3( name, color.Data() );
@@ -100,8 +274,8 @@ namespace Engine::ImGuiDrawer
 
 		if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
 		{
-			float near_plane = camera.GetNearPlaneOffset();
-			float far_plane = camera.GetFarPlaneOffset();
+			float near_plane   = camera.GetNearPlaneOffset();
+			float far_plane    = camera.GetFarPlaneOffset();
 			float aspect_ratio = camera.GetAspectRatio();
 			float vertical_fov = ( float )camera.GetVerticalFieldOfView();
 
@@ -125,8 +299,8 @@ namespace Engine::ImGuiDrawer
 	{
 		if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
 		{
-			float near_plane = camera.GetNearPlaneOffset();
-			float far_plane = camera.GetFarPlaneOffset();
+			float near_plane   = camera.GetNearPlaneOffset();
+			float far_plane    = camera.GetFarPlaneOffset();
 			float aspect_ratio = camera.GetAspectRatio();
 			float vertical_fov = ( float )camera.GetVerticalFieldOfView();
 
@@ -137,6 +311,99 @@ namespace Engine::ImGuiDrawer
 		
 			ImGui::TreePop();
 		}
+	}
+
+	void Draw( Material& material, ImGuiWindowFlags window_flags )
+	{
+		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			if( ImGui::TreeNodeEx( material.GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			{
+				// TODO: Implement shader selection.
+				if( material.HasShaderAssigned() )
+				{
+					const auto& shader_name( material.GetShaderName() );
+					ImGui::TextColored( ImVec4( 0.38f, 0.12f, 0.68f, 1.0f ), "Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
+				}
+				else
+					ImGui::TextUnformatted( "Shader: <unassigned>" );
+
+				const auto& uniform_map = material.GetUniformInformations();
+
+				for( auto& [ uniform_name, uniform_info ] : uniform_map )
+				{
+					/* Skip uniform struct members; They will be drawn under their parent struct name instead. */
+					if( uniform_info.original_order_in_struct != -1 )
+						continue;
+
+					if( uniform_info.IsUserDefinedStruct() )
+					{
+						if( ImGui::TreeNodeEx( uniform_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+						{
+							for( const auto& [ uniform_member_name, uniform_member_info ] : uniform_info.members )
+								if( Draw( uniform_member_info->type, material.GetUniformPointer( uniform_member_info->original_offset ), uniform_member_name.c_str() ) )
+									material.Set( uniform_member_name.c_str() );
+
+							ImGui::TreePop();
+						}
+					}
+					else
+					{
+						if( Draw( uniform_info.type, material.GetUniformPointer( uniform_info.offset ), uniform_name.c_str() ) )
+							material.Set( uniform_name.c_str() );
+					}
+				}
+
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::End();
+	}
+
+	void Draw( const Material& material, ImGuiWindowFlags window_flags )
+	{
+		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			if( ImGui::TreeNodeEx( material.GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			{
+				if( material.HasShaderAssigned() )
+				{
+					const auto& shader_name( material.GetShaderName() );
+					ImGui::TextColored( ImVec4( 0.38f, 0.12f, 0.68f, 1.0f ), "Shader: %s", material.GetShaderName().c_str() );
+				}
+				else
+					ImGui::TextUnformatted( "Shader: <unassigned>" );
+
+				const auto& uniform_map = material.GetUniformInformations();
+
+				for( auto& [ uniform_name, uniform_info ] : uniform_map )
+				{
+					/* Skip uniform struct members; They will be drawn under their parent struct name instead. */
+					if( uniform_info.original_order_in_struct != -1 )
+						continue;
+
+					if( uniform_info.IsUserDefinedStruct() )
+					{
+						if( ImGui::TreeNodeEx( uniform_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+						{
+							for( const auto& [ uniform_member_name, uniform_member_info ] : uniform_info.members )
+								Draw( uniform_member_info->type, material.GetUniformPointer( uniform_member_info->original_offset ), uniform_member_name.c_str() );
+
+							ImGui::TreePop();
+						}
+					}
+					else
+					{
+						Draw( uniform_info.type, material.GetUniformPointer( uniform_info.original_offset ), uniform_name.c_str() );
+					}
+				}
+
+				ImGui::TreePop();
+			}
+		}
+
+		ImGui::End();
 	}
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags )

@@ -1,7 +1,7 @@
 // Engine Includes.
 #include "Engine.h"
 #include "Engine/Graphics/Lighting.h"
-#include "Engine/Graphics/Shader.hpp"
+#include "Engine/Graphics/Material.hpp"
 #include "Engine/Graphics/VertexArray.h"
 #include "Engine/Graphics/Texture.h"
 #include "Engine/Scene/Camera.h"
@@ -38,6 +38,7 @@ private:
 	void UpdateProjectionMatrix( Engine::Shader& shader );
 
 	void ResetLightingData();
+	void ResetMaterialData();
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
 
 private:
@@ -45,10 +46,15 @@ private:
 	Engine::VertexBuffer vertex_buffer_crate;
 	Engine::VertexArray vertex_array_crate;
 
-/* Shaders & Textures: */
+/* Materials, Shaders & Textures: */
 	Engine::Shader* cube_shader;
 	Engine::Shader gouraud_shader, phong_shader;
 	Engine::Shader light_source_shader;
+
+	std::vector< Engine::Material > light_source_material_array;
+	std::vector< Engine::Material > cube_material_array;
+	Engine::Material ground_quad_material;
+	Engine::Material front_wall_quad_material;
 
 	Engine::Texture container_texture_diffuse_map, container_texture_specular_map;
 

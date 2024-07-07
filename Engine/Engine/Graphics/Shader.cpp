@@ -21,12 +21,15 @@ namespace Engine
 	Shader::Shader( const char* name )
 		:
 		program_id( 0 ),
-		name( name )
+		name( name ),
+		uniform_size_total( 0 )
 	{
 	}
 
 	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
-		: name( name )
+		:
+		name( name ),
+		uniform_size_total( 0 )
 	{
 		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path );
 	}
@@ -71,6 +74,7 @@ namespace Engine
 			QueryUniformData( uniform_info_map );
 			ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *vertex_shader_source	) );
 			ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *fragment_shader_source	) );
+			uniform_size_total = CalculateTotalUniformSize();
 		}
 
 		return link_result;
@@ -81,7 +85,7 @@ namespace Engine
 		GLCALL( glUseProgram( program_id ) );
 	}
 
-	void Shader::SetUniform( const UniformInformation& uniform_info, const void* value_pointer )
+	void Shader::SetUniform( const Uniform::Information& uniform_info, const void* value_pointer )
 	{
 		switch( uniform_info.type )
 		{
@@ -166,7 +170,7 @@ namespace Engine
 		return true;
 	}
 
-	void Shader::QueryUniformData( std::map< std::string, UniformInformation >& uniform_information_map )
+	void Shader::QueryUniformData( std::map< std::string, Uniform::Information >& uniform_information_map )
 	{
 		int active_uniform_count = 0;
 		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &active_uniform_count ) );
@@ -324,7 +328,7 @@ namespace Engine
 									/* Case 2: There ARE commas, i.e., the line contains multiple uniform member definitions. */
 									else
 									{
-										std::vector< UniformInformation* > uniform_infos_found_in_reverse_order;
+										std::vector< Uniform::Information* > uniform_infos_found_in_reverse_order;
 										/* No need to check if find() was successfull;
 										 * This shader source compiles successfully, so there HAS TO BE at least one whitespace (between type and variable) in this line. */
 										const auto last_preceding_whitespace_position = line_view.find_last_of( " \t" );
@@ -373,12 +377,12 @@ namespace Engine
 				}
 
 				/* Now that the original orders are determined, the offsets based on these original orders can also be calculated. */
-				std::map< int /* order */, UniformInformation* > members_sorted_by_original_order;
+				std::map< int /* order */, Uniform::Information* > members_sorted_by_original_order;
 				
 				for( auto& [ dont_care_about_name, uniform_member_info ] : uniform_info.members )
 					members_sorted_by_original_order[ uniform_member_info->original_order_in_struct ] = uniform_member_info;
 
-				int offset = 0;
+				int offset = uniform_info.offset;
 				for( auto& [ original_order, uniform_member_info ] : members_sorted_by_original_order )
 				{
 					uniform_member_info->original_offset = offset;
@@ -389,7 +393,16 @@ namespace Engine
 		}
 	}
 
-	const Shader::UniformInformation& Shader::GetUniformInformation( const std::string& uniform_name )
+	std::size_t Shader::CalculateTotalUniformSize() const
+	{
+		std::size_t total = 0;
+		for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
+			total += uniform_info.size;
+
+		return total;
+	}
+
+	const Uniform::Information& Shader::GetUniformInformation( const std::string& uniform_name )
 	{
 	#ifdef _DEBUG
 		try

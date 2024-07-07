@@ -47,10 +47,15 @@ namespace Engine
 		return shader_type_identifiers[ shader_type ];
 	}
 
-	class Shader
+	/* Forward declaration: */
+	class Material;
+
+	class Uniform // Acts more like a namespace to conceal its inner classes to Shader & Material only.
 	{
-	private:
-		class UniformInformation
+		friend class Shader;
+		friend class Material;
+
+		class Information
 		{
 		private:
 			friend class Shader;
@@ -66,7 +71,7 @@ namespace Engine
 			int original_offset = -1; // The offset based on the original order. Used for the cpu-side memory-addressing inside the struct's blob.
 			GLenum type;
 
-			std::map< std::string, UniformInformation* > members;
+			std::map< std::string, Information* > members;
 
 		private:
 			inline bool HasOriginalOrdersDetermined() const
@@ -78,7 +83,10 @@ namespace Engine
 				return true;
 			}
 		};
+	};
 
+	class Shader
+	{
 	public:
 		/* Will be initialized later with FromFile(). */
 		Shader( const char* name );
@@ -91,7 +99,8 @@ namespace Engine
 
 		inline const std::string& GetName() const { return name; }
 
-		const std::map< std::string, UniformInformation >& GetUniformInformations() const { return uniform_info_map; }
+		inline const std::map< std::string, Uniform::Information >& GetUniformInformations() const { return uniform_info_map; }
+		inline std::size_t GetTotalUniformSize() const { return uniform_size_total; }
 
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );
@@ -263,7 +272,8 @@ namespace Engine
 
 				for( const auto& [ dont_care_member_uniform_name, member_uniform_info ] : uniform_info.members )
 				{
-					const void* member_uniform_pointer = ( const void* )( ( const char* )&value + member_uniform_info->original_offset );
+					const int   parent_relative_offset = member_uniform_info->original_offset - uniform_info.offset;
+					const void* member_uniform_pointer = ( const void* )( ( const char* )&value + parent_relative_offset );
 
 					SetUniform( *member_uniform_info, member_uniform_pointer );
 				}
@@ -274,17 +284,19 @@ namespace Engine
 			}
 		}
 
-		void SetUniform( const UniformInformation& uniform_info, const void* value_pointer );
+		void SetUniform( const Uniform::Information& uniform_info, const void* value_pointer );
 
 	private:
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
-		void QueryUniformData( std::map< std::string, UniformInformation >& uniform_information_map );
+		void QueryUniformData( std::map< std::string, Uniform::Information >& uniform_information_map );
 		std::string ShaderSource_CommentsStripped( const std::string& shader_source );
 		void ParseUniformData_StructMemberCPUOrders( const std::string& shader_source );
-		const UniformInformation& GetUniformInformation( const std::string& uniform_name );
+		std::size_t CalculateTotalUniformSize() const;
+
+		const Uniform::Information& GetUniformInformation( const std::string& uniform_name );
 
 		void LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const;
 		void LogErrors_Linking( const int program_id ) const;
@@ -293,6 +305,7 @@ namespace Engine
 	private:
 		int program_id;
 		std::string name;
-		std::map< std::string, UniformInformation > uniform_info_map;
+		std::map< std::string, Uniform::Information > uniform_info_map;
+		std::size_t uniform_size_total;
 	};
 }
