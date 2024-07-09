@@ -463,4 +463,15 @@ namespace Engine
 	using Vector2B = Math::Vector< bool,			2 >;
 	using Vector3B = Math::Vector< bool,			3 >;
 	using Vector4B = Math::Vector< bool,			4 >;
+
+	namespace Concepts
+	{
+		template< typename >
+		struct IsVectorTag : public std::false_type {};
+
+		template< typename T, std::size_t S >
+		struct IsVectorTag< Math::Vector< T, S > > : public std::true_type {};
+
+		template< typename Type > concept IsVector = bool( IsVectorTag< Type >::value );
+	}
 }
