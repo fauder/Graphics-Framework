@@ -397,7 +397,8 @@ namespace Engine
 	{
 		std::size_t total = 0;
 		for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
-			total += uniform_info.size;
+			if( not uniform_info.IsUserDefinedStruct() ) // Skip structs to prevent duplicate terms in the total sum (as the struct's size is the sum of its members' sizes).
+				total += uniform_info.size;
 
 		return total;
 	}
