@@ -157,6 +157,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\ImGuiDrawer.hpp" />
     <ClInclude Include="Engine\Core\ImGuiUtility.h" />
     <ClInclude Include="Engine\Core\Initialization.h" />
+    <ClInclude Include="Engine\Graphics\Mesh.hpp" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Graphics\Color.hpp" />
@@ -176,8 +177,8 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Scene\Transform.h" />
     <ClInclude Include="Engine\Graphics\UniformStruct.h" />
     <ClInclude Include="Engine\Graphics\VertexArray.h" />
-    <ClInclude Include="Engine\Graphics\VertexBufferLayout.h" />
-    <ClInclude Include="Engine\Graphics\VertexBuffer.h" />
+    <ClInclude Include="Engine\Graphics\VertexBufferLayout.hpp" />
+    <ClInclude Include="Engine\Graphics\VertexBuffer.hpp" />
     <ClInclude Include="Engine\Math\Angle.hpp" />
     <ClInclude Include="Engine\Math\Concepts.h" />
     <ClInclude Include="Engine\Math\Constants.h" />

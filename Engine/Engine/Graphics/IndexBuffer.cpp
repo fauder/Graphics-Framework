@@ -6,6 +6,7 @@ namespace Engine
 	IndexBuffer::IndexBuffer()
 		:
 		id( -1 ),
+		index_count( 0 ),
 		size( 0 )
 	{
 	}
@@ -13,24 +14,27 @@ namespace Engine
 	IndexBuffer::IndexBuffer( IndexBuffer&& donor )
 		:
 		id( std::exchange( donor.id, -1 ) ),
+		index_count( std::exchange( donor.index_count, 0 ) ),
 		size( std::exchange( donor.size, 0 ) )
 	{
 	}
 
 	IndexBuffer& IndexBuffer::operator = ( IndexBuffer&& donor )
 	{
-		id   = std::exchange( donor.id, -1 );
-		size = std::exchange( donor.size, 0 );
+		id          = std::exchange( donor.id,			-1 );
+		index_count = std::exchange( donor.index_count,  0 );
+		size        = std::exchange( donor.size,		 0 );
 
 		return *this;
 	}
 
-	IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int size, const GLenum usage )
+	IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage )
 		:
 		id( -1 ),
-		size( size )
+		index_count( count ),
+		size( count * sizeof( unsigned int ) )
 	{
-		ASSERT_DEBUG_ONLY( IsValid() && "'size' parameter passed to IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int size, const GLenum usage ) is zero!" );
+		ASSERT_DEBUG_ONLY( IsValid() && "'count' parameter passed to IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage ) is zero!" );
 
 		GLCALL( glGenBuffers( 1, &id ) );
 		Bind();

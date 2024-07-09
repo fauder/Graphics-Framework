@@ -1,9 +1,12 @@
 #pragma once
 
 // Engine Includes.
-#include "VertexBuffer.h"
-#include "VertexBufferLayout.h"
+#include "VertexBuffer.hpp"
+#include "VertexBufferLayout.hpp"
 #include "IndexBuffer.h"
+
+// std Includes.
+#include <optional>
 
 namespace Engine
 {
@@ -17,13 +20,15 @@ namespace Engine
 		VertexArray& operator =( VertexArray&& donor );
 		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout );
 		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer& index_buffer );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::optional< IndexBuffer >& index_buffer );
 		~VertexArray();
 
 		void Bind() const;
 		void Unbind() const;
 
-		unsigned int VertexCount() const;
-		unsigned int IndexCount() const;
+		inline unsigned int VertexCount()	const { return vertex_count; }
+		inline unsigned int IndexCount()	const { return index_count;  }
+		inline bool			IsValid()		const { return vertex_count; } // Use the vertex count to implicitly define validness state.
 
 	private:
 		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout );
@@ -36,7 +41,5 @@ namespace Engine
 
 		unsigned int vertex_count;
 		unsigned int index_count;
-
-		bool is_valid;
 	};
 }

@@ -9,7 +9,20 @@ namespace Engine
 	{
 	public:
 		IndexBuffer();
-		IndexBuffer( const unsigned int* index_data, const unsigned int size, const GLenum usage );
+		IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage );
+		template< typename Collection >
+		IndexBuffer( Collection&& index_data, const GLenum usage )
+			:
+			id( -1 ),
+			index_count( ( int )index_data.size() ),
+			size( index_count * sizeof( index_data.front() ) )
+		{
+			ASSERT_DEBUG_ONLY( IsValid() && "'index_data' parameter passed to IndexBuffer::IndexBuffer< Collection&& >( const Collection&& index_data, const GLenum usage ) is empty!" );
+
+			GLCALL( glGenBuffers( 1, &id ) );
+			Bind();
+			GLCALL( glBufferData( GL_ELEMENT_ARRAY_BUFFER, size, ( void* )index_data.data(), usage ) );
+		}
 
 		/* Prohibit copying; It does not make sense two have multiple index buffers with the same Id. */
 		IndexBuffer( const IndexBuffer& other )				 = delete;
@@ -23,12 +36,14 @@ namespace Engine
 
 		void Bind() const;
 
-		inline unsigned int Size()		const { return size; }
-		inline unsigned int Id()		const { return id;   }
-		inline bool			IsValid()	const { return size; } // Use the size to implicitly define validness state.
+		inline unsigned int Id()			const { return id;			}
+		inline unsigned int IndexCount()	const { return index_count;	}
+		inline unsigned int Size()			const { return size;		}
+		inline bool			IsValid()		const { return index_count; } // Use the index count to implicitly define validness state.
 
 	private:
 		unsigned int id;
+		unsigned int index_count;
 		unsigned int size;
 	};
 }

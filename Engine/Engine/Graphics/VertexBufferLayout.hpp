@@ -2,18 +2,25 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Math/Concepts.h"
 
 // std Includes.
 #include <vector>
 
 namespace Engine
 {
-	struct VertexAttribute
+	struct VertexAttributeCountAndType
 	{
-		unsigned int location;
 		int count;
 		GLenum type;
-		bool normalized;
+
+		inline unsigned int Empty() const { return count == 0; }
+	}; 
+	
+	struct VertexAttribute : VertexAttributeCountAndType
+	{
+		unsigned int location;
+		GLint normalize;
 
 		inline unsigned int Size() const { return count * sizeof( type ); }
 	};
@@ -21,25 +28,39 @@ namespace Engine
 	class VertexBufferLayout
 	{
 	public:
+		VertexBufferLayout()
+		{}
+
+		template< typename Collection > 
+		VertexBufferLayout( Collection&& attribute_counts_and_types )
+		{
+			for( auto& attribute : attribute_counts_and_types )
+				if( !attribute.Empty() )
+					attributes.push_back( { attribute.count, attribute.type, ( unsigned int )attributes.size(), GL_FALSE } );
+		}
+
+		~VertexBufferLayout()
+		{}
+
 		template< typename Type >
 		void Push( const int count );
 
 		template <>
 		void Push< int >( const int count )
 		{
-			attributes.push_back( { ( unsigned int )attributes.size(), count, GL_INT, GL_FALSE } );
+			attributes.push_back( { count, GL_INT, ( unsigned int )attributes.size(), GL_FALSE } );
 		}
 
 		template <>
 		void Push< bool >( const int count )
 		{
-			attributes.push_back( { ( unsigned int )attributes.size(), count, GL_INT, GL_FALSE } );
+			attributes.push_back( { count, GL_INT, ( unsigned int )attributes.size(), GL_FALSE } );
 		}
 
 		template <>
 		void Push< float >( const int count )
 		{
-			attributes.push_back( { ( unsigned int )attributes.size(), count, GL_FLOAT, GL_FALSE } );
+			attributes.push_back( { count, GL_FLOAT, ( unsigned int )attributes.size(), GL_FALSE } );
 		}
 
 		inline void SetAndEnableAttributes() const
@@ -50,7 +71,7 @@ namespace Engine
 			for( auto index = 0; index < attributes.size(); index++ )
 			{
 				const auto attribute = attributes[ index ];
-				GLCALL( glVertexAttribPointer( attribute.location, attribute.count, attribute.type, attribute.normalized, stride, BUFFER_OFFSET( offset ) ) );
+				GLCALL( glVertexAttribPointer( attribute.location, attribute.count, attribute.type, attribute.normalize, stride, BUFFER_OFFSET( offset ) ) );
 				GLCALL( glEnableVertexAttribArray( attribute.location ) );
 				offset += attribute.Size();
 			}
