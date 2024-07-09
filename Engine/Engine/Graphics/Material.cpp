@@ -33,6 +33,12 @@ namespace Engine
 	{
 	}
 
+	const Shader* Material::Bind() const
+	{
+		shader->Bind(); 
+		return shader;
+	}
+
 	void* Material::GetUniformPointer( std::size_t offset )
 	{
 		return GetValuePointerFromBlob( offset );
@@ -41,20 +47,6 @@ namespace Engine
 	const void* Material::GetUniformPointer( std::size_t offset ) const
 	{
 		return GetValuePointerFromBlob( offset );
-	}
-
-	/* Uses the value in the internal memory blob. */
-	void Material::Set( const char* uniform_name )
-	{
-		const auto& uniform_info = GetUniformInformation( uniform_name );
-
-		if( uniform_info.IsUserDefinedStruct() )
-		{
-			for( const auto& [ member_uniform_name, member_uniform_info ] : uniform_info.members )
-				shader->SetUniform( *member_uniform_info, GetValuePointerFromBlob( member_uniform_info->original_offset ) );
-		}
-		else
-			shader->SetUniform( uniform_info, GetValuePointerFromBlob( uniform_info.offset ) );
 	}
 
 	void Material::SetShader( Shader* const shader )
@@ -77,5 +69,27 @@ namespace Engine
 	const void* Material::GetValuePointerFromBlob( std::size_t offset ) const
 	{
 		return uniform_blob.data() + offset;
+	}
+
+	/* Uploads the value in the internal memory blob to GPU. */
+	void Material::UploadUniform( const char* uniform_name )
+	{
+		const auto& uniform_info = GetUniformInformation( uniform_name );
+
+		/*if( uniform_info.IsUserDefinedStruct() )
+		{
+			for( const auto& [ member_uniform_name, member_uniform_info ] : uniform_info.members )
+				shader->SetUniform( *member_uniform_info, GetValuePointerFromBlob( member_uniform_info->original_offset ) );
+		}
+		else*/
+			shader->SetUniform( uniform_info, GetValuePointerFromBlob( uniform_info.original_offset == -1 ? uniform_info.offset : uniform_info.original_offset ) );
+	}
+
+	/* Uploads the values in the internal memory blob to GPU. */
+	void Material::UploadAllUniforms()
+	{
+		for( const auto& [ uniform_info_name, uniform_info ] : *uniform_info_map )
+			if( not uniform_info.IsUserDefinedStruct() ) // Skip structs to prevent duplicate processing of members. Can not upload the whole struct at once anyways.
+				UploadUniform( uniform_info_name.c_str() );
 	}
 }

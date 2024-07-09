@@ -3,6 +3,7 @@
 #include "Engine/Graphics/Lighting.h"
 #include "Engine/Graphics/Material.hpp"
 #include "Engine/Graphics/Mesh.hpp"
+#include "Engine/Graphics/Renderer.h"
 #include "Engine/Graphics/Texture.h"
 #include "Engine/Scene/Camera.h"
 #include "Engine/Scene/CameraController_Flight.h"
@@ -34,14 +35,21 @@ public:
 	virtual void OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels ) override;
 
 private:
-	void UpdateViewMatrix( Engine::Shader& shader );
-	void UpdateProjectionMatrix( Engine::Shader& shader );
+	void UpdateViewMatrix();
 
 	void ResetLightingData();
 	void ResetMaterialData();
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
 
 private:
+/* Renderer: */
+	Engine::Renderer renderer;
+
+	std::vector< Engine::Drawable > light_source_drawable_array;
+	std::vector< Engine::Drawable > cube_drawable_array;
+	Engine::Drawable ground_quad_drawable;
+	Engine::Drawable front_wall_quad_drawable;
+
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh;
 
@@ -56,6 +64,12 @@ private:
 	Engine::Material front_wall_quad_material;
 
 	Engine::Texture container_texture_diffuse_map, container_texture_specular_map;
+
+/* Scene: */
+	std::vector< Engine::Transform > light_source_transform_array;
+	std::vector< Engine::Transform > cube_transform_array;
+	Engine::Transform ground_quad_transform;
+	Engine::Transform front_wall_quad_transform;
 
 /* Camera: */
 	Engine::Transform camera_transform;

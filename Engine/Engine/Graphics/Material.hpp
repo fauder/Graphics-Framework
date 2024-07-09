@@ -8,8 +8,12 @@
 
 namespace Engine
 {
+	class Renderer;
+
 	class Material
 	{
+		friend Renderer;
+
 	public:
 		Material();
 		Material( const std::string& name );
@@ -17,13 +21,23 @@ namespace Engine
 
 		~Material();
 
+	/* Queries: */
 		inline const std::string& GetName() const { return name; }
-		inline bool HasShaderAssigned() const { return shader; }
+
+	/* Main: */
+		const Shader* Bind() const;
+
+	/* Shader: */
 		inline const std::string& GetShaderName() const
 		{
 			ASSERT_DEBUG_ONLY( HasShaderAssigned() && "Material::GetShaderName() called with nullptr shader!" );
 			return shader->GetName();
 		}
+		inline bool HasShaderAssigned() const { return shader; }
+
+		void SetShader( Shader* const shader );
+
+	/* Uniforms: */
 		inline const std::map< std::string, Uniform::Information >& GetUniformInformations() const { return *uniform_info_map; }
 
 			  void* GetUniformPointer( std::size_t offset );
@@ -37,19 +51,18 @@ namespace Engine
 			/* Update the value in the internal memory blob: */
 			CopyValueToBlob( reinterpret_cast< const char* >( &value ), uniform_info.offset, uniform_info.size );
 
-			/* Have to call the template version in case of user-defined structs (there is no "upload the whole struct directly to gpu" method anyway, at least not for regular uniform structs). */
-			if constexpr( std::is_base_of_v< UniformStruct, UniformType > )
-				shader->SetUniform( uniform_name, value );
-			else
-				shader->SetUniform( uniform_info.location, value );
+			///* Have to call the template version in case of user-defined structs (there is no "upload the whole struct directly to gpu" method anyway, at least not for regular uniform structs). */
+			//if constexpr( std::is_base_of_v< UniformStruct, UniformType > )
+			//	shader->SetUniform( uniform_name, value );
+			//else
+			//	shader->SetUniform( uniform_info.location, value );
 		}
 
-		/* Uses the value in the internal memory blob. */
-		void Set( const char* uniform_name );
-
-		void SetShader( Shader* const shader );
-
 	private:
+	/* Shader: */
+		inline const Shader* GetShader() const { return shader; };
+
+	/* Uniform: */
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name )
 		{
 			try
@@ -65,6 +78,10 @@ namespace Engine
 		void CopyValueToBlob( const char* value, const std::size_t offset, const std::size_t size );
 			  void* GetValuePointerFromBlob( std::size_t offset );
 		const void* GetValuePointerFromBlob( std::size_t offset ) const;
+
+		/* Uses the value in the internal memory blob. */
+		void UploadUniform( const char* uniform_name );
+		void UploadAllUniforms();
 
 	private:
 		std::string name;

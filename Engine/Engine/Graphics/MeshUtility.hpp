@@ -12,7 +12,7 @@ namespace Engine
 	namespace MeshUtility
 	{
 		template< typename VertexAttributeArray, typename ... VertexAttributeArrays >
-		constexpr auto Interleave_Array( const VertexAttributeArray& vertex_attribute_array_first, const VertexAttributeArrays& ... vertex_attribute_array_pack )
+		constexpr auto Interleave( const VertexAttributeArray& vertex_attribute_array_first, const VertexAttributeArrays& ... vertex_attribute_array_pack )
 		{
 			// TODO: ASSERT that the array sizes are the same.
 			// TODO: ASSERT that the array element types are the same.
@@ -72,9 +72,9 @@ namespace Engine
 				return ComponentCount< std::remove_reference_t< decltype( vector_of_attributes ) >::value_type >();
 			};
 
-			const auto first_attribute_component_count = ComponentCount< std::remove_reference_t< decltype( vertex_attribute_vector_first ) >::value_type >();
-			const auto total_attribute_count           = first_attribute_component_count +
-														 ( ComponentCount_OnlyForNonEmpty( vertex_attribute_vector_pack ) + ... );
+			constexpr auto first_attribute_component_count = ComponentCount< std::remove_reference_t< decltype( vertex_attribute_vector_first ) >::value_type >();
+			const	  auto total_attribute_count           = first_attribute_component_count +
+														     ( ComponentCount_OnlyForNonEmpty( vertex_attribute_vector_pack ) + ... );
 			vertex_count = ( unsigned int )vertex_attribute_vector_first.size();
 
 			std::vector< float > interleaved_vertex_attribute_vector( total_attribute_count * vertex_count );

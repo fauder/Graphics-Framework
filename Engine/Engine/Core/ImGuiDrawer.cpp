@@ -336,21 +336,22 @@ namespace Engine::ImGuiDrawer
 					if( uniform_info.original_order_in_struct != -1 )
 						continue;
 
+
 					if( uniform_info.IsUserDefinedStruct() )
 					{
 						if( ImGui::TreeNodeEx( uniform_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 						{
+							/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 							for( const auto& [ uniform_member_name, uniform_member_info ] : uniform_info.members )
-								if( Draw( uniform_member_info->type, material.GetUniformPointer( uniform_member_info->original_offset ), uniform_member_name.c_str() ) )
-									material.Set( uniform_member_name.c_str() );
+								Draw( uniform_member_info->type, material.GetUniformPointer( uniform_member_info->original_offset ), uniform_member_name.c_str() );
 
 							ImGui::TreePop();
 						}
 					}
 					else
 					{
-						if( Draw( uniform_info.type, material.GetUniformPointer( uniform_info.offset ), uniform_name.c_str() ) )
-							material.Set( uniform_name.c_str() );
+						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+						Draw( uniform_info.type, material.GetUniformPointer( uniform_info.offset ), uniform_name.c_str() );
 					}
 				}
 

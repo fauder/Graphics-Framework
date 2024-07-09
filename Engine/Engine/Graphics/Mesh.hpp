@@ -13,7 +13,22 @@ namespace Engine
 	class Mesh
 	{
 	public:
-		inline Mesh()
+		enum class PrimitiveType
+		{
+			Points			= GL_POINTS,
+			Lines			= GL_LINES,
+			Line_loop		= GL_LINE_LOOP,
+			Line_strip		= GL_LINE_STRIP,
+			Triangles		= GL_TRIANGLES,
+			Triangle_strip	= GL_TRIANGLE_STRIP,
+			Triangle_fan	= GL_TRIANGLE_FAN,
+			Quads			= GL_QUADS
+		};
+
+	public:
+		Mesh()
+			:
+			primitive_type( PrimitiveType::Triangles )
 		{}
 
 		Mesh( const Mesh& other )				= default;
@@ -21,17 +36,20 @@ namespace Engine
 		Mesh( Mesh&& donor )					= default;
 		Mesh& operator = ( Mesh&& donor )		= default;
 
-		Mesh( std::vector< Vector3 >&& positions, 
-			  const GLenum usage                        = GL_STATIC_DRAW,
-			  std::vector< unsigned int >&& indices     = {},
-			  std::vector< Vector3		>&& normals     = {},
-			  std::vector< Vector2		>&& uvs_0       = {}, 
-			  std::vector< Vector2		>&& uvs_1       = {}, 
-			  std::vector< Vector2		>&& uvs_2       = {}, 
-			  std::vector< Vector2		>&& uvs_3       = {},
-			  std::vector< Color3		>&& colors_rgb  = {}, 
-			  std::vector< Color4		>&& colors_rgba = {} )
+		Mesh( std::vector< Vector3		>&& positions, 
+			  std::vector< Vector3		>&& normals        = {},
+			  std::vector< Vector2		>&& uvs_0          = {}, 
+			  std::vector< unsigned int >&& indices        = {},
+			  const PrimitiveType			primitive_type = PrimitiveType::Triangles,
+			  const GLenum usage                           = GL_STATIC_DRAW,
+			  /* Below are seldom used so they come after. */
+			  std::vector< Vector2		>&& uvs_1          = {},
+			  std::vector< Vector2		>&& uvs_2          = {}, 
+			  std::vector< Vector2		>&& uvs_3          = {},
+			  std::vector< Color3		>&& colors_rgb     = {}, 
+			  std::vector< Color4		>&& colors_rgba    = {} )
 			:
+			primitive_type( primitive_type ),
 			indices( indices ),
 			positions( positions ),
 			normals( normals ),
@@ -54,8 +72,36 @@ namespace Engine
 		inline ~Mesh()
 		{}
 
+	/* Queries: */
+		inline PrimitiveType Primitive() const { return primitive_type; }
+
 		inline int VertexCount() const { return vertex_buffer.VertexCount(); }
 		inline int IndexCount()  const { return index_buffer.has_value() ? index_buffer->Size() : 0; }
+
+		inline bool IsIndexed()  const { return IndexCount(); }
+
+	/* Index Data: */
+		inline const std::vector< unsigned int >& Indices()	const { return indices; };
+		inline const float* Indices_Raw() const { return reinterpret_cast< const float* >( indices.data() ); };
+
+	/* Vertex Data: */
+		inline const std::vector< Vector3 >& Positions()	const { return positions;	};
+		inline const std::vector< Vector3 >& Normals()		const { return normals;		};
+		inline const std::vector< Vector2 >& Uvs_0()		const { return uvs_0;		};
+		inline const std::vector< Vector2 >& Uvs_1()		const { return uvs_1;		};
+		inline const std::vector< Vector2 >& Uvs_2()		const { return uvs_2;		};
+		inline const std::vector< Vector2 >& Uvs_3()		const { return uvs_3;		};
+		inline const std::vector< Color3  >& Colors_rgb()	const { return colors_rgb;	};
+		inline const std::vector< Color4  >& Colors_rgba()	const { return colors_rgba; };
+
+		inline const float* Positions_Raw()		const { return reinterpret_cast< const float* >( positions.data()	); };
+		inline const float* Normals_Raw()		const { return reinterpret_cast< const float* >( normals.data()		); };
+		inline const float* Uvs_0_Raw()			const { return reinterpret_cast< const float* >( uvs_0.data()		); };
+		inline const float* Uvs_1_Raw()			const { return reinterpret_cast< const float* >( uvs_1.data()		); };
+		inline const float* Uvs_2_Raw()			const { return reinterpret_cast< const float* >( uvs_2.data()		); };
+		inline const float* Uvs_3_Raw()			const { return reinterpret_cast< const float* >( uvs_3.data()		); };
+		inline const float* Colors_rgb_Raw()	const { return reinterpret_cast< const float* >( colors_rgb.data()	); };
+		inline const float* Colors_rgba_Raw()	const { return reinterpret_cast< const float* >( colors_rgba.data()	); };
 
 		inline void Bind() const { vertex_array.Bind(); }
 
@@ -79,6 +125,8 @@ namespace Engine
 		}
 
  	private:
+		PrimitiveType primitive_type;
+
 		std::vector< unsigned int > indices;
 
 		std::vector< Vector3 > positions;
