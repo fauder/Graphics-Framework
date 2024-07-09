@@ -2,7 +2,7 @@
 #include "Engine.h"
 #include "Engine/Graphics/Lighting.h"
 #include "Engine/Graphics/Material.hpp"
-#include "Engine/Graphics/VertexArray.h"
+#include "Engine/Graphics/Mesh.hpp"
 #include "Engine/Graphics/Texture.h"
 #include "Engine/Scene/Camera.h"
 #include "Engine/Scene/CameraController_Flight.h"
@@ -43,8 +43,7 @@ private:
 
 private:
 /* Vertex Info.: */
-	Engine::VertexBuffer vertex_buffer_crate;
-	Engine::VertexArray vertex_array_crate;
+	Engine::Mesh cube_mesh;
 
 /* Materials, Shaders & Textures: */
 	Engine::Shader* cube_shader;

@@ -77,17 +77,11 @@ void SandboxApplication::Initialize()
 	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
 
 /* Vertex/Index Data: */
-	constexpr auto vertices( Engine::MeshUtility::Interleave( Engine::Primitive::NonIndexed::Cube::Positions,
-															  Engine::Primitive::NonIndexed::Cube::Normals,
-															  Engine::Primitive::NonIndexed::Cube::UVs ) );
-
-	vertex_buffer_crate = Engine::VertexBuffer( vertices.data(), sizeof( vertices ), GL_STATIC_DRAW );
-	Engine::VertexBufferLayout vertex_buffer_layout;
-	vertex_buffer_layout.Push< float >( 3 ); // Position.
-	vertex_buffer_layout.Push< float >( 3 ); // Normal.
-	vertex_buffer_layout.Push< float >( 2 ); // UVs.
-
-	vertex_array_crate = Engine::VertexArray( vertex_buffer_crate, vertex_buffer_layout );
+	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
+							  GL_STATIC_DRAW,
+							  { /* No indices. */ },
+							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
+							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ) );
 
 /* View & Projection: */
 	UpdateViewMatrix( gouraud_shader);
@@ -152,7 +146,7 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	vertex_array_crate.Bind();
+	cube_mesh.Bind();
 
 /* Render the light source: */
 	light_source_shader.Bind();
@@ -177,7 +171,7 @@ void SandboxApplication::Render()
 		light_source_material_array[ i ].Set( "uniform_transform_world", Engine::Matrix::Translation( light_point_data.position_world_space ) );
 		light_source_material_array[ i ].Set( "uniform_color" ); // Use the value stored in the material.
 
-		GLCALL( glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() ) );
+		GLCALL( glDrawArrays( GL_TRIANGLES, 0, cube_mesh.VertexCount() ) );
 	}
 
 /* Render cubes: */
@@ -230,7 +224,7 @@ void SandboxApplication::Render()
 		/* Transform: */
 		cube_material_array[ i ].Set( "uniform_transform_world", transform );
 
-		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
+		GLCALL( glDrawArrays( GL_TRIANGLES, 0, cube_mesh.VertexCount() ) );
 	}
 
 /* Ground quad: */
@@ -244,7 +238,7 @@ void SandboxApplication::Render()
 		/* Transform: */
 		ground_quad_material.Set( "uniform_transform_world", transform );
 
-		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
+		GLCALL( glDrawArrays( GL_TRIANGLES, 0, cube_mesh.VertexCount() ) );
 	}
 
 /* Front wall quad: */
@@ -258,7 +252,7 @@ void SandboxApplication::Render()
 		/* Transform: */
 		front_wall_quad_material.Set( "uniform_transform_world", transform );
 
-		glDrawArrays( GL_TRIANGLES, 0, vertex_array_crate.VertexCount() );
+		glDrawArrays( GL_TRIANGLES, 0, cube_mesh.VertexCount() );
 	}
 }
 
