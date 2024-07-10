@@ -23,7 +23,7 @@ namespace Engine
 		:
 		name( name ),
 		shader( shader ),
-		uniform_blob( shader->GetTotalUniformSize() ),
+		uniform_blob( shader->GetTotalUniformSize(), std::byte{ 0 } ),
 		uniform_info_map( &shader->GetUniformInformations() )
 	{
 		ASSERT_DEBUG_ONLY( HasShaderAssigned() && "Parameter 'shader' passed to Material::Material( const std::string& name, Shader* const shader ) is nullptr!" );
@@ -53,10 +53,10 @@ namespace Engine
 	{
 		this->shader     = shader;
 		uniform_info_map = ( &shader->GetUniformInformations() );
-		uniform_blob     = std::vector< char >( shader->GetTotalUniformSize() );
+		uniform_blob     = std::vector< std::byte >( shader->GetTotalUniformSize() );
 	}
 
-	void Material::CopyValueToBlob( const char* value, const std::size_t offset, const std::size_t size )
+	void Material::CopyValueToBlob( const std::byte* value, const std::size_t offset, const std::size_t size )
 	{
 		std::memcpy( uniform_blob.data() + offset, value, size );
 	}

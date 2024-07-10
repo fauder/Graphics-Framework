@@ -5,6 +5,7 @@
 
 // std Includes.
 #include <vector>
+#include <cstddef> // std::byte.
 
 namespace Engine
 {
@@ -49,7 +50,7 @@ namespace Engine
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
 			/* Update the value in the internal memory blob: */
-			CopyValueToBlob( reinterpret_cast< const char* >( &value ), uniform_info.offset, uniform_info.size );
+			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), uniform_info.offset, uniform_info.size );
 
 			///* Have to call the template version in case of user-defined structs (there is no "upload the whole struct directly to gpu" method anyway, at least not for regular uniform structs). */
 			//if constexpr( std::is_base_of_v< UniformStruct, UniformType > )
@@ -75,7 +76,7 @@ namespace Engine
 			}
 		}
 
-		void CopyValueToBlob( const char* value, const std::size_t offset, const std::size_t size );
+		void CopyValueToBlob( const std::byte* value, const std::size_t offset, const std::size_t size );
 			  void* GetValuePointerFromBlob( std::size_t offset );
 		const void* GetValuePointerFromBlob( std::size_t offset ) const;
 
@@ -88,7 +89,7 @@ namespace Engine
 
 		Shader* shader;
 
-		std::vector< char > uniform_blob; // Resized only when a shader is assigned and the total uniform size is (re)calculated.
-		const std::map< std::string, Uniform::Information >* uniform_info_map; // Obtain only throuh Shader::GetUniformInformations(), only when a shader is assigned.
+		std::vector< std::byte > uniform_blob; // Resized only when a shader is assigned and the total uniform size is (re)calculated.
+		const std::map< std::string, Uniform::Information >* uniform_info_map; // Obtain only through Shader::GetUniformInformations(), only when a shader is assigned.
 	};
 }
