@@ -82,6 +82,11 @@ namespace Engine
 		constexpr float B() const { return data[ 2 ]; };
 		constexpr float A() const { return data[ 3 ]; };
 
+		/* Because Microsoft is a JOKE company, Function name below has to be surrounded by parentheses to instruct preprocessor to not expand it, i.e., treat it as a macro. */
+		Color3& ( RGB )() { return reinterpret_cast< Color3& >( *this ); };
+		/* Because Microsoft is a JOKE company, Function name below has to be surrounded by parentheses to instruct preprocessor to not expand it, i.e., treat it as a macro. */
+		const Color3& ( RGB )() const { return reinterpret_cast< const Color3& >( *this ); };
+
 		static constexpr Color4 White( float alpha = 1.0f )							{ return Color4( 1.0f, 1.0f, 1.0f, alpha ); }
 		static constexpr Color4 Black( float alpha = 1.0f )							{ return Color4( 0.0f, 0.0f, 0.0f, alpha ); }
 		static constexpr Color4 Gray( float intensity = 0.55f, float alpha = 1.0f ) { return Color4( intensity, intensity, intensity, alpha ); }
