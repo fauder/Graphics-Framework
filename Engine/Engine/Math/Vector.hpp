@@ -102,6 +102,10 @@ namespace Engine::Math
 		constexpr const Vector< Component, 3 >& XYZ()  const requires( Size >= 3 ) { return reinterpret_cast< const Vector< Component,3 >& >( *this ); };
 		constexpr const Vector< Component, 4 >& XYZW() const requires( Size >= 4 ) { return reinterpret_cast< const Vector< Component,4 >& >( *this ); };
 
+		constexpr Vector< Component, 2 >& XY()		requires( Size >= 2 ) { return reinterpret_cast< Vector< Component, 2 >& >( *this ); };
+		constexpr Vector< Component, 3 >& XYZ()		requires( Size >= 3 ) { return reinterpret_cast< Vector< Component, 3 >& >( *this ); };
+		constexpr Vector< Component, 4 >& XYZW()	requires( Size >= 4 ) { return reinterpret_cast< Vector< Component, 4 >& >( *this ); };
+
 		constexpr Vector& SetX( const Component value ) requires( Size >= 1 ) { data[ 0 ] = value; return *this; };
 		constexpr Vector& SetY( const Component value ) requires( Size >= 2 ) { data[ 1 ] = value; return *this; };
 		constexpr Vector& SetZ( const Component value ) requires( Size >= 3 ) { data[ 2 ] = value; return *this; };
