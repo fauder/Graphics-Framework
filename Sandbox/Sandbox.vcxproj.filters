@@ -2,6 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="Source\SandboxApplication.h" />
+    <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\SandboxApplication.cpp" />

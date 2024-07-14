@@ -499,14 +499,14 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			is_modified |= Draw( point_light_data.ambient,  "Ambient"  );
-			is_modified |= Draw( point_light_data.diffuse,  "Diffuse"  );
-			is_modified |= Draw( point_light_data.specular, "Specular" );
+			is_modified |= Draw( point_light_data.ambient_and_attenuation_constant.color,	"Ambient"  );
+			is_modified |= Draw( point_light_data.diffuse_and_attenuation_linear.color,		"Diffuse"  );
+			is_modified |= Draw( point_light_data.specular_attenuation_quadratic.color,		"Specular" );
 			if( !hide_position )
 				is_modified |= Draw( point_light_data.position_world_space, "Position" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.attenuation_constant,		0.0f, 5.0f, "%.5g" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.attenuation_linear,		0.0f, 1.0f, "%.5g" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.attenuation_quadratic,	0.0f, 1.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.ambient_and_attenuation_constant.scalar,	0.0f, 5.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.diffuse_and_attenuation_linear.scalar,	0.0f, 1.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.specular_attenuation_quadratic.scalar,	0.0f, 1.0f, "%.5g" );
 
 			ImGui::PopID();
 		}
@@ -524,15 +524,15 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			Draw( point_light_data.ambient,  "Ambient"  );
-			Draw( point_light_data.diffuse,  "Diffuse"  );
-			Draw( point_light_data.specular, "Specular" );
+			Draw( point_light_data.ambient_and_attenuation_constant.color,  "Ambient"  );
+			Draw( point_light_data.diffuse_and_attenuation_linear.color,	"Diffuse"  );
+			Draw( point_light_data.specular_attenuation_quadratic.color,	"Specular" );
 			Draw( point_light_data.position_world_space, "Position" );
 			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
-			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.attenuation_constant  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.attenuation_linear	  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.attenuation_quadratic ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.ambient_and_attenuation_constant.scalar ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.diffuse_and_attenuation_linear.scalar	), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.specular_attenuation_quadratic.scalar	), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
 			ImGui::PopStyleColor();
 
 			ImGui::PopID();

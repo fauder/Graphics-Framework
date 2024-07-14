@@ -72,7 +72,7 @@ void SandboxApplication::Initialize()
 		cube_material_array[ i ].Set( "uniform_surface_data", cube_surface_data_array[ i ] );
 	light_source_shader.Bind();
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse );
+		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse_and_attenuation_linear.color );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();
@@ -196,13 +196,14 @@ void SandboxApplication::Render()
 
 		light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 
-		light_spot_data.direction_view_space = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
-		light_spot_data.position_view_space = ( Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) *
-												view_transformation ).XYZ();
-
 		// Also need to convert the angles to cosines.
-		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
-		light_spot_data.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
+
+		light_spot_data.position_view_space_and_cos_cutoff_angle_inner.vector = 
+			( Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) * view_transformation ).XYZ();
+		light_spot_data.position_view_space_and_cos_cutoff_angle_inner.scalar = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
+
+		light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.vector = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
+		light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
 
 		for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 		{
@@ -299,7 +300,7 @@ void SandboxApplication::DrawImGui()
 		{
 			const std::string name( "Point Light # " + std::to_string( i ) + " Properties##");
 			if( Engine::ImGuiDrawer::Draw( light_point_data_array[ i ], name.c_str(), light_point_is_animated /* hide position. */ ) )
-				light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse );
+				light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse_and_attenuation_linear.color );
 		}
 		Engine::ImGuiDrawer::Draw( light_spot_data, "Spot Light Properties" );
 
@@ -398,10 +399,11 @@ void SandboxApplication::ResetLightingData()
 
 	light_directional_data =
 	{
-		.ambient               = {  0.05f,  0.05f,  0.05f },
-		.diffuse               = {  0.4f,   0.4f,   0.4f  },
-		.specular              = {  0.5f,   0.5f,   0.5f  },
+		.ambient               = Engine::Color3{  0.05f,  0.05f,  0.05f },
+		.diffuse               = Engine::Color3{  0.4f,   0.4f,   0.4f  },
+		.specular              = Engine::Color3{  0.5f,   0.5f,   0.5f  },
 		.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+	/* End of GLSL equivalence. */
 		.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
 	};
 	light_point_data_array = std::vector< Engine::Lighting::PointLightData >( LIGHT_POINT_COUNT );
@@ -409,26 +411,24 @@ void SandboxApplication::ResetLightingData()
 	{
 		light_point_data_array[ i ] =
 		{
-			.ambient               = {  0.05f,  0.05f,  0.05f },
-			.diffuse               = Engine::Math::Random::Generate< Engine::Color3 >(),
-			.specular              = {  1.0f,   1.0f,   1.0f  },
-			.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-			.attenuation_constant  = 1.0f,
-			.attenuation_linear    = 0.09f,
-			.attenuation_quadratic = 0.032f,
-			.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
+			.ambient_and_attenuation_constant = { .color = {  0.05f,  0.05f,  0.05f }, .scalar = 1.0f },
+			.diffuse_and_attenuation_linear   = { .color = Engine::Math::Random::Generate< Engine::Color3 >(), .scalar = 0.09f },
+			.specular_attenuation_quadratic   = { .color = {  1.0f,   1.0f,   1.0f  }, .scalar = 0.03f },
+			.position_view_space              = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+		/* End of GLSL equivalence. */
+			.position_world_space             = {  0.2f,  -1.0f,   1.0f  }
 		};
 	}
 	light_spot_data =
 	{
-		.ambient                = {  0.05f,  0.05f,  0.05f },
-		.diffuse                = {  0.4f,   0.4f,   0.4f  },
-		.specular               = {  0.5f,   0.5f,   0.5f  },
-		.position_view_space    = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.direction_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( 12.5_deg ) ),
-		.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( 17.5_deg ) ),
-		/* End of GLSL equivalence. */
+		.ambient                = Engine::Color3{  0.05f,  0.05f,  0.05f },
+		.diffuse                = Engine::Color3{  0.4f,   0.4f,   0.4f  },
+		.specular               = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+
+		// These two's values do not matter, will be updated with the correct view space value every frame.
+		.position_view_space_and_cos_cutoff_angle_inner  = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 12.5_deg ) ) },
+		.direction_view_space_and_cos_cutoff_angle_outer = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 17.5_deg ) ) },
+	/* End of GLSL equivalence. */
 		.position_world_space   = camera_transform.GetTranslation(),
 		.direction_world_space  = camera_transform.Forward(),
 		.cutoff_angle_inner     = 12.5_deg,
