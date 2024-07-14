@@ -160,6 +160,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Drawable.h" />
     <ClInclude Include="Engine\Graphics\Mesh.hpp" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
+    <ClInclude Include="Engine\Graphics\PaddedAndCombinedTypes.h" />
     <ClInclude Include="Engine\Graphics\Renderer.h" />
     <ClInclude Include="Engine\Graphics\Uniform.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
