@@ -16,6 +16,7 @@
 #include <optional>
 #include <string>
 #include <map>
+#include <vector>
 
 namespace Engine
 {
@@ -62,8 +63,8 @@ namespace Engine
 
 		inline const std::string& GetName() const { return name; }
 
-		inline const std::map< std::string, Uniform::Information >& GetUniformInformations() const { return uniform_info_map; }
-		inline std::size_t GetTotalUniformSize() const { return uniform_size_total; }
+		inline const std::map< std::string, Uniform::Information_Old >& GetUniformInformations() const { return uniform_info_map_legacy; }
+		inline std::size_t GetTotalUniformSize() const { return uniform_book_keeping_info.total_size; }
 
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );
@@ -247,19 +248,27 @@ namespace Engine
 			}
 		}
 
-		void SetUniform( const Uniform::Information& uniform_info, const void* value_pointer );
+		void SetUniform( const Uniform::Information_Old& uniform_info, const void* value_pointer );
 
 	private:
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
-		void QueryUniformData( std::map< std::string, Uniform::Information >& uniform_information_map );
 		std::string ShaderSource_CommentsStripped( const std::string& shader_source );
+
+		void GetUniformBookKeepingInfo();
+		
+		/* Expects empty input vectors. */
+		bool GetActiveUniformBlockIndicesAndCorrespondingUniformIndices( const int active_uniform_count,
+																		 std::vector< unsigned int >& block_indices, std::vector< unsigned int >& corresponding_uniform_indices ) const;
+		void QueryUniformData_In_DefaultBlock( std::map< std::string, Uniform::Information >& uniform_information_map );
+		void QueryUniformData_In_UniformBlocks( std::map< std::string, Uniform::Information >& uniform_information_map );
+		void QueryUniformBufferData( std::map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map );
 		void ParseUniformData_StructMemberCPUOrders( const std::string& shader_source );
 		std::size_t CalculateTotalUniformSize() const;
 
-		const Uniform::Information& GetUniformInformation( const std::string& uniform_name );
+		const Uniform::Information_Old& GetUniformInformation( const std::string& uniform_name );
 
 		void LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const;
 		void LogErrors_Linking( const int program_id ) const;
@@ -268,7 +277,9 @@ namespace Engine
 	private:
 		int program_id;
 		std::string name;
+		std::map< std::string, Uniform::Information_Old > uniform_info_map_legacy;
 		std::map< std::string, Uniform::Information > uniform_info_map;
-		std::size_t uniform_size_total;
+		std::map< std::string, Uniform::BufferInformation > uniform_buffer_info_map;
+		Uniform::ActiveUniformBookKeepingInformation uniform_book_keeping_info;
 	};
 }

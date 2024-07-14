@@ -39,7 +39,7 @@ namespace Engine
 		void SetShader( Shader* const shader );
 
 	/* Uniforms: */
-		inline const std::map< std::string, Uniform::Information >& GetUniformInformations() const { return *uniform_info_map; }
+		inline const std::map< std::string, Uniform::Information_Old >& GetUniformInformations() const { return *uniform_info_map; }
 
 			  void* GetUniformPointer( std::size_t offset );
 		const void* GetUniformPointer( std::size_t offset ) const;
@@ -64,7 +64,7 @@ namespace Engine
 		inline const Shader* GetShader() const { return shader; };
 
 	/* Uniform: */
-		const Uniform::Information& GetUniformInformation( const std::string& uniform_name )
+		const Uniform::Information_Old& GetUniformInformation( const std::string& uniform_name )
 		{
 			try
 			{
@@ -90,6 +90,6 @@ namespace Engine
 		Shader* shader;
 
 		std::vector< std::byte > uniform_blob; // Resized only when a shader is assigned and the total uniform size is (re)calculated.
-		const std::map< std::string, Uniform::Information >* uniform_info_map; // Obtain only through Shader::GetUniformInformations(), only when a shader is assigned.
+		const std::map< std::string, Uniform::Information_Old >* uniform_info_map; // Obtain only through Shader::GetUniformInformations(), only when a shader is assigned.
 	};
 }

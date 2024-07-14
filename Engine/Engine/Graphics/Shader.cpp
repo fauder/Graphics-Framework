@@ -11,9 +11,10 @@
 
 // std Includes.
 #include <fstream>
+#include <numeric> // std::iota.
+#include <span>
 #include <sstream>
 #include <string_view>
-#include <vector>
 
 namespace Engine
 {
@@ -21,15 +22,13 @@ namespace Engine
 	Shader::Shader( const char* name )
 		:
 		program_id( 0 ),
-		name( name ),
-		uniform_size_total( 0 )
+		name( name )
 	{
 	}
 
 	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
 		:
-		name( name ),
-		uniform_size_total( 0 )
+		name( name )
 	{
 		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path );
 	}
@@ -71,10 +70,17 @@ namespace Engine
 
 		if( link_result )
 		{
-			QueryUniformData( uniform_info_map );
-			ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *vertex_shader_source	) );
-			ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *fragment_shader_source	) );
-			uniform_size_total = CalculateTotalUniformSize();
+			GetUniformBookKeepingInfo();
+			if( uniform_book_keeping_info.count == 0 )
+				return true;
+
+			QueryUniformData_In_DefaultBlock( uniform_info_map );
+			QueryUniformData_In_UniformBlocks( uniform_info_map );
+			QueryUniformBufferData( uniform_buffer_info_map );
+			/*ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *vertex_shader_source	) );
+			ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *fragment_shader_source	) );*/
+
+			uniform_book_keeping_info.total_size = CalculateTotalUniformSize();
 		}
 
 		return link_result;
@@ -85,7 +91,7 @@ namespace Engine
 		GLCALL( glUseProgram( program_id ) );
 	}
 
-	void Shader::SetUniform( const Uniform::Information& uniform_info, const void* value_pointer )
+	void Shader::SetUniform( const Uniform::Information_Old& uniform_info, const void* value_pointer )
 	{
 		switch( uniform_info.type )
 		{
@@ -170,68 +176,147 @@ namespace Engine
 		return true;
 	}
 
-	void Shader::QueryUniformData( std::map< std::string, Uniform::Information >& uniform_information_map )
+	void Shader::GetUniformBookKeepingInfo()
 	{
-		int active_uniform_count = 0;
-		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &active_uniform_count ) );
+		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &uniform_book_keeping_info.count ) );
+		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_book_keeping_info.name_max_length ) );
+		uniform_book_keeping_info.name_holder = std::string( uniform_book_keeping_info.name_max_length, '?' );
+	}
 
-		if( active_uniform_count == 0 )
-			return;
+	/* Expects empty input vectors. */
+	bool Shader::GetActiveUniformBlockIndicesAndCorrespondingUniformIndices( const int active_uniform_count,
+																			 std::vector< unsigned int >& block_indices, std::vector< unsigned int >& corresponding_uniform_indices ) const
+	{
+		corresponding_uniform_indices.resize( active_uniform_count );
+		block_indices.resize( active_uniform_count );
+		std::iota( corresponding_uniform_indices.begin(), corresponding_uniform_indices.end(), 0 );
 
-		int uniform_name_max_length = 0;
-		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_name_max_length ) );
-		std::string name( uniform_name_max_length, '?' );
+		GLCALL( glGetActiveUniformsiv( program_id, active_uniform_count, corresponding_uniform_indices.data(), GL_UNIFORM_BLOCK_INDEX,
+									   reinterpret_cast< int* >( block_indices.data() ) ) );
 
+		int block_count = 0;
+		for( auto uniform_index = 0; uniform_index < active_uniform_count; uniform_index++ )
+		{
+			if( const auto block_index = block_indices[ uniform_index ];
+				block_index != -1 )
+			{
+				/* Overwrite vector elements starting from the beginning. This should be safe as the uniform_index should be greater than block_count at this point.
+				 * So we should be overwriting previous elements as we go through all uniform indices. */
+				block_indices[ block_count ]                 = block_index;
+				corresponding_uniform_indices[ block_count ] = uniform_index;
+				block_count++;
+			}
+		}
+
+		if( block_count )
+		{
+			block_indices.resize( block_count );
+			corresponding_uniform_indices.resize( block_count );
+			return true;
+		}
+
+		return false;
+	}
+
+	void Shader::QueryUniformData_In_DefaultBlock( std::map< std::string, Uniform::Information >& uniform_information_map )
+	{
 		int offset = 0;
-		for( int uniform_index = 0; uniform_index < active_uniform_count; uniform_index++ )
+		for( auto uniform_index = 0; uniform_index < uniform_book_keeping_info.count; uniform_index++ )
 		{
 			/*
 			 * glGetActiveUniform has a parameter named "size", but its actually the size of the array. So for singular types like int, float, vec2, vec3 etc. the value returned is 1.
 			 */
-			int array_size_dontCare = 0, length = 0;
+			int array_size_dontCare = 0, length_dontCare = 0;
 			GLenum type;
-			glGetActiveUniform( program_id, uniform_index, uniform_name_max_length, &length, &array_size_dontCare, &type, name.data() );
-			GLCALL( glGetActiveUniform( program_id, uniform_index, uniform_name_max_length, &length, &array_size_dontCare, &type, name.data() ) );
+			GLCALL( glGetActiveUniform( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length_dontCare, &array_size_dontCare, &type,
+										uniform_book_keeping_info.name_holder.data() ) );
 
 			const int size = GetSizeOfType( type );
 
-#ifdef _DEBUG
-			if( array_size_dontCare > 1 )
-			{
-				// TODO: Implement parsing of arrays of non-struct uniforms.
-				throw std::logic_error( "Uniform arrays are not implemented yet." );
-			}
-#endif // _DEBUG
-
-
 			GLClearError();
-			const auto location = glGetUniformLocation( program_id, name.c_str() );
+			const auto location = glGetUniformLocation( program_id, uniform_book_keeping_info.name_holder.c_str() );
 			ASSERT( GLLogCall( "glGetUniformLocation", __FILE__, __LINE__ ) );
 
-			uniform_information_map[ name.c_str() ] = { location, 
-														/* Original order in struct, will be parsed later from source: */ -1,
-														size, 
-														offset, 
-														/* Original memory offset in the struct, will be parsed later from source: */ -1,
-														type };
+			const bool is_buffer_member = location == -1;
 
-			if( const auto dot_pos = name.find( '.' );
-				dot_pos != std::string::npos )
+			uniform_information_map[ uniform_book_keeping_info.name_holder.c_str() ] =
 			{
-				// This uniform is part of a structure. Add it the the "members" list of the parent structure uniform info.
-				const std::string structure_name( name.substr( 0, dot_pos ) );
-				auto& structure_uniform_info = uniform_info_map[ structure_name ]; // DELIBERATE USE of [] operator; Create an entry if not present.
-				// "location" member variable is initialized to -1 by default. Use this to check whether this is the first uniform in the structure.
-				if( structure_uniform_info.location == -1 )
-				{
-					/* First uniform's location & offset are also the parent structure's location & offset. */
-					structure_uniform_info.location = location;
-					structure_uniform_info.offset   = offset;
-				}
-				structure_uniform_info.size += size;
-				structure_uniform_info.members.emplace( name.c_str(), &uniform_information_map[ name.c_str() ] );
+				.location_or_block_index = location,
+				.size                    = size,
+				.offset                  = is_buffer_member ? -1 : offset,
+				.type                    = type,
+				.is_buffer_member		 = is_buffer_member
+			};
 
-				// "type" of the structure is unimportant and therefore not assigned.
+			offset += !is_buffer_member * size;
+		}
+	}
+
+	void Shader::QueryUniformData_In_UniformBlocks( std::map< std::string, Uniform::Information >& uniform_information_map )
+	{
+		std::vector< unsigned int > block_indices, corresponding_uniform_indices;
+		if( not GetActiveUniformBlockIndicesAndCorrespondingUniformIndices( uniform_book_keeping_info.count, block_indices, corresponding_uniform_indices ) )
+			return;
+
+		/* Size below is commented out because array uniforms are not implemented yetand size here refers to array size.It is 1 for non - arrays. */
+
+		std::vector< int > /*corresponding_array_sizes( corresponding_uniform_indices.size() ),*/ correspoding_offsets( corresponding_uniform_indices.size() ), corresponding_types( corresponding_uniform_indices.size() );
+		//glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_SIZE,		corresponding_array_sizes.data() );
+		glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET,	correspoding_offsets.data() );
+
+		for( int index = 0; index < corresponding_uniform_indices.size(); index++ )
+		{
+			const auto uniform_index = corresponding_uniform_indices[ index ];
+			const auto block_index   = block_indices[ index ];
+			const auto offset        = correspoding_offsets[ index ];
+
+			int length = 0;
+			glGetActiveUniformName( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() );
+
+			const auto& uniform_name = uniform_book_keeping_info.name_holder.c_str();
+
+			/* 'size', 'type' and 'is_buffer_member' was already initialized during query of default block uniforms. Update the remaining information for block member uniforms: */
+			auto& uniform_info = uniform_information_map[ uniform_name ];
+
+			uniform_info.location_or_block_index = ( int )block_index;
+			uniform_info.offset                  = offset;
+		}
+	}
+
+	void Shader::QueryUniformBufferData( std::map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map )
+	{
+		int active_uniform_block_count = 0;
+		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCKS, &active_uniform_block_count ) );
+
+		if( active_uniform_block_count == 0 )
+			return;
+
+		int uniform_block_name_max_length = 0;
+		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &uniform_block_name_max_length ) );
+		std::string name( uniform_block_name_max_length, '?' );
+
+		int offset = 0;
+		for( int uniform_block_index = 0; uniform_block_index < active_uniform_block_count; uniform_block_index++ )
+		{
+			int length = 0;
+			GLCALL( glGetActiveUniformBlockName( program_id, uniform_block_index, uniform_block_name_max_length, &length, name.data() ) );
+			
+			int binding_point, size;
+			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size			) );
+			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_BINDING,	&binding_point	) );
+
+			auto& uniform_buffer_information = uniform_buffer_information_map[ name.c_str() ] = 
+			{
+				.binding_point = binding_point,
+				.size          = size,
+				.offset        = offset,
+			};
+
+			/* Add members and set their block indices. */
+			for( auto& [ uniform_name, uniform_info ] : uniform_info_map )
+			{
+				if( uniform_info.is_buffer_member && uniform_info.location_or_block_index == uniform_block_index )
+					uniform_buffer_information.members_map.emplace( uniform_name.data(), &uniform_info );
 			}
 
 			offset += size;
@@ -277,7 +362,7 @@ namespace Engine
 	 * Expects: To be called after the shader whose source is passed is compiled & linked successfully. */
 	void Shader::ParseUniformData_StructMemberCPUOrders( const std::string& shader_source )
 	{
-		for( auto& [ uniform_name, uniform_info ] : uniform_info_map )
+		for( auto& [ uniform_name, uniform_info ] : uniform_info_map_legacy )
 		{
 			if( uniform_info.IsUserDefinedStruct() && !uniform_info.HasOriginalOrdersDetermined() )
 			{
@@ -328,7 +413,7 @@ namespace Engine
 									/* Case 2: There ARE commas, i.e., the line contains multiple uniform member definitions. */
 									else
 									{
-										std::vector< Uniform::Information* > uniform_infos_found_in_reverse_order;
+										std::vector< Uniform::Information_Old* > uniform_infos_found_in_reverse_order;
 										/* No need to check if find() was successfull;
 										 * This shader source compiles successfully, so there HAS TO BE at least one whitespace (between type and variable) in this line. */
 										const auto last_preceding_whitespace_position = line_view.find_last_of( " \t" );
@@ -377,7 +462,7 @@ namespace Engine
 				}
 
 				/* Now that the original orders are determined, the offsets based on these original orders can also be calculated. */
-				std::map< int /* order */, Uniform::Information* > members_sorted_by_original_order;
+				std::map< int /* order */, Uniform::Information_Old* > members_sorted_by_original_order;
 				
 				for( auto& [ dont_care_about_name, uniform_member_info ] : uniform_info.members )
 					members_sorted_by_original_order[ uniform_member_info->original_order_in_struct ] = uniform_member_info;
@@ -396,19 +481,25 @@ namespace Engine
 	std::size_t Shader::CalculateTotalUniformSize() const
 	{
 		std::size_t total = 0;
+
+		/* Sum of default block (i.e., not in any explicit Uniform Buffer) uniforms: */
 		for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
-			if( not uniform_info.IsUserDefinedStruct() ) // Skip structs to prevent duplicate terms in the total sum (as the struct's size is the sum of its members' sizes).
+			if( not uniform_info.is_buffer_member ) // Skip buffer members, as their layout (std140) means their total buffer size is calculated differently.
 				total += uniform_info.size;
+
+		/* Now add buffer block sizes(calculated before): */
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+			total += uniform_buffer_info.size;
 
 		return total;
 	}
 
-	const Uniform::Information& Shader::GetUniformInformation( const std::string& uniform_name )
+	const Uniform::Information_Old& Shader::GetUniformInformation( const std::string& uniform_name )
 	{
 	#ifdef _DEBUG
 		try
 		{
-			return uniform_info_map.at( uniform_name );
+			return uniform_info_map_legacy.at( uniform_name );
 		}
 		catch( const std::exception& )
 		{
