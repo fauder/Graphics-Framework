@@ -1,9 +1,9 @@
 #pragma once
 
 // Engine Includes.
-#include "VertexBuffer.hpp"
+#include "VertexBuffer.h"
 #include "VertexBufferLayout.hpp"
-#include "IndexBuffer.hpp"
+#include "IndexBuffer.h"
 
 // std Includes.
 #include <optional>

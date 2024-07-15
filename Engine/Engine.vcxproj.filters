@@ -45,7 +45,7 @@
     <ClInclude Include="Engine\Graphics\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\IndexBuffer.hpp">
+    <ClInclude Include="Engine\Graphics\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\VertexBufferLayout.hpp">
@@ -54,7 +54,7 @@
     <ClInclude Include="Engine\Graphics\VertexArray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\VertexBuffer.hpp">
+    <ClInclude Include="Engine\Graphics\VertexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Math\Vector.hpp">
@@ -150,6 +150,9 @@
     <ClInclude Include="Engine\Graphics\PaddedAndCombinedTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Graphics\Buffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp">
@@ -171,12 +174,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\VertexArray.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Graphics\VertexBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Graphics\IndexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Math\Matrix.cpp">
@@ -207,6 +204,8 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\Renderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

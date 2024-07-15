@@ -157,6 +157,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\ImGuiDrawer.hpp" />
     <ClInclude Include="Engine\Core\ImGuiUtility.h" />
     <ClInclude Include="Engine\Core\Initialization.h" />
+    <ClInclude Include="Engine\Graphics\Buffer.hpp" />
     <ClInclude Include="Engine\Graphics\Drawable.h" />
     <ClInclude Include="Engine\Graphics\Mesh.hpp" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
@@ -165,7 +166,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Uniform.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Graphics\Color.hpp" />
-    <ClInclude Include="Engine\Graphics\IndexBuffer.hpp" />
+    <ClInclude Include="Engine\Graphics\IndexBuffer.h" />
     <ClInclude Include="Engine\Core\EntryPoint.h" />
     <ClInclude Include="Engine\Graphics\Graphics.h" />
     <ClInclude Include="Engine\Core\ImGuiSetup.h" />
@@ -182,7 +183,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\UniformBufferTag.h" />
     <ClInclude Include="Engine\Graphics\VertexArray.h" />
     <ClInclude Include="Engine\Graphics\VertexBufferLayout.hpp" />
-    <ClInclude Include="Engine\Graphics\VertexBuffer.hpp" />
+    <ClInclude Include="Engine\Graphics\VertexBuffer.h" />
     <ClInclude Include="Engine\Math\Angle.hpp" />
     <ClInclude Include="Engine\Math\Concepts.h" />
     <ClInclude Include="Engine\Math\Constants.h" />
@@ -206,7 +207,6 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Graphics\Material.cpp" />
     <ClCompile Include="Engine\Graphics\Renderer.cpp" />
     <ClCompile Include="Engine\Scene\Camera.cpp" />
-    <ClCompile Include="Engine\Graphics\IndexBuffer.cpp" />
     <ClCompile Include="Engine\Core\Platform.cpp" />
     <ClCompile Include="Engine\Graphics\Shader.cpp" />
     <ClCompile Include="Engine\Graphics\Texture.cpp" />
@@ -214,7 +214,6 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Scene\CameraController_Flight.cpp" />
     <ClCompile Include="Engine\Scene\Transform.cpp" />
     <ClCompile Include="Engine\Graphics\VertexArray.cpp" />
-    <ClCompile Include="Engine\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="Engine\Math\Math.cpp" />
     <ClCompile Include="Engine\Math\Matrix.cpp" />
   </ItemGroup>
