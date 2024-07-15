@@ -5,7 +5,7 @@
 #include "Graphics/Color.hpp"
 #include "Graphics/Lighting.h"
 #include "Graphics/Uniform.h"
-#include "Graphics/UniformStruct.h"
+#include "UniformBufferTag.h"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
@@ -230,7 +230,7 @@ namespace Engine
 		{
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
-			if constexpr( std::is_base_of_v< UniformStruct, UniformType > )
+			if constexpr( std::is_base_of_v< UniformBufferTag, UniformType > )
 			{
 				ASSERT_DEBUG_ONLY( uniform_info.IsUserDefinedStruct() && "Non-struct uniform attempted to be set via SetUniform< uniform-struct-type >()." );
 

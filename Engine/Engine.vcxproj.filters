@@ -105,7 +105,7 @@
     <ClInclude Include="Engine\Core\ImGuiDrawer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\UniformStruct.h">
+    <ClInclude Include="Engine\Graphics\UniformBufferTag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Core\ImGuiUtility.h">

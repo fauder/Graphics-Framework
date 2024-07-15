@@ -2,13 +2,13 @@
 
 // Engine Includes.
 #include "Color.hpp"
-#include "UniformStruct.h"
+#include "UniformBufferTag.h"
 #include "PaddedAndCombinedTypes.h"
 #include "Math/Vector.hpp"
 
 namespace Engine::Lighting
 {
-	struct PointLightData : public UniformStruct
+	struct PointLightData : public UniformBufferTag
 	{
 		Color3_AndScalar ambient_and_attenuation_constant, diffuse_and_attenuation_linear, specular_attenuation_quadratic;
 		Vector3_Padded position_view_space;
@@ -19,7 +19,7 @@ namespace Engine::Lighting
 		Vector3 position_world_space;
 	};
 
-	struct DirectionalLightData : public UniformStruct
+	struct DirectionalLightData : public UniformBufferTag
 	{
 		Color3_Padded ambient, diffuse, specular;
 		Vector3_Padded direction_view_space;
@@ -30,7 +30,7 @@ namespace Engine::Lighting
 		Vector3 direction_world_space;
 	};
 
-	struct SpotLightData : public UniformStruct
+	struct SpotLightData : public UniformBufferTag
 	{
 		Color3_Padded ambient, diffuse, specular;
 		Vector3_AndScalar position_view_space_and_cos_cutoff_angle_inner, direction_view_space_and_cos_cutoff_angle_outer; // Expected to be in view space when passed to shaders.
@@ -43,7 +43,7 @@ namespace Engine::Lighting
 	};
 
 	/* This is also named Material in some sources, but since the name Material is more widely used to define [Shader + Uniforms + Textures] instead, this struct is named SurfaceData */
-	struct SurfaceData : public UniformStruct
+	struct SurfaceData : public UniformBufferTag
 	{
 		int diffuse_map_slot, specular_map_slot;
 		float shininess;
