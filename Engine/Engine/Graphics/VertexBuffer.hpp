@@ -8,6 +8,9 @@ namespace Engine
 	class VertexBuffer
 	{
 	public:
+		using ID = unsigned int;
+
+	public:
 		VertexBuffer();
 		VertexBuffer( const void* vertex_data, const unsigned int vertex_count, const unsigned int size, const GLenum usage = GL_STATIC_DRAW );
 		template< typename Collection >
@@ -17,13 +20,11 @@ namespace Engine
 			vertex_count( vertex_count ),
 			size( ( unsigned int )vertex_data.size() * sizeof( std::remove_reference_t< decltype( vertex_data ) >::value_type ) )
 		{
-			{
-				ASSERT_DEBUG_ONLY( IsValid() && "'vertex_data' parameter passed to VertexBuffer::VertexBuffer< Collection&& >( const Collection&& vertex_data, const GLenum usage ) is empty!" );
+			ASSERT_DEBUG_ONLY( IsValid() && "'vertex_data' parameter passed to VertexBuffer::VertexBuffer< Collection&& >( const Collection&& vertex_data, const GLenum usage ) is empty!" );
 
-				GLCALL( glGenBuffers( 1, &id ) );
-				Bind();
-				GLCALL( glBufferData( GL_ARRAY_BUFFER, size, ( void* )vertex_data.data(), usage ) );
-			}
+			GLCALL( glGenBuffers( 1, &id ) );
+			Bind();
+			GLCALL( glBufferData( GL_ARRAY_BUFFER, size, ( void* )vertex_data.data(), usage ) );
 		}
 
 		/* Prohibit copying; It does not make sense two have multiple vertex buffers with the same Id. */
@@ -38,13 +39,13 @@ namespace Engine
 		
 		void Bind() const;
 		
-		inline unsigned int Id()			const { return id;				}
+		inline ID			Id()			const { return id;				}
 		inline unsigned int VertexCount()	const { return vertex_count;	}
 		inline unsigned int Size()			const { return size;			}
 		inline bool			IsValid()		const { return vertex_count;	} // Use the vertex count to implicitly define validness state.
 
 	private:
-		unsigned int id;
+		ID id;
 		unsigned int vertex_count;
 		unsigned int size;
 	};

@@ -52,6 +52,9 @@ namespace Engine
 	class Shader
 	{
 	public:
+		using ID = unsigned int;
+
+	public:
 		/* Will be initialized later with FromFile(). */
 		Shader( const char* name );
 		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path );
@@ -62,6 +65,7 @@ namespace Engine
 		void Bind() const;
 
 		inline const std::string& GetName() const { return name; }
+		inline ID GetID() const { return program_id; }
 
 		inline const std::map< std::string, Uniform::Information_Old >& GetUniformInformations() const { return uniform_info_map_legacy; }
 		inline std::size_t GetTotalUniformSize() const { return uniform_book_keeping_info.total_size; }
@@ -275,7 +279,7 @@ namespace Engine
 		std::string FormatErrorLog( const char* log ) const;
 
 	private:
-		int program_id;
+		ID program_id;
 		std::string name;
 		std::map< std::string, Uniform::Information_Old > uniform_info_map_legacy;
 		std::map< std::string, Uniform::Information > uniform_info_map;

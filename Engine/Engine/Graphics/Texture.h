@@ -5,6 +5,9 @@ namespace Engine
 	class Texture
 	{
 	public:
+		using ID = unsigned int;
+
+	public:
 		Texture();
 		Texture( const char* file_path, const int format );
 		~Texture();
@@ -19,7 +22,7 @@ namespace Engine
 		void Bind() const;
 
 	private:
-		unsigned int id;
+		ID id;
 		int width, height;
 	};
 };

@@ -1,5 +1,5 @@
 // Engine Includes.
-#include "IndexBuffer.h"
+#include "IndexBuffer.hpp"
 
 namespace Engine
 {
@@ -9,6 +9,19 @@ namespace Engine
 		index_count( 0 ),
 		size( 0 )
 	{
+	}
+
+	IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage )
+		:
+		id( -1 ),
+		index_count( count ),
+		size( count * sizeof( unsigned int ) )
+	{
+		ASSERT_DEBUG_ONLY( IsValid() && "'count' parameter passed to IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage ) is zero!" );
+
+		GLCALL( glGenBuffers( 1, &id ) );
+		Bind();
+		GLCALL( glBufferData( GL_ELEMENT_ARRAY_BUFFER, size, ( void* )index_data, usage ) );
 	}
 
 	IndexBuffer::IndexBuffer( IndexBuffer&& donor )
@@ -28,19 +41,6 @@ namespace Engine
 		return *this;
 	}
 
-	IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage )
-		:
-		id( -1 ),
-		index_count( count ),
-		size( count * sizeof( unsigned int ) )
-	{
-		ASSERT_DEBUG_ONLY( IsValid() && "'count' parameter passed to IndexBuffer::IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage ) is zero!" );
-
-		GLCALL( glGenBuffers( 1, &id ) );
-		Bind();
-		GLCALL( glBufferData( GL_ELEMENT_ARRAY_BUFFER, size, ( void* )index_data, usage ) );
-	}
-
 	IndexBuffer::~IndexBuffer()
 	{
 		if( IsValid() )
@@ -51,7 +51,7 @@ namespace Engine
 
 	void IndexBuffer::Bind() const
 	{
-		ASSERT_DEBUG_ONLY( IsValid() && "'size' parameter passed to IndexBuffer::Bind() is zero!" );
+		ASSERT_DEBUG_ONLY( IsValid() && "Attempting Bind() on IndexBuffer with zero size!" );
 		
 		GLCALL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, id ) );
 	}

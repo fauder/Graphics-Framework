@@ -45,7 +45,7 @@
     <ClInclude Include="Engine\Graphics\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\IndexBuffer.h">
+    <ClInclude Include="Engine\Graphics\IndexBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\VertexBufferLayout.hpp">

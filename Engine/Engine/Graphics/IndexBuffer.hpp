@@ -8,6 +8,9 @@ namespace Engine
 	class IndexBuffer
 	{
 	public:
+		using ID = unsigned int;
+
+	public:
 		IndexBuffer();
 		IndexBuffer( const unsigned int* index_data, const unsigned int count, const GLenum usage );
 		template< typename Collection >
@@ -36,13 +39,13 @@ namespace Engine
 
 		void Bind() const;
 
-		inline unsigned int Id()			const { return id;			}
+		inline ID			Id()			const { return id;			}
 		inline unsigned int IndexCount()	const { return index_count;	}
 		inline unsigned int Size()			const { return size;		}
 		inline bool			IsValid()		const { return index_count; } // Use the index count to implicitly define validness state.
 
 	private:
-		unsigned int id;
+		ID id;
 		unsigned int index_count;
 		unsigned int size;
 	};

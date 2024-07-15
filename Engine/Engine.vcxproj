@@ -165,7 +165,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Uniform.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Graphics\Color.hpp" />
-    <ClInclude Include="Engine\Graphics\IndexBuffer.h" />
+    <ClInclude Include="Engine\Graphics\IndexBuffer.hpp" />
     <ClInclude Include="Engine\Core\EntryPoint.h" />
     <ClInclude Include="Engine\Graphics\Graphics.h" />
     <ClInclude Include="Engine\Core\ImGuiSetup.h" />
