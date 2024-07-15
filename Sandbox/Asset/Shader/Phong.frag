@@ -14,17 +14,12 @@ layout ( std140 ) uniform DirectionalLightData
 	vec3 direction_view_space;
 } uniform_directional_light_data;
 
-struct PointLightData
+layout ( std140 ) uniform PointLightData
 {
 	vec3 ambient, diffuse, specular;
 	vec3 position_view_space;
 
 	float attenuation_constant, attenuation_linear, attenuation_quadratic;
-};
-
-layout ( std140 ) uniform PointLightDataBuffer
-{
-	PointLightData point_light_data;
 } uniform_point_light_data[ POINT_LIGHT_COUNT ];
 
 layout ( std140 ) uniform SpotLightData
