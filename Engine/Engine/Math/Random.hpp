@@ -48,8 +48,6 @@ namespace Engine::Math
 		static VectorType Generate( const VectorType& min = VectorType::Zero(), 
 									const VectorType& max = VectorType::One() )
 		{
-			/*static_assert( !std::is_same_v< VectorType, Color3 > && !std::is_same_v< VectorType, Color4 >,
-						   "Please use the Generate( const Color3/4 min, const Color3/4 max ) overload instead." );*/
 			auto& instance = Instance();
 
 			VectorType vector;
@@ -59,19 +57,6 @@ namespace Engine::Math
 
 			return vector;
 		}
-
-		/*template< typename ColorType > requires( ColorType::Dimension() > 1 && ( std::is_same_v< ColorType, Color3 > || std::is_same_v< ColorType, Color4 > ) )
-		static ColorType Generate( const ColorType& min = ColorType::White(), const ColorType& max = ColorType::Black() )
-		{
-			using UnderlyingVectorType = Vector< ColorType::ComponentType, ColorType::Dimension() >;
-			return Generate< UnderlyingVectorType >( reinterpret_cast< const UnderlyingVectorType& >( min ), reinterpret_cast< const UnderlyingVectorType& >( max ) );
-		}*/
-
-		//template<>
-		//static Color3 Generate< Color3 >( const Color3& min, const Color3& max )
-		//{
-		//	//return Generate< Vector3 >( reinterpret_cast< const Vector3& >( min ), reinterpret_cast< const Vector3& >( max ) );
-		//}
 
 	private:
 		Random( const unsigned int seed )
