@@ -4,8 +4,8 @@
 #include "Graphics.h"
 
 // std Includes.
-#include <map>
 #include <string>
+#include <unordered_map>
 
 namespace Engine
 {
@@ -58,7 +58,7 @@ namespace Engine
 
 			BufferCategory category;
 
-			std::map< std::string, Information* > members_map;
+			std::unordered_map< std::string, Information* > members_map;
 
 			inline bool IsRegular()		const { return category == BufferCategory::Regular;		}
 			inline bool IsInstance()	const { return category == BufferCategory::Instance;	}
@@ -129,7 +129,7 @@ namespace Engine
 			}
 
 		private:
-			std::map< std::string, Uniform::BindingPoint > binding_point_map;
+			std::unordered_map< std::string, Uniform::BindingPoint > binding_point_map;
 			unsigned int in_use = 0;
 			unsigned int start_offset;
 			unsigned int maximum_allowed;

@@ -231,7 +231,7 @@ namespace Engine
 		return false;
 	}
 
-	void Shader::QueryUniformData_In_DefaultBlock( std::map< std::string, Uniform::Information >& uniform_information_map )
+	void Shader::QueryUniformData_In_DefaultBlock( std::unordered_map< std::string, Uniform::Information >& uniform_information_map )
 	{
 		int offset = 0;
 		for( auto uniform_index = 0; uniform_index < uniform_book_keeping_info.count; uniform_index++ )
@@ -263,7 +263,7 @@ namespace Engine
 		}
 	}
 
-	void Shader::QueryUniformData_In_UniformBlocks( std::map< std::string, Uniform::Information >& uniform_information_map )
+	void Shader::QueryUniformData_In_UniformBlocks( std::unordered_map< std::string, Uniform::Information >& uniform_information_map )
 	{
 		std::vector< unsigned int > block_indices, corresponding_uniform_indices;
 		if( not GetActiveUniformBlockIndicesAndCorrespondingUniformIndices( uniform_book_keeping_info.count, block_indices, corresponding_uniform_indices ) )
@@ -294,7 +294,7 @@ namespace Engine
 		}
 	}
 
-	void Shader::QueryUniformBufferData( std::map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map )
+	void Shader::QueryUniformBufferData( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map )
 	{
 		int active_uniform_block_count = 0;
 		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCKS, &active_uniform_block_count ) );

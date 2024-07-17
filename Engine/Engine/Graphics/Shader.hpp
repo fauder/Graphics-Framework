@@ -15,7 +15,7 @@
 #include <iostream>
 #include <optional>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 namespace Engine
@@ -69,8 +69,8 @@ namespace Engine
 
 	/* Uniform APIs: */
 
-		inline const std::map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
-		inline const std::map< std::string, Uniform::BufferInformation >& GetUniformBufferInfoMap() const { return uniform_buffer_info_map; }
+		inline const std::unordered_map< std::string, Uniform::Information			>& GetUniformInfoMap()			const { return uniform_info_map;		}
+		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return uniform_buffer_info_map; }
 		inline std::size_t GetTotalUniformSize_DefaultBlockOnly() const { return uniform_book_keeping_info.total_size_default_block; }
 		inline std::size_t GetTotalUniformSize_UniformBlocksOnly() const { return uniform_book_keeping_info.total_size_uniform_blocks; }
 		inline std::size_t GetTotalUniformSize() const { return uniform_book_keeping_info.total_size; }
@@ -275,10 +275,10 @@ namespace Engine
 		/* Expects empty input vectors. */
 		bool GetActiveUniformBlockIndicesAndCorrespondingUniformIndices( const int active_uniform_count,
 																		 std::vector< unsigned int >& block_indices, std::vector< unsigned int >& corresponding_uniform_indices ) const;
-		void QueryUniformData_In_DefaultBlock( std::map< std::string, Uniform::Information >& uniform_information_map );
-		void QueryUniformData_In_UniformBlocks( std::map< std::string, Uniform::Information >& uniform_information_map );
-		void QueryUniformBufferData( std::map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map );
 		/*void ParseUniformData_StructMemberCPUOrders( const std::string& shader_source );*/
+		void QueryUniformData_In_DefaultBlock( std::unordered_map< std::string, Uniform::Information >& uniform_information_map );
+		void QueryUniformData_In_UniformBlocks( std::unordered_map< std::string, Uniform::Information >& uniform_information_map );
+		void QueryUniformBufferData( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map );
 		void CalculateTotalUniformSizes();
 		void EnumerateUniformBufferCategories();
 
@@ -294,8 +294,8 @@ namespace Engine
 		ID program_id;
 		std::string name;
 
-		std::map< std::string, Uniform::Information			> uniform_info_map;
-		std::map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map;
+		std::unordered_map< std::string, Uniform::Information		> uniform_info_map;
+		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map;
 
 		Uniform::ActiveUniformBookKeepingInformation uniform_book_keeping_info;
 	};

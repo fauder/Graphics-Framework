@@ -5,8 +5,9 @@
 #include "UniformBuffer.h"
 
 // std Includes.
-#include <vector>
 #include <cstddef> // std::byte.
+#include <unordered_map>
+#include <vector>
 
 namespace Engine
 {
@@ -44,8 +45,8 @@ namespace Engine
 		void SetShader( Shader* const shader );
 
 	/* Uniforms: */
-		inline const std::map< std::string, Uniform::Information		>& GetUniformInfoMap()			const { return *uniform_info_map;			}
-		inline const std::map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return *uniform_buffer_info_map;	}
+		inline const std::unordered_map< std::string, Uniform::Information			>& GetUniformInfoMap()			const { return *uniform_info_map;			}
+		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return *uniform_buffer_info_map;	}
 
 		const void* Get( const Uniform::Information& uniform_info ) const
 		{
@@ -135,10 +136,10 @@ namespace Engine
 		std::size_t uniform_blob_offset_of_uniform_buffers;
 
 		/* Map pointers below are assigned only when the Shader itself is assigne to the Material, through Shader::GetUniformInfoMap() & Shader::GetUniformBufferInfoMap() respectively. */
-		const std::map< std::string, Uniform::Information		>* uniform_info_map;
-		const std::map< std::string, Uniform::BufferInformation >* uniform_buffer_info_map;
+		const std::unordered_map< std::string, Uniform::Information			>* uniform_info_map;
+		const std::unordered_map< std::string, Uniform::BufferInformation	>* uniform_buffer_info_map;
 
-		std::map< std::string, UniformBuffer > uniform_buffer_map_regular;
-		std::map< std::string, UniformBuffer > uniform_buffer_map_instance;
+		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_regular;
+		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_instance;
 	};
 }
