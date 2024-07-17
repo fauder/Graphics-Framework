@@ -61,26 +61,6 @@ namespace Engine
 		PopulateAndSetupUniformBuffersMap();
 	}
 
-	void* Material::GetUniformPointer( std::size_t offset )
-	{
-		return GetValuePointerFromBlob( offset );
-	}
-
-	const void* Material::GetUniformPointer( std::size_t offset ) const
-	{
-		return GetValuePointerFromBlob( offset );
-	}
-
-	void* Material::GetUniformBufferPointer( std::size_t offset )
-	{
-		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
-	}
-
-	const void* Material::GetUniformBufferPointer( std::size_t offset ) const
-	{
-		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
-	}
-
 /*
  *
  *	PRIVATE API:
@@ -128,6 +108,36 @@ namespace Engine
 		{
 			throw std::runtime_error( R"(ERROR::MATERIAL::GetUniformInformation(): uniform ")" + std::string( uniform_name ) + R"(" does not exist!)" );
 		}
+	}
+
+	void* Material::GetUniformPointer( std::size_t offset )
+	{
+		return GetValuePointerFromBlob( offset );
+	}
+
+	const void* Material::GetUniformPointer( std::size_t offset ) const
+	{
+		return GetValuePointerFromBlob( offset );
+	}
+
+	void* Material::GetUniformBufferPointer( std::size_t offset )
+	{
+		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
+	}
+
+	const void* Material::GetUniformBufferPointer( std::size_t offset ) const
+	{
+		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
+	}
+
+	void Material::CopyValueToBlob( const std::byte* value, const Uniform::Information& uniform_info )
+	{
+		CopyValueToBlob( value, uniform_info.offset, uniform_info.size );
+	}
+
+	void Material::CopyValueToBlob( const std::byte* value, const Uniform::BufferInformation& uniform_buffer_info )
+	{
+		CopyValueToBlob( value, uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset, uniform_buffer_info.size );
 	}
 
 	void Material::CopyValueToBlob( const std::byte* value, const std::size_t offset, const std::size_t size )

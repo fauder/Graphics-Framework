@@ -47,10 +47,33 @@ namespace Engine
 		inline const std::map< std::string, Uniform::Information		>& GetUniformInfoMap()			const { return *uniform_info_map;			}
 		inline const std::map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return *uniform_buffer_info_map;	}
 
-			  void* GetUniformPointer( std::size_t offset );
-		const void* GetUniformPointer( std::size_t offset ) const;
-			  void* GetUniformBufferPointer( std::size_t offset );
-		const void* GetUniformBufferPointer( std::size_t offset ) const;
+		const void* Get( const Uniform::Information& uniform_info ) const
+		{
+			ASSERT_DEBUG_ONLY( not uniform_info.is_buffer_member &&
+							   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
+							   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
+			
+			return GetUniformPointer( uniform_info.offset );
+		}
+
+		void* Get( const Uniform::Information& uniform_info )
+		{
+			ASSERT_DEBUG_ONLY( not uniform_info.is_buffer_member &&
+							   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
+							   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
+
+			return GetUniformPointer( uniform_info.offset );
+		}
+
+		const void* Get( const Uniform::BufferInformation& uniform_buffer_info ) const
+		{
+			return GetUniformBufferPointer( uniform_buffer_info.offset );
+		}
+
+		void* Get( const Uniform::BufferInformation& uniform_buffer_info )
+		{
+			return GetUniformBufferPointer( uniform_buffer_info.offset );
+		}
 
 		template< typename UniformType >
 		void Set( const char* uniform_name, const UniformType& value )
@@ -58,7 +81,7 @@ namespace Engine
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
 			/* Update the value in the internal memory blob: */
-			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), uniform_info.offset, uniform_info.size );
+			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), uniform_info );
 		}
 
 		template< typename StructType > 
@@ -78,6 +101,14 @@ namespace Engine
 		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_buffer_name ) const;
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name ) const;
 
+		/* Keep these private as the user may accidentally mix UBO vs non-UBO versions. */
+			  void* GetUniformPointer( std::size_t offset );
+		const void* GetUniformPointer( std::size_t offset ) const;
+			  void* GetUniformBufferPointer( std::size_t offset );
+		const void* GetUniformBufferPointer( std::size_t offset ) const;
+
+		void CopyValueToBlob( const std::byte* value, const Uniform::Information& uniform_info );
+		void CopyValueToBlob( const std::byte* value, const Uniform::BufferInformation& uniform_buffer_info );
 		void CopyValueToBlob( const std::byte* value, const std::size_t offset, const std::size_t size );
 			  void* GetValuePointerFromBlob( std::size_t offset );
 		const void* GetValuePointerFromBlob( std::size_t offset ) const;
