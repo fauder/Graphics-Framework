@@ -10,21 +10,21 @@
 
 namespace Engine
 {
-	Uniform::BindingPoint UniformBufferManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, const Uniform::BufferCategory category )
+	Uniform::BindingPoint UniformBufferManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BufferInformation& uniform_buffer_info )
 	{
 		auto& instance = Instance();
 
-		switch( category )
+		switch( uniform_buffer_info.category )
 		{
 			case Uniform::BufferCategory::Instance:
-				return RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_instance );
+				return uniform_buffer_info.binding_point = RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_instance );
 			case Uniform::BufferCategory::Global:
-				return RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_global );
+				return uniform_buffer_info.binding_point = RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_global );
 			case Uniform::BufferCategory::Intrinsic:
-				return RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_intrinsic );
+				return uniform_buffer_info.binding_point = RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_intrinsic );
 			// case Uniform::BufferCategory::Regular:
 			default:
-				return RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_regular );
+				return uniform_buffer_info.binding_point = RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_regular );
 		}
 	}
 
@@ -85,8 +85,6 @@ namespace Engine
 
 	Uniform::BindingPoint UniformBufferManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BindingPointBookKeeping& binding_point_book_keeping )
 	{
-		// TODO: Also set the binding point variable of the Shader's uniform_buffer_info_map element.
-
 		auto& instance = Instance();
 
 		if( const auto maybe_binding_point = binding_point_book_keeping.Find( block_name );

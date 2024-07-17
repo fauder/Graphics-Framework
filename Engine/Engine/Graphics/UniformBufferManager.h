@@ -20,7 +20,7 @@ namespace Engine
 		void operator = ( UniformBufferManager const& )		= delete;
 
 	/* Block registering API: */
-		static Uniform::BindingPoint RegisterUniformBlock( const Shader& shader, const std::string& block_name, const Uniform::BufferCategory category = Uniform::BufferCategory::Regular );
+		static Uniform::BindingPoint RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BufferInformation& uniform_buffer_info );
 
 	/* Buffer-Block connecting API: */
 		static void ConnectBufferToBlock( const UniformBuffer& uniform_buffer, const std::string& block_name, const Uniform::BufferCategory category = Uniform::BufferCategory::Regular );

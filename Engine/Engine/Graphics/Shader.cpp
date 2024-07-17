@@ -86,7 +86,7 @@ namespace Engine
 			EnumerateUniformBufferCategories();
 
 			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-				UniformBufferManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info.category );
+				UniformBufferManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 		}
 
 		return link_result;
