@@ -324,8 +324,6 @@ namespace Engine::ImGuiDrawer
 				else
 					ImGui::TextUnformatted( "Shader: <unassigned>" );
 
-				
-
 				if( ImGui::BeginTable( material.Name().c_str(), 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
 				{
 					const auto& uniform_info_map        = material.GetUniformInfoMap();
@@ -421,11 +419,12 @@ namespace Engine::ImGuiDrawer
 				else
 					ImGui::TextUnformatted( "Shader: <unassigned>" );
 
-				const auto& uniform_info_map        = material.GetUniformInfoMap();
-				const auto& uniform_buffer_info_map = material.GetUniformBufferInfoMap();
-
 				if( ImGui::BeginTable( material.Name().c_str(), 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
 				{
+					const auto& uniform_info_map        = material.GetUniformInfoMap();
+					const auto& uniform_buffer_info_map = material.GetUniformBufferInfoMap();
+					const auto& texture_map             = material.GetTextureMap();
+
 					ImGui::TableSetupColumn( "Name"	 );
 					ImGui::TableSetupColumn( "Value" );
 
@@ -474,6 +473,18 @@ namespace Engine::ImGuiDrawer
 						}
 						else
 							ImGui::TableNextRow();
+					}
+
+					for( const auto& [ uniform_sampler_name, texture_pointer ] : texture_map )
+					{
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_sampler_name.c_str() );
+
+						ImGui::TableNextColumn();
+
+						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+						ImGui::PushID( ( void* )&texture_pointer );
+						Draw( texture_pointer, uniform_sampler_name.c_str() );
+						ImGui::PopID();
 					}
 
 					ImGui::EndTable();
