@@ -138,12 +138,8 @@ void main()
 	// No need to subtract from the camera position since the camera is positioned at the origin in view space.
 	vec4 viewing_direction_view_space = normalize( -varying_position_view_space ); 
 
-	// TODO: Enable when Material support for setting Textures uniforms is (re)implemented.
-//	vec3 diffuse_sample  = vec3( texture( uniform_surface_data_diffuse_map_slot,  varying_tex_coords ) );
-//	vec3 specular_sample = vec3( texture( uniform_surface_data_specular_map_slot, varying_tex_coords ) );
-
-	vec3 diffuse_sample  = vec3( 1.0f, 1.0f, 1.0f );
-	vec3 specular_sample = vec3( 1.0f, 1.0f, 1.0f );
+	vec3 diffuse_sample  = vec3( texture( uniform_surface_data_diffuse_map_slot,  varying_tex_coords ) );
+	vec3 specular_sample = vec3( texture( uniform_surface_data_specular_map_slot, varying_tex_coords ) );
 
 	vec3 from_directional_light = CalculateColorFromDirectionalLight( normal_view_space, viewing_direction_view_space,
 																	  diffuse_sample, specular_sample );
