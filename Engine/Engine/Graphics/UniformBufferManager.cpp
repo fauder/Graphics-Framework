@@ -37,16 +37,16 @@ namespace Engine
 		switch( category )
 		{
 			case Uniform::BufferCategory::Regular:
-				binding_point = BindingPoint( block_name, instance.binding_point_book_keeping_regular.binding_point_map );
+				binding_point = instance.binding_point_book_keeping_regular.Find( block_name );
 				break;
 			case Uniform::BufferCategory::Instance:
-				binding_point = BindingPoint( block_name, instance.binding_point_book_keeping_instance.binding_point_map );
+				binding_point = instance.binding_point_book_keeping_instance.Find( block_name );
 				break;
 			case Uniform::BufferCategory::Global:
-				binding_point = BindingPoint( block_name, instance.binding_point_book_keeping_global.binding_point_map );
+				binding_point = instance.binding_point_book_keeping_global.Find( block_name );
 				break;
 			case Uniform::BufferCategory::Intrinsic:
-				binding_point = BindingPoint( block_name, instance.binding_point_book_keeping_intrinsic.binding_point_map );
+				binding_point = instance.binding_point_book_keeping_intrinsic.Find( block_name );
 				break;
 		}
 
@@ -74,31 +74,25 @@ namespace Engine
 
 	UniformBufferManager::UniformBufferManager()
 		:
-		binding_point_max_count( 0 )
-	{
-		GLCALL( glGetIntegerv( GL_MAX_UNIFORM_BUFFER_BINDINGS, ( int* )&binding_point_max_count ) );
-
 		/* Divide max. binding points = max. uniform buffers/blocks allowed into 4 categories and determine their starting offsets from 0. */
-
-		binding_point_book_keeping_intrinsic.maximum_allowed = 4;									//             4 binding points =>             4 buffers/blocks total.
-		binding_point_book_keeping_global.maximum_allowed = 4;									//             4 binding points =>             4 buffers/blocks total.
-		binding_point_book_keeping_instance.maximum_allowed = ( binding_point_max_count - 8 ) / 2;	// (Max - 8) / 2 binding points => (Max - 8) / 2 buffers/blocks total.
-		binding_point_book_keeping_regular.maximum_allowed = ( binding_point_max_count - 8 ) / 2;	// (Max - 8) / 2 binding points => (Max - 8) / 2 buffers/blocks total.
-
-		binding_point_book_keeping_intrinsic.start_offset = 0;
-		binding_point_book_keeping_global.start_offset = binding_point_book_keeping_intrinsic.start_offset + binding_point_book_keeping_intrinsic.maximum_allowed;
-		binding_point_book_keeping_instance.start_offset = binding_point_book_keeping_global.start_offset + binding_point_book_keeping_global.maximum_allowed;
-		binding_point_book_keeping_regular.start_offset = binding_point_book_keeping_instance.start_offset + binding_point_book_keeping_instance.maximum_allowed;
+		binding_point_max_count( QueryMaximumUniformBufferBindingCount() ),
+		binding_point_book_keeping_intrinsic( 0, 4 ),
+		binding_point_book_keeping_global( 0 + 4, 4 ),
+		binding_point_book_keeping_instance( 0 + 4 + 4, ( binding_point_max_count - 8 ) / 2 ),
+		binding_point_book_keeping_regular( 0 + 4 + 4 + ( binding_point_max_count - 8 ) / 2, ( binding_point_max_count - 8 ) / 2 )
+	{
 	}
 
 	Uniform::BindingPoint UniformBufferManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BindingPointBookKeeping& binding_point_book_keeping )
 	{
+		// TODO: Also set the binding point variable of the Shader's uniform_buffer_info_map element.
+
 		auto& instance = Instance();
 
-		if( const auto found = binding_point_book_keeping.binding_point_map.find( block_name );
-			found != binding_point_book_keeping.binding_point_map.cend() )
+		if( const auto maybe_binding_point = binding_point_book_keeping.Find( block_name );
+			maybe_binding_point.has_value() )
 		{
-			const auto binding_point_found = found->second;
+			const auto binding_point_found = *maybe_binding_point;
 
 			GLCALL( const unsigned int block_index = glGetUniformBlockIndex( shader.Id(), block_name.c_str() ) );
 			GLCALL( glUniformBlockBinding( shader.Id(), block_index, binding_point_found ) );
@@ -109,10 +103,12 @@ namespace Engine
 		{
 			if( binding_point_book_keeping.HasRoom() )
 			{
-				GLCALL( const unsigned int block_index = glGetUniformBlockIndex( shader.Id(), block_name.c_str() ) );
-				GLCALL( glUniformBlockBinding( shader.Id(), block_index, binding_point_book_keeping.in_use ) );
+				const auto binding_point_to_assign = binding_point_book_keeping.Assign( block_name );
 
-				return binding_point_book_keeping.Assign( block_name );
+				GLCALL( const unsigned int block_index = glGetUniformBlockIndex( shader.Id(), block_name.c_str() ) );
+				GLCALL( glUniformBlockBinding( shader.Id(), block_index, binding_point_to_assign ) );
+
+				return binding_point_to_assign;
 			}
 
 #ifdef _DEBUG
@@ -136,15 +132,10 @@ namespace Engine
 		GLCALL( glBindBufferRange( GL_UNIFORM_BUFFER, binding_point, uniform_buffer.Id(), ( GLintptr )offset, ( GLsizeiptr )size ) );
 	}
 
-	std::optional< Uniform::BindingPoint > UniformBufferManager::BindingPoint( const std::string& block_name,
-																			   const std::map< std::string, Uniform::BindingPoint >& binding_point_map_to_search )
+	unsigned int UniformBufferManager::QueryMaximumUniformBufferBindingCount()
 	{
-		if( const auto found = binding_point_map_to_search.find( block_name );
-			found != binding_point_map_to_search.cend() )
-		{
-			return found->second;
-		}
-
-		return std::nullopt;
+		unsigned int query_result;
+		GLCALL( glGetIntegerv( GL_MAX_UNIFORM_BUFFER_BINDINGS, ( int* )&query_result ) );
+		return query_result;
 	}
 }

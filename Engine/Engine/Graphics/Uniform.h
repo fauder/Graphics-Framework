@@ -25,6 +25,8 @@ namespace Engine
 			int offset;
 			GLenum type;
 			bool is_buffer_member;
+
+			// TODO: Add a string here for more editor friendly uniform name. Example: uniform_surface_data would be Surface Data & uniform_color would be Color.
 		};
 
 		enum class BufferCategory
@@ -86,17 +88,14 @@ namespace Engine
 			int intrinsic_block_count, global_block_count, instance_block_count, regular_block_count;
 		};
 
-		struct BindingPointBookKeeping
+		class BindingPointBookKeeping
 		{
-			std::map< std::string, Uniform::BindingPoint > binding_point_map;
-			unsigned int in_use = 0;
-			unsigned int start_offset;
-			unsigned int maximum_allowed;
-
-			inline Uniform::BindingPoint Absolute( const BindingPoint offset ) const
-			{ 
-				return start_offset + offset;
-			}
+		public:
+			BindingPointBookKeeping( const unsigned int start_offset, const unsigned int maximum_allowed )
+				:
+				start_offset( start_offset ),
+				maximum_allowed( maximum_allowed )
+			{}
 
 			inline bool HasRoom() const
 			{ 
@@ -105,8 +104,35 @@ namespace Engine
 
 			inline BindingPoint Assign( const std::string& block_name )
 			{
-				return binding_point_map[ block_name ] = in_use++;
+				return binding_point_map[ block_name ] = start_offset + in_use++;
 			}
+
+			inline int InUseCount() const { return in_use; }
+
+			inline bool IsAssigned( const std::string& block_name ) const
+			{
+				return binding_point_map.contains( block_name );
+			}
+
+			/*inline Uniform::BindingPoint BindingPoint( const std::string& block_name ) const
+			{
+				return binding_point_map.at( block_name );
+			}*/
+
+			inline std::optional< const Uniform::BindingPoint > Find( const std::string& block_name ) const
+			{
+				if( const auto iterator = binding_point_map.find( block_name );
+					iterator != binding_point_map.cend() )
+					return iterator->second;
+
+				return std::nullopt;
+			}
+
+		private:
+			std::map< std::string, Uniform::BindingPoint > binding_point_map;
+			unsigned int in_use = 0;
+			unsigned int start_offset;
+			unsigned int maximum_allowed;
 		};
 	};
 }

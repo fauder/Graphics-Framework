@@ -44,16 +44,15 @@ namespace Engine
 		static void BindBufferToBindingPoint_Partial( const UniformBuffer&, const Uniform::BindingPoint,
 													  const unsigned int offset, const unsigned int size );
 
-	/* Other Queries: */
-		static std::optional< Uniform::BindingPoint > BindingPoint( const std::string& block_name,
-																	const std::map< std::string, Uniform::BindingPoint >& binding_point_map_to_search );
+	/* Misc.: */
+		static unsigned int QueryMaximumUniformBufferBindingCount();
 
 	private:
+		unsigned int binding_point_max_count;
+
 		Uniform::BindingPointBookKeeping binding_point_book_keeping_regular;
 		Uniform::BindingPointBookKeeping binding_point_book_keeping_instance;
 		Uniform::BindingPointBookKeeping binding_point_book_keeping_global;
 		Uniform::BindingPointBookKeeping binding_point_book_keeping_intrinsic;
-		
-		unsigned int binding_point_max_count;
 	};
 }
