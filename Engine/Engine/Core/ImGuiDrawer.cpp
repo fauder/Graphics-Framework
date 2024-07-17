@@ -333,15 +333,14 @@ namespace Engine::ImGuiDrawer
 
 						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 						ImGui::PushID( ( void* )&uniform_info );
-						Draw( uniform_info.type, material.GetUniformPointer( uniform_info.offset ) );
+						Draw( uniform_info.type, material.Get( uniform_info ) );
 						ImGui::PopID();
 					}
 
 					for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 					{
-						// TODO: Move globals & intrinsics out of here.
-						/*if( uniform_buffer_info.IsGlobalOrIntrinsic() )
-							continue;*/
+						if( uniform_buffer_info.IsGlobalOrIntrinsic() )
+							continue;
 
 						ImGui::TableNextColumn();
 
@@ -349,6 +348,9 @@ namespace Engine::ImGuiDrawer
 						{
 							ImGui::TableNextRow();
 							/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+
+							std::byte* memory_blob = ( std::byte* )material.Get( uniform_buffer_info );
+
 							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info.members_map )
 							{
 								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_name.c_str() );
@@ -356,7 +358,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextColumn();
 
 								ImGui::PushID( ( void* )uniform_buffer_member_info );
-								Draw( uniform_buffer_member_info->type, material.GetUniformBufferPointer( uniform_buffer_member_info->offset ) );
+								Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
 								ImGui::PopID();
 							}
 
@@ -413,15 +415,14 @@ namespace Engine::ImGuiDrawer
 
 						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 						ImGui::PushID( ( void* )&uniform_info );
-						Draw( uniform_info.type, material.GetUniformPointer( uniform_info.offset ) );
+						Draw( uniform_info.type, material.Get( uniform_info ) );
 						ImGui::PopID();
 					}
 
 					for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 					{
-						// TODO: Move globals & intrinsics out of here.
-						/*if( uniform_buffer_info.IsGlobalOrIntrinsic() )
-							continue;*/
+						if( uniform_buffer_info.IsGlobalOrIntrinsic() )
+							continue;
 
 						ImGui::TableNextColumn();
 
@@ -436,7 +437,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextColumn();
 
 								ImGui::PushID( ( void* )uniform_buffer_member_info );
-								Draw( uniform_buffer_member_info->type, material.GetUniformBufferPointer( uniform_buffer_member_info->offset ) );
+								Draw( uniform_buffer_member_info->type, material.Get( *uniform_buffer_member_info ) );
 								ImGui::PopID();
 							}
 
