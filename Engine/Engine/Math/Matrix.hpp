@@ -226,6 +226,15 @@ namespace Engine::Math
 			return reinterpret_cast< const Vector< Type, VectorSize >& >( *( data[ row_index ] + start_index_inRow ) );
 		}
 
+		template< std::size_t VectorSize >
+		Vector< Type, VectorSize >& GetRow( const unsigned int row_index = 0, const unsigned int start_index_inRow = 0 ) requires( VectorSize <= ColumnSize )
+		{
+			ASSERT_DEBUG_ONLY( row_index < RowSize && "Row index out of bounds." );
+			ASSERT_DEBUG_ONLY( start_index_inRow + VectorSize <= ColumnSize && "Given vector does not fit inside the row when starting from start_index_inRow." );
+
+			return reinterpret_cast< Vector< Type, VectorSize >& >( *( data[ row_index ] + start_index_inRow ) );
+		}
+
 		/* Obligatory copy is returned as the data is laid out such that rows are contigous, not columns.. */
 		template< std::size_t VectorSize >
 		constexpr Vector< Type, VectorSize > GetColumn( const unsigned int column_index = 0, const unsigned int start_index_inColumn = 0 ) const requires( VectorSize <= RowSize )
