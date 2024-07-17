@@ -748,9 +748,7 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( surface_name );
 
-			is_modified |= ImGui::SliderInt( "Diffuse Map ID",	&surface_data.diffuse_map_slot,		0,		16 );
-			is_modified |= ImGui::SliderInt( "Specular Map ID", &surface_data.specular_map_slot,	0,		16 );
-			is_modified |= ImGui::SliderFloat( "Shininess",		&surface_data.shininess,			0.1f,	64.0f, "%.2f", ImGuiSliderFlags_Logarithmic );
+			is_modified |= ImGui::SliderFloat( "Shininess",	&surface_data.shininess, 0.1f, 64.0f, "%.2f", ImGuiSliderFlags_Logarithmic );
 
 			ImGui::PopID();
 		}
@@ -769,10 +767,6 @@ namespace Engine::ImGuiDrawer
 			ImGui::PushID( surface_name );
 
 			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
-
-			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
-			ImGui::InputInt( "Diffuse Map ID",  const_cast< int* >( &surface_data.diffuse_map_slot  ), 0, 0, ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputInt( "Specular Map ID", const_cast< int* >( &surface_data.specular_map_slot ), 0, 0, ImGuiInputTextFlags_ReadOnly );
 
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputFloat( "Shininess", const_cast< float* >( &surface_data.shininess ), 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_ReadOnly );

@@ -428,9 +428,9 @@ void SandboxApplication::ResetLightingData()
 	}
 	light_spot_data =
 	{
-		.ambient                = Engine::Color3{  0.05f,  0.05f,  0.05f },
-		.diffuse                = Engine::Color3{  0.4f,   0.4f,   0.4f  },
-		.specular               = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+		.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
+		.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
+		.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
 
 		// These two's values do not matter, will be updated with the correct view space value every frame.
 		.position_view_space_and_cos_cutoff_angle_inner  = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 12.5_deg ) ) },
@@ -444,16 +444,12 @@ void SandboxApplication::ResetLightingData()
 
 	cube_surface_data_array = std::vector< Engine::Lighting::SurfaceData >( CUBE_COUNT, 
 	{
-		.shininess         = 32.0f,
-		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1
+		.shininess = 32.0f
 	} );
 
 	ground_quad_surface_data = front_wall_quad_surface_data =
 	{
-		.shininess         = 32.0f,
-		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1
+		.shininess = 32.0f
 	};
 }
 

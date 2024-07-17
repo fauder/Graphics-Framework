@@ -46,10 +46,5 @@ namespace Engine::Lighting
 	struct SurfaceData : public UniformBufferTag
 	{
 		float shininess;
-
-	/* End of GLSL equivalence;
-	 * Samplers are not allowed to be Uniform Block members in GLSL.
-	 * Putting them in here regardless, as this portion of the struct will not be seen by GLSL. */
-		int diffuse_map_slot, specular_map_slot;
 	};
 }
