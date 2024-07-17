@@ -29,6 +29,8 @@ SandboxApplication::SandboxApplication()
 	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
+	container_texture_diffuse_map( "Container (Diffuse) Map" ),
+	container_texture_specular_map( "Container (Specular) Map" ),
 	light_source_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
@@ -239,11 +241,6 @@ void SandboxApplication::Render()
 			front_wall_quad_material.Set( uniform_name.c_str(), light_point_data );
 		}
 	}
-
-	// TODO: Move texture handling into Material as well.
-
-	container_texture_diffuse_map.ActivateAndUse( 0 );
-	container_texture_specular_map.ActivateAndUse( 1 );
 
 /* Ground quad: */
 	{

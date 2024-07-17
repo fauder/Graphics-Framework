@@ -14,15 +14,26 @@ namespace Engine
 		:
 		id( -1 ),
 		width( 0 ),
-		height( 0 )
+		height( 0 ),
+		name( "<unnamed>" )
 	{
 	}
 
-	Texture::Texture( const char* file_path, const int format )
+	Texture::Texture( const std::string_view& name )
 		:
 		id( -1 ),
 		width( 0 ),
-		height( 0 )
+		height( 0 ),
+		name( name )
+	{
+	}
+
+	Texture::Texture( const std::string_view& name, const char* file_path, const int format )
+		:
+		id( -1 ),
+		width( 0 ),
+		height( 0 ),
+		name( name )
 	{
 		FromFile( file_path, format );
 	}
@@ -37,7 +48,7 @@ namespace Engine
 		glBindTexture( GL_TEXTURE_2D, id );
 	}
 
-	void Texture::ActivateAndUse( const int slot )
+	void Texture::Activate( const int slot )
 	{
 		glActiveTexture( GL_TEXTURE0 + slot );
 		Bind();

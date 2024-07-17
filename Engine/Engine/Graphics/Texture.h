@@ -9,20 +9,29 @@ namespace Engine
 
 	public:
 		Texture();
-		Texture( const char* file_path, const int format );
+		Texture( const std::string_view& name );
+		Texture( const std::string_view& name, const char* file_path, const int format );
 		~Texture();
 
-		void ActivateAndUse( const int slot );
-
-		bool FromFile( const char* file_path, const int format );
-
+	/* Static API: */
 		static void INITIALIZE();
 
+	/* Creation: */
+		bool FromFile( const char* file_path, const int format );
+
+	/* Queries: */
+		inline const std::string& Name() const { return name; }
+
+	/* Usage: */
+		void Activate( const int slot );
+
 	private:
+	/* Usage: */
 		void Bind() const;
 
 	private:
 		ID id;
 		int width, height;
+		std::string name;
 	};
 };
