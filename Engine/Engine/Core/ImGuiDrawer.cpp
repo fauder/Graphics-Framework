@@ -29,7 +29,7 @@ namespace Engine::ImGuiDrawer
 			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< Vector4B*		>( value_pointer ), name );
 			
 			/* Matrices: */
-			/*case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< Matrix2x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< Matrix2x2*	>( value_pointer ), name );
 			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< Matrix3x3*	>( value_pointer ), name );
 			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< Matrix4x4*	>( value_pointer ), name );
 			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< Matrix2x3*	>( value_pointer ), name );
@@ -37,16 +37,7 @@ namespace Engine::ImGuiDrawer
 			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< Matrix3x2*	>( value_pointer ), name );
 			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< Matrix3x4*	>( value_pointer ), name );
 			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< Matrix4x2*	>( value_pointer ), name );
-			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );*/
-			case GL_FLOAT_MAT2 			: return false;
-			case GL_FLOAT_MAT3 			: return false;
-			case GL_FLOAT_MAT4 			: return false;
-			case GL_FLOAT_MAT2x3 		: return false;
-			case GL_FLOAT_MAT2x4 		: return false;
-			case GL_FLOAT_MAT3x2 		: return false;
-			case GL_FLOAT_MAT3x4 		: return false;
-			case GL_FLOAT_MAT4x2 		: return false;
-			case GL_FLOAT_MAT4x3 		: return false;
+			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );
 
 			/* Other: */
 			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
@@ -81,7 +72,7 @@ namespace Engine::ImGuiDrawer
 			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< const Vector4B*		>( value_pointer ), name );
 
 			/* Matrices: */
-			/*case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< const Matrix2x2*		>( value_pointer ), name ); return;
+			case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< const Matrix2x2*		>( value_pointer ), name );
 			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< const Matrix3x3*		>( value_pointer ), name );
 			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< const Matrix4x4*		>( value_pointer ), name );
 			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< const Matrix2x3*		>( value_pointer ), name );
@@ -89,16 +80,7 @@ namespace Engine::ImGuiDrawer
 			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< const Matrix3x2*		>( value_pointer ), name );
 			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< const Matrix3x4*		>( value_pointer ), name );
 			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< const Matrix4x2*		>( value_pointer ), name );
-			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );*/
-			case GL_FLOAT_MAT2 			: return;
-			case GL_FLOAT_MAT3 			: return;
-			case GL_FLOAT_MAT4 			: return;
-			case GL_FLOAT_MAT2x3 		: return;
-			case GL_FLOAT_MAT2x4 		: return;
-			case GL_FLOAT_MAT3x2 		: return;
-			case GL_FLOAT_MAT3x4 		: return;
-			case GL_FLOAT_MAT4x2 		: return;
-			case GL_FLOAT_MAT4x3 		: return;
+			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );
 
 			/* Other: */
 			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
