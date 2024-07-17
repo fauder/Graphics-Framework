@@ -8,17 +8,6 @@
 
 namespace Engine::Lighting
 {
-	struct PointLightData : public UniformBufferTag
-	{
-		Color3_AndScalar ambient_and_attenuation_constant, diffuse_and_attenuation_linear, specular_attenuation_quadratic;
-		Vector3_Padded position_view_space;
-
-	/* End of GLSL equivalence. C++ only extras: */
-
-		// Keeping world space position is beneficial; It is easier to reason about compared to view space coordinates.
-		Vector3 position_world_space;
-	};
-
 	struct DirectionalLightData : public UniformBufferTag
 	{
 		Color3_Padded ambient, diffuse, specular;
@@ -28,6 +17,17 @@ namespace Engine::Lighting
 
 		// Keeping world space direction is beneficial; It is easier to reason about compared to view space coordinates.
 		Vector3 direction_world_space;
+	};
+
+	struct PointLightData : public UniformBufferTag
+	{
+		Color3_AndScalar ambient_and_attenuation_constant, diffuse_and_attenuation_linear, specular_attenuation_quadratic;
+		Vector3_Padded position_view_space;
+
+	/* End of GLSL equivalence. C++ only extras: */
+
+		// Keeping world space position is beneficial; It is easier to reason about compared to view space coordinates.
+		Vector3 position_world_space;
 	};
 
 	struct SpotLightData : public UniformBufferTag
