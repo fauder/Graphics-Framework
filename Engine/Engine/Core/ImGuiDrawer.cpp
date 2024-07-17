@@ -254,14 +254,20 @@ namespace Engine::ImGuiDrawer
 	{
 		// TODO: Implement texture selection.
 
-		ImGui::TextUnformatted( texture ? texture->Name().c_str() : "<unassigned>" );
+		if( texture )
+			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), R"~("%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+		else
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
 
 		return false;
 	}
 
 	void Draw( const Texture* texture, const char* name )
 	{
-		ImGui::TextUnformatted( texture ? texture->Name().c_str() : "<unassigned>" );
+		if( texture )
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), R"~("%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+		else
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
 	}
 
 	bool Draw( Camera& camera, const char* name )
