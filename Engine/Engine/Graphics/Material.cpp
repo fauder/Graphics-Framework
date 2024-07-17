@@ -69,6 +69,22 @@ namespace Engine
  *
  */
 
+	void Material::SetTexture( const char* sampler_name_of_new_texture, Texture* texture_to_be_set )
+	{
+		texture_map[ sampler_name_of_new_texture ] = texture_to_be_set;
+	}
+
+	const Texture* Material::GetTexture( const char* sampler_name_of_new_texture ) const
+	{
+		if( const auto iterator = texture_map.find( sampler_name_of_new_texture ); 
+			iterator != texture_map.cend() )
+		{
+			return iterator->second;
+		}
+
+		return nullptr;
+	}
+
 	void Material::PopulateAndSetupUniformBufferMap()
 	{
 		for( auto& [ uniform_buffer_name, uniform_buffer_info ] : *uniform_buffer_info_map )

@@ -96,6 +96,10 @@ namespace Engine
 			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), uniform_buffer_info );
 		}
 
+	/* Textures: */
+		void SetTexture( const char* sampler_name_of_new_texture, Texture* texture_to_be_set );
+		const Texture* GetTexture( const char* sampler_name_of_new_texture ) const;
+
 	private:
 	/* Shader: */
 		inline const Shader* GetShader() const { return shader; };
