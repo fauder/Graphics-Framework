@@ -25,7 +25,7 @@ SandboxApplication::SandboxApplication()
 	Engine::Application(),
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
-	cube_shader(nullptr),
+	cube_shader( nullptr ),
 	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
@@ -68,10 +68,10 @@ void SandboxApplication::Initialize()
 /* Materials: */
 	ResetMaterialData();
 	cube_shader->Bind();
-	ground_quad_material.Set( "uniform_surface_data", ground_quad_surface_data );
-	front_wall_quad_material.Set( "uniform_surface_data", front_wall_quad_surface_data );
+	ground_quad_material.Set( "SurfaceData", ground_quad_surface_data );
+	front_wall_quad_material.Set( "SurfaceData", front_wall_quad_surface_data );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
-		cube_material_array[ i ].Set( "uniform_surface_data", cube_surface_data_array[ i ] );
+		cube_material_array[ i ].Set( "SurfaceData", cube_surface_data_array[ i ] );
 	light_source_shader.Bind();
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse_and_attenuation_linear.color );
@@ -104,9 +104,6 @@ void SandboxApplication::Initialize()
 	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
 	renderer.AddDrawable( &ground_quad_drawable );
 
-	/*düzeldi, proj ve view ubo da güzelce gidiyor gpuya.
-	þimdi þu saçmalýk var: üstteki drawable'larý açýnca sapýtýyor.*/
-
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable );
 
@@ -119,6 +116,8 @@ void SandboxApplication::Initialize()
 
 	Platform::MaximizeWindow();
 }
+
+// TODO: Integrate RenderDoc annotations.
 
 void SandboxApplication::Shutdown()
 {
@@ -215,14 +214,14 @@ void SandboxApplication::Render()
 
 		for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 		{
-			cube_material_array[ cube_index ].Set( "uniform_directional_light_data",	light_directional_data	);
-			cube_material_array[ cube_index ].Set( "uniform_spot_light_data",			light_spot_data			);
+			cube_material_array[ cube_index ].Set( "DirectionalLightData",	light_directional_data	);
+			cube_material_array[ cube_index ].Set( "SpotLightData",			light_spot_data			);
 		}
-		ground_quad_material.Set( "uniform_directional_light_data", light_directional_data	);
-		ground_quad_material.Set( "uniform_spot_light_data",		light_spot_data			);
+		ground_quad_material.Set( "DirectionalLightData",	light_directional_data	);
+		ground_quad_material.Set( "SpotLightData",			light_spot_data			);
 		
-		front_wall_quad_material.Set( "uniform_directional_light_data", light_directional_data	);
-		front_wall_quad_material.Set( "uniform_spot_light_data",		light_spot_data			);
+		front_wall_quad_material.Set( "DirectionalLightData",	light_directional_data	);
+		front_wall_quad_material.Set( "SpotLightData",			light_spot_data			);
 
 		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		{
@@ -230,7 +229,9 @@ void SandboxApplication::Render()
 			light_point_data.position_view_space = ( Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
 													 view_transformation ).XYZ();
 
-			const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
+			// TODO: Correct this when UBO arrays are implemented.
+			//const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
+			const std::string uniform_name( "PointLightData" );
 
 			for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 				cube_material_array[ cube_index ].Set( uniform_name.c_str(), light_point_data );
@@ -246,9 +247,9 @@ void SandboxApplication::Render()
 
 /* Ground quad: */
 	{
-		ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
+		ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f ); // TODO: Move this to Update().
 
-		ground_quad_material.Set( "uniform_transform_world", ground_quad_transform.GetFinalMatrix() );
+		ground_quad_material.Set( "uniform_transform_world", ground_quad_transform.GetFinalMatrix() ); // TODO: Move this to Renderer::Render().
 	}
 
 /* Front wall quad: */
@@ -280,10 +281,6 @@ void SandboxApplication::DrawImGui()
 
 	ImGui::ShowDemoWindow();
 
-	static const Engine::Material test_mat = Engine::Material( "Const Material Example", &light_source_shader );
-
-	Engine::ImGuiDrawer::Draw( test_mat );
-
 	Engine::ImGuiDrawer::Draw( gouraud_shader );
 	Engine::ImGuiDrawer::Draw( phong_shader );
 	Engine::ImGuiDrawer::Draw( light_source_shader );
@@ -302,7 +299,6 @@ void SandboxApplication::DrawImGui()
 			ResetLightingData();
 
 			cube_shader = &phong_shader;
-			ground_quad_material.SetShader( cube_shader );
 		}
 
 		Engine::ImGuiDrawer::Draw( light_directional_data, "Directional Light Properties" );
@@ -451,16 +447,16 @@ void SandboxApplication::ResetLightingData()
 
 	cube_surface_data_array = std::vector< Engine::Lighting::SurfaceData >( CUBE_COUNT, 
 	{
+		.shininess         = 32.0f,
 		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1,
-		.shininess         = 32.0f
+		.specular_map_slot = 1
 	} );
 
 	ground_quad_surface_data = front_wall_quad_surface_data =
 	{
+		.shininess         = 32.0f,
 		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1,
-		.shininess         = 32.0f
+		.specular_map_slot = 1
 	};
 }
 
