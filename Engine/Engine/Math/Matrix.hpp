@@ -235,7 +235,7 @@ namespace Engine::Math
 			return reinterpret_cast< Vector< Type, VectorSize >& >( *( data[ row_index ] + start_index_inRow ) );
 		}
 
-		/* Obligatory copy is returned as the data is laid out such that rows are contigous, not columns.. */
+		/* Obligatory copy is returned as the data is laid out such that rows are contigous, not columns. */
 		template< std::size_t VectorSize >
 		constexpr Vector< Type, VectorSize > GetColumn( const unsigned int column_index = 0, const unsigned int start_index_inColumn = 0 ) const requires( VectorSize <= RowSize )
 		{

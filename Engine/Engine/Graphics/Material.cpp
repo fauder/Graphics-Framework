@@ -1,5 +1,6 @@
 // Engine Includes.
 #include "Material.hpp"
+#include "UniformBufferManager.h"
 
 namespace Engine
 {
@@ -7,7 +8,9 @@ namespace Engine
 		:
 		name( "<unnamed>" ),
 		shader( nullptr ),
-		uniform_info_map( nullptr )
+		uniform_info_map( nullptr ),
+		uniform_buffer_info_map( nullptr ),
+		uniform_blob_offset_of_uniform_buffers( 0 )
 	{
 	}
 
@@ -15,7 +18,9 @@ namespace Engine
 		:
 		name( name ),
 		shader( nullptr ),
-		uniform_info_map( nullptr )
+		uniform_info_map( nullptr ),
+		uniform_buffer_info_map( nullptr ),
+		uniform_blob_offset_of_uniform_buffers( 0 )
 	{
 	}
 
@@ -24,9 +29,13 @@ namespace Engine
 		name( name ),
 		shader( shader ),
 		uniform_blob( shader->GetTotalUniformSize(), std::byte{ 0 } ),
-		uniform_info_map( &shader->GetUniformInformations() )
+		uniform_blob_offset_of_uniform_buffers( shader->GetTotalUniformSize_DefaultBlockOnly() ),
+		uniform_info_map( &shader->GetUniformInfoMap() ),
+		uniform_buffer_info_map( &shader->GetUniformBufferInfoMap() )
 	{
 		ASSERT_DEBUG_ONLY( HasShaderAssigned() && "Parameter 'shader' passed to Material::Material( const std::string& name, Shader* const shader ) is nullptr!" );
+
+		PopulateAndSetupUniformBuffersMap();
 	}
 
 	Material::~Material()
@@ -39,6 +48,19 @@ namespace Engine
 		return shader;
 	}
 
+	void Material::SetShader( Shader* const shader )
+	{
+		this->shader = shader;
+
+		uniform_blob                   = std::vector< std::byte >( shader->GetTotalUniformSize() );
+		uniform_blob_offset_of_uniform_buffers = shader->GetTotalUniformSize_DefaultBlockOnly();
+
+		uniform_info_map        = ( &shader->GetUniformInfoMap() );
+		uniform_buffer_info_map = ( &shader->GetUniformBufferInfoMap() );
+
+		PopulateAndSetupUniformBuffersMap();
+	}
+
 	void* Material::GetUniformPointer( std::size_t offset )
 	{
 		return GetValuePointerFromBlob( offset );
@@ -49,11 +71,63 @@ namespace Engine
 		return GetValuePointerFromBlob( offset );
 	}
 
-	void Material::SetShader( Shader* const shader )
+	void* Material::GetUniformBufferPointer( std::size_t offset )
 	{
-		this->shader     = shader;
-		uniform_info_map = ( &shader->GetUniformInformations() );
-		uniform_blob     = std::vector< std::byte >( shader->GetTotalUniformSize() );
+		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
+	}
+
+	const void* Material::GetUniformBufferPointer( std::size_t offset ) const
+	{
+		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
+	}
+
+/*
+ *
+ *	PRIVATE API:
+ *
+ */
+
+	void Material::PopulateAndSetupUniformBuffersMap()
+	{
+		for( auto& [ uniform_buffer_name, uniform_buffer_info ] : *uniform_buffer_info_map )
+		{
+			/* .first gets the resulting iterator. Calling ->second on it gets the underlying Uniform Buffer object. */
+
+			if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
+			{
+				auto& buffer = uniform_buffer_map_regular.emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+				UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
+			}
+			else if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
+			{
+				auto& created_buffer = uniform_buffer_map_instance.emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+				UniformBufferManager::ConnectBufferToBlock( created_buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
+			}
+		}
+	}
+
+	const Uniform::BufferInformation& Material::GetUniformBufferInformation( const std::string& uniform_buffer_name ) const
+	{
+		try
+		{
+			return uniform_buffer_info_map->at( uniform_buffer_name );
+		}
+		catch( const std::exception& )
+		{
+			throw std::runtime_error( R"(ERROR::MATERIAL::GetUniformBufferInformation(): uniform buffer ")" + std::string( uniform_buffer_name ) + R"(" does not exist!)" );
+		}
+	}
+
+	const Uniform::Information& Material::GetUniformInformation( const std::string& uniform_name ) const
+	{
+		try
+		{
+			return uniform_info_map->at( uniform_name );
+		}
+		catch( const std::exception& )
+		{
+			throw std::runtime_error( R"(ERROR::MATERIAL::GetUniformInformation(): uniform ")" + std::string( uniform_name ) + R"(" does not exist!)" );
+		}
 	}
 
 	void Material::CopyValueToBlob( const std::byte* value, const std::size_t offset, const std::size_t size )
@@ -71,25 +145,42 @@ namespace Engine
 		return uniform_blob.data() + offset;
 	}
 
-	/* Uploads the value in the internal memory blob to GPU. */
-	void Material::UploadUniform( const char* uniform_name )
+	void Material::UploadUniform( const Uniform::Information& uniform_info )
 	{
-		const auto& uniform_info = GetUniformInformation( uniform_name );
-
-		/*if( uniform_info.IsUserDefinedStruct() )
-		{
-			for( const auto& [ member_uniform_name, member_uniform_info ] : uniform_info.members )
-				shader->SetUniform( *member_uniform_info, GetValuePointerFromBlob( member_uniform_info->original_offset ) );
-		}
-		else*/
-			shader->SetUniform( uniform_info, GetValuePointerFromBlob( uniform_info.original_offset == -1 ? uniform_info.offset : uniform_info.original_offset ) );
+		shader->SetUniform( uniform_info, GetUniformPointer( uniform_info.offset ) );
 	}
 
-	/* Uploads the values in the internal memory blob to GPU. */
-	void Material::UploadAllUniforms()
+	void Material::UploadUniformBuffer( const Uniform::BufferInformation& uniform_buffer_info, const UniformBuffer& uniform_buffer_to_update )
 	{
-		for( const auto& [ uniform_info_name, uniform_info ] : *uniform_info_map )
-			if( not uniform_info.IsUserDefinedStruct() ) // Skip structs to prevent duplicate processing of members. Can not upload the whole struct at once anyways.
-				UploadUniform( uniform_info_name.c_str() );
+		uniform_buffer_to_update.Update( GetUniformBufferPointer( uniform_buffer_info.offset ) );
+	}
+
+	void Material::UploadUniformBuffer_Partial( const Uniform::BufferInformation& uniform_buffer_info, const UniformBuffer& uniform_buffer_to_update,
+												const std::size_t offset, const std::size_t size )
+	{
+		uniform_buffer_to_update.Update_Partial( std::span( ( std::byte* )GetUniformBufferPointer( uniform_buffer_info.offset ), size ), offset );
+	}
+
+	void Material::UploadUniforms()
+	{
+		for( const auto& [ uniform_name, uniform_info ] : *uniform_info_map )
+			if( not uniform_info.is_buffer_member )
+				UploadUniform( uniform_info );
+
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : *uniform_buffer_info_map )
+		{
+			if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
+				UploadUniformBuffer( uniform_buffer_info, uniform_buffer_map_regular[ uniform_buffer_name ] );
+			else if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
+				UploadUniformBuffer( uniform_buffer_info, uniform_buffer_map_instance[ uniform_buffer_name ] );
+		}
+
+		// TODO: Implement partial updates for Regular & Instance uniforms.
+		// TODO: This means there needs to be SetPartial()< Type > (hopefully with a better name) function.
+		/* Idea: 
+		 * We somehow have to keep track of which sub-blob areas are dirty.
+		 * Material may check if there are any dirty flags set for a given uniform buffer's sub-blob inside the main blob.
+		 * If there are any dirty flags set, we do a partial update only for the sub-blobs with dirty flags set and skip the "clean" sub-blobs.
+		 * If there aren't any dirty flags set, we do a full update on the whole buffer blob. */
 	}
 }

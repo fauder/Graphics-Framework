@@ -8,6 +8,7 @@
 #include "Core/Utility.hpp"
 #include "Shader.hpp"
 #include "ShaderTypeInformation.h"
+#include "UniformBufferManager.h"
 
 // std Includes.
 #include <fstream>
@@ -77,10 +78,15 @@ namespace Engine
 			QueryUniformData_In_DefaultBlock( uniform_info_map );
 			QueryUniformData_In_UniformBlocks( uniform_info_map );
 			QueryUniformBufferData( uniform_buffer_info_map );
+
 			/*ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *vertex_shader_source	) );
 			ParseUniformData_StructMemberCPUOrders( ShaderSource_CommentsStripped( *fragment_shader_source	) );*/
 
-			uniform_book_keeping_info.total_size = CalculateTotalUniformSize();
+			CalculateTotalUniformSizes();
+			EnumerateUniformBufferCategories();
+
+			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+				UniformBufferManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info.category );
 		}
 
 		return link_result;
@@ -91,44 +97,50 @@ namespace Engine
 		GLCALL( glUseProgram( program_id ) );
 	}
 
-	void Shader::SetUniform( const Uniform::Information_Old& uniform_info, const void* value_pointer )
+	void Shader::SetUniform( const Uniform::Information& uniform_info, const void* value_pointer )
 	{
 		switch( uniform_info.type )
 		{
 			/* Scalars & vectors: */
-			case GL_FLOAT				: SetUniform( uniform_info.location, *reinterpret_cast< const float*		>( value_pointer ) ); return;
-			case GL_FLOAT_VEC2			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector2*		>( value_pointer ) ); return;
-			case GL_FLOAT_VEC3			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector3*		>( value_pointer ) ); return;
-			case GL_FLOAT_VEC4			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector4*		>( value_pointer ) ); return;
-			//case GL_DOUBLE				: SetUniform( uniform_info.location, *reinterpret_cast< const double*		>( value_pointer ) ); return;
-			case GL_INT					: SetUniform( uniform_info.location, *reinterpret_cast< const int*			>( value_pointer ) ); return;
-			case GL_INT_VEC2			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector2I*		>( value_pointer ) ); return;
-			case GL_INT_VEC3			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector3I*		>( value_pointer ) ); return;
-			case GL_INT_VEC4			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector4I*		>( value_pointer ) ); return;
-			case GL_UNSIGNED_INT		: SetUniform( uniform_info.location, *reinterpret_cast< const unsigned int*	>( value_pointer ) ); return;
-			case GL_UNSIGNED_INT_VEC2	: SetUniform( uniform_info.location, *reinterpret_cast< const Vector2U*		>( value_pointer ) ); return;
-			case GL_UNSIGNED_INT_VEC3	: SetUniform( uniform_info.location, *reinterpret_cast< const Vector3U*		>( value_pointer ) ); return;
-			case GL_UNSIGNED_INT_VEC4	: SetUniform( uniform_info.location, *reinterpret_cast< const Vector4U*		>( value_pointer ) ); return;
-			case GL_BOOL				: SetUniform( uniform_info.location, *reinterpret_cast< const bool*			>( value_pointer ) ); return;
-			case GL_BOOL_VEC2			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector2B*		>( value_pointer ) ); return;
-			case GL_BOOL_VEC3			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector3B*		>( value_pointer ) ); return;
-			case GL_BOOL_VEC4			: SetUniform( uniform_info.location, *reinterpret_cast< const Vector4B*		>( value_pointer ) ); return;
-			case GL_FLOAT_MAT2 			: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix2x2*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT3 			: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix3x3*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT4 			: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix4x4*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT2x3 		: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix2x3*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT2x4 		: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix2x4*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT3x2 		: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix3x2*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT3x4 		: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix3x4*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT4x2 		: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix4x2*	>( value_pointer ) ); return;
-			case GL_FLOAT_MAT4x3 		: SetUniform( uniform_info.location, *reinterpret_cast< const Matrix4x3*	>( value_pointer ) ); return;
-			case GL_SAMPLER_1D 			: SetUniform( uniform_info.location, *reinterpret_cast< const int*			>( value_pointer ) ); return;
-			case GL_SAMPLER_2D 			: SetUniform( uniform_info.location, *reinterpret_cast< const int*			>( value_pointer ) ); return;
-			case GL_SAMPLER_3D 			: SetUniform( uniform_info.location, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_FLOAT				: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const float*			>( value_pointer ) ); return;
+			case GL_FLOAT_VEC2			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2*		>( value_pointer ) ); return;
+			case GL_FLOAT_VEC3			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3*		>( value_pointer ) ); return;
+			case GL_FLOAT_VEC4			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4*		>( value_pointer ) ); return;
+			//case GL_DOUBLE				: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const double*		>( value_pointer ) ); return;
+			case GL_INT					: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_INT_VEC2			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2I*		>( value_pointer ) ); return;
+			case GL_INT_VEC3			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3I*		>( value_pointer ) ); return;
+			case GL_INT_VEC4			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4I*		>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const unsigned int*	>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT_VEC2	: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2U*		>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT_VEC3	: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3U*		>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT_VEC4	: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4U*		>( value_pointer ) ); return;
+			case GL_BOOL				: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const bool*			>( value_pointer ) ); return;
+			case GL_BOOL_VEC2			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2B*		>( value_pointer ) ); return;
+			case GL_BOOL_VEC3			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3B*		>( value_pointer ) ); return;
+			case GL_BOOL_VEC4			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4B*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT2 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x2*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT3 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x3*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT4 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x4*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT2x3 		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x3*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT2x4 		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x4*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT3x2 		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x2*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT3x4 		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x4*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT4x2 		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x2*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT4x3 		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x3*		>( value_pointer ) ); return;
+			case GL_SAMPLER_1D 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_SAMPLER_2D 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_SAMPLER_3D 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
 		}
 
 		throw std::runtime_error( "ERROR::SHADER::SetUniform( uniform_info, value_pointer ) called for an unknown GL type!" );
 	}
+
+/*
+ *
+ *	PRIVATE API:
+ *
+ */
 
 	std::optional< std::string > Shader::ParseShaderFromFile( const char* file_path, const ShaderType shader_type )
 	{
@@ -160,7 +172,8 @@ namespace Engine
 
 	bool Shader::LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id )
 	{
-		program_id = glCreateProgram();
+		GLCALL( program_id = glCreateProgram() );
+
 		GLCALL( glAttachShader( program_id, vertex_shader_id ) );
 		GLCALL( glAttachShader( program_id, fragment_shader_id ) );
 		GLCALL( glLinkProgram( program_id ) );
@@ -169,7 +182,7 @@ namespace Engine
 		GLCALL( glGetProgramiv( program_id, GL_LINK_STATUS, &success ) );
 		if( !success )
 		{
-			LogErrors_Linking( program_id );
+			LogErrors_Linking();
 			return false;
 		}
 
@@ -233,9 +246,7 @@ namespace Engine
 
 			const int size = GetSizeOfType( type );
 
-			GLClearError();
-			const auto location = glGetUniformLocation( program_id, uniform_book_keeping_info.name_holder.c_str() );
-			ASSERT( GLLogCall( "glGetUniformLocation", __FILE__, __LINE__ ) );
+			GLCALL( const auto location = glGetUniformLocation( program_id, uniform_book_keeping_info.name_holder.c_str() ) );
 
 			const bool is_buffer_member = location == -1;
 
@@ -260,9 +271,9 @@ namespace Engine
 
 		/* Size below is commented out because array uniforms are not implemented yetand size here refers to array size.It is 1 for non - arrays. */
 
-		std::vector< int > /*corresponding_array_sizes( corresponding_uniform_indices.size() ),*/ correspoding_offsets( corresponding_uniform_indices.size() ), corresponding_types( corresponding_uniform_indices.size() );
-		//glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_SIZE,		corresponding_array_sizes.data() );
-		glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET,	correspoding_offsets.data() );
+		std::vector< int > /*corresponding_array_sizes( corresponding_uniform_indices.size() ),*/ correspoding_offsets( corresponding_uniform_indices.size() );
+		//GLCALL( glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_SIZE,		corresponding_array_sizes.data()	) );
+		GLCALL( glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET,	correspoding_offsets.data()			) );
 
 		for( int index = 0; index < corresponding_uniform_indices.size(); index++ )
 		{
@@ -271,7 +282,7 @@ namespace Engine
 			const auto offset        = correspoding_offsets[ index ];
 
 			int length = 0;
-			glGetActiveUniformName( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() );
+			GLCALL( glGetActiveUniformName( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() ) );
 
 			const auto& uniform_name = uniform_book_keeping_info.name_holder.c_str();
 
@@ -305,11 +316,14 @@ namespace Engine
 			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size			) );
 			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_BINDING,	&binding_point	) );
 
+			const auto category = Uniform::DetermineBufferCategory( name );
+
 			auto& uniform_buffer_information = uniform_buffer_information_map[ name.c_str() ] = 
 			{
 				.binding_point = binding_point,
 				.size          = size,
 				.offset        = offset,
+				.category	   = category
 			};
 
 			/* Add members and set their block indices. */
@@ -323,36 +337,37 @@ namespace Engine
 		}
 	}
 
+#pragma region Unnecessary Old Stuff
 	/* Expects: To be called after the shader whose source is passed is compiled & linked successfully. */
-	std::string Shader::ShaderSource_CommentsStripped( const std::string& shader_source )
-	{
-		/* This function is called AFTER the shader is compiled & linked. So it is known for a fact that the block comments have matching pairs of begin/end symbols. */
+	//std::string Shader::ShaderSource_CommentsStripped( const std::string& shader_source )
+	//{
+	//	/* This function is called AFTER the shader is compiled & linked. So it is known for a fact that the block comments have matching pairs of begin/end symbols. */
 
-		auto Strip = [ &shader_source ]( const std::string& source_string, const std::string& comment_begin_token, const std::string& comment_end_token,
-										 const bool do_not_erase_new_line = false ) -> std::string
-		{
-			std::string stripped_shader_source;
-			std::size_t current_pos = source_string.find( comment_begin_token, 0 ), last_begin_pos = 0;
+	//	auto Strip = [ &shader_source ]( const std::string& source_string, const std::string& comment_begin_token, const std::string& comment_end_token,
+	//									 const bool do_not_erase_new_line = false ) -> std::string
+	//	{
+	//		std::string stripped_shader_source;
+	//		std::size_t current_pos = source_string.find( comment_begin_token, 0 ), last_begin_pos = 0;
 
-			while( current_pos != std::string::npos )
-			{
-				const std::size_t comment_start_pos = current_pos;
-				const std::size_t comment_end_pos   = source_string.find( comment_end_token, current_pos + comment_begin_token.size() );
+	//		while( current_pos != std::string::npos )
+	//		{
+	//			const std::size_t comment_start_pos = current_pos;
+	//			const std::size_t comment_end_pos   = source_string.find( comment_end_token, current_pos + comment_begin_token.size() );
 
-				stripped_shader_source += source_string.substr( last_begin_pos, comment_start_pos - last_begin_pos );
-				last_begin_pos = comment_end_pos + comment_end_token.size() - ( int )do_not_erase_new_line;
+	//			stripped_shader_source += source_string.substr( last_begin_pos, comment_start_pos - last_begin_pos );
+	//			last_begin_pos = comment_end_pos + comment_end_token.size() - ( int )do_not_erase_new_line;
 
-				current_pos = source_string.find( comment_begin_token, last_begin_pos );
-			}
+	//			current_pos = source_string.find( comment_begin_token, last_begin_pos );
+	//		}
 
-			/* Add the remaining part of the source string.*/
-			stripped_shader_source += source_string.substr( last_begin_pos );
+	//		/* Add the remaining part of the source string.*/
+	//		stripped_shader_source += source_string.substr( last_begin_pos );
 
-			return stripped_shader_source;
-		};
+	//		return stripped_shader_source;
+	//	};
 
-		return Strip( Strip( shader_source, "/*", "*/" ), "//", "\n", true );
-	}
+	//	return Strip( Strip( shader_source, "/*", "*/" ), "//", "\n", true );
+	//}
 
 	/*
 	 * Since OpenGL arbitrarily relocates uniform members inside structs, 
@@ -360,160 +375,196 @@ namespace Engine
 	 * This makes it possible to write a generic function that can handle ALL uniform structs, instead of having to create a SetUniform< CustomStructType >() for each new struct.
 	 *
 	 * Expects: To be called after the shader whose source is passed is compiled & linked successfully. */
-	void Shader::ParseUniformData_StructMemberCPUOrders( const std::string& shader_source )
+	//void Shader::ParseUniformData_StructMemberCPUOrders( const std::string& shader_source )
+	//{
+	//	for( auto& [ uniform_name, uniform_info ] : uniform_info_map_legacy )
+	//	{
+	//		if( uniform_info.IsUserDefinedStruct() && !uniform_info.HasOriginalOrdersDetermined() )
+	//		{
+	//			std::string uniform_name_without_square_brackets;
+	//			const auto square_bracket_pos = uniform_name.find( '[' );
+
+	//			if( const auto uniform_struct_name_pos = shader_source.find( uniform_name.substr( 0, square_bracket_pos ) );
+	//				uniform_struct_name_pos != std::string::npos )
+	//			{
+	//				const auto uniform_struct_type_name( Utility::String::FindPreviousWord( shader_source, uniform_struct_name_pos ) );
+
+	//				const auto struct_type_name_pos = shader_source.find( uniform_struct_type_name );
+
+	//				if( const auto struct_keyword_pos = shader_source.rfind( "struct", struct_type_name_pos );
+	//					struct_keyword_pos != std::string::npos )
+	//				{
+	//					if( shader_source.find_first_not_of( " \t\n", struct_keyword_pos + 6 ) == struct_type_name_pos )
+	//					{
+	//						if( const auto open_curly_brace_pos = shader_source.find( '{', struct_type_name_pos ), close_curly_brace_pos = shader_source.find( '}', struct_type_name_pos );
+	//							open_curly_brace_pos != std::string::npos && close_curly_brace_pos != std::string::npos && close_curly_brace_pos > open_curly_brace_pos )
+	//						{
+	//							const std::string_view struct_definition_view( shader_source.begin() + open_curly_brace_pos + 1, shader_source.begin() + close_curly_brace_pos );
+
+	//							int definition_order = uniform_info.location;
+
+	//							std::size_t line_begin = 0;
+	//							std::size_t semi_colon_pos = struct_definition_view.find( ';' );
+
+	//							while( semi_colon_pos != std::string_view::npos ) // This loops over lines basically.
+	//							{
+	//								/* DO NOT include the ';' AND/OR any whitespace before it in the line view. */
+	//								const std::string_view line_view( 
+	//									Utility::String::RemoveTrailingWhitespace( std::string_view( struct_definition_view.begin() + line_begin,
+	//																								 struct_definition_view.begin() + semi_colon_pos ) ) );
+
+	//								/* Case 1: There are NO commas, i.e., the line only contains a single uniform member definition. */
+	//								if( std::size_t comma_pos = line_view.find( ',' );
+	//									comma_pos == std::string_view::npos )
+	//								{
+	//									/* No need to check if find() was successfull;
+	//									 * This shader source compiles successfully, so there HAS TO BE at least one whitespace (between type and variable) in this line. */
+	//									const auto last_preceding_whitespace_position = line_view.find_last_of( " \t" );
+	//										
+	//									const std::string uniform_member_name( line_view.begin() + last_preceding_whitespace_position + 1, line_view.end() );
+
+	//									uniform_info.members[ uniform_name + "." + uniform_member_name ]->original_order_in_struct = definition_order++;
+	//								}
+	//								/* Case 2: There ARE commas, i.e., the line contains multiple uniform member definitions. */
+	//								else
+	//								{
+	//									std::vector< Uniform::Information_Old* > uniform_infos_found_in_reverse_order;
+	//									/* No need to check if find() was successfull;
+	//									 * This shader source compiles successfully, so there HAS TO BE at least one whitespace (between type and variable) in this line. */
+	//									const auto last_preceding_whitespace_position = line_view.find_last_of( " \t" );
+
+	//									const std::string uniform_member_name( line_view.begin() + last_preceding_whitespace_position + 1, line_view.end() );
+
+	//									uniform_infos_found_in_reverse_order.push_back( uniform_info.members[ uniform_name + "." + uniform_member_name ] );
+
+	//									comma_pos = line_view.rfind( ',', last_preceding_whitespace_position - 1 );
+	//										
+	//									while( comma_pos != std::string_view::npos )
+	//									{
+	//										const std::string_view remaining_line_view( Utility::String::RemoveTrailingWhitespace( std::string_view( line_view.begin(),
+	//																																				 line_view.begin() + comma_pos ) ) );
+	//										const auto uniform_name_begin_position = remaining_line_view.find_last_of( " \t," ) + 1;
+
+	//										const std::string uniform_member_name( remaining_line_view.begin() + uniform_name_begin_position, remaining_line_view.end() );
+
+	//										uniform_infos_found_in_reverse_order.push_back( uniform_info.members[ uniform_name + "." + uniform_member_name ] );
+	//										
+	//										comma_pos = remaining_line_view.rfind( ',', uniform_name_begin_position - 1 );
+	//									}
+
+	//									std::reverse( uniform_infos_found_in_reverse_order.begin(), uniform_infos_found_in_reverse_order.end() );
+
+	//									for( auto& uniform_info_found : uniform_infos_found_in_reverse_order /*** Now in correct order ***/ )
+	//										uniform_info_found->original_order_in_struct = definition_order++;
+	//								}
+
+	//								/* Check whether there is only 1 non-processed uniform member left. */
+	//								if( ( definition_order - uniform_info.location ) == uniform_info.members.size() - 1 )
+	//								{
+	//									// There is no need to continue parsing the source code; We can simply process the last remaining member uniform and assign it the next order.
+	//									for( auto& [ member_uniform_name, member_uniform_info ] : uniform_info.members )
+	//										if( member_uniform_info->original_order_in_struct == -1 )
+	//											member_uniform_info->original_order_in_struct = definition_order; // No need to increment either; This is the last member of the struct.
+	//									break;
+	//								}
+
+	//								line_begin     = semi_colon_pos + 1;
+	//								semi_colon_pos = struct_definition_view.find_first_of( ";", semi_colon_pos + 1 );
+	//							}
+	//						}
+	//					}
+	//				}
+	//			}
+
+	//			/* Now that the original orders are determined, the offsets based on these original orders can also be calculated. */
+	//			std::map< int /* order */, Uniform::Information_Old* > members_sorted_by_original_order;
+	//			
+	//			for( auto& [ dont_care_about_name, uniform_member_info ] : uniform_info.members )
+	//				members_sorted_by_original_order[ uniform_member_info->original_order_in_struct ] = uniform_member_info;
+
+	//			int offset = uniform_info.offset;
+	//			for( auto& [ original_order, uniform_member_info ] : members_sorted_by_original_order )
+	//			{
+	//				uniform_member_info->original_offset = offset;
+
+	//				offset += uniform_member_info->size;
+	//			}
+	//		}
+	//	}
+	//}
+#pragma endregion
+
+	void Shader::CalculateTotalUniformSizes()
 	{
-		for( auto& [ uniform_name, uniform_info ] : uniform_info_map_legacy )
-		{
-			if( uniform_info.IsUserDefinedStruct() && !uniform_info.HasOriginalOrdersDetermined() )
-			{
-				std::string uniform_name_without_square_brackets;
-				const auto square_bracket_pos = uniform_name.find( '[' );
-
-				if( const auto uniform_struct_name_pos = shader_source.find( uniform_name.substr( 0, square_bracket_pos ) );
-					uniform_struct_name_pos != std::string::npos )
-				{
-					const auto uniform_struct_type_name( Utility::String::FindPreviousWord( shader_source, uniform_struct_name_pos ) );
-
-					const auto struct_type_name_pos = shader_source.find( uniform_struct_type_name );
-
-					if( const auto struct_keyword_pos = shader_source.rfind( "struct", struct_type_name_pos );
-						struct_keyword_pos != std::string::npos )
-					{
-						if( shader_source.find_first_not_of( " \t\n", struct_keyword_pos + 6 ) == struct_type_name_pos )
-						{
-							if( const auto open_curly_brace_pos = shader_source.find( '{', struct_type_name_pos ), close_curly_brace_pos = shader_source.find( '}', struct_type_name_pos );
-								open_curly_brace_pos != std::string::npos && close_curly_brace_pos != std::string::npos && close_curly_brace_pos > open_curly_brace_pos )
-							{
-								const std::string_view struct_definition_view( shader_source.begin() + open_curly_brace_pos + 1, shader_source.begin() + close_curly_brace_pos );
-
-								int definition_order = uniform_info.location;
-
-								std::size_t line_begin = 0;
-								std::size_t semi_colon_pos = struct_definition_view.find( ';' );
-
-								while( semi_colon_pos != std::string_view::npos ) // This loops over lines basically.
-								{
-									/* DO NOT include the ';' AND/OR any whitespace before it in the line view. */
-									const std::string_view line_view( 
-										Utility::String::RemoveTrailingWhitespace( std::string_view( struct_definition_view.begin() + line_begin,
-																									 struct_definition_view.begin() + semi_colon_pos ) ) );
-
-									/* Case 1: There are NO commas, i.e., the line only contains a single uniform member definition. */
-									if( std::size_t comma_pos = line_view.find( ',' );
-										comma_pos == std::string_view::npos )
-									{
-										/* No need to check if find() was successfull;
-										 * This shader source compiles successfully, so there HAS TO BE at least one whitespace (between type and variable) in this line. */
-										const auto last_preceding_whitespace_position = line_view.find_last_of( " \t" );
-											
-										const std::string uniform_member_name( line_view.begin() + last_preceding_whitespace_position + 1, line_view.end() );
-
-										uniform_info.members[ uniform_name + "." + uniform_member_name ]->original_order_in_struct = definition_order++;
-									}
-									/* Case 2: There ARE commas, i.e., the line contains multiple uniform member definitions. */
-									else
-									{
-										std::vector< Uniform::Information_Old* > uniform_infos_found_in_reverse_order;
-										/* No need to check if find() was successfull;
-										 * This shader source compiles successfully, so there HAS TO BE at least one whitespace (between type and variable) in this line. */
-										const auto last_preceding_whitespace_position = line_view.find_last_of( " \t" );
-
-										const std::string uniform_member_name( line_view.begin() + last_preceding_whitespace_position + 1, line_view.end() );
-
-										uniform_infos_found_in_reverse_order.push_back( uniform_info.members[ uniform_name + "." + uniform_member_name ] );
-
-										comma_pos = line_view.rfind( ',', last_preceding_whitespace_position - 1 );
-											
-										while( comma_pos != std::string_view::npos )
-										{
-											const std::string_view remaining_line_view( Utility::String::RemoveTrailingWhitespace( std::string_view( line_view.begin(),
-																																					 line_view.begin() + comma_pos ) ) );
-											const auto uniform_name_begin_position = remaining_line_view.find_last_of( " \t," ) + 1;
-
-											const std::string uniform_member_name( remaining_line_view.begin() + uniform_name_begin_position, remaining_line_view.end() );
-
-											uniform_infos_found_in_reverse_order.push_back( uniform_info.members[ uniform_name + "." + uniform_member_name ] );
-											
-											comma_pos = remaining_line_view.rfind( ',', uniform_name_begin_position - 1 );
-										}
-
-										std::reverse( uniform_infos_found_in_reverse_order.begin(), uniform_infos_found_in_reverse_order.end() );
-
-										for( auto& uniform_info_found : uniform_infos_found_in_reverse_order /*** Now in correct order ***/ )
-											uniform_info_found->original_order_in_struct = definition_order++;
-									}
-
-									/* Check whether there is only 1 non-processed uniform member left. */
-									if( ( definition_order - uniform_info.location ) == uniform_info.members.size() - 1 )
-									{
-										// There is no need to continue parsing the source code; We can simply process the last remaining member uniform and assign it the next order.
-										for( auto& [ member_uniform_name, member_uniform_info ] : uniform_info.members )
-											if( member_uniform_info->original_order_in_struct == -1 )
-												member_uniform_info->original_order_in_struct = definition_order; // No need to increment either; This is the last member of the struct.
-										break;
-									}
-
-									line_begin     = semi_colon_pos + 1;
-									semi_colon_pos = struct_definition_view.find_first_of( ";", semi_colon_pos + 1 );
-								}
-							}
-						}
-					}
-				}
-
-				/* Now that the original orders are determined, the offsets based on these original orders can also be calculated. */
-				std::map< int /* order */, Uniform::Information_Old* > members_sorted_by_original_order;
-				
-				for( auto& [ dont_care_about_name, uniform_member_info ] : uniform_info.members )
-					members_sorted_by_original_order[ uniform_member_info->original_order_in_struct ] = uniform_member_info;
-
-				int offset = uniform_info.offset;
-				for( auto& [ original_order, uniform_member_info ] : members_sorted_by_original_order )
-				{
-					uniform_member_info->original_offset = offset;
-
-					offset += uniform_member_info->size;
-				}
-			}
-		}
-	}
-
-	std::size_t Shader::CalculateTotalUniformSize() const
-	{
-		std::size_t total = 0;
+		uniform_book_keeping_info.total_size_default_block = 0, uniform_book_keeping_info.total_size_uniform_blocks = 0;
 
 		/* Sum of default block (i.e., not in any explicit Uniform Buffer) uniforms: */
 		for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
 			if( not uniform_info.is_buffer_member ) // Skip buffer members, as their layout (std140) means their total buffer size is calculated differently.
-				total += uniform_info.size;
+				uniform_book_keeping_info.total_size_default_block += uniform_info.size;
 
-		/* Now add buffer block sizes(calculated before): */
+		/* Now add buffer block sizes (calculated before): */
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-			total += uniform_buffer_info.size;
+			uniform_book_keeping_info.total_size_uniform_blocks += uniform_buffer_info.size;
 
-		return total;
+		uniform_book_keeping_info.total_size = uniform_book_keeping_info.total_size_default_block + uniform_book_keeping_info.total_size_uniform_blocks;
 	}
 
-	const Uniform::Information_Old& Shader::GetUniformInformation( const std::string& uniform_name )
+	void Shader::EnumerateUniformBufferCategories()
+	{
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+		{
+			switch( uniform_buffer_info.category )
+			{
+				case Uniform::BufferCategory::Instance:
+					uniform_book_keeping_info.instance_block_count++; break;
+				case Uniform::BufferCategory::Global:
+					uniform_book_keeping_info.global_block_count++; break;
+				case Uniform::BufferCategory::Intrinsic:
+					uniform_book_keeping_info.intrinsic_block_count++; break;
+				// case Uniform::BufferCategory::Regular:
+				default:
+					uniform_book_keeping_info.regular_block_count++; break;
+			}
+		}
+	}
+
+	const Uniform::Information& Shader::GetUniformInformation( const std::string& uniform_name )
 	{
 	#ifdef _DEBUG
 		try
 		{
-			return uniform_info_map_legacy.at( uniform_name );
+			return uniform_info_map.at( uniform_name );
 		}
 		catch( const std::exception& )
 		{
-			throw std::runtime_error( R"(ERROR::SHADER::UNIFORM::")" + std::string( uniform_name ) + R"("::DOES_NOT_EXIST)" );
+			throw std::runtime_error( R"(ERROR::SHADER::GetUniformInformation(): uniform ")" + std::string( uniform_name ) + R"(" does not exist!)" );
 		}
 	#else
 		return uniform_info_map[ uniform_name ];
 	#endif // DEBUG
 	}
 
+	const Uniform::BufferInformation& Shader::GetUniformBufferInformation( const std::string& uniform_name )
+	{
+	#ifdef _DEBUG
+		try
+		{
+			return uniform_buffer_info_map.at( uniform_name );
+		}
+		catch( const std::exception& )
+		{
+			throw std::runtime_error( R"(ERROR::SHADER::GetUniformBufferInformation(): uniform ")" + std::string( uniform_name ) + R"(" does not exist!)" );
+		}
+	#else
+		return uniform_buffer_info_map[ uniform_name ];
+	#endif // DEBUG
+	}
+
 	void Shader::LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const
 	{
 		char info_log[ 512 ];
-		glGetShaderInfoLog( shader_id, 512, NULL, info_log );
+		GLCALL( glGetShaderInfoLog( shader_id, 512, NULL, info_log ) );
 
 		const std::string complete_error_string( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::COMPILE:\nShader name: " + name + FormatErrorLog( info_log ) );
 		std::cerr << complete_error_string;
@@ -524,10 +575,10 @@ namespace Engine
 		throw std::logic_error( complete_error_string );
 	}
 
-	void Shader::LogErrors_Linking( const int program_id ) const
+	void Shader::LogErrors_Linking() const
 	{
 		char info_log[ 512 ];
-		glGetProgramInfoLog( program_id, 512, NULL, info_log );
+		GLCALL( glGetProgramInfoLog( program_id, 512, NULL, info_log ) );
 
 		const std::string complete_error_string( "ERROR::SHADER::PROGRAM::LINK:\nShader name: " + name + FormatErrorLog( info_log ) );
 		std::cerr << complete_error_string;

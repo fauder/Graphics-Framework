@@ -13,6 +13,8 @@
 
 using namespace Engine::Math::Literals;
 
+// TODO: Get debug callback working ASAP.
+
 Engine::Application* Engine::CreateApplication()
 {
     return new SandboxApplication();
@@ -23,7 +25,7 @@ SandboxApplication::SandboxApplication()
 	Engine::Application(),
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
-	cube_shader( nullptr ),
+	cube_shader(nullptr),
 	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
@@ -101,6 +103,10 @@ void SandboxApplication::Initialize()
 
 	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
 	renderer.AddDrawable( &ground_quad_drawable );
+
+	/*düzeldi, proj ve view ubo da güzelce gidiyor gpuya.
+	þimdi þu saçmalýk var: üstteki drawable'larý açýnca sapýtýyor.*/
+
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable );
 
@@ -108,6 +114,8 @@ void SandboxApplication::Initialize()
 	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
 
 	GLCALL( glEnable( GL_DEPTH_TEST ) );
+
+	// TODO: Move the calls above into Renderer.
 
 	Platform::MaximizeWindow();
 }
@@ -240,7 +248,7 @@ void SandboxApplication::Render()
 	{
 		ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
 
-		ground_quad_material.Set( "uniform_transform_world",		ground_quad_transform.GetFinalMatrix() );
+		ground_quad_material.Set( "uniform_transform_world", ground_quad_transform.GetFinalMatrix() );
 	}
 
 /* Front wall quad: */
@@ -249,7 +257,7 @@ void SandboxApplication::Render()
 			.SetScaling( 25.0f, 25.0f, 0.01f )
 			.SetTranslation( Vector3::Forward() * 5.0f );
 
-		front_wall_quad_material.Set( "uniform_transform_world",		front_wall_quad_transform.GetFinalMatrix() );
+		front_wall_quad_material.Set( "uniform_transform_world", front_wall_quad_transform.GetFinalMatrix() );
 	}
 
 /* Cubes: */
@@ -260,7 +268,7 @@ void SandboxApplication::Render()
 			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 
-		cube_material_array[ cube_index ].Set( "uniform_transform_world",		cube_transform_array[ cube_index ].GetFinalMatrix() );
+		cube_material_array[ cube_index ].Set( "uniform_transform_world", cube_transform_array[ cube_index ].GetFinalMatrix() );
 	}
 
 	renderer.Render( camera );
@@ -269,6 +277,12 @@ void SandboxApplication::Render()
 void SandboxApplication::DrawImGui()
 {
 	Application::DrawImGui();
+
+	ImGui::ShowDemoWindow();
+
+	static const Engine::Material test_mat = Engine::Material( "Const Material Example", &light_source_shader );
+
+	Engine::ImGuiDrawer::Draw( test_mat );
 
 	Engine::ImGuiDrawer::Draw( gouraud_shader );
 	Engine::ImGuiDrawer::Draw( phong_shader );

@@ -2,9 +2,9 @@
 
 // Engine Includes.
 #include "Graphics.h"
-#include "Graphics/Color.hpp"
-#include "Graphics/Lighting.h"
-#include "Graphics/Uniform.h"
+#include "Color.hpp"
+#include "Lighting.h"
+#include "Uniform.h"
 #include "UniformBufferTag.h"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
@@ -20,7 +20,7 @@
 
 namespace Engine
 {
-	enum ShaderType
+	enum class ShaderType
 	{
 		VERTEX,
 		FRAGMENT,
@@ -29,24 +29,24 @@ namespace Engine
 
 	constexpr const char* ShaderTypeString( const ShaderType shader_type )
 	{
-		constexpr std::array< const char*, ShaderType::_COUNT_ > shader_type_identifiers
+		constexpr std::array< const char*, ( int )ShaderType::_COUNT_ > shader_type_identifiers
 		{
 			"VERTEX",
 			"FRAGMENT"
 		};
 
-		return shader_type_identifiers[ shader_type ];
+		return shader_type_identifiers[ ( int )shader_type ];
 	}
 
 	constexpr int ShaderTypeID( const ShaderType shader_type )
 	{
-		constexpr std::array< int, ShaderType::_COUNT_ > shader_type_identifiers
+		constexpr std::array< int, ( int )ShaderType::_COUNT_ > shader_type_identifiers
 		{
 			GL_VERTEX_SHADER,
 			GL_FRAGMENT_SHADER
 		};
 
-		return shader_type_identifiers[ shader_type ];
+		return shader_type_identifiers[ ( int )shader_type ];
 	}
 
 	class Shader
@@ -64,12 +64,23 @@ namespace Engine
 
 		void Bind() const;
 
-		inline const std::string& GetName() const { return name; }
-		inline ID GetID() const { return program_id; }
+		inline const std::string&	Name()	const { return name;		}
+		inline		 ID				Id()	const { return program_id;	}
 
-		inline const std::map< std::string, Uniform::Information_Old >& GetUniformInformations() const { return uniform_info_map_legacy; }
+	/* Uniform APIs: */
+
+		inline const std::map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
+		inline const std::map< std::string, Uniform::BufferInformation >& GetUniformBufferInfoMap() const { return uniform_buffer_info_map; }
+		inline std::size_t GetTotalUniformSize_DefaultBlockOnly() const { return uniform_book_keeping_info.total_size_default_block; }
+		inline std::size_t GetTotalUniformSize_UniformBlocksOnly() const { return uniform_book_keeping_info.total_size_uniform_blocks; }
 		inline std::size_t GetTotalUniformSize() const { return uniform_book_keeping_info.total_size; }
 
+		inline bool HasIntrinsicUniformBlocks()	const { return uniform_book_keeping_info.intrinsic_block_count;	}
+		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;	}
+		inline bool HasInstanceUniformBlocks()	const { return uniform_book_keeping_info.instance_block_count;	}
+		inline bool HasRegularUniformBlocks()	const { return uniform_book_keeping_info.regular_block_count;	}
+
+#pragma region Uniform Set< Type > Functions
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );
 
@@ -228,39 +239,37 @@ namespace Engine
 				}
 			}
 		}
+#pragma endregion
 
+	/*
+	 * "Setting" Uniform Buffers is not the Shader's responsibility (nor can it do it); It's just an OpenGL Buffer Object -> UBO can Update() itself.
+	 * Whoever holds the UBO will call Update() on it.
+	 * Global   & Intrinsic Uniform Buffers are kept & updated by the Renderer.
+	 * Instance & Regular   Uniform Buffers are kept & updated by the Material.
+	 */
+
+	/* Uniform setters; By name & value: */
 		template< typename UniformType >
+			/* Prohibit Uniform Buffers: */ requires( not std::is_base_of_v< UniformBufferTag, UniformType > )
 		void SetUniform( const char* uniform_name, const UniformType& value )
 		{
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
-			if constexpr( std::is_base_of_v< UniformBufferTag, UniformType > )
-			{
-				ASSERT_DEBUG_ONLY( uniform_info.IsUserDefinedStruct() && "Non-struct uniform attempted to be set via SetUniform< uniform-struct-type >()." );
-
-				for( const auto& [ dont_care_member_uniform_name, member_uniform_info ] : uniform_info.members )
-				{
-					const int   parent_relative_offset = member_uniform_info->original_offset - uniform_info.offset;
-					const void* member_uniform_pointer = ( const void* )( ( const char* )&value + parent_relative_offset );
-
-					SetUniform( *member_uniform_info, member_uniform_pointer );
-				}
-			}
-			else
-			{
-				SetUniform( uniform_info.location, value );
-			}
+			SetUniform( uniform_info.location_or_block_index, value );
 		}
 
-		void SetUniform( const Uniform::Information_Old& uniform_info, const void* value_pointer );
+	/* Uniform setters; By info. & pointer: */
+		void SetUniform( const Uniform::Information& uniform_info, const void* value_pointer );
 
 	private:
+	/* Compilation & Linkage: */
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
-		std::string ShaderSource_CommentsStripped( const std::string& shader_source );
+		/*std::string ShaderSource_CommentsStripped( const std::string& shader_source );*/
 
+	/* Shader Introspection: */
 		void GetUniformBookKeepingInfo();
 		
 		/* Expects empty input vectors. */
@@ -269,21 +278,25 @@ namespace Engine
 		void QueryUniformData_In_DefaultBlock( std::map< std::string, Uniform::Information >& uniform_information_map );
 		void QueryUniformData_In_UniformBlocks( std::map< std::string, Uniform::Information >& uniform_information_map );
 		void QueryUniformBufferData( std::map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map );
-		void ParseUniformData_StructMemberCPUOrders( const std::string& shader_source );
-		std::size_t CalculateTotalUniformSize() const;
+		/*void ParseUniformData_StructMemberCPUOrders( const std::string& shader_source );*/
+		void CalculateTotalUniformSizes();
+		void EnumerateUniformBufferCategories();
 
-		const Uniform::Information_Old& GetUniformInformation( const std::string& uniform_name );
+		const Uniform::Information& GetUniformInformation( const std::string& uniform_name );
+		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_name );
 
+	/* Error Checking/Reporting: */
 		void LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const;
-		void LogErrors_Linking( const int program_id ) const;
+		void LogErrors_Linking() const;
 		std::string FormatErrorLog( const char* log ) const;
 
 	private:
 		ID program_id;
 		std::string name;
-		std::map< std::string, Uniform::Information_Old > uniform_info_map_legacy;
-		std::map< std::string, Uniform::Information > uniform_info_map;
-		std::map< std::string, Uniform::BufferInformation > uniform_buffer_info_map;
+
+		std::map< std::string, Uniform::Information			> uniform_info_map;
+		std::map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map;
+
 		Uniform::ActiveUniformBookKeepingInformation uniform_book_keeping_info;
 	};
 }

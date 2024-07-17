@@ -6,7 +6,7 @@ in vec2 varying_tex_coords;
 
 out vec4 out_color;
 
-#define POINT_LIGHT_COUNT 15
+#define POINT_LIGHT_COUNT 1
 
 layout ( std140 ) uniform DirectionalLightData
 {
@@ -14,13 +14,18 @@ layout ( std140 ) uniform DirectionalLightData
 	vec3 direction_view_space;
 } uniform_directional_light_data;
 
-layout ( std140 ) uniform PointLightData
+struct PointLightDataStruct
 {
 	vec3 ambient, diffuse, specular;
 	vec3 position_view_space;
 
 	float attenuation_constant, attenuation_linear, attenuation_quadratic;
-} uniform_point_light_data[ POINT_LIGHT_COUNT ];
+};
+
+layout ( std140 ) uniform PointLightData
+{
+	PointLightDataStruct point_light_data[ POINT_LIGHT_COUNT ];
+} uniform_point_light_data;
 
 layout ( std140 ) uniform SpotLightData
 {
@@ -61,34 +66,33 @@ vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_di
 
 float CalculateAttenuation( const int point_light_index, float distance )
 {
-	return 1.0f / ( uniform_point_light_data[ point_light_index ].attenuation_constant  +
-					uniform_point_light_data[ point_light_index ].attenuation_linear    * distance + 
-					uniform_point_light_data[ point_light_index ].attenuation_quadratic * distance * distance );
+	return 1.0f / ( uniform_point_light_data.point_light_data[ point_light_index ].attenuation_constant  +
+					uniform_point_light_data.point_light_data[ point_light_index ].attenuation_linear    * distance + 
+					uniform_point_light_data.point_light_data[ point_light_index ].attenuation_quadratic * distance * distance );
 }
 
 vec3 CalculateColorFromPointLight( const int point_light_index, 
 								   vec4 normal_view_space, vec4 viewing_direction_view_space,
-								   vec4 fragment_position_view_space,
 								   vec3 diffuse_sample, vec3 specular_sample )
 {
 /* Ambient term: */
-	vec3 ambient = diffuse_sample * uniform_point_light_data[ point_light_index ].ambient;
+	vec3 ambient = diffuse_sample * uniform_point_light_data.point_light_data[ point_light_index ].ambient;
 
 /* Diffuse term: */
-	vec4 to_light_view_space = normalize( vec4( uniform_point_light_data[ point_light_index ].position_view_space, 1.0 ) - varying_position_view_space );
+	vec4 to_light_view_space = normalize( vec4( uniform_point_light_data.point_light_data[ point_light_index ].position_view_space, 1.0 ) - varying_position_view_space );
 
 	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0 );
-	vec3 diffuse               = diffuse_sample * uniform_point_light_data[ point_light_index ].diffuse * diffuse_contribution;
+	vec3 diffuse               = diffuse_sample * uniform_point_light_data.point_light_data[ point_light_index ].diffuse * diffuse_contribution;
 
 /* Specular term: */
 	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
 	vec4 reflected_light_direction_view_space = reflect( -to_light_view_space, normal_view_space );
 
 	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_surface_data.shininess );
-	vec3 specular               = specular_sample * uniform_point_light_data[ point_light_index ].specular * specular_contribution;
+	vec3 specular               = specular_sample * uniform_point_light_data.point_light_data[ point_light_index ].specular * specular_contribution;
 
 /* Attenuation: */
-	float distance_view_space = distance( fragment_position_view_space.xyz, uniform_point_light_data[ point_light_index ].position_view_space );
+	float distance_view_space = distance( varying_position_view_space.xyz, uniform_point_light_data.point_light_data[ point_light_index ].position_view_space );
 	float attenuation         = CalculateAttenuation( point_light_index, distance_view_space );
 
 	ambient  *= attenuation;
@@ -142,7 +146,6 @@ void main()
 	{
 		from_point_light += CalculateColorFromPointLight( i, 
 														  normal_view_space, viewing_direction_view_space,
-														  varying_position_view_space,
 														  diffuse_sample, specular_sample );
 	}
 
@@ -150,4 +153,7 @@ void main()
 													    diffuse_sample, specular_sample );
 
 	out_color = vec4( from_directional_light + from_point_light + from_spot_light, 1.0 );
+
+	// TODO: Remove this.
+	out_color = vec4( 1.0f, 1.0f, 1.0f, 1.0f );
 }

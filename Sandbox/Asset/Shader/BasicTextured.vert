@@ -7,14 +7,14 @@ out vec2 varying_uv;
 
 uniform mat4x4 uniform_transform_world;
 
-layout ( std140 ) uniform Essential_CameraMatrices
+layout ( std140 ) uniform _Intrinsic_
 {
-    mat4x4 ESSENTIAL_TRANSFORM_VIEW;
-    mat4x4 ESSENTIAL_TRANSFORM_PROJECTION;
+    mat4x4 _INTRINSIC_TRANSFORM_VIEW;
+    mat4x4 _INTRINSIC_TRANSFORM_PROJECTION;
 };
 
 void main()
 {
-    gl_Position = vec4( position, 1.0 ) * uniform_transform_world * ESSENTIAL_TRANSFORM_VIEW * ESSENTIAL_TRANSFORM_PROJECTION;
+    gl_Position = vec4( position, 1.0 ) * uniform_transform_world * _INTRINSIC_TRANSFORM_VIEW * _INTRINSIC_TRANSFORM_PROJECTION;
     varying_uv  = uv;
 }
