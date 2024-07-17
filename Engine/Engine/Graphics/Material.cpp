@@ -35,7 +35,8 @@ namespace Engine
 	{
 		ASSERT_DEBUG_ONLY( HasShaderAssigned() && "Parameter 'shader' passed to Material::Material( const std::string& name, Shader* const shader ) is nullptr!" );
 
-		PopulateAndSetupUniformBuffersMap();
+		PopulateAndSetupUniformBufferMap();
+		PopulateTextureMap();
 	}
 
 	Material::~Material()
@@ -58,7 +59,8 @@ namespace Engine
 		uniform_info_map        = ( &shader->GetUniformInfoMap() );
 		uniform_buffer_info_map = ( &shader->GetUniformBufferInfoMap() );
 
-		PopulateAndSetupUniformBuffersMap();
+		PopulateAndSetupUniformBufferMap();
+		PopulateTextureMap();
 	}
 
 /*
@@ -67,7 +69,7 @@ namespace Engine
  *
  */
 
-	void Material::PopulateAndSetupUniformBuffersMap()
+	void Material::PopulateAndSetupUniformBufferMap()
 	{
 		for( auto& [ uniform_buffer_name, uniform_buffer_info ] : *uniform_buffer_info_map )
 		{
@@ -192,5 +194,12 @@ namespace Engine
 		 * Material may check if there are any dirty flags set for a given uniform buffer's sub-blob inside the main blob.
 		 * If there are any dirty flags set, we do a partial update only for the sub-blobs with dirty flags set and skip the "clean" sub-blobs.
 		 * If there aren't any dirty flags set, we do a full update on the whole buffer blob. */
+	}
+
+	void Material::PopulateTextureMap()
+	{
+		for( const auto& [ uniform_name, uniform_info ] : *uniform_info_map )
+			if( uniform_info.type == GL_SAMPLER_2D )
+				texture_map.emplace( uniform_name, nullptr );
 	}
 }

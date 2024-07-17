@@ -3,6 +3,7 @@
 // Engine Includes.
 #include "Shader.hpp"
 #include "UniformBuffer.h"
+#include "Texture.h"
 
 // std Includes.
 #include <cstddef> // std::byte.
@@ -47,6 +48,7 @@ namespace Engine
 	/* Uniforms: */
 		inline const std::unordered_map< std::string, Uniform::Information			>& GetUniformInfoMap()			const { return *uniform_info_map;			}
 		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return *uniform_buffer_info_map;	}
+		inline const std::unordered_map< std::string, Texture*						>& GetTextureMap()				const { return texture_map;					}
 
 		const void* Get( const Uniform::Information& uniform_info ) const
 		{
@@ -99,7 +101,7 @@ namespace Engine
 		inline const Shader* GetShader() const { return shader; };
 
 	/* Uniform: */
-		void PopulateAndSetupUniformBuffersMap();
+		void PopulateAndSetupUniformBufferMap();
 
 		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_buffer_name ) const;
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name ) const;
@@ -122,6 +124,9 @@ namespace Engine
 										  const std::size_t offset, const std::size_t size );
 		void UploadUniforms();
 
+	/* Texture: */
+		void PopulateTextureMap();
+
 	private:
 		std::string name;
 
@@ -141,5 +146,7 @@ namespace Engine
 
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_regular;
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_instance;
+
+		std::unordered_map< std::string, Texture* > texture_map;
 	};
 }
