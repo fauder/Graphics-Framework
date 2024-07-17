@@ -222,6 +222,9 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
+	bool Draw(		 Texture* texture, const char* name );
+	void Draw( const Texture* texture, const char* name );
+
 	bool Draw(		 Camera& camera, const char* name = "##camera" );
 	void Draw( const Camera& camera, const char* name = "##camera" );
 
@@ -230,6 +233,7 @@ namespace Engine::ImGuiDrawer
 
 	void Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+
 	void Draw( const Shader& shader,		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 
 	// TODO: Remove LightData & SurfaceData overloads; Implement a generic uniform struct drawer instead, similar to Shader's implementation.
