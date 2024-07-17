@@ -45,7 +45,11 @@ namespace Engine::Lighting
 	/* This is also named Material in some sources, but since the name Material is more widely used to define [Shader + Uniforms + Textures] instead, this struct is named SurfaceData */
 	struct SurfaceData : public UniformBufferTag
 	{
-		int diffuse_map_slot, specular_map_slot;
 		float shininess;
+
+	/* End of GLSL equivalence;
+	 * Samplers are not allowed to be Uniform Block members in GLSL.
+	 * Putting them in here regardless, as this portion of the struct will not be seen by GLSL. */
+		int diffuse_map_slot, specular_map_slot;
 	};
 }
