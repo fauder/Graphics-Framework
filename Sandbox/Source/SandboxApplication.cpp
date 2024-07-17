@@ -57,6 +57,12 @@ void SandboxApplication::Initialize()
 
 	//Engine::Math::Random::SeedRandom();
 
+/* Textures: */
+	Engine::Texture::INITIALIZE();
+
+	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
+	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
+
 /* Shaders: */
 	gouraud_shader.FromFile( R"(Asset/Shader/Gouraud.vert)", R"(Asset/Shader/Gouraud.frag)" );
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
@@ -77,12 +83,6 @@ void SandboxApplication::Initialize()
 	light_source_shader.Bind();
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse_and_attenuation_linear.color );
-
-/* Textures: */
-	Engine::Texture::INITIALIZE();
-
-	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
-	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
 
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
@@ -461,9 +461,19 @@ void SandboxApplication::ResetMaterialData()
 	
 	cube_material_array.resize( CUBE_COUNT );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
+	{
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), cube_shader );
+		cube_material_array[ i ].SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
+		cube_material_array[ i ].SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
+	}
+
 	ground_quad_material     = Engine::Material( "Ground", cube_shader );
+	ground_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
+	ground_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
+
 	front_wall_quad_material = Engine::Material( "Front Wall", cube_shader );
+	front_wall_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
+	front_wall_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
