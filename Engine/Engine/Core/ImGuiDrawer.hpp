@@ -39,8 +39,8 @@ namespace Engine::ImGuiDrawer
 			return "%.3lf";
 	}
 
-	bool Draw( const GLenum type,	    void* value_pointer, const char* name );
-	void Draw( const GLenum type, const void* value_pointer, const char* name );
+	bool Draw( const GLenum type,	    void* value_pointer, const char* name = "##hidden" );
+	void Draw( const GLenum type, const void* value_pointer, const char* name = "##hidden" );
 
 	bool Draw( int& scalar,					const char* name = "##scalar_int" 	 );
 	bool Draw( int& scalar,					const int min, const int max, const char* name = "##scalar_int" );
@@ -65,17 +65,17 @@ namespace Engine::ImGuiDrawer
 			if constexpr( Size >= 2 )
 			{
 				bool x = vector.X(), y = vector.Y();
-				ImGui::Checkbox( "", &x ); ImGui::SameLine(); ImGui::Checkbox( "", &y );
+				ImGui::Checkbox( "##x", &x ); ImGui::SameLine(); ImGui::Checkbox( "##y", &y );
 			}
 			if constexpr( Size >= 3 )
 			{
 				bool value = vector.Z();
-				ImGui::SameLine(); ImGui::Checkbox( "", &value );
+				ImGui::SameLine(); ImGui::Checkbox( "##z", &value );
 			}
 			if constexpr( Size >= 4 )
 			{
 				bool value = vector.W();
-				ImGui::SameLine(); ImGui::Checkbox( "", &value );
+				ImGui::SameLine(); ImGui::Checkbox( "##w", &value );
 			}
 		}
 		else
@@ -94,15 +94,15 @@ namespace Engine::ImGuiDrawer
 		{
 			if constexpr( Size >= 2 )
 			{
-				is_modified |= ImGui::Checkbox( "", &vector[ 0 ] ); ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 1 ] );
+				is_modified |= ImGui::Checkbox( "##x", &vector[ 0 ] ); ImGui::SameLine(); is_modified |= ImGui::Checkbox( "##y", &vector[ 1 ] );
 			}
 			if constexpr( Size >= 3 )
 			{
-				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 2 ] );
+				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "##z", &vector[ 2 ] );
 			}
 			if constexpr( Size >= 4 )
 			{
-				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 3 ] );
+				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "##w", &vector[ 3 ] );
 			}
 		}
 		else
