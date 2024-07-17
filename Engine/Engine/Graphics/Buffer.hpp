@@ -7,6 +7,8 @@
 #include <span>
 #include <cstddef> // std::byte.
 
+// TODO: Keep track of buffer ids and debug/inspect them via ImGuiDrawer::Draw() or something.
+
 namespace Engine
 {
 	template< GLenum TargetType, typename BufferElementType >
@@ -24,10 +26,40 @@ namespace Engine
 		{
 		}
 
+		/* Only allocate memory.*/
+		Buffer( const unsigned int size, const GLenum usage = GL_STATIC_DRAW )
+			:
+			id( -1 ),
+			count( 0 ),
+			size( size )
+		{
+			ASSERT_DEBUG_ONLY( IsValid() && "'size' parameter passed to Buffer::Buffer( const unsigned int size, const GLenum usage ) is empty!" );
+
+			CreateBuffer();
+			Bind();
+			Update( nullptr, usage );
+		}
+
 		Buffer( const std::span< const BufferElementType > data_span, const GLenum usage = GL_STATIC_DRAW )
 			:
 			id( -1 ),
 			count( ( unsigned int )data_span.size() ),
+			size( ( unsigned int )data_span.size_bytes() )
+		{
+			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const GLenum usage ) is empty!" );
+
+			CreateBuffer();
+			Bind();
+			Update( ( void* )data_span.data(), usage );
+		}
+
+		/* To support cases where the count can not be deduced from the type alone;
+		 * For example consider a vertex buffer that is passed as std::span< float >, with the following vertex attributes: 3x floats position, 3x floats normal, 2x floats uv.
+		 * data_span.size() would give the actual vertex count times 8 (3 + 3 + 2) in this case. */
+		Buffer( const unsigned int count, const std::span< const BufferElementType > data_span, const GLenum usage = GL_STATIC_DRAW )
+			:
+			id( -1 ),
+			count( count ),
 			size( ( unsigned int )data_span.size_bytes() )
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const GLenum usage ) is empty!" );
@@ -72,18 +104,18 @@ namespace Engine
 			GLCALL( glBindBuffer( TargetType, id ) );
 		}
 
-		void Update( const void* data, const GLenum usage ) const
+		void Update( const void* data, const GLenum usage = GL_STATIC_DRAW ) const
 		{
 			Bind();
 
-			GLCALL( glBufferData( TargetType, size, ( void* )data, usage ) );
+			GLCALL( glBufferData( TargetType, size, data, usage ) );
 		}
 
-		void UpdatePartial( const std::span<std::byte> data_span, const std::byte offset_from_buffer_start, const GLenum usage ) const
+		void Update_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const
 		{
 			Bind();
 
-			GLCALL( glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, data_span.size_bytes(), ( void* )data_span.data() ) );
+			GLCALL( glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() ) );
 		}
 		
 		ID				Id()		const { return id;		}
