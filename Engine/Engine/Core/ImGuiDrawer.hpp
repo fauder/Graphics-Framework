@@ -111,6 +111,57 @@ namespace Engine::ImGuiDrawer
 		return is_modified;
 	}
 
+	template< Concepts::Arithmetic Type, std::size_t RowSize, std::size_t ColumnSize > requires Concepts::NonZero< RowSize >&& Concepts::NonZero< ColumnSize >
+	void Draw( const Math::Matrix< Type, RowSize, ColumnSize >& matrix, const char* name = "##matrix<>" )
+	{
+		if( ImGui::TreeNodeEx( name, 0 ) )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
+			for( auto row_index = 0; row_index < RowSize; row_index++ )
+			{
+				const auto& row_vector = matrix.GetRow< ColumnSize >( row_index );
+				ImGui::PushID( row_index );
+				Draw( row_vector );
+				ImGui::PopID();
+			}
+
+			ImGui::PopStyleColor();
+
+			ImGui::TreePop();
+		}
+	}
+
+	template< Concepts::Arithmetic Type, std::size_t RowSize, std::size_t ColumnSize > requires Concepts::NonZero< RowSize >&& Concepts::NonZero< ColumnSize >
+	bool Draw( Math::Matrix< Type, RowSize, ColumnSize >& matrix, const char* name = "##matrix<>" )
+	{
+		bool is_modified = false;
+
+		if( ImGui::TreeNodeEx( name, 0 ) )
+		{
+			auto& first_row_vector = matrix.GetRow< ColumnSize >();
+			is_modified |= Draw( first_row_vector );
+
+			if( name[ 0 ] != '#' || name[ 1 ] != '#' )
+			{
+				ImGui::SameLine( 0.0f, ImGui::GetStyle().ItemInnerSpacing.x );
+				ImGui::TextUnformatted( name );
+			}
+
+			for( auto row_index = 1; row_index < RowSize; row_index++ )
+			{
+				ImGui::PushID( row_index );
+				auto& row_vector = matrix.GetRow< ColumnSize >( row_index );
+				is_modified |= Draw( row_vector );
+				ImGui::PopID();
+			}
+
+			ImGui::TreePop();
+		}
+
+		return is_modified;
+	}
+
 	template< Concepts::Arithmetic Component >
 	void Draw( const Math::Quaternion< Component >& quaternion, const char* name = "##quaternion<>" )
 	{
