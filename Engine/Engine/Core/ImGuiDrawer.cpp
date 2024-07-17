@@ -40,9 +40,9 @@ namespace Engine::ImGuiDrawer
 			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );
 
 			/* Other: */
-			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
-			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
-			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
+			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
 		}
 
 		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, void* value_pointer ) called for an undefined GL type!" );
@@ -83,9 +83,9 @@ namespace Engine::ImGuiDrawer
 			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );
 
 			/* Other: */
-			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
-			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
-			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
+			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
 		}
 
 		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, const void* value_pointer ) called for an undefined GL type!" );
