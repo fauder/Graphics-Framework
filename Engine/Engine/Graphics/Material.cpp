@@ -203,6 +203,21 @@ namespace Engine
 				UploadUniformBuffer( uniform_buffer_info, uniform_buffer_map_instance[ uniform_buffer_name ] );
 		}
 
+		unsigned int texture_unit_slots_in_use = 0; // This can be controlled via a central manager class if more complex use-cases arise. For now every Material will act as if it is the only one using Texture Unit slots.
+
+		/* Copy texture slot to blob, activate the slot & upload the slot uniform to GPU. */
+		for( auto& [ sampler_name, texture ] : texture_map )
+		{
+			const auto& sampler_uniform_info = uniform_info_map->at( sampler_name );
+			const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
+
+			CopyValueToBlob( ( const std::byte* )&texture_unit_slot, sampler_uniform_info );
+
+			texture->Activate( texture_unit_slot );
+
+			UploadUniform( sampler_uniform_info );
+		}
+
 		// TODO: Implement partial updates for Regular & Instance uniforms.
 		// TODO: This means there needs to be SetPartial()< Type > (hopefully with a better name) function.
 		/* Idea: 

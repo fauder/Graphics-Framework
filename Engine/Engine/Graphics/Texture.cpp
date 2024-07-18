@@ -43,15 +43,10 @@ namespace Engine
 		glDeleteTextures( 1, &id );
 	}
 
-	void Texture::Bind() const
+	void Texture::INITIALIZE()
 	{
-		glBindTexture( GL_TEXTURE_2D, id );
-	}
-
-	void Texture::Activate( const int slot )
-	{
-		glActiveTexture( GL_TEXTURE0 + slot );
-		Bind();
+		// OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
+		stbi_set_flip_vertically_on_load( true );
 	}
 
 	bool Texture::FromFile( const char* file_path, const int format )
@@ -80,9 +75,14 @@ namespace Engine
 		return result;
 	}
 
-	void Texture::INITIALIZE()
+	void Texture::Activate( const int slot )
 	{
-		// OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
-		stbi_set_flip_vertically_on_load( true );
+		glActiveTexture( GL_TEXTURE0 + slot );
+		Bind();
+	}
+
+	void Texture::Bind() const
+	{
+		glBindTexture( GL_TEXTURE_2D, id );
 	}
 }
