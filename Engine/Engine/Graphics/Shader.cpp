@@ -310,15 +310,14 @@ namespace Engine
 			int length = 0;
 			GLCALL( glGetActiveUniformBlockName( program_id, uniform_block_index, uniform_block_name_max_length, &length, name.data() ) );
 			
-			int binding_point, size;
-			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size			) );
-			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_BINDING,	&binding_point	) );
+			int size;
+			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size ) );
 
 			const auto category = Uniform::DetermineBufferCategory( name );
 
 			auto& uniform_buffer_information = uniform_buffer_information_map[ name.c_str() ] = 
 			{
-				.binding_point = binding_point,
+				.binding_point = -1, // This will be filled later via BufferManager::ConnectBufferToBlock().
 				.size          = size,
 				.offset        = offset,
 				.category	   = category
