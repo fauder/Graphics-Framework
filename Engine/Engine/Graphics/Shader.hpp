@@ -289,6 +289,9 @@ namespace Engine
 		void LogErrors_Linking() const;
 		std::string FormatErrorLog( const char* log ) const;
 
+	/* Misc: */
+		std::string UniformEditorName( const std::string& original_name );
+
 	private:
 		ID program_id;
 		std::string name;

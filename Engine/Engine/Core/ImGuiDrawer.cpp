@@ -348,7 +348,7 @@ namespace Engine::ImGuiDrawer
 						if( uniform_info.is_buffer_member )
 							continue;
 
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_name.c_str() );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_info.editor_name.c_str() );
 
 						ImGui::TableNextColumn();
 
@@ -374,7 +374,7 @@ namespace Engine::ImGuiDrawer
 
 							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info.members_map )
 							{
-								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_name.c_str() );
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
 
 								ImGui::TableNextColumn();
 
@@ -391,7 +391,7 @@ namespace Engine::ImGuiDrawer
 
 					for( auto& [ uniform_sampler_name, texture_pointer ] : texture_map )
 					{
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_sampler_name.c_str() );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_info_map.at( uniform_sampler_name ).editor_name.c_str() );
 
 						ImGui::TableNextColumn();
 
@@ -443,7 +443,7 @@ namespace Engine::ImGuiDrawer
 						if( uniform_info.is_buffer_member )
 							continue;
 
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_name.c_str() );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_info.editor_name.c_str() );
 
 						ImGui::TableNextColumn();
 
@@ -466,7 +466,7 @@ namespace Engine::ImGuiDrawer
 							/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info.members_map )
 							{
-								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_name.c_str() );
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
 
 								ImGui::TableNextColumn();
 
@@ -483,7 +483,7 @@ namespace Engine::ImGuiDrawer
 
 					for( const auto& [ uniform_sampler_name, texture_pointer ] : texture_map )
 					{
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_sampler_name.c_str() );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_info_map.at( uniform_sampler_name ).editor_name.c_str() );
 
 						ImGui::TableNextColumn();
 

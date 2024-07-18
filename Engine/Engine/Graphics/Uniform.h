@@ -26,7 +26,7 @@ namespace Engine
 			GLenum type;
 			bool is_buffer_member;
 
-			// TODO: Add a string here for more editor friendly uniform name. Example: uniform_surface_data would be Surface Data & uniform_color would be Color.
+			std::string editor_name;
 		};
 
 		enum class BufferCategory

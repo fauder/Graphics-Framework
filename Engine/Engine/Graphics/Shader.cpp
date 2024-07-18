@@ -253,7 +253,8 @@ namespace Engine
 				.size                    = size,
 				.offset                  = is_buffer_member ? -1 : offset,
 				.type                    = type,
-				.is_buffer_member		 = is_buffer_member
+				.is_buffer_member		 = is_buffer_member,
+				.editor_name			 = UniformEditorName( uniform_book_keeping_info.name_holder )
 			};
 
 			offset += !is_buffer_member * size;
@@ -467,5 +468,40 @@ namespace Engine
 		std::string error_log_string( log );
 		Utility::String::Replace( error_log_string, "\n", "\n    " );
 		return "\n    " + error_log_string;
+	}
+
+	std::string Shader::UniformEditorName( const std::string& original_name )
+	{
+		std::string editor_name( original_name );
+
+		/* First get rid of parent struct/block names: */
+		if( const auto last_dot_pos = editor_name.find_last_of( '.' );
+			last_dot_pos != std::string::npos )
+			editor_name = editor_name.substr( last_dot_pos + 1 );
+
+		if( editor_name.compare( 0, 7, "_GLOBAL", 7 ) == 0 )
+			editor_name.erase( 0, 7 );
+		else if( editor_name.compare( 0, 8, "_REGULAR", 8 ) == 0 )
+			editor_name.erase( 0, 8 );
+		else if( editor_name.compare( 0, 9, "_INSTANCE", 9 ) == 0 )
+			editor_name.erase( 0, 9 );
+		else if( editor_name.compare( 0, 10, "_INTRINSIC", 10 ) == 0 )
+			editor_name.erase( 0, 10 );
+
+		std::replace( editor_name.begin(), editor_name.end(), '_', ' ' );
+
+		if( std::isalpha( editor_name[ 0 ] ) )
+			editor_name[ 0 ] = std::toupper( editor_name[ 0 ] );
+		else if( editor_name.starts_with( ' ' ) )
+			editor_name = editor_name.erase( 0, 1 );
+
+		if( editor_name.compare( 0, 7, "UNIFORM", 7 ) == 0 || editor_name.compare( 0, 7, "Uniform", 7 ) == 0 )
+			editor_name.erase( 0, 7 );
+
+		for( auto index = 1; index < editor_name.size(); index++ )
+			if( editor_name[ index - 1 ] == ' ' )
+				editor_name[ index ] = std::toupper( editor_name[ index ] );
+
+		return editor_name;
 	}
 }
