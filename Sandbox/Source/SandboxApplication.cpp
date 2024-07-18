@@ -116,6 +116,23 @@ void SandboxApplication::Initialize()
 
 	// TODO: Move the calls above into Renderer.
 
+/* Initial transforms: */
+	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
+
+	front_wall_quad_transform
+		.SetScaling( 25.0f, 25.0f, 0.01f )
+		.SetTranslation( Vector3::Forward() * 5.0f );
+
+	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
+	{
+		Degrees angle( 20.0f * cube_index );
+		cube_transform_array[ cube_index ]
+			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
+			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
+
+		cube_material_array[ cube_index ].Set( "uniform_transform_world", cube_transform_array[ cube_index ].GetFinalMatrix() );
+	}
+
 	Platform::MaximizeWindow();
 }
 
@@ -191,82 +208,47 @@ void SandboxApplication::Render()
 
 	Engine::Application::Render();
 
-/* Light sources: */
-	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-	{
-		light_source_transform_array[ i ].SetTranslation( light_point_data_array[ i ].position_world_space );
+/* 
+ * Lighting information for materials using the cube shader:
+ */
 
-		light_source_material_array[ i ].Set( "uniform_transform_world", light_source_transform_array[ i ].GetFinalMatrix() );
-	}
+	/* Shaders expect the lights' position & direction in view space. */
 
-/* Lighting information for materials using the cube shader: */
-	{
-		/* Shaders expect the lights' position & direction in view space. */
+	light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 
-		light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
+	light_spot_data.position_view_space_and_cos_cutoff_angle_inner.vector = 
+		( Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) * view_transformation ).XYZ();
+	light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.vector = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 
-		// Also need to convert the angles to cosines.
+	/* Also need to convert the angles to cosines: */
+	light_spot_data.position_view_space_and_cos_cutoff_angle_inner.scalar  = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
+	light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
 
-		light_spot_data.position_view_space_and_cos_cutoff_angle_inner.vector = 
-			( Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) * view_transformation ).XYZ();
-		light_spot_data.position_view_space_and_cos_cutoff_angle_inner.scalar = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
-
-		light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.vector = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
-		light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
-
-		for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
-		{
-			cube_material_array[ cube_index ].Set( "DirectionalLightData",	light_directional_data	);
-			cube_material_array[ cube_index ].Set( "SpotLightData",			light_spot_data			);
-		}
-		ground_quad_material.Set( "DirectionalLightData",	light_directional_data	);
-		ground_quad_material.Set( "SpotLightData",			light_spot_data			);
-		
-		front_wall_quad_material.Set( "DirectionalLightData",	light_directional_data	);
-		front_wall_quad_material.Set( "SpotLightData",			light_spot_data			);
-
-		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		{
-			auto& light_point_data = light_point_data_array[ i ];
-			light_point_data.position_view_space = ( Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
-													 view_transformation ).XYZ();
-
-			// TODO: Correct this when UBO arrays are implemented.
-			//const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
-			const std::string uniform_name( "PointLightData" );
-
-			for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
-				cube_material_array[ cube_index ].Set( uniform_name.c_str(), light_point_data );
-			ground_quad_material.Set( uniform_name.c_str(), light_point_data );
-			front_wall_quad_material.Set( uniform_name.c_str(), light_point_data );
-		}
-	}
-
-/* Ground quad: */
-	{
-		ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f ); // TODO: Move this to Update().
-
-		ground_quad_material.Set( "uniform_transform_world", ground_quad_transform.GetFinalMatrix() ); // TODO: Move this to Renderer::Render().
-	}
-
-/* Front wall quad: */
-	{
-		front_wall_quad_transform
-			.SetScaling( 25.0f, 25.0f, 0.01f )
-			.SetTranslation( Vector3::Forward() * 5.0f );
-
-		front_wall_quad_material.Set( "uniform_transform_world", front_wall_quad_transform.GetFinalMatrix() );
-	}
-
-/* Cubes: */
 	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 	{
-		Degrees angle( 20.0f * cube_index );
-		cube_transform_array[ cube_index ]
-			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
-			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
+		cube_material_array[ cube_index ].Set( "DirectionalLightData",	light_directional_data	);
+		cube_material_array[ cube_index ].Set( "SpotLightData",			light_spot_data			);
+	}
+	ground_quad_material.Set( "DirectionalLightData",	light_directional_data	);
+	ground_quad_material.Set( "SpotLightData",			light_spot_data			);
+		
+	front_wall_quad_material.Set( "DirectionalLightData",	light_directional_data	);
+	front_wall_quad_material.Set( "SpotLightData",			light_spot_data			);
 
-		cube_material_array[ cube_index ].Set( "uniform_transform_world", cube_transform_array[ cube_index ].GetFinalMatrix() );
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+	{
+		auto& light_point_data = light_point_data_array[ i ];
+		light_point_data.position_view_space = ( Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
+												 view_transformation ).XYZ();
+
+		// TODO: Correct this when UBO arrays are implemented.
+		//const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
+		const std::string uniform_name( "PointLightData" );
+
+		for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
+			cube_material_array[ cube_index ].Set( uniform_name.c_str(), light_point_data );
+		ground_quad_material.Set( uniform_name.c_str(), light_point_data );
+		front_wall_quad_material.Set( uniform_name.c_str(), light_point_data );
 	}
 
 	renderer.Render( camera );

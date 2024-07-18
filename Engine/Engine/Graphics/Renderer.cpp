@@ -47,6 +47,8 @@ namespace Engine
 						{
 							drawable->mesh->Bind();
 
+							material->Set( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
+
 							drawable->material->UploadUniforms();
 
 							// TODO: Implement Instance uniforms.
