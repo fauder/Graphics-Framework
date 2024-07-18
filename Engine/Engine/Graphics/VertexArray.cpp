@@ -43,7 +43,7 @@ namespace Engine
 		id( -1 ),
 		vertex_buffer_id( vertex_buffer.Id() ),
 		index_buffer_id( -1 ),
-		vertex_count( vertex_buffer.VertexCount() ),
+		vertex_count( vertex_buffer.Count() ),
 		index_count( 0 )
 	{
 		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
@@ -56,8 +56,8 @@ namespace Engine
 		id( -1 ),
 		vertex_buffer_id( vertex_buffer.Id() ),
 		index_buffer_id( index_buffer.Id() ),
-		vertex_count( vertex_buffer.VertexCount() ),
-		index_count( index_buffer.IndexCount() )
+		vertex_count( vertex_buffer.Count() ),
+		index_count( index_buffer.Count() )
 	{
 		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
 		index_buffer.Bind();
@@ -70,8 +70,8 @@ namespace Engine
 		id( -1 ),
 		vertex_buffer_id( vertex_buffer.Id() ),
 		index_buffer_id( index_buffer ? index_buffer->Id() : -1 ),
-		vertex_count( vertex_buffer.VertexCount() ),
-		index_count( index_buffer ? index_buffer->IndexCount() : 0 )
+		vertex_count( vertex_buffer.Count() ),
+		index_count( index_buffer ? index_buffer->Count() : 0 )
 	{
 		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
 		if( index_buffer )

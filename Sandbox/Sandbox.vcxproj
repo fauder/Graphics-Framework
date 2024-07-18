@@ -115,6 +115,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
     <ClInclude Include="Source\SandboxApplication.h" />
   </ItemGroup>
   <ItemGroup>

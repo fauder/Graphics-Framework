@@ -8,18 +8,12 @@ in vec2 varying_tex_coords;
 
 out vec4 out_color;
 
-struct SurfaceData
-{
-	sampler2D diffuse_map_slot, specular_map_slot;
-	float shininess;
-};
-
-uniform SurfaceData uniform_surface_data;
+uniform sampler2D uniform_surface_data_diffuse_map_slot, uniform_surface_data_specular_map_slot;
 
 void main()
 {
-	vec3 diffuse_sample  = vec3( texture( uniform_surface_data.diffuse_map_slot,  varying_tex_coords ) );
-	vec3 specular_sample = vec3( texture( uniform_surface_data.specular_map_slot, varying_tex_coords ) );
+	vec3 diffuse_sample  = vec3( texture( uniform_surface_data_diffuse_map_slot,  varying_tex_coords ) );
+	vec3 specular_sample = vec3( texture( uniform_surface_data_specular_map_slot, varying_tex_coords ) );
 
 	vec3 ambient  =  diffuse_sample * varying_ambient_from_light;
 	vec3 diffuse  =  diffuse_sample * varying_diffuse_from_light;

@@ -63,7 +63,7 @@ namespace Engine
 			unsigned int vertex_count_interleaved;
 			const auto interleaved_vertices = MeshUtility::Interleave( vertex_count_interleaved, positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgb, colors_rgba );
 
-			vertex_buffer        = VertexBuffer( interleaved_vertices, vertex_count_interleaved, usage );
+			vertex_buffer        = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), usage );
 			vertex_buffer_layout = VertexBufferLayout( AttributeCountsAndTypes( positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgb, colors_rgba ) );
 			index_buffer         = indices.empty() ? std::nullopt : std::optional< IndexBuffer >( std::in_place, indices, usage );
 			vertex_array         = VertexArray( vertex_buffer, vertex_buffer_layout, index_buffer );
@@ -75,8 +75,8 @@ namespace Engine
 	/* Queries: */
 		inline PrimitiveType Primitive() const { return primitive_type; }
 
-		inline int VertexCount() const { return vertex_buffer.VertexCount(); }
-		inline int IndexCount()  const { return index_buffer.has_value() ? index_buffer->Size() : 0; }
+		inline int VertexCount() const { return vertex_buffer.Count(); }
+		inline int IndexCount()  const { return index_buffer.has_value() ? index_buffer->Count() : 0; }
 
 		inline bool IsIndexed()  const { return IndexCount(); }
 

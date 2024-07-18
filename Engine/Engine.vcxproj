@@ -157,10 +157,13 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\ImGuiDrawer.hpp" />
     <ClInclude Include="Engine\Core\ImGuiUtility.h" />
     <ClInclude Include="Engine\Core\Initialization.h" />
+    <ClInclude Include="Engine\Graphics\Buffer.hpp" />
     <ClInclude Include="Engine\Graphics\Drawable.h" />
     <ClInclude Include="Engine\Graphics\Mesh.hpp" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
+    <ClInclude Include="Engine\Graphics\PaddedAndCombinedTypes.h" />
     <ClInclude Include="Engine\Graphics\Renderer.h" />
+    <ClInclude Include="Engine\Graphics\UniformBufferManager.h" />
     <ClInclude Include="Engine\Graphics\Uniform.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Graphics\Color.hpp" />
@@ -178,10 +181,10 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\Utility.hpp" />
     <ClInclude Include="Engine\Scene\CameraController_Flight.h" />
     <ClInclude Include="Engine\Scene\Transform.h" />
-    <ClInclude Include="Engine\Graphics\UniformStruct.h" />
+    <ClInclude Include="Engine\Graphics\UniformBufferTag.h" />
     <ClInclude Include="Engine\Graphics\VertexArray.h" />
     <ClInclude Include="Engine\Graphics\VertexBufferLayout.hpp" />
-    <ClInclude Include="Engine\Graphics\VertexBuffer.hpp" />
+    <ClInclude Include="Engine\Graphics\VertexBuffer.h" />
     <ClInclude Include="Engine\Math\Angle.hpp" />
     <ClInclude Include="Engine\Math\Concepts.h" />
     <ClInclude Include="Engine\Math\Constants.h" />
@@ -195,6 +198,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Math\TypeTraits.h" />
     <ClInclude Include="Engine\Math\Unit.hpp" />
     <ClInclude Include="Engine\Math\Vector.hpp" />
+    <ClInclude Include="Engine\Graphics\UniformBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp" />
@@ -204,8 +208,8 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Graphics\Drawable.cpp" />
     <ClCompile Include="Engine\Graphics\Material.cpp" />
     <ClCompile Include="Engine\Graphics\Renderer.cpp" />
+    <ClCompile Include="Engine\Graphics\UniformBufferManager.cpp" />
     <ClCompile Include="Engine\Scene\Camera.cpp" />
-    <ClCompile Include="Engine\Graphics\IndexBuffer.cpp" />
     <ClCompile Include="Engine\Core\Platform.cpp" />
     <ClCompile Include="Engine\Graphics\Shader.cpp" />
     <ClCompile Include="Engine\Graphics\Texture.cpp" />
@@ -213,7 +217,6 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Scene\CameraController_Flight.cpp" />
     <ClCompile Include="Engine\Scene\Transform.cpp" />
     <ClCompile Include="Engine\Graphics\VertexArray.cpp" />
-    <ClCompile Include="Engine\Graphics\VertexBuffer.cpp" />
     <ClCompile Include="Engine\Math\Math.cpp" />
     <ClCompile Include="Engine\Math\Matrix.cpp" />
   </ItemGroup>

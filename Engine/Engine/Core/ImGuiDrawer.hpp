@@ -39,8 +39,8 @@ namespace Engine::ImGuiDrawer
 			return "%.3lf";
 	}
 
-	bool Draw( const GLenum type,	    void* value_pointer, const char* name );
-	void Draw( const GLenum type, const void* value_pointer, const char* name );
+	bool Draw( const GLenum type,	    void* value_pointer, const char* name = "##hidden" );
+	void Draw( const GLenum type, const void* value_pointer, const char* name = "##hidden" );
 
 	bool Draw( int& scalar,					const char* name = "##scalar_int" 	 );
 	bool Draw( int& scalar,					const int min, const int max, const char* name = "##scalar_int" );
@@ -65,17 +65,17 @@ namespace Engine::ImGuiDrawer
 			if constexpr( Size >= 2 )
 			{
 				bool x = vector.X(), y = vector.Y();
-				ImGui::Checkbox( "", &x ); ImGui::SameLine(); ImGui::Checkbox( "", &y );
+				ImGui::Checkbox( "##x", &x ); ImGui::SameLine(); ImGui::Checkbox( "##y", &y );
 			}
 			if constexpr( Size >= 3 )
 			{
 				bool value = vector.Z();
-				ImGui::SameLine(); ImGui::Checkbox( "", &value );
+				ImGui::SameLine(); ImGui::Checkbox( "##z", &value );
 			}
 			if constexpr( Size >= 4 )
 			{
 				bool value = vector.W();
-				ImGui::SameLine(); ImGui::Checkbox( "", &value );
+				ImGui::SameLine(); ImGui::Checkbox( "##w", &value );
 			}
 		}
 		else
@@ -94,19 +94,70 @@ namespace Engine::ImGuiDrawer
 		{
 			if constexpr( Size >= 2 )
 			{
-				is_modified |= ImGui::Checkbox( "", &vector[ 0 ] ); ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 1 ] );
+				is_modified |= ImGui::Checkbox( "##x", &vector[ 0 ] ); ImGui::SameLine(); is_modified |= ImGui::Checkbox( "##y", &vector[ 1 ] );
 			}
 			if constexpr( Size >= 3 )
 			{
-				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 2 ] );
+				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "##z", &vector[ 2 ] );
 			}
 			if constexpr( Size >= 4 )
 			{
-				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "", &vector[ 3 ] );
+				ImGui::SameLine(); is_modified |= ImGui::Checkbox( "##w", &vector[ 3 ] );
 			}
 		}
 		else
 			is_modified |= ImGui::DragScalarN( name, GetImGuiDataType< Component >(), vector.Data(), Size, 1.0f, NULL, NULL, GetFormat< Component >() );
+
+		return is_modified;
+	}
+
+	template< Concepts::Arithmetic Type, std::size_t RowSize, std::size_t ColumnSize > requires Concepts::NonZero< RowSize >&& Concepts::NonZero< ColumnSize >
+	void Draw( const Math::Matrix< Type, RowSize, ColumnSize >& matrix, const char* name = "##matrix<>" )
+	{
+		if( ImGui::TreeNodeEx( name, 0 ) )
+		{
+			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
+			for( auto row_index = 0; row_index < RowSize; row_index++ )
+			{
+				const auto& row_vector = matrix.GetRow< ColumnSize >( row_index );
+				ImGui::PushID( row_index );
+				Draw( row_vector );
+				ImGui::PopID();
+			}
+
+			ImGui::PopStyleColor();
+
+			ImGui::TreePop();
+		}
+	}
+
+	template< Concepts::Arithmetic Type, std::size_t RowSize, std::size_t ColumnSize > requires Concepts::NonZero< RowSize >&& Concepts::NonZero< ColumnSize >
+	bool Draw( Math::Matrix< Type, RowSize, ColumnSize >& matrix, const char* name = "##matrix<>" )
+	{
+		bool is_modified = false;
+
+		if( ImGui::TreeNodeEx( name, 0 ) )
+		{
+			auto& first_row_vector = matrix.GetRow< ColumnSize >();
+			is_modified |= Draw( first_row_vector );
+
+			if( name[ 0 ] != '#' || name[ 1 ] != '#' )
+			{
+				ImGui::SameLine( 0.0f, ImGui::GetStyle().ItemInnerSpacing.x );
+				ImGui::TextUnformatted( name );
+			}
+
+			for( auto row_index = 1; row_index < RowSize; row_index++ )
+			{
+				ImGui::PushID( row_index );
+				auto& row_vector = matrix.GetRow< ColumnSize >( row_index );
+				is_modified |= Draw( row_vector );
+				ImGui::PopID();
+			}
+
+			ImGui::TreePop();
+		}
 
 		return is_modified;
 	}
@@ -171,6 +222,9 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
+	bool Draw(		 Texture* texture, const char* name );
+	void Draw( const Texture* texture, const char* name );
+
 	bool Draw(		 Camera& camera, const char* name = "##camera" );
 	void Draw( const Camera& camera, const char* name = "##camera" );
 
@@ -179,6 +233,7 @@ namespace Engine::ImGuiDrawer
 
 	void Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+
 	void Draw( const Shader& shader,		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 
 	// TODO: Remove LightData & SurfaceData overloads; Implement a generic uniform struct drawer instead, similar to Shader's implementation.

@@ -5,5 +5,5 @@
 
 namespace Engine
 {
-	using IndexBuffer = Buffer< GL_ELEMENT_ARRAY_BUFFER, unsigned int >;
+	using VertexBuffer = Buffer< GL_ARRAY_BUFFER, float >;
 }

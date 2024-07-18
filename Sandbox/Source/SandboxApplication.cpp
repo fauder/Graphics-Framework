@@ -13,6 +13,8 @@
 
 using namespace Engine::Math::Literals;
 
+// TODO: Get debug callback working ASAP.
+
 Engine::Application* Engine::CreateApplication()
 {
     return new SandboxApplication();
@@ -27,6 +29,8 @@ SandboxApplication::SandboxApplication()
 	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
+	container_texture_diffuse_map( "Container (Diffuse) Map" ),
+	container_texture_specular_map( "Container (Specular) Map" ),
 	light_source_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
@@ -53,6 +57,12 @@ void SandboxApplication::Initialize()
 
 	//Engine::Math::Random::SeedRandom();
 
+/* Textures: */
+	Engine::Texture::INITIALIZE();
+
+	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
+	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
+
 /* Shaders: */
 	gouraud_shader.FromFile( R"(Asset/Shader/Gouraud.vert)", R"(Asset/Shader/Gouraud.frag)" );
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
@@ -66,19 +76,13 @@ void SandboxApplication::Initialize()
 /* Materials: */
 	ResetMaterialData();
 	cube_shader->Bind();
-	ground_quad_material.Set( "uniform_surface_data", ground_quad_surface_data );
-	front_wall_quad_material.Set( "uniform_surface_data", front_wall_quad_surface_data );
+	ground_quad_material.Set( "SurfaceData", ground_quad_surface_data );
+	front_wall_quad_material.Set( "SurfaceData", front_wall_quad_surface_data );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
-		cube_material_array[ i ].Set( "uniform_surface_data", cube_surface_data_array[ i ] );
+		cube_material_array[ i ].Set( "SurfaceData", cube_surface_data_array[ i ] );
 	light_source_shader.Bind();
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse );
-
-/* Textures: */
-	Engine::Texture::INITIALIZE();
-
-	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
-	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
+		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse_and_attenuation_linear.color );
 
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
@@ -101,6 +105,7 @@ void SandboxApplication::Initialize()
 
 	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
 	renderer.AddDrawable( &ground_quad_drawable );
+
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable );
 
@@ -109,8 +114,12 @@ void SandboxApplication::Initialize()
 
 	GLCALL( glEnable( GL_DEPTH_TEST ) );
 
+	// TODO: Move the calls above into Renderer.
+
 	Platform::MaximizeWindow();
 }
+
+// TODO: Integrate RenderDoc annotations.
 
 void SandboxApplication::Shutdown()
 {
@@ -196,24 +205,25 @@ void SandboxApplication::Render()
 
 		light_directional_data.direction_view_space = light_directional_data.direction_world_space * view_transformation.SubMatrix< 3 >();
 
-		light_spot_data.direction_view_space = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
-		light_spot_data.position_view_space = ( Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) *
-												view_transformation ).XYZ();
-
 		// Also need to convert the angles to cosines.
-		light_spot_data.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
-		light_spot_data.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
+
+		light_spot_data.position_view_space_and_cos_cutoff_angle_inner.vector = 
+			( Vector4( light_spot_data.position_world_space.X(), light_spot_data.position_world_space.Y(), light_spot_data.position_world_space.Z(), 1.0f ) * view_transformation ).XYZ();
+		light_spot_data.position_view_space_and_cos_cutoff_angle_inner.scalar = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_inner ) );
+
+		light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.vector = light_spot_data.direction_world_space * view_transformation.SubMatrix< 3 >();
+		light_spot_data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Engine::Math::Cos( Radians( light_spot_data.cutoff_angle_outer ) );
 
 		for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 		{
-			cube_material_array[ cube_index ].Set( "uniform_directional_light_data",	light_directional_data	);
-			cube_material_array[ cube_index ].Set( "uniform_spot_light_data",			light_spot_data			);
+			cube_material_array[ cube_index ].Set( "DirectionalLightData",	light_directional_data	);
+			cube_material_array[ cube_index ].Set( "SpotLightData",			light_spot_data			);
 		}
-		ground_quad_material.Set( "uniform_directional_light_data", light_directional_data	);
-		ground_quad_material.Set( "uniform_spot_light_data",		light_spot_data			);
+		ground_quad_material.Set( "DirectionalLightData",	light_directional_data	);
+		ground_quad_material.Set( "SpotLightData",			light_spot_data			);
 		
-		front_wall_quad_material.Set( "uniform_directional_light_data", light_directional_data	);
-		front_wall_quad_material.Set( "uniform_spot_light_data",		light_spot_data			);
+		front_wall_quad_material.Set( "DirectionalLightData",	light_directional_data	);
+		front_wall_quad_material.Set( "SpotLightData",			light_spot_data			);
 
 		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		{
@@ -221,7 +231,9 @@ void SandboxApplication::Render()
 			light_point_data.position_view_space = ( Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
 													 view_transformation ).XYZ();
 
-			const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
+			// TODO: Correct this when UBO arrays are implemented.
+			//const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
+			const std::string uniform_name( "PointLightData" );
 
 			for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 				cube_material_array[ cube_index ].Set( uniform_name.c_str(), light_point_data );
@@ -230,16 +242,11 @@ void SandboxApplication::Render()
 		}
 	}
 
-	// TODO: Move texture handling into Material as well.
-
-	container_texture_diffuse_map.ActivateAndUse( 0 );
-	container_texture_specular_map.ActivateAndUse( 1 );
-
 /* Ground quad: */
 	{
-		ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
+		ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f ); // TODO: Move this to Update().
 
-		ground_quad_material.Set( "uniform_transform_world",		ground_quad_transform.GetFinalMatrix() );
+		ground_quad_material.Set( "uniform_transform_world", ground_quad_transform.GetFinalMatrix() ); // TODO: Move this to Renderer::Render().
 	}
 
 /* Front wall quad: */
@@ -248,7 +255,7 @@ void SandboxApplication::Render()
 			.SetScaling( 25.0f, 25.0f, 0.01f )
 			.SetTranslation( Vector3::Forward() * 5.0f );
 
-		front_wall_quad_material.Set( "uniform_transform_world",		front_wall_quad_transform.GetFinalMatrix() );
+		front_wall_quad_material.Set( "uniform_transform_world", front_wall_quad_transform.GetFinalMatrix() );
 	}
 
 /* Cubes: */
@@ -259,7 +266,7 @@ void SandboxApplication::Render()
 			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 
-		cube_material_array[ cube_index ].Set( "uniform_transform_world",		cube_transform_array[ cube_index ].GetFinalMatrix() );
+		cube_material_array[ cube_index ].Set( "uniform_transform_world", cube_transform_array[ cube_index ].GetFinalMatrix() );
 	}
 
 	renderer.Render( camera );
@@ -268,6 +275,8 @@ void SandboxApplication::Render()
 void SandboxApplication::DrawImGui()
 {
 	Application::DrawImGui();
+
+	ImGui::ShowDemoWindow();
 
 	Engine::ImGuiDrawer::Draw( gouraud_shader );
 	Engine::ImGuiDrawer::Draw( phong_shader );
@@ -287,7 +296,6 @@ void SandboxApplication::DrawImGui()
 			ResetLightingData();
 
 			cube_shader = &phong_shader;
-			ground_quad_material.SetShader( cube_shader );
 		}
 
 		Engine::ImGuiDrawer::Draw( light_directional_data, "Directional Light Properties" );
@@ -299,7 +307,7 @@ void SandboxApplication::DrawImGui()
 		{
 			const std::string name( "Point Light # " + std::to_string( i ) + " Properties##");
 			if( Engine::ImGuiDrawer::Draw( light_point_data_array[ i ], name.c_str(), light_point_is_animated /* hide position. */ ) )
-				light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse );
+				light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse_and_attenuation_linear.color );
 		}
 		Engine::ImGuiDrawer::Draw( light_spot_data, "Spot Light Properties" );
 
@@ -398,10 +406,11 @@ void SandboxApplication::ResetLightingData()
 
 	light_directional_data =
 	{
-		.ambient               = {  0.05f,  0.05f,  0.05f },
-		.diffuse               = {  0.4f,   0.4f,   0.4f  },
-		.specular              = {  0.5f,   0.5f,   0.5f  },
+		.ambient               = Engine::Color3{  0.05f,  0.05f,  0.05f },
+		.diffuse               = Engine::Color3{  0.4f,   0.4f,   0.4f  },
+		.specular              = Engine::Color3{  0.5f,   0.5f,   0.5f  },
 		.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+	/* End of GLSL equivalence. */
 		.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
 	};
 	light_point_data_array = std::vector< Engine::Lighting::PointLightData >( LIGHT_POINT_COUNT );
@@ -409,26 +418,24 @@ void SandboxApplication::ResetLightingData()
 	{
 		light_point_data_array[ i ] =
 		{
-			.ambient               = {  0.05f,  0.05f,  0.05f },
-			.diffuse               = Engine::Math::Random::Generate< Engine::Color3 >(),
-			.specular              = {  1.0f,   1.0f,   1.0f  },
-			.position_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-			.attenuation_constant  = 1.0f,
-			.attenuation_linear    = 0.09f,
-			.attenuation_quadratic = 0.032f,
-			.position_world_space  = {  0.2f,  -1.0f,   1.0f  }
+			.ambient_and_attenuation_constant = { .color = {  0.05f,  0.05f,  0.05f }, .scalar = 1.0f },
+			.diffuse_and_attenuation_linear   = { .color = Engine::Math::Random::Generate< Engine::Color3 >(), .scalar = 0.09f },
+			.specular_attenuation_quadratic   = { .color = {  1.0f,   1.0f,   1.0f  }, .scalar = 0.03f },
+			.position_view_space              = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
+		/* End of GLSL equivalence. */
+			.position_world_space             = {  0.2f,  -1.0f,   1.0f  }
 		};
 	}
 	light_spot_data =
 	{
-		.ambient                = {  0.05f,  0.05f,  0.05f },
-		.diffuse                = {  0.4f,   0.4f,   0.4f  },
-		.specular               = {  0.5f,   0.5f,   0.5f  },
-		.position_view_space    = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.direction_view_space   = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		.cos_cutoff_angle_inner = Engine::Math::Cos( Radians( 12.5_deg ) ),
-		.cos_cutoff_angle_outer = Engine::Math::Cos( Radians( 17.5_deg ) ),
-		/* End of GLSL equivalence. */
+		.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
+		.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
+		.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+
+		// These two's values do not matter, will be updated with the correct view space value every frame.
+		.position_view_space_and_cos_cutoff_angle_inner  = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 12.5_deg ) ) },
+		.direction_view_space_and_cos_cutoff_angle_outer = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 17.5_deg ) ) },
+	/* End of GLSL equivalence. */
 		.position_world_space   = camera_transform.GetTranslation(),
 		.direction_world_space  = camera_transform.Forward(),
 		.cutoff_angle_inner     = 12.5_deg,
@@ -437,16 +444,12 @@ void SandboxApplication::ResetLightingData()
 
 	cube_surface_data_array = std::vector< Engine::Lighting::SurfaceData >( CUBE_COUNT, 
 	{
-		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1,
-		.shininess         = 32.0f
+		.shininess = 32.0f
 	} );
 
 	ground_quad_surface_data = front_wall_quad_surface_data =
 	{
-		.diffuse_map_slot  = 0,
-		.specular_map_slot = 1,
-		.shininess         = 32.0f
+		.shininess = 32.0f
 	};
 }
 
@@ -458,9 +461,19 @@ void SandboxApplication::ResetMaterialData()
 	
 	cube_material_array.resize( CUBE_COUNT );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
+	{
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), cube_shader );
+		cube_material_array[ i ].SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
+		cube_material_array[ i ].SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
+	}
+
 	ground_quad_material     = Engine::Material( "Ground", cube_shader );
+	ground_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
+	ground_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
+
 	front_wall_quad_material = Engine::Material( "Front Wall", cube_shader );
+	front_wall_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
+	front_wall_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

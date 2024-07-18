@@ -5,21 +5,34 @@ namespace Engine
 	class Texture
 	{
 	public:
+		using ID = unsigned int;
+
+	public:
 		Texture();
-		Texture( const char* file_path, const int format );
+		Texture( const std::string_view& name );
+		Texture( const std::string_view& name, const char* file_path, const int format );
 		~Texture();
 
-		void ActivateAndUse( const int slot );
-
-		bool FromFile( const char* file_path, const int format );
-
+	/* Static API: */
 		static void INITIALIZE();
 
+	/* Creation: */
+		bool FromFile( const char* file_path, const int format );
+
+	/* Queries: */
+		inline const std::string&	Name()	const { return name;	}
+		inline const ID				Id()	const { return id;		}
+
+	/* Usage: */
+		void Activate( const int slot );
+
 	private:
+	/* Usage: */
 		void Bind() const;
 
 	private:
-		unsigned int id;
+		ID id;
 		int width, height;
+		std::string name;
 	};
 };

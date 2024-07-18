@@ -8,8 +8,9 @@
 
 // std Includes.
 #include <iostream>
+#include <cstddef>
 
-#define BUFFER_OFFSET( idx ) ( static_cast< char* >( 0 ) + ( idx ) )
+#define BUFFER_OFFSET( idx ) ( static_cast< std::byte* >( 0 ) + ( idx ) )
 
 #define GLCALL( x ) GLClearError();\
 x;\

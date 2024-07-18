@@ -1,7 +1,7 @@
 #pragma once
 
 // Engine Includes.
-#include "VertexBuffer.hpp"
+#include "VertexBuffer.h"
 #include "VertexBufferLayout.hpp"
 #include "IndexBuffer.h"
 
@@ -12,6 +12,9 @@ namespace Engine
 {
 	class VertexArray
 	{
+	public:
+		using ID = unsigned int;
+
 	public:
 		VertexArray();
 		VertexArray( const VertexArray& right_hand_side )				= delete;
@@ -26,6 +29,7 @@ namespace Engine
 		void Bind() const;
 		void Unbind() const;
 
+		inline ID			Id()			const { return id;			 }
 		inline unsigned int VertexCount()	const { return vertex_count; }
 		inline unsigned int IndexCount()	const { return index_count;  }
 		inline bool			IsValid()		const { return vertex_count; } // Use the vertex count to implicitly define validness state.
@@ -34,7 +38,7 @@ namespace Engine
 		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout );
 
 	private:
-		unsigned int id;
+		ID id;
 
 		unsigned int vertex_buffer_id;
 		unsigned int index_buffer_id;

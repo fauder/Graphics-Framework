@@ -1,43 +1,41 @@
 #pragma once
 
 // Engine Includes.
-#include "Graphics/Color.hpp"
-#include "Graphics/UniformStruct.h"
+#include "Color.hpp"
+#include "UniformBufferTag.h"
+#include "PaddedAndCombinedTypes.h"
 #include "Math/Vector.hpp"
 
 namespace Engine::Lighting
 {
-	struct PointLightData : public UniformStruct
+	struct DirectionalLightData : public UniformBufferTag
 	{
-		Color3 ambient, diffuse, specular;
-		Vector3 position_view_space;
+		Color3_Padded ambient, diffuse, specular;
+		Vector3_Padded direction_view_space;
 
-		float attenuation_constant, attenuation_linear, attenuation_quadratic;
-
-	/* End of GLSL equivalence. */
-
-		// Keeping world space position is beneficial; It is easier to reason about compared to view space coordinates.
-		Vector3 position_world_space;
-	};
-
-	struct DirectionalLightData : public UniformStruct
-	{
-		Color3 ambient, diffuse, specular;
-		Vector3 direction_view_space;
-
-	/* End of GLSL equivalence. */
+	/* End of GLSL equivalence. C++ only extras: */
 
 		// Keeping world space direction is beneficial; It is easier to reason about compared to view space coordinates.
 		Vector3 direction_world_space;
 	};
 
-	struct SpotLightData : public UniformStruct
+	struct PointLightData : public UniformBufferTag
 	{
-		Color3 ambient, diffuse, specular;
-		Vector3 position_view_space, direction_view_space; // Expected to be in view space when passed to shaders.
-		float cos_cutoff_angle_inner, cos_cutoff_angle_outer;
+		Color3_AndScalar ambient_and_attenuation_constant, diffuse_and_attenuation_linear, specular_attenuation_quadratic;
+		Vector3_Padded position_view_space;
 
-	/* End of GLSL equivalence. */
+	/* End of GLSL equivalence. C++ only extras: */
+
+		// Keeping world space position is beneficial; It is easier to reason about compared to view space coordinates.
+		Vector3 position_world_space;
+	};
+
+	struct SpotLightData : public UniformBufferTag
+	{
+		Color3_Padded ambient, diffuse, specular;
+		Vector3_AndScalar position_view_space_and_cos_cutoff_angle_inner, direction_view_space_and_cos_cutoff_angle_outer; // Expected to be in view space when passed to shaders.
+
+	/* End of GLSL equivalence. C++ only extras: */
 
 		// Keeping world space position & direction is beneficial; It is easier to reason about compared to view space coordinates.
 		Vector3 position_world_space, direction_world_space;
@@ -45,9 +43,8 @@ namespace Engine::Lighting
 	};
 
 	/* This is also named Material in some sources, but since the name Material is more widely used to define [Shader + Uniforms + Textures] instead, this struct is named SurfaceData */
-	struct SurfaceData : public UniformStruct
+	struct SurfaceData : public UniformBufferTag
 	{
-		int diffuse_map_slot, specular_map_slot;
 		float shininess;
 	};
 }

@@ -29,7 +29,7 @@ namespace Engine::ImGuiDrawer
 			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< Vector4B*		>( value_pointer ), name );
 			
 			/* Matrices: */
-			/*case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< Matrix2x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< Matrix2x2*	>( value_pointer ), name );
 			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< Matrix3x3*	>( value_pointer ), name );
 			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< Matrix4x4*	>( value_pointer ), name );
 			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< Matrix2x3*	>( value_pointer ), name );
@@ -37,21 +37,12 @@ namespace Engine::ImGuiDrawer
 			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< Matrix3x2*	>( value_pointer ), name );
 			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< Matrix3x4*	>( value_pointer ), name );
 			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< Matrix4x2*	>( value_pointer ), name );
-			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );*/
-			case GL_FLOAT_MAT2 			: return false;
-			case GL_FLOAT_MAT3 			: return false;
-			case GL_FLOAT_MAT4 			: return false;
-			case GL_FLOAT_MAT2x3 		: return false;
-			case GL_FLOAT_MAT2x4 		: return false;
-			case GL_FLOAT_MAT3x2 		: return false;
-			case GL_FLOAT_MAT3x4 		: return false;
-			case GL_FLOAT_MAT4x2 		: return false;
-			case GL_FLOAT_MAT4x3 		: return false;
+			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );
 
 			/* Other: */
-			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
-			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
-			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
+			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
 		}
 
 		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, void* value_pointer ) called for an undefined GL type!" );
@@ -81,7 +72,7 @@ namespace Engine::ImGuiDrawer
 			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< const Vector4B*		>( value_pointer ), name );
 
 			/* Matrices: */
-			/*case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< const Matrix2x2*		>( value_pointer ), name ); return;
+			case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< const Matrix2x2*		>( value_pointer ), name );
 			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< const Matrix3x3*		>( value_pointer ), name );
 			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< const Matrix4x4*		>( value_pointer ), name );
 			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< const Matrix2x3*		>( value_pointer ), name );
@@ -89,21 +80,12 @@ namespace Engine::ImGuiDrawer
 			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< const Matrix3x2*		>( value_pointer ), name );
 			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< const Matrix3x4*		>( value_pointer ), name );
 			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< const Matrix4x2*		>( value_pointer ), name );
-			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );*/
-			case GL_FLOAT_MAT2 			: return;
-			case GL_FLOAT_MAT3 			: return;
-			case GL_FLOAT_MAT4 			: return;
-			case GL_FLOAT_MAT2x3 		: return;
-			case GL_FLOAT_MAT2x4 		: return;
-			case GL_FLOAT_MAT3x2 		: return;
-			case GL_FLOAT_MAT3x4 		: return;
-			case GL_FLOAT_MAT4x2 		: return;
-			case GL_FLOAT_MAT4x3 		: return;
+			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );
 
 			/* Other: */
-			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
-			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
-			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
+			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
 		}
 
 		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, const void* value_pointer ) called for an undefined GL type!" );
@@ -268,6 +250,26 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
+	bool Draw( Texture* texture, const char* name )
+	{
+		// TODO: Implement texture selection.
+
+		if( texture )
+			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), R"~("%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+		else
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
+
+		return false;
+	}
+
+	void Draw( const Texture* texture, const char* name )
+	{
+		if( texture )
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), R"~("%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+		else
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
+	}
+
 	bool Draw( Camera& camera, const char* name )
 	{
 		bool is_modified = false;
@@ -317,7 +319,7 @@ namespace Engine::ImGuiDrawer
 	{
 		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
-			if( ImGui::TreeNodeEx( material.GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			if( ImGui::TreeNodeEx( material.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 			{
 				// TODO: Implement shader selection.
 				if( material.HasShaderAssigned() )
@@ -328,31 +330,78 @@ namespace Engine::ImGuiDrawer
 				else
 					ImGui::TextUnformatted( "Shader: <unassigned>" );
 
-				const auto& uniform_map = material.GetUniformInformations();
-
-				for( auto& [ uniform_name, uniform_info ] : uniform_map )
+				if( ImGui::BeginTable( material.Name().c_str(), 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
 				{
-					/* Skip uniform struct members; They will be drawn under their parent struct name instead. */
-					if( uniform_info.original_order_in_struct != -1 )
-						continue;
+					const auto& uniform_info_map        = material.GetUniformInfoMap();
+					const auto& uniform_buffer_info_map = material.GetUniformBufferInfoMap();
+					const auto& texture_map             = material.GetTextureMap();
 
+					ImGui::TableSetupColumn( "Name"	 );
+					ImGui::TableSetupColumn( "Value" );
 
-					if( uniform_info.IsUserDefinedStruct() )
+					ImGui::TableHeadersRow();
+					ImGui::TableNextRow();
+
+					for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
 					{
-						if( ImGui::TreeNodeEx( uniform_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+						/* Skip uniform buffer members; They will be drawn under their parent uniform buffer instead. */
+						if( uniform_info.is_buffer_member )
+							continue;
+
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_name.c_str() );
+
+						ImGui::TableNextColumn();
+
+						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+						ImGui::PushID( ( void* )&uniform_info );
+						Draw( uniform_info.type, material.Get( uniform_info ) );
+						ImGui::PopID();
+					}
+
+					for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					{
+						if( uniform_buffer_info.IsGlobalOrIntrinsic() )
+							continue;
+
+						ImGui::TableNextColumn();
+
+						if( ImGui::TreeNodeEx( uniform_buffer_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 						{
+							ImGui::TableNextRow();
 							/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
-							for( const auto& [ uniform_member_name, uniform_member_info ] : uniform_info.members )
-								Draw( uniform_member_info->type, material.GetUniformPointer( uniform_member_info->original_offset ), uniform_member_name.c_str() );
+
+							std::byte* memory_blob = ( std::byte* )material.Get( uniform_buffer_info );
+
+							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info.members_map )
+							{
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_name.c_str() );
+
+								ImGui::TableNextColumn();
+
+								ImGui::PushID( ( void* )uniform_buffer_member_info );
+								Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
+								ImGui::PopID();
+							}
 
 							ImGui::TreePop();
 						}
+						else
+							ImGui::TableNextRow();
 					}
-					else
+
+					for( auto& [ uniform_sampler_name, texture_pointer ] : texture_map )
 					{
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_sampler_name.c_str() );
+
+						ImGui::TableNextColumn();
+
 						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
-						Draw( uniform_info.type, material.GetUniformPointer( uniform_info.offset ), uniform_name.c_str() );
+						ImGui::PushID( ( void* )&texture_pointer );
+						Draw( texture_pointer, uniform_sampler_name.c_str() );
+						ImGui::PopID();
 					}
+
+					ImGui::EndTable();
 				}
 
 				ImGui::TreePop();
@@ -366,38 +415,85 @@ namespace Engine::ImGuiDrawer
 	{
 		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
-			if( ImGui::TreeNodeEx( material.GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			if( ImGui::TreeNodeEx( material.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 			{
 				if( material.HasShaderAssigned() )
 				{
 					const auto& shader_name( material.GetShaderName() );
-					ImGui::TextColored( ImVec4( 0.38f, 0.12f, 0.68f, 1.0f ), "Shader: %s", material.GetShaderName().c_str() );
+					ImGui::TextColored( ImVec4( 0.38f, 0.12f, 0.68f, 1.0f ), "Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
 				}
 				else
 					ImGui::TextUnformatted( "Shader: <unassigned>" );
 
-				const auto& uniform_map = material.GetUniformInformations();
-
-				for( auto& [ uniform_name, uniform_info ] : uniform_map )
+				if( ImGui::BeginTable( material.Name().c_str(), 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
 				{
-					/* Skip uniform struct members; They will be drawn under their parent struct name instead. */
-					if( uniform_info.original_order_in_struct != -1 )
-						continue;
+					const auto& uniform_info_map        = material.GetUniformInfoMap();
+					const auto& uniform_buffer_info_map = material.GetUniformBufferInfoMap();
+					const auto& texture_map             = material.GetTextureMap();
 
-					if( uniform_info.IsUserDefinedStruct() )
+					ImGui::TableSetupColumn( "Name"	 );
+					ImGui::TableSetupColumn( "Value" );
+
+					ImGui::TableHeadersRow();
+					ImGui::TableNextRow();
+
+					for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
 					{
-						if( ImGui::TreeNodeEx( uniform_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+						/* Skip uniform buffer members; They will be drawn under their parent uniform buffer instead. */
+						if( uniform_info.is_buffer_member )
+							continue;
+
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_name.c_str() );
+
+						ImGui::TableNextColumn();
+
+						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+						ImGui::PushID( ( void* )&uniform_info );
+						Draw( uniform_info.type, material.Get( uniform_info ) );
+						ImGui::PopID();
+					}
+
+					for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					{
+						if( uniform_buffer_info.IsGlobalOrIntrinsic() )
+							continue;
+
+						ImGui::TableNextColumn();
+
+						if( ImGui::TreeNodeEx( uniform_buffer_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 						{
-							for( const auto& [ uniform_member_name, uniform_member_info ] : uniform_info.members )
-								Draw( uniform_member_info->type, material.GetUniformPointer( uniform_member_info->original_offset ), uniform_member_name.c_str() );
+							ImGui::TableNextRow();
+							/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info.members_map )
+							{
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_name.c_str() );
+
+								ImGui::TableNextColumn();
+
+								ImGui::PushID( ( void* )uniform_buffer_member_info );
+								Draw( uniform_buffer_member_info->type, material.Get( *uniform_buffer_member_info ) );
+								ImGui::PopID();
+							}
 
 							ImGui::TreePop();
 						}
+						else
+							ImGui::TableNextRow();
 					}
-					else
+
+					for( const auto& [ uniform_sampler_name, texture_pointer ] : texture_map )
 					{
-						Draw( uniform_info.type, material.GetUniformPointer( uniform_info.original_offset ), uniform_name.c_str() );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_sampler_name.c_str() );
+
+						ImGui::TableNextColumn();
+
+						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+						ImGui::PushID( ( void* )&texture_pointer );
+						Draw( texture_pointer, uniform_sampler_name.c_str() );
+						ImGui::PopID();
 					}
+
+					ImGui::EndTable();
 				}
 
 				ImGui::TreePop();
@@ -407,15 +503,19 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
+	// TODO: Move Intrinsic & Global Uniforms to another Window.
+
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags )
 	{
 		if( ImGui::Begin( "Shaders", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
-			const auto& uniform_map = shader.GetUniformInformations();
+			const auto& uniform_info_map        = shader.GetUniformInfoMap();
+			const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap();
 
-			if( ImGui::TreeNodeEx( shader.GetName().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			if( ImGui::TreeNodeEx( shader.Name().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
 			{
 				ImGui::SeparatorText( "Uniforms" );
+
 				if( ImGui::BeginTable( "Uniforms", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 				{
 					ImGui::TableSetupColumn( "Name"		);
@@ -424,56 +524,78 @@ namespace Engine::ImGuiDrawer
 					ImGui::TableSetupColumn( "Offset"	);
 					ImGui::TableSetupColumn( "Type"		);
 
-					ImGui::TableNextRow( ImGuiTableRowFlags_Headers ); // Indicates that the header row will be modified.
-					ImGuiUtility::Table_Header_ManuallySubmit( std::array< int, 3 >{ 0, 2, 4 } );
-					ImGuiUtility::Table_Header_ManuallySubmit_AppendHelpMarker( 1, "For uniform struct members, value in parenthesis shows the original location defined in the struct." );
-					ImGuiUtility::Table_Header_ManuallySubmit_AppendHelpMarker( 3, "For uniform struct members, value in parenthesis shows the original offset of the member in the struct." );
-					ImGui::TableNextRow(); // Done with the header row, skip to normal rows.
+					ImGui::TableHeadersRow();
+					ImGui::TableNextRow();
 
 					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
-					for( auto& [ uniform_name, uniform_info ] : uniform_map )
+					for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
 					{
-						/* Skip uniform struct members; They will be drawn under their parent struct name instead. */
-						if( uniform_info.original_order_in_struct != -1 )
+						/* Skip uniform buffer members; They will be drawn under their parent uniform buffer instead. */
+						if( uniform_info.is_buffer_member )
 							continue;
 
-						if( uniform_info.IsUserDefinedStruct() )
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_name.c_str() );
+						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location_or_block_index );
+						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
+						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info.type ) );
+					}
+
+					ImGui::PopStyleColor();
+
+					ImGui::EndTable();
+				}
+
+				ImGui::SeparatorText( "Uniform Buffers" );
+
+				if( ImGui::BeginTable( "Uniform Buffers", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+				{
+					ImGui::TableSetupColumn( "Name"				);
+					ImGui::TableSetupColumn( "Binding/Location" );
+					ImGui::TableSetupColumn( "Size"				);
+					ImGui::TableSetupColumn( "Offset"			);
+					ImGui::TableSetupColumn( "Category/Type"	);
+
+					ImGui::TableHeadersRow();
+					ImGui::TableNextRow();
+
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
+					for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					{
+						ImGui::TableNextColumn();
+
+						if( ImGui::TreeNodeEx( uniform_buffer_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 						{
-							ImGui::TableNextColumn();
-							if( ImGui::TreeNodeEx( uniform_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
-							{
-								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location );
-								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
-								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
-								ImGui::TableNextColumn(); ImGui::TextUnformatted( "struct" );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.binding_point );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.size );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.offset );
+							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_info.CategoryString( uniform_buffer_info.category ) );
 
-								for( const auto& [ uniform_member_name, uniform_member_info ] : uniform_info.members )
+							for( const auto& [ uniform_name, uniform_info ] : uniform_buffer_info.members_map )
+							{
+								ImGui::TableNextColumn();
+
+								if( ImGui::TreeNodeEx( uniform_name.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen ) )
 								{
-									ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_member_name.c_str() );
-									ImGui::TableNextColumn(); ImGui::Text( "%d (%d)", uniform_member_info->location, uniform_member_info->original_order_in_struct );
-									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_member_info->size );
-									ImGui::TableNextColumn(); ImGui::Text( "%d (%d)", uniform_member_info->offset, uniform_member_info->original_offset );
-									ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_member_info->type ) );
+									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->location_or_block_index );
+									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->size );
+									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->offset );
+									ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info->type ) );
 								}
+							}
 
-								ImGui::TreePop();
-							}
-							else
-							{
-								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location );
-								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
-								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
-								ImGui::TableNextColumn(); ImGui::TextUnformatted( "struct" );
-							}
+							ImGui::TreePop();
+
+							ImGui::TableNextRow();
 						}
 						else
 						{
-							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_name.c_str() );
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location );
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
-							ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info.type ) );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.binding_point );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.size );
+							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.offset );
+							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_info.CategoryString( uniform_buffer_info.category ) );
 						}
 					}
 
@@ -499,14 +621,14 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			is_modified |= Draw( point_light_data.ambient,  "Ambient"  );
-			is_modified |= Draw( point_light_data.diffuse,  "Diffuse"  );
-			is_modified |= Draw( point_light_data.specular, "Specular" );
+			is_modified |= Draw( point_light_data.ambient_and_attenuation_constant.color,	"Ambient"  );
+			is_modified |= Draw( point_light_data.diffuse_and_attenuation_linear.color,		"Diffuse"  );
+			is_modified |= Draw( point_light_data.specular_attenuation_quadratic.color,		"Specular" );
 			if( !hide_position )
 				is_modified |= Draw( point_light_data.position_world_space, "Position" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.attenuation_constant,		0.0f, 5.0f, "%.5g" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.attenuation_linear,		0.0f, 1.0f, "%.5g" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.attenuation_quadratic,	0.0f, 1.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.ambient_and_attenuation_constant.scalar,	0.0f, 5.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.diffuse_and_attenuation_linear.scalar,	0.0f, 1.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.specular_attenuation_quadratic.scalar,	0.0f, 1.0f, "%.5g" );
 
 			ImGui::PopID();
 		}
@@ -524,15 +646,15 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( light_name );
 
-			Draw( point_light_data.ambient,  "Ambient"  );
-			Draw( point_light_data.diffuse,  "Diffuse"  );
-			Draw( point_light_data.specular, "Specular" );
+			Draw( point_light_data.ambient_and_attenuation_constant.color,  "Ambient"  );
+			Draw( point_light_data.diffuse_and_attenuation_linear.color,	"Diffuse"  );
+			Draw( point_light_data.specular_attenuation_quadratic.color,	"Specular" );
 			Draw( point_light_data.position_world_space, "Position" );
 			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
-			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.attenuation_constant  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.attenuation_linear	  ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.attenuation_quadratic ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.ambient_and_attenuation_constant.scalar ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.diffuse_and_attenuation_linear.scalar	), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.specular_attenuation_quadratic.scalar	), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
 			ImGui::PopStyleColor();
 
 			ImGui::PopID();
@@ -643,9 +765,7 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( surface_name );
 
-			is_modified |= ImGui::SliderInt( "Diffuse Map ID",	&surface_data.diffuse_map_slot,		0,		16 );
-			is_modified |= ImGui::SliderInt( "Specular Map ID", &surface_data.specular_map_slot,	0,		16 );
-			is_modified |= ImGui::SliderFloat( "Shininess",		&surface_data.shininess,			0.1f,	64.0f, "%.2f", ImGuiSliderFlags_Logarithmic );
+			is_modified |= ImGui::SliderFloat( "Shininess",	&surface_data.shininess, 0.1f, 64.0f, "%.2f", ImGuiSliderFlags_Logarithmic );
 
 			ImGui::PopID();
 		}
@@ -664,10 +784,6 @@ namespace Engine::ImGuiDrawer
 			ImGui::PushID( surface_name );
 
 			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
-
-			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
-			ImGui::InputInt( "Diffuse Map ID",  const_cast< int* >( &surface_data.diffuse_map_slot  ), 0, 0, ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputInt( "Specular Map ID", const_cast< int* >( &surface_data.specular_map_slot ), 0, 0, ImGuiInputTextFlags_ReadOnly );
 
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputFloat( "Shininess", const_cast< float* >( &surface_data.shininess ), 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_ReadOnly );

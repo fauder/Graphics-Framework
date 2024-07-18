@@ -5,5 +5,5 @@
 
 namespace Engine
 {
-	using IndexBuffer = Buffer< GL_ELEMENT_ARRAY_BUFFER, unsigned int >;
+	using UniformBuffer = Buffer< GL_UNIFORM_BUFFER, std::byte >;
 }
