@@ -5,6 +5,7 @@
 #include "Engine/Core/ImGuiDrawer.hpp"
 #include "Engine/Core/ImGuiSetup.h"
 #include "Engine/Core/Platform.h"
+#include "Engine/Core/ServiceLocator.h"
 #include "Engine/Graphics/GLLogger.h"
 #include "Engine/Graphics/MeshUtility.hpp"
 #include "Engine/Graphics/Primitive/Primitive_Cube.h"
@@ -13,8 +14,6 @@
 #include "Engine/Math/Random.hpp"
 
 using namespace Engine::Math::Literals;
-
-// TODO: Get debug callback working ASAP.
 
 Engine::Application* Engine::CreateApplication()
 {
@@ -56,6 +55,8 @@ void SandboxApplication::Initialize()
 {
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
+	Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
+
 	gl_logger.IgnoreID( 131185 );
 
 	//Engine::Math::Random::SeedRandom();
@@ -90,6 +91,7 @@ void SandboxApplication::Initialize()
 
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
+							  "Cube",
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
@@ -139,8 +141,6 @@ void SandboxApplication::Initialize()
 
 	Platform::MaximizeWindow();
 }
-
-// TODO: Integrate RenderDoc annotations.
 
 void SandboxApplication::Shutdown()
 {

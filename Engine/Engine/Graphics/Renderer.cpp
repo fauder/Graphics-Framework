@@ -140,7 +140,7 @@ namespace Engine
 			{
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Intrinsic )
 				{
-					auto& buffer = uniform_buffer_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+					auto& buffer = uniform_buffer_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Intrinsic );
 				}
 			}
@@ -152,7 +152,7 @@ namespace Engine
 			{
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Global )
 				{
-					auto& buffer = uniform_buffer_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+					auto& buffer = uniform_buffer_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Global );
 				}
 			}

@@ -7,6 +7,7 @@
 // std Includes.
 #include <functional>
 #include <stack>
+#include <string>
 
 namespace Engine
 {
@@ -63,6 +64,7 @@ namespace Engine
 
 	/* Labeling: */
 		void SetLabel( const GLenum object_type, const GLuint object_id, const char* label );
+		void SetLabel( const GLenum object_type, const GLuint object_id, const std::string& name );
 		void GetLabel( const GLenum object_type, const GLuint object_id, char* label );
 		std::string GetLabel( const GLenum object_type, const GLuint object_id );
 

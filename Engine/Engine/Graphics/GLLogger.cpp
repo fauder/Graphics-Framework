@@ -58,6 +58,11 @@ namespace Engine
 		glObjectLabel( object_type, object_id, -1, label );
 	}
 
+	void GLLogger::SetLabel( const GLenum object_type, const GLuint object_id, const std::string& name )
+	{
+		glObjectLabel( object_type, object_id, -1, name.c_str() );
+	}
+
 	void GLLogger::GetLabel( const GLenum object_type, const GLuint object_id, char* label )
 	{
 		int label_length;

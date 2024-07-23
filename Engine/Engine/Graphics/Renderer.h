@@ -76,8 +76,6 @@ namespace Engine
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_intrinsic;
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_global;
 
-		//std::unordered_map< UniformBuffer::ID, 
-
 		// TODO: Probably going to need to keep a blob similar to Material's here for intrinsic & global uniforms.
 	};
 }

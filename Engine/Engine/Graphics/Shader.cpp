@@ -5,17 +5,15 @@
 #endif // _WIN32
 
 // Engince Includes.
+#include "Core/ServiceLocator.h"
 #include "Core/Utility.hpp"
+#include "GLLogger.h"
 #include "Shader.hpp"
 #include "ShaderTypeInformation.h"
 #include "UniformBufferManager.h"
 
 // std Includes.
-#include <fstream>
 #include <numeric> // std::iota.
-#include <span>
-#include <sstream>
-#include <string_view>
 
 namespace Engine
 {
@@ -71,6 +69,10 @@ namespace Engine
 
 		if( link_result )
 		{
+#ifdef _DEBUG
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_PROGRAM, program_id, name );
+#endif // _DEBUG
+
 			GetUniformBookKeepingInfo();
 			if( uniform_book_keeping_info.count == 0 )
 				return true;

@@ -10,7 +10,7 @@ namespace Engine
 {
 	enum class GLLogType
 	{
-		ERROR,               
+		ERROR_, // wingdi.h has ERROR macro...
 		DEPRECATED_BEHAVIOR,
 		UNDEFINED_BEHAVIOR,
 		PORTABILITY,
@@ -29,7 +29,7 @@ namespace Engine
 	{
 		switch( value )
 		{
-			case GL_DEBUG_TYPE_ERROR               : return GLLogType::ERROR;
+			case GL_DEBUG_TYPE_ERROR               : return GLLogType::ERROR_;
 			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR : return GLLogType::DEPRECATED_BEHAVIOR;
 			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR  : return GLLogType::UNDEFINED_BEHAVIOR;
 			case GL_DEBUG_TYPE_PORTABILITY         : return GLLogType::PORTABILITY;
