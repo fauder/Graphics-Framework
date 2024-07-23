@@ -24,6 +24,11 @@ namespace Engine
 	{
 	}
 
+	void GLLogger::Insert( const char* message, const unsigned int id )
+	{
+		glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, id, GL_DEBUG_SEVERITY_NOTIFICATION, -1, message );
+	}
+
 	void GLLogger::PushGroup( const char* group_name, const unsigned int id )
 	{
 		empty_log_groups.push( group_name );

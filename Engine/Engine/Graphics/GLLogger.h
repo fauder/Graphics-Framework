@@ -52,6 +52,9 @@ namespace Engine
 		GLLogger();
 		~GLLogger();
 
+	/* Custom messages: */
+		void Insert( const char* message, const unsigned int id = 0 );
+
 	/* Grouping: */
 		void PushGroup( const char* group_name, const unsigned int id = 0 );
 		void PopGroup();
