@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Core/Assert.h"
 
 // std Includes.
 #include <span>
@@ -101,21 +102,21 @@ namespace Engine
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "Attempting Bind() on Buffer with zero size!" );
 
-			GLCALL( glBindBuffer( TargetType, id ) );
+			glBindBuffer( TargetType, id );
 		}
 
 		void Update( const void* data, const GLenum usage = GL_STATIC_DRAW ) const
 		{
 			Bind();
 
-			GLCALL( glBufferData( TargetType, size, data, usage ) );
+			glBufferData( TargetType, size, data, usage );
 		}
 
 		void Update_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const
 		{
 			Bind();
 
-			GLCALL( glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() ) );
+			glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() );
 		}
 		
 		ID				Id()		const { return id;		}
@@ -126,12 +127,12 @@ namespace Engine
 	private:
 		void CreateBuffer()
 		{
-			GLCALL( glGenBuffers( 1, &id ) );
+			glGenBuffers( 1, &id );
 		}
 
 		void DeleteBuffer()
 		{
-			GLCALL( glDeleteBuffers( 1, &id ) );
+			glDeleteBuffers( 1, &id );
 		}
 
 	private:

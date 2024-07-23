@@ -36,7 +36,7 @@ namespace Engine
 
 	Shader::~Shader()
 	{
-		GLCALL( glDeleteProgram( program_id ) );
+		glDeleteProgram( program_id );
 	}
 
 	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
@@ -60,14 +60,14 @@ namespace Engine
 		}
 		else
 		{
-			GLCALL( glDeleteShader( vertex_shader_id ) );
+			glDeleteShader( vertex_shader_id );
 			return false;
 		}
 
 		const bool link_result = LinkProgram( vertex_shader_id, fragment_shader_id );
 
-		GLCALL( glDeleteShader( vertex_shader_id ) );
-		GLCALL( glDeleteShader( fragment_shader_id ) );
+		glDeleteShader( vertex_shader_id );
+		glDeleteShader( fragment_shader_id );
 
 		if( link_result )
 		{
@@ -91,7 +91,7 @@ namespace Engine
 
 	void Shader::Bind() const
 	{
-		GLCALL( glUseProgram( program_id ) );
+		glUseProgram( program_id );
 	}
 
 	void Shader::SetUniform( const Uniform::Information& uniform_info, const void* value_pointer )
@@ -152,12 +152,12 @@ namespace Engine
 
 	bool Shader::CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type )
 	{
-		GLCALL( shader_id = glCreateShader( ShaderTypeID( shader_type ) ) );
-		GLCALL( glShaderSource( shader_id, /* how many strings: */ 1, &source, NULL ) );
-		GLCALL( glCompileShader( shader_id ) );
+		shader_id = glCreateShader( ShaderTypeID( shader_type ) );
+		glShaderSource( shader_id, /* how many strings: */ 1, &source, NULL );
+		glCompileShader( shader_id );
 
 		int success = false;
-		GLCALL( glGetShaderiv( shader_id, GL_COMPILE_STATUS, &success ) );
+		glGetShaderiv( shader_id, GL_COMPILE_STATUS, &success );
 		if( !success )
 		{
 			LogErrors_Compilation( shader_id, shader_type );
@@ -169,14 +169,14 @@ namespace Engine
 
 	bool Shader::LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id )
 	{
-		GLCALL( program_id = glCreateProgram() );
+		program_id = glCreateProgram();
 
-		GLCALL( glAttachShader( program_id, vertex_shader_id ) );
-		GLCALL( glAttachShader( program_id, fragment_shader_id ) );
-		GLCALL( glLinkProgram( program_id ) );
+		glAttachShader( program_id, vertex_shader_id );
+		glAttachShader( program_id, fragment_shader_id );
+		glLinkProgram( program_id );
 
 		int success;
-		GLCALL( glGetProgramiv( program_id, GL_LINK_STATUS, &success ) );
+		glGetProgramiv( program_id, GL_LINK_STATUS, &success );
 		if( !success )
 		{
 			LogErrors_Linking();
@@ -188,8 +188,8 @@ namespace Engine
 
 	void Shader::GetUniformBookKeepingInfo()
 	{
-		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &uniform_book_keeping_info.count ) );
-		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_book_keeping_info.name_max_length ) );
+		glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &uniform_book_keeping_info.count );
+		glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_book_keeping_info.name_max_length );
 		uniform_book_keeping_info.name_holder = std::string( uniform_book_keeping_info.name_max_length, '?' );
 	}
 
@@ -201,8 +201,7 @@ namespace Engine
 		block_indices.resize( active_uniform_count );
 		std::iota( corresponding_uniform_indices.begin(), corresponding_uniform_indices.end(), 0 );
 
-		GLCALL( glGetActiveUniformsiv( program_id, active_uniform_count, corresponding_uniform_indices.data(), GL_UNIFORM_BLOCK_INDEX,
-									   reinterpret_cast< int* >( block_indices.data() ) ) );
+		glGetActiveUniformsiv( program_id, active_uniform_count, corresponding_uniform_indices.data(), GL_UNIFORM_BLOCK_INDEX, reinterpret_cast< int* >( block_indices.data() ) );
 
 		int block_count = 0;
 		for( auto uniform_index = 0; uniform_index < active_uniform_count; uniform_index++ )
@@ -238,12 +237,13 @@ namespace Engine
 			 */
 			int array_size_dontCare = 0, length_dontCare = 0;
 			GLenum type;
-			GLCALL( glGetActiveUniform( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length_dontCare, &array_size_dontCare, &type,
-										uniform_book_keeping_info.name_holder.data() ) );
+			glGetActiveUniform( program_id, uniform_index, uniform_book_keeping_info.name_max_length,
+								&length_dontCare, &array_size_dontCare, &type, 
+								uniform_book_keeping_info.name_holder.data() );
 
 			const int size = GetSizeOfType( type );
 
-			GLCALL( const auto location = glGetUniformLocation( program_id, uniform_book_keeping_info.name_holder.c_str() ) );
+			const auto location = glGetUniformLocation( program_id, uniform_book_keeping_info.name_holder.c_str() );
 
 			const bool is_buffer_member = location == -1;
 
@@ -270,8 +270,8 @@ namespace Engine
 		/* Size below is commented out because array uniforms are not implemented yetand size here refers to array size.It is 1 for non - arrays. */
 
 		std::vector< int > /*corresponding_array_sizes( corresponding_uniform_indices.size() ),*/ correspoding_offsets( corresponding_uniform_indices.size() );
-		//GLCALL( glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_SIZE,		corresponding_array_sizes.data()	) );
-		GLCALL( glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET,	correspoding_offsets.data()			) );
+		//glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_SIZE,		corresponding_array_sizes.data()	);
+		glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET,	correspoding_offsets.data()			);
 
 		for( int index = 0; index < corresponding_uniform_indices.size(); index++ )
 		{
@@ -280,7 +280,7 @@ namespace Engine
 			const auto offset        = correspoding_offsets[ index ];
 
 			int length = 0;
-			GLCALL( glGetActiveUniformName( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() ) );
+			glGetActiveUniformName( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() );
 
 			const auto& uniform_name = uniform_book_keeping_info.name_holder.c_str();
 
@@ -295,23 +295,23 @@ namespace Engine
 	void Shader::QueryUniformBufferData( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map )
 	{
 		int active_uniform_block_count = 0;
-		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCKS, &active_uniform_block_count ) );
+		glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCKS, &active_uniform_block_count );
 
 		if( active_uniform_block_count == 0 )
 			return;
 
 		int uniform_block_name_max_length = 0;
-		GLCALL( glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &uniform_block_name_max_length ) );
+		glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &uniform_block_name_max_length );
 		std::string name( uniform_block_name_max_length, '?' );
 
 		int offset = 0;
 		for( int uniform_block_index = 0; uniform_block_index < active_uniform_block_count; uniform_block_index++ )
 		{
 			int length = 0;
-			GLCALL( glGetActiveUniformBlockName( program_id, uniform_block_index, uniform_block_name_max_length, &length, name.data() ) );
+			glGetActiveUniformBlockName( program_id, uniform_block_index, uniform_block_name_max_length, &length, name.data() );
 			
 			int size;
-			GLCALL( glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size ) );
+			glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size );
 
 			const auto category = Uniform::DetermineBufferCategory( name );
 
@@ -437,7 +437,7 @@ namespace Engine
 	void Shader::LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const
 	{
 		char info_log[ 512 ];
-		GLCALL( glGetShaderInfoLog( shader_id, 512, NULL, info_log ) );
+		glGetShaderInfoLog( shader_id, 512, NULL, info_log );
 
 		const std::string complete_error_string( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::COMPILE:\nShader name: " + name + FormatErrorLog( info_log ) );
 		std::cerr << complete_error_string;
@@ -451,7 +451,7 @@ namespace Engine
 	void Shader::LogErrors_Linking() const
 	{
 		char info_log[ 512 ];
-		GLCALL( glGetProgramInfoLog( program_id, 512, NULL, info_log ) );
+		glGetProgramInfoLog( program_id, 512, NULL, info_log );
 
 		const std::string complete_error_string( "ERROR::SHADER::PROGRAM::LINK:\nShader name: " + name + FormatErrorLog( info_log ) );
 		std::cerr << complete_error_string;

@@ -84,23 +84,23 @@ namespace Engine
 	{
 		if( IsValid() )
 		{
-			GLCALL( glDeleteVertexArrays( 1, &id ) );
+			glDeleteVertexArrays( 1, &id );
 		}
 	}
 
 	void VertexArray::Bind() const
 	{
-		GLCALL( glBindVertexArray( id ) );
+		glBindVertexArray( id );
 	}
 
 	void VertexArray::Unbind() const
 	{
-		GLCALL( glBindVertexArray( 0 ) );
+		glBindVertexArray( 0 );
 	}
 
 	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout )
 	{
-		GLCALL( glGenVertexArrays( 1, &id ) );
+		glGenVertexArrays( 1, &id );
 		Bind();
 
 		vertex_buffer.Bind();

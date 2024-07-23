@@ -121,12 +121,12 @@ namespace Engine
 
 	void Renderer::Render_Indexed( const Mesh& mesh )
 	{
-		GLCALL( glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, mesh.Indices_Raw() ) );
+		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, mesh.Indices_Raw() );
 	}
 
 	void Renderer::Render_NonIndexed( const Mesh& mesh )
 	{
-		GLCALL( glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() ) );
+		glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() );
 	}
 
 	void Renderer::RegisterShader( const Shader& shader )
@@ -167,11 +167,11 @@ namespace Engine
 
 	void Renderer::SetClearColor()
 	{
-		GLCALL( glClearColor( clear_color.R(), clear_color.G(), clear_color.B(), clear_color.A() ) );
+		glClearColor( clear_color.R(), clear_color.G(), clear_color.B(), clear_color.A() );
 	}
 
 	void Renderer::Clear() const
 	{
-		GLCALL( glClear( ( GLbitfield )clear_target ) );
+		glClear( ( GLbitfield )clear_target );
 	}
 }

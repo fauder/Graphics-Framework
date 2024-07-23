@@ -162,6 +162,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Drawable.h" />
     <ClInclude Include="Engine\Graphics\GLLogType.h" />
     <ClInclude Include="Engine\Graphics\GLLogger.h" />
+    <ClInclude Include="Engine\Graphics\Macros.h" />
     <ClInclude Include="Engine\Graphics\Mesh.hpp" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
     <ClInclude Include="Engine\Graphics\PaddedAndCombinedTypes.h" />
