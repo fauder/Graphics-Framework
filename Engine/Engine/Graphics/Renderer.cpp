@@ -120,6 +120,21 @@ namespace Engine
  * 
  */
 
+	void Renderer::EnableDepthTest()
+	{
+		glEnable( GL_DEPTH_TEST );
+	}
+
+	void Renderer::DisableDepthTest()
+	{
+		glDisable( GL_DEPTH_TEST );
+	}
+
+	void Renderer::SetPolygonMode( const PolygonMode mode )
+	{
+		glPolygonMode( GL_FRONT_AND_BACK, ( GLenum )mode );
+	}
+
 	void Renderer::Render( const Mesh& mesh )
 	{
 		mesh.IsIndexed()

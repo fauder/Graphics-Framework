@@ -20,6 +20,15 @@ namespace Engine
 			ColorBuffer   = GL_COLOR_BUFFER_BIT,
 		};
 
+		enum class PolygonMode
+		{
+			Point = GL_POINT,
+			Line  = GL_LINE, 
+			Fill  = GL_FILL,
+			
+			Wireframe = Line
+		};
+
 	public:
 		Renderer();
 		~Renderer();
@@ -46,6 +55,13 @@ namespace Engine
 		{
 			clear_target = ClearTarget( ( int )target | ( ( int )other_targets | ... ) );
 		}
+
+	/* Depth Test: */
+		void EnableDepthTest();
+		void DisableDepthTest();
+
+	/* Other: */
+		void SetPolygonMode( const PolygonMode mode );
 
 	private:
 	/* Main: */

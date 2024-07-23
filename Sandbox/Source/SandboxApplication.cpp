@@ -116,11 +116,7 @@ void SandboxApplication::Initialize()
 	renderer.AddDrawable( &front_wall_quad_drawable );
 
 /* Other: */
-	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); // Draw wire-frame.
-
-	glEnable( GL_DEPTH_TEST );
-
-	// TODO: Move the calls above into Renderer.
+	renderer.EnableDepthTest();
 
 /* Initial transforms: */
 	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
