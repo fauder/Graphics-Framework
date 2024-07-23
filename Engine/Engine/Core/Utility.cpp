@@ -54,6 +54,27 @@ namespace Engine
 				}
 			}
 
+			/* Returns either the multiple splitted string views or the source string in case delimiter was never found. */
+			std::vector< std::string_view > Split( std::string_view source, const char delimiter )
+			{
+				std::vector< std::string_view > splitted;
+
+				int start = 0;
+				for( int char_index = 0; char_index < source.size(); char_index++ )
+				{
+					if( source[ char_index ] == delimiter )
+					{
+						splitted.push_back( { source.cbegin() + start, source.cbegin() + start + char_index } );
+						start = char_index + 1; // Does not matter if out-of-bounds; Loop will end before this OoB value can be used.
+					}
+				}
+
+				if( splitted.empty() )
+					splitted.push_back( source );
+
+				return splitted;
+			}
+
 			std::string_view FindPreviousWord( const std::string_view source, const std::size_t offset )
 			{
 				const std::size_t last_char_pos = source.find_last_not_of( " \t", offset - 1 );
