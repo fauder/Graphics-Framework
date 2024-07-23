@@ -5,6 +5,8 @@
 #include "Engine/Core/ImGuiDrawer.hpp"
 #include "Engine/Core/ImGuiSetup.h"
 #include "Engine/Core/Platform.h"
+#include "Engine/Core/ServiceLocator.h"
+#include "Engine/Graphics/GLLogger.h"
 #include "Engine/Graphics/MeshUtility.hpp"
 #include "Engine/Graphics/Primitive/Primitive_Cube.h"
 #include "Engine/Math/Math.hpp"
@@ -12,8 +14,6 @@
 #include "Engine/Math/Random.hpp"
 
 using namespace Engine::Math::Literals;
-
-// TODO: Get debug callback working ASAP.
 
 Engine::Application* Engine::CreateApplication()
 {
@@ -55,7 +55,13 @@ void SandboxApplication::Initialize()
 {
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
+	Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
+
+	gl_logger.IgnoreID( 131185 );
+
 	//Engine::Math::Random::SeedRandom();
+
+	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init." ) );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();
@@ -75,7 +81,6 @@ void SandboxApplication::Initialize()
 
 /* Materials: */
 	ResetMaterialData();
-	cube_shader->Bind();
 	ground_quad_material.Set( "SurfaceData", ground_quad_surface_data );
 	front_wall_quad_material.Set( "SurfaceData", front_wall_quad_surface_data );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
@@ -86,6 +91,7 @@ void SandboxApplication::Initialize()
 
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
+							  "Cube",
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
@@ -110,9 +116,9 @@ void SandboxApplication::Initialize()
 	renderer.AddDrawable( &front_wall_quad_drawable );
 
 /* Other: */
-	//GLCALL( glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ) ); // Draw wire-frame.
+	//glPolygonMode( GL_FRONT_AND_BACK, GL_LINE ); // Draw wire-frame.
 
-	GLCALL( glEnable( GL_DEPTH_TEST ) );
+	glEnable( GL_DEPTH_TEST );
 
 	// TODO: Move the calls above into Renderer.
 
@@ -136,8 +142,6 @@ void SandboxApplication::Initialize()
 	Platform::MaximizeWindow();
 }
 
-// TODO: Integrate RenderDoc annotations.
-
 void SandboxApplication::Shutdown()
 {
 	/* Insert application-specific shutdown code here. */
@@ -150,6 +154,8 @@ void SandboxApplication::Shutdown()
 
 void SandboxApplication::Update()
 {
+	auto log_group = gl_logger.TemporaryLogGroup( "Sandbox Update" );
+
 	current_time_as_angle = Radians( time_current );
 
 	/* Light sources' transform: */
@@ -208,6 +214,8 @@ void SandboxApplication::Render()
 
 	Engine::Application::Render();
 
+	auto log_group = gl_logger.TemporaryLogGroup( "Sandbox Render" );
+
 /* 
  * Lighting information for materials using the cube shader:
  */
@@ -256,7 +264,13 @@ void SandboxApplication::Render()
 
 void SandboxApplication::DrawImGui()
 {
-	Application::DrawImGui();
+	{
+		auto log_group = gl_logger.TemporaryLogGroup( "Application ImGui" );
+
+		Application::DrawImGui();
+	}
+
+	auto log_group = gl_logger.TemporaryLogGroup( "Sandbox ImGui" );
 
 	ImGui::ShowDemoWindow();
 

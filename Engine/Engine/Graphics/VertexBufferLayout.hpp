@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Macros.h"
 #include "Math/Concepts.h"
 
 // std Includes.
@@ -71,8 +72,8 @@ namespace Engine
 			for( auto index = 0; index < attributes.size(); index++ )
 			{
 				const auto attribute = attributes[ index ];
-				GLCALL( glVertexAttribPointer( attribute.location, attribute.count, attribute.type, attribute.normalize, stride, BUFFER_OFFSET( offset ) ) );
-				GLCALL( glEnableVertexAttribArray( attribute.location ) );
+				glVertexAttribPointer( attribute.location, attribute.count, attribute.type, attribute.normalize, stride, BUFFER_OFFSET( offset ) );
+				glEnableVertexAttribArray( attribute.location );
 				offset += attribute.Size();
 			}
 		}

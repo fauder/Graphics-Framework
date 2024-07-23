@@ -176,6 +176,12 @@ namespace Platform
 	/* Events. */
 	void PollEvents();
 
+#ifdef _DEBUG
+	/* GL Debug Output. */
+	void SetGLDebugOutputCallback( std::function< void( unsigned int source, unsigned int type, unsigned int id, unsigned int severity, int length, 
+														const char* message, const void* parameters ) > callback = {} );
+#endif // _DEBUG
+
 	/* Keyboard IO. */
 	void SetKeyboardEventCallback( std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods ) > callback = {} );
 	bool IsKeyPressed( const KeyCode key_code );

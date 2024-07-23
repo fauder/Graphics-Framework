@@ -93,12 +93,12 @@ namespace Engine
 
 			if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
 			{
-				auto& buffer = uniform_buffer_map_regular.emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+				auto& buffer = uniform_buffer_map_regular.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 				UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
 			}
 			else if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
 			{
-				auto& created_buffer = uniform_buffer_map_instance.emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+				auto& created_buffer = uniform_buffer_map_instance.try_emplace( uniform_buffer_name, uniform_buffer_info.size , uniform_buffer_name ).first->second;
 				UniformBufferManager::ConnectBufferToBlock( created_buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
 			}
 		}

@@ -1,10 +1,14 @@
 #pragma once
 
 // Engine Includes.
+#include "GLLogger.h"
 #include "Graphics.h"
+#include "Core/ServiceLocator.h"
+#include "Core/Assertion.h"
 
 // std Includes.
 #include <span>
+#include <string>
 #include <cstddef> // std::byte.
 
 // TODO: Keep track of buffer ids and debug/inspect them via ImGuiDrawer::Draw() or something.
@@ -21,15 +25,17 @@ namespace Engine
 		Buffer()
 			:
 			id( -1 ),
+			name(),
 			count( 0 ),
 			size( 0 )
 		{
 		}
 
 		/* Only allocate memory.*/
-		Buffer( const unsigned int size, const GLenum usage = GL_STATIC_DRAW )
+		Buffer( const unsigned int size, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
 			id( -1 ),
+			name( name ),
 			count( 0 ),
 			size( size )
 		{
@@ -38,11 +44,17 @@ namespace Engine
 			CreateBuffer();
 			Bind();
 			Update( nullptr, usage );
+
+#ifdef _DEBUG
+			if( not name.empty() )
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+#endif // _DEBUG
 		}
 
-		Buffer( const std::span< const BufferElementType > data_span, const GLenum usage = GL_STATIC_DRAW )
+		Buffer( const std::span< const BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
 			id( -1 ),
+			name( name ),
 			count( ( unsigned int )data_span.size() ),
 			size( ( unsigned int )data_span.size_bytes() )
 		{
@@ -51,14 +63,20 @@ namespace Engine
 			CreateBuffer();
 			Bind();
 			Update( ( void* )data_span.data(), usage );
+
+#ifdef _DEBUG
+			if( not name.empty() )
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+#endif // _DEBUG
 		}
 
 		/* To support cases where the count can not be deduced from the type alone;
 		 * For example consider a vertex buffer that is passed as std::span< float >, with the following vertex attributes: 3x floats position, 3x floats normal, 2x floats uv.
 		 * data_span.size() would give the actual vertex count times 8 (3 + 3 + 2) in this case. */
-		Buffer( const unsigned int count, const std::span< const BufferElementType > data_span, const GLenum usage = GL_STATIC_DRAW )
+		Buffer( const unsigned int count, const std::span< const BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
 			id( -1 ),
+			name( name ),
 			count( count ),
 			size( ( unsigned int )data_span.size_bytes() )
 		{
@@ -67,6 +85,11 @@ namespace Engine
 			CreateBuffer();
 			Bind();
 			Update( ( void* )data_span.data(), usage );
+
+#ifdef _DEBUG
+			if( not name.empty() )
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+#endif // _DEBUG
 		}
 
 		/* Prohibit copying; It does not make sense two have multiple Buffers with the same Id. */
@@ -101,21 +124,21 @@ namespace Engine
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "Attempting Bind() on Buffer with zero size!" );
 
-			GLCALL( glBindBuffer( TargetType, id ) );
+			glBindBuffer( TargetType, id );
 		}
 
 		void Update( const void* data, const GLenum usage = GL_STATIC_DRAW ) const
 		{
 			Bind();
 
-			GLCALL( glBufferData( TargetType, size, data, usage ) );
+			glBufferData( TargetType, size, data, usage );
 		}
 
 		void Update_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const
 		{
 			Bind();
 
-			GLCALL( glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() ) );
+			glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() );
 		}
 		
 		ID				Id()		const { return id;		}
@@ -126,16 +149,17 @@ namespace Engine
 	private:
 		void CreateBuffer()
 		{
-			GLCALL( glGenBuffers( 1, &id ) );
+			glGenBuffers( 1, &id );
 		}
 
 		void DeleteBuffer()
 		{
-			GLCALL( glDeleteBuffers( 1, &id ) );
+			glDeleteBuffers( 1, &id );
 		}
 
 	private:
 		ID id;
+		std::string name;
 		unsigned int count;
 		unsigned int size;
 	};

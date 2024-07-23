@@ -7,6 +7,7 @@
 #include "ImGui/imgui_impl_glfw.h"
 
 // std Includes.
+#include <iostream>
 #include <stdexcept>
 
 namespace Platform
@@ -20,11 +21,14 @@ namespace Platform
 	bool MOUSE_CAPTURE_ENABLED = false;
 	std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods )	> KEYBOARD_CALLBACK;
 	std::function< void( const int width_new_pixels, const int height_new_pixels )				> FRAMEBUFFER_RESIZE_CALLBACK;
+#ifdef _DEBUG
+	std::function< void( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters ) > GL_DEBUG_OUTPUT_CALLBACK;
+#endif // _DEBUG
 
 	void OnResizeWindow( GLFWwindow* window, const int width_new_pixels, const int height_new_pixels )
 	{
 		glfwSetWindowSize( window, width_new_pixels, height_new_pixels );
-		GLCALL( glViewport( 0, 0, width_new_pixels, height_new_pixels ) );
+		glViewport( 0, 0, width_new_pixels, height_new_pixels );
 
 		if( FRAMEBUFFER_RESIZE_CALLBACK )
 			FRAMEBUFFER_RESIZE_CALLBACK( width_new_pixels, height_new_pixels );
@@ -67,12 +71,29 @@ namespace Platform
 			KEYBOARD_CALLBACK( KeyCode( key_code ), KeyAction( action ), KeyMods( mods ) );
 	}
 
+#ifdef _DEBUG
+	void OnDebugOutput( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters )
+	{
+		GL_DEBUG_OUTPUT_CALLBACK( source, type, id, severity, length, message, parameters );
+	}
+#endif // _DEBUG
+
 	/* GLAD needs the created window's context made current BEFORE it is initialized. */
 	void InitializeGLAD()
 	{
 		if( !gladLoadGLLoader( ( GLADloadproc )glfwGetProcAddress ) )
 			throw std::logic_error( "ERROR::GRAPHICS::GLAD::FAILED_TO_INITIALIZE!" );
 	}
+
+#ifdef _DEBUG
+	void RegisterGLDebugOutputCallback()
+	{
+		glEnable( GL_DEBUG_OUTPUT );
+		glEnable( GL_DEBUG_OUTPUT_SYNCHRONOUS );
+
+		glDebugMessageCallback( OnDebugOutput, nullptr );
+	}
+#endif // _DEBUG
 
 	void RegisterFrameBufferResizeCallback()
 	{
@@ -92,6 +113,10 @@ namespace Platform
 	void InitializeAndCreateWindow( const int width_pixels, const int height_pixels )
 	{
 		glfwInit();
+
+#ifdef _DEBUG
+		glfwWindowHint( GLFW_OPENGL_DEBUG_CONTEXT, true );
+#endif // _DEBUG
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 4 );
 		glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 6 );
 		glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
@@ -114,6 +139,18 @@ namespace Platform
 
 		// GLAD needs the created window's context made current BEFORE it is initialized.
 		InitializeGLAD();
+
+#ifdef _DEBUG
+		int gl_debug_context_flags = 0;
+		glGetIntegerv( GL_CONTEXT_FLAGS, &gl_debug_context_flags );
+
+		if( gl_debug_context_flags & GL_CONTEXT_FLAG_DEBUG_BIT )
+			std::cout << "OpenGL debug context is created successfully.\n";
+		else
+			std::cerr << "Could not create OpenGL debug context!\n";
+
+		RegisterGLDebugOutputCallback();
+#endif // _DEBUG
 
 		ResizeWindow( width_pixels, height_pixels );
 
@@ -194,6 +231,11 @@ namespace Platform
 		MOUSE_CURSOR_X_DELTA = MOUSE_CURSOR_Y_DELTA = 0.0f;
 		MOUSE_SCROLL_X_OFFSET = MOUSE_SCROLL_Y_OFFSET = 0.0f;
 		glfwPollEvents();
+	}
+
+	void SetGLDebugOutputCallback( std::function< void( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters ) > callback )
+	{
+		GL_DEBUG_OUTPUT_CALLBACK = callback;
 	}
 
 	void SetKeyboardEventCallback( std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods ) > callback )

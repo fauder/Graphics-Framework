@@ -1,5 +1,9 @@
 #pragma once
 
+// std Includes.
+#include <string>
+#include <string_view>
+
 namespace Engine
 {
 	class Texture

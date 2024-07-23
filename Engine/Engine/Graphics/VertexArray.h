@@ -16,14 +16,14 @@ namespace Engine
 		using ID = unsigned int;
 
 	public:
-		VertexArray();
+		VertexArray( const std::string& name = {} );
 		VertexArray( const VertexArray& right_hand_side )				= delete;
 		VertexArray& operator =( const VertexArray& right_hand_side )	= delete;
 		VertexArray( VertexArray&& donor );
 		VertexArray& operator =( VertexArray&& donor );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer& index_buffer );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::optional< IndexBuffer >& index_buffer );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer& index_buffer, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::optional< IndexBuffer >& index_buffer, const std::string& name = {} );
 		~VertexArray();
 
 		void Bind() const;
@@ -39,6 +39,8 @@ namespace Engine
 
 	private:
 		ID id;
+
+		std::string name;
 
 		unsigned int vertex_buffer_id;
 		unsigned int index_buffer_id;

@@ -37,6 +37,7 @@ namespace Engine
 		Mesh& operator = ( Mesh&& donor )		= default;
 
 		Mesh( std::vector< Vector3		>&& positions, 
+			  const std::string&			name		   = {},
 			  std::vector< Vector3		>&& normals        = {},
 			  std::vector< Vector2		>&& uvs_0          = {}, 
 			  std::vector< unsigned int >&& indices        = {},
@@ -58,15 +59,16 @@ namespace Engine
 			uvs_2( uvs_2 ),
 			uvs_3( uvs_3 ),
 			colors_rgb( colors_rgb ),
-			colors_rgba( colors_rgba )
+			colors_rgba( colors_rgba ),
+			name( name )
 		{
 			unsigned int vertex_count_interleaved;
 			const auto interleaved_vertices = MeshUtility::Interleave( vertex_count_interleaved, positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgb, colors_rgba );
 
-			vertex_buffer        = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), usage );
+			vertex_buffer        = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), name + " Index Buffer", usage);
 			vertex_buffer_layout = VertexBufferLayout( AttributeCountsAndTypes( positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgb, colors_rgba ) );
-			index_buffer         = indices.empty() ? std::nullopt : std::optional< IndexBuffer >( std::in_place, indices, usage );
-			vertex_array         = VertexArray( vertex_buffer, vertex_buffer_layout, index_buffer );
+			index_buffer         = indices.empty() ? std::nullopt : std::optional< IndexBuffer >( std::in_place, indices, name + " Vertex Buffer", usage);
+			vertex_array         = VertexArray( vertex_buffer, vertex_buffer_layout, index_buffer, name + " VAO");
 		}
 
 		inline ~Mesh()
@@ -142,6 +144,8 @@ namespace Engine
 		VertexBufferLayout vertex_buffer_layout;
 		std::optional< IndexBuffer > index_buffer;
 		VertexArray vertex_array;
+
+		std::string name;
 	};
 
 }

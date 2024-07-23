@@ -121,12 +121,12 @@ namespace Engine
 
 	void Renderer::Render_Indexed( const Mesh& mesh )
 	{
-		GLCALL( glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, mesh.Indices_Raw() ) );
+		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, mesh.Indices_Raw() );
 	}
 
 	void Renderer::Render_NonIndexed( const Mesh& mesh )
 	{
-		GLCALL( glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() ) );
+		glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() );
 	}
 
 	void Renderer::RegisterShader( const Shader& shader )
@@ -140,7 +140,7 @@ namespace Engine
 			{
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Intrinsic )
 				{
-					auto& buffer = uniform_buffer_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+					auto& buffer = uniform_buffer_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Intrinsic );
 				}
 			}
@@ -152,7 +152,7 @@ namespace Engine
 			{
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Global )
 				{
-					auto& buffer = uniform_buffer_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size ).first->second;
+					auto& buffer = uniform_buffer_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Global );
 				}
 			}
@@ -167,11 +167,11 @@ namespace Engine
 
 	void Renderer::SetClearColor()
 	{
-		GLCALL( glClearColor( clear_color.R(), clear_color.G(), clear_color.B(), clear_color.A() ) );
+		glClearColor( clear_color.R(), clear_color.G(), clear_color.B(), clear_color.A() );
 	}
 
 	void Renderer::Clear() const
 	{
-		GLCALL( glClear( ( GLbitfield )clear_target ) );
+		glClear( ( GLbitfield )clear_target );
 	}
 }

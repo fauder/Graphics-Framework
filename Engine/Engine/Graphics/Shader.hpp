@@ -87,25 +87,25 @@ namespace Engine
 		template<>
 		void SetUniform< float >( const int location, const float& value )
 		{
-			GLCALL( glUniform1f( location, value ) );
+			glUniform1f( location, value );
 		}
 
 		template<>
 		void SetUniform< int >( const int location, const int& value )
 		{
-			GLCALL( glUniform1i( location, value ) );
+			glUniform1i( location, value );
 		}
 
 		template<>
 		void SetUniform< unsigned int >( const int location, const unsigned int& value )
 		{
-			GLCALL( glUniform1ui( location, value ) );
+			glUniform1ui( location, value );
 		}
 
 		template<>
 		void SetUniform< bool >( const int location, const bool& value )
 		{
-			GLCALL( glUniform1i( location, value ) );
+			glUniform1i( location, value );
 		}
 
 		template< typename Component, std::size_t Size > requires( Size >= 2 && Size <= 4 )
@@ -117,15 +117,15 @@ namespace Engine
 
 				if constexpr( Size == 2 )
 				{
-					GLCALL( glUniform2i( location, value.X(), value.Y() ) );
+					glUniform2i( location, value.X(), value.Y() );
 				}
 				if constexpr( Size == 3 )
 				{
-					GLCALL( glUniform3i( location, value.X(), value.Y(), value.Z() ) );
+					glUniform3i( location, value.X(), value.Y(), value.Z() );
 				}
 				if constexpr( Size == 4 )
 				{
-					GLCALL( glUniform4i( location, value.X(), value.Y(), value.Z(), value.W() ) );
+					glUniform4i( location, value.X(), value.Y(), value.Z(), value.W() );
 				}
 			}
 			else
@@ -134,15 +134,15 @@ namespace Engine
 				{
 					if constexpr( Size == 2 )
 					{
-						GLCALL( glUniform2fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform2fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 					if constexpr( Size == 3 )
 					{
-						GLCALL( glUniform3fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform3fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 					if constexpr( Size == 4 )
 					{
-						GLCALL( glUniform4fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform4fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 				}
 
@@ -150,15 +150,15 @@ namespace Engine
 				{
 					if constexpr( Size == 2 )
 					{
-						GLCALL( glUniform2iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform2iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 					if constexpr( Size == 3 )
 					{
-						GLCALL( glUniform3iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform3iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 					if constexpr( Size == 4 )
 					{
-						GLCALL( glUniform4iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform4iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 				}
 
@@ -166,15 +166,15 @@ namespace Engine
 				{
 					if constexpr( Size == 2 )
 					{
-						GLCALL( glUniform2uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform2uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 					if constexpr( Size == 3 )
 					{
-						GLCALL( glUniform3uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform3uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 					if constexpr( Size == 4 )
 					{
-						GLCALL( glUniform4uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() ) );
+						glUniform4uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
 					}
 				}
 			}
@@ -200,42 +200,42 @@ namespace Engine
 			{
 				if constexpr( RowSize == 2U )
 				{
-					GLCALL( glUniformMatrix2fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix2fv( location, 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 3U )
 				{
-					GLCALL( glUniformMatrix3fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix3fv( location, 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 4U )
 				{
-					GLCALL( glUniformMatrix4fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix4fv( location, 1, GL_TRUE, value.Data() );
 				}
 			}
 			else
 			{
 				if constexpr( RowSize == 2U && ColumnSize == 3U )
 				{
-					GLCALL( glUniformMatrix2x3fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix2x3fv( location, 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 2U && ColumnSize == 4U )
 				{
-					GLCALL( glUniformMatrix2x4fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix2x4fv( location, 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 3U && ColumnSize == 2U )
 				{
-					GLCALL( glUniformMatrix3x2fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix3x2fv( location, 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 3U && ColumnSize == 4U )
 				{
-					GLCALL( glUniformMatrix3x4fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix3x4fv( location, 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 4U && ColumnSize == 2U )
 				{
-					GLCALL( glUniformMatrix4x2fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix4x2fv( location, 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 4U && ColumnSize == 3U )
 				{
-					GLCALL( glUniformMatrix4x3fv( location, 1, GL_TRUE, value.Data() ) );
+					glUniformMatrix4x3fv( location, 1, GL_TRUE, value.Data() );
 				}
 			}
 		}

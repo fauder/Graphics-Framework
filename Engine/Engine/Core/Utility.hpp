@@ -4,6 +4,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace Engine
 {
@@ -30,6 +31,9 @@ namespace Engine
 				( void )( ( it = std::copy_n( strings, Length - 1, it ), 0 ), ... );
 				return result;
 			}
+
+			/* Returns either the multiple splitted string views or the source string in case delimiter was never found. */
+			std::vector< std::string_view > Split( std::string_view source, const char delimiter );
 		}
 	};
 }

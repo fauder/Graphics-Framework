@@ -15,6 +15,7 @@ namespace Engine
 		display_frame_statistics( true ),
 		time_current( 0.0f ),
 		time_multiplier( 1.0f ),
+		show_gl_logger( true ),
 		time_previous( 0.0f ),
 		time_previous_since_start( 0.0f ),
 		time_since_start( 0.0f )
@@ -32,7 +33,7 @@ namespace Engine
 		Platform::InitializeAndCreateWindow( 800, 600 );
 		Platform::ChangeTitle( "Graphics Framework" );
 
-		GLCALL( const auto version = glGetString( GL_VERSION ) );
+		const auto version = glGetString( GL_VERSION );
 		std::cout << version << "\n\n";
 
 		ImGuiSetup::Initialize();
@@ -48,6 +49,8 @@ namespace Engine
 			{
 				this->OnFramebufferResizeEventInternal( width_new_pixels, height_new_pixels );
 			} );
+
+		Platform::SetGLDebugOutputCallback( gl_logger.GetCallback() );
 	}
 
 	void Application::Shutdown()
@@ -136,6 +139,9 @@ namespace Engine
 	void Application::DrawImGui()
 	{
 		RenderImGui_FrameStatistics();
+
+		if( show_gl_logger )
+			gl_logger.Draw( &show_gl_logger );
 	}
 
 	void Application::RenderImGui_FrameStatistics()

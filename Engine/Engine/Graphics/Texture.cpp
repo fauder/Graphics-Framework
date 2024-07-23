@@ -1,6 +1,8 @@
 // Engine Includes.
+#include "GLLogger.h"
 #include "Graphics.h"
 #include "Texture.h"
+#include "Core/ServiceLocator.h"
 
 // Vendor/stb Includes.
 #include "stb/stb_image.h"
@@ -53,6 +55,11 @@ namespace Engine
 	{
 		glGenTextures( 1, &id );
 		Bind();
+
+#ifdef _DEBUG
+		if( not name.empty() )
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, name );
+#endif // _DEBUG
 
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
