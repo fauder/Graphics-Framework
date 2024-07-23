@@ -153,7 +153,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
   <ItemGroup>
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Engine\Core\Application.h" />
-    <ClInclude Include="Engine\Core\Assert.h" />
+    <ClInclude Include="Engine\Core\Assertion.h" />
     <ClInclude Include="Engine\Core\ImGuiDrawer.hpp" />
     <ClInclude Include="Engine\Core\ImGuiLog.hpp" />
     <ClInclude Include="Engine\Core\ImGuiUtility.h" />

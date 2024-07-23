@@ -2,7 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
-#include "Core/Assert.h"
+#include "Core/Assertion.h"
 
 // std Includes.
 #include <span>

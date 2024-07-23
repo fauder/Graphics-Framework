@@ -24,7 +24,7 @@
     <ClInclude Include="Engine\Core\Application.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Core\Assert.h">
+    <ClInclude Include="Engine\Core\Assertion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\Graphics.h">
