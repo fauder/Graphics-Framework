@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in vec4 varying_position_view_space;
 in vec4 varying_normal_view_space;

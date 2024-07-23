@@ -1,4 +1,4 @@
-#version 330 core
+#version 460 core
 
 in vec3 varying_ambient_from_light;
 in vec3 varying_diffuse_from_light;
