@@ -89,6 +89,14 @@ namespace Engine
 			shaders_registered.erase( iterator );
 	}
 
+	void Renderer::RemoveAllDrawables()
+	{
+		drawable_list.clear();
+		shaders_in_flight.clear();
+		materials_in_flight.clear();
+		shaders_registered.clear();
+	}
+
 	void Renderer::SetClearColor( const Color3& new_clear_color )
 	{
 		clear_color = new_clear_color;

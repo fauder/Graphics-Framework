@@ -32,6 +32,7 @@ namespace Engine
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
 		// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
 		void RemoveDrawable( const Drawable* drawable_to_remove );
+		void RemoveAllDrawables();
 
 	/* Shaders: */
 		// TODO: Provide Global setting/getting functions.
