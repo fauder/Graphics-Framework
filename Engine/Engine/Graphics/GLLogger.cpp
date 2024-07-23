@@ -48,6 +48,16 @@ namespace Engine
 		return group;
 	}
 
+	void GLLogger::IgnoreID( const unsigned int id_to_ignore )
+	{
+		glDebugMessageControl( GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &id_to_ignore, false );
+	}
+
+	void GLLogger::DontIgnoreID( const unsigned int id_to_restore )
+	{
+		glDebugMessageControl( GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &id_to_restore, true );
+	}
+
 	void GLLogger::Draw( bool* show )
 	{
 		logger.Draw( "GL Logs", show );

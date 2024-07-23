@@ -58,6 +58,10 @@ namespace Engine
 
 		GLLogGroup TemporaryLogGroup( const char* group_name, const unsigned int id = 0 );
 
+	/* Filtering IDs: */
+		static void IgnoreID( const unsigned int id_to_ignore );
+		static void DontIgnoreID( const unsigned int id_to_restore );
+
 	/* Main: */
 		void Draw( bool* show = nullptr );
 
