@@ -6,7 +6,7 @@
 
 namespace Engine
 {
-	class _declspec( dllexport ) Application
+	class Application
 	{
 	public:
 		Application();
