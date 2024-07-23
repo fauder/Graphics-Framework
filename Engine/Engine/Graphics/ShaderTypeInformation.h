@@ -43,7 +43,9 @@ namespace Engine
 			case GL_FLOAT_VEC4							: return sizeof( Vector4 );
 			
 			case GL_DOUBLE								: return sizeof( double );
-			// OpenGL 3.3 does not have vectors of double type.
+			case GL_DOUBLE_VEC2							: return sizeof( Vector2D );
+			case GL_DOUBLE_VEC3							: return sizeof( Vector3D );
+			case GL_DOUBLE_VEC4							: return sizeof( Vector4D );
 			
 			case GL_INT									: return sizeof( int );
 			case GL_INT_VEC2							: return sizeof( Vector2I );
@@ -72,7 +74,17 @@ namespace Engine
 			case GL_FLOAT_MAT4x2 						: return sizeof( Matrix4x2 );
 			case GL_FLOAT_MAT4x3 						: return sizeof( Matrix4x3 );
 
-			// OpenGL 3.3 does not have matrices of double type.
+			/* Double matrices: */
+			case GL_DOUBLE_MAT2 						: return sizeof( Matrix2x2D );
+			case GL_DOUBLE_MAT3 						: return sizeof( Matrix3x3D );
+			case GL_DOUBLE_MAT4 						: return sizeof( Matrix4x4D );
+			
+			case GL_DOUBLE_MAT2x3 						: return sizeof( Matrix2x3D );
+			case GL_DOUBLE_MAT2x4 						: return sizeof( Matrix2x4D );
+			case GL_DOUBLE_MAT3x2 						: return sizeof( Matrix3x2D );
+			case GL_DOUBLE_MAT3x4 						: return sizeof( Matrix3x4D );
+			case GL_DOUBLE_MAT4x2 						: return sizeof( Matrix4x2D );
+			case GL_DOUBLE_MAT4x3 						: return sizeof( Matrix4x3D );
 
 			/* Texture samplers: */
 			case GL_SAMPLER_1D 							: return sizeof( int );
@@ -94,8 +106,10 @@ namespace Engine
 			case GL_FLOAT_VEC4										: return "vec4";
 			
 			case GL_DOUBLE											: return "double";
-			// OpenGL 3.3 does not have vectors of double type.
-			
+			case GL_DOUBLE_VEC2										: return "dvec2";
+			case GL_DOUBLE_VEC3										: return "dvec3";
+			case GL_DOUBLE_VEC4										: return "dvec4";
+
 			case GL_INT												: return "int";
 			case GL_INT_VEC2										: return "ivec2";
 			case GL_INT_VEC3										: return "ivec3";
@@ -123,7 +137,17 @@ namespace Engine
 			case GL_FLOAT_MAT4x2 									: return "mat4x2";
 			case GL_FLOAT_MAT4x3 									: return "mat4x3";
 
-			// OpenGL 3.3 does not have matrices of double type.
+			/* Float matrices: */
+			case GL_DOUBLE_MAT2 									: return "dmat2";
+			case GL_DOUBLE_MAT3 									: return "dmat3";
+			case GL_DOUBLE_MAT4 									: return "dmat4";
+			
+			case GL_DOUBLE_MAT2x3 									: return "dmat2x3";
+			case GL_DOUBLE_MAT2x4 									: return "dmat2x4";
+			case GL_DOUBLE_MAT3x2 									: return "dmat3x2";
+			case GL_DOUBLE_MAT3x4 									: return "dmat3x4";
+			case GL_DOUBLE_MAT4x2 									: return "dmat4x2";
+			case GL_DOUBLE_MAT4x3 									: return "dmat4x3";
 
 			/* Texture samplers: */
 			case GL_SAMPLER_1D 										: return "sampler1D";
@@ -194,21 +218,6 @@ namespace Engine
 
 // TODO: Add missing types as they are needed.
 /* Types not added yet:
- * 
- * GL_DOUBLE_VEC2 	dvec2				 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_VEC3 	dvec3				 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_VEC4 	dvec4				 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * 
- * GL_DOUBLE_MAT2 	dmat2				 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_MAT3 	dmat3				 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_MAT4 	dmat4				 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * 
- * GL_DOUBLE_MAT2x3 	dmat2x3			 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_MAT2x4 	dmat2x4			 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_MAT3x2 	dmat3x2			 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_MAT3x4 	dmat3x4			 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_MAT4x2 	dmat4x2			 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
- * GL_DOUBLE_MAT4x3						 // Does not exist in OpenGL 3.3 (supported starting from OpenGL 4.0)
  * 
  * GL_SAMPLER_CUBE 	samplerCube
  * 
