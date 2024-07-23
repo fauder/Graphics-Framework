@@ -6,11 +6,45 @@
 
 // std Includes.
 #include <functional>
+#include <stack>
 
 namespace Engine
 {
 	class GLLogger
 	{
+	private:
+		struct GLLogGroup
+		{
+			GLLogGroup( GLLogger* logger, const char* group_name, const unsigned int id = 0 )
+				:
+				logger( logger )
+			{
+				logger->PushGroup( group_name, id );
+			}
+
+			GLLogGroup( const GLLogGroup& other )            = delete;
+			GLLogGroup& operator=( const GLLogGroup& other ) = delete;
+
+			GLLogGroup( GLLogGroup&& donor )
+				:
+				logger( std::exchange( donor.logger, nullptr ) )
+			{}
+
+			GLLogGroup& operator=( GLLogGroup&& donor )
+			{
+				logger = std::exchange( donor.logger, nullptr );
+			}
+
+			~GLLogGroup()
+			{
+				if( logger )
+					logger->PopGroup();
+			}
+
+		private:
+			GLLogger* logger;
+		};
+
 	private:
 		using CallbackType = std::function< void( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters ) >;
 
@@ -18,8 +52,16 @@ namespace Engine
 		GLLogger();
 		~GLLogger();
 
+	/* Grouping: */
+		void PushGroup( const char* group_name, const unsigned int id = 0 );
+		void PopGroup();
+
+		GLLogGroup TemporaryLogGroup( const char* group_name, const unsigned int id = 0 );
+
+	/* Main: */
 		void Draw( bool* show = nullptr );
 
+	/* Queries: */
 		CallbackType GetCallback();
 
 	private:
@@ -31,5 +73,7 @@ namespace Engine
 
 	private:
 		ImGuiLog< GLLogType, std::size_t( GLLogType::COUNT ) > logger;
+
+		std::stack< const char* > empty_log_groups;
 	};
 }

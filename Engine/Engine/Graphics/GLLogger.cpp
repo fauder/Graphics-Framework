@@ -24,6 +24,30 @@ namespace Engine
 	{
 	}
 
+	void GLLogger::PushGroup( const char* group_name, const unsigned int id )
+	{
+		empty_log_groups.push( group_name );
+
+		/* Defer actual glPushDebugGroup() to InternalDebugOutputCallback(); This way a group can be checked to see if it is emptyand if so, skipped.Else, it is pushed first. */
+	}
+
+	void GLLogger::PopGroup()
+	{
+		if( not empty_log_groups.empty() )
+		{
+			empty_log_groups.pop();
+			return;
+		}
+
+		glPopDebugGroup();
+	}
+
+	GLLogger::GLLogGroup GLLogger::TemporaryLogGroup( const char* group_name, const unsigned int id )
+	{
+		GLLogGroup group( this, group_name, id );
+		return group;
+	}
+
 	void GLLogger::Draw( bool* show )
 	{
 		logger.Draw( "GL Logs", show );
@@ -43,6 +67,19 @@ namespace Engine
 
 	void GLLogger::InternalDebugOutputCallback( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters )
 	{
+		/* We pop one group name every time a log is made. This way, we can check if any logs were recorded between push/pop of a specific log group & can skip the group if it is empty. */
+		if( not empty_log_groups.empty() )
+		{
+			const auto& group_name = empty_log_groups.top();
+
+			if( group_name != message )
+			{
+				glPushDebugGroup( GL_DEBUG_SOURCE_APPLICATION, id, -1, group_name );
+
+				empty_log_groups.pop();
+			}
+		}
+
 		const auto severity_string = GLenumToString_Severity( severity );	// Has a max length of 17.
 		const auto source_string   = GLenumToString_Source( source );		// Has a max length of 13.
 		const auto type_string     = GLenumToString_Type( type );			// Has a max length of 13.
