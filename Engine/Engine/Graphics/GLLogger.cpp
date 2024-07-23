@@ -53,6 +53,25 @@ namespace Engine
 		return group;
 	}
 
+	void GLLogger::SetLabel( const GLenum object_type, const GLuint object_id, const char* label )
+	{
+		glObjectLabel( object_type, object_id, -1, label );
+	}
+
+	void GLLogger::GetLabel( const GLenum object_type, const GLuint object_id, char* label )
+	{
+		int label_length;
+		glGetObjectLabel( object_type, object_id, GL_MAX_LABEL_LENGTH, &label_length, label );
+	}
+
+	std::string GLLogger::GetLabel( const GLenum object_type, const GLuint object_id )
+	{
+		static char OBJECT_LABEL_STORAGE[ GL_MAX_LABEL_LENGTH ];
+		int label_length;
+		glGetObjectLabel( object_type, object_id, GL_MAX_LABEL_LENGTH, &label_length, OBJECT_LABEL_STORAGE );
+		return OBJECT_LABEL_STORAGE;
+	}
+
 	void GLLogger::IgnoreID( const unsigned int id_to_ignore )
 	{
 		glDebugMessageControl( GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_OTHER, GL_DONT_CARE, 1, &id_to_ignore, false );
@@ -100,10 +119,10 @@ namespace Engine
 		const auto type_string     = GLenumToString_Type( type );			// Has a max length of 13.
 
 		constexpr std::size_t fixed_portion_length =
-			1 + 1 +						// 1 vertical line + 1 space.
-			17 + 1 + 1 + 1 +			// Severity ( max length = 17 ) + 1 space + 1 vertical line + 1 space.
-			13 + 1 + 1 + 1 +			// Source   ( max length = 13 ) + 1 space + 1 vertical line + 1 space.
-			13 + 1 + 1 + 1 +			// Type     ( max length = 13 ) + 1 space + 1 vertical line + 1 space.
+			1 + 1 +				// 1 vertical line + 1 space.
+			17 + 1 + 1 + 1 +	// Severity ( max length = 17 ) + 1 space + 1 vertical line + 1 space.
+			13 + 1 + 1 + 1 +	// Source   ( max length = 13 ) + 1 space + 1 vertical line + 1 space.
+			13 + 1 + 1 + 1 +	// Type     ( max length = 13 ) + 1 space + 1 vertical line + 1 space.
 			1 + 10 + 1 + 1 + 4;	// Open parenthesis + id (max 10 digits) + close parenthesis + colon + 4 spaces.
 
 		static std::vector< char > full_message( fixed_portion_length + 255, ' ' ); // Initial max. message length of 255 reserved.

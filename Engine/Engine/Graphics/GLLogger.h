@@ -61,6 +61,11 @@ namespace Engine
 
 		GLLogGroup TemporaryLogGroup( const char* group_name, const unsigned int id = 0 );
 
+	/* Labeling: */
+		void SetLabel( const GLenum object_type, const GLuint object_id, const char* label );
+		void GetLabel( const GLenum object_type, const GLuint object_id, char* label );
+		std::string GetLabel( const GLenum object_type, const GLuint object_id );
+
 	/* Filtering IDs: */
 		static void IgnoreID( const unsigned int id_to_ignore );
 		static void DontIgnoreID( const unsigned int id_to_restore );
