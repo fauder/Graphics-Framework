@@ -77,7 +77,7 @@ namespace Engine
 
 	void Renderer::RemoveDrawable( const Drawable* drawable_to_remove )
 	{
-		std::ignore = std::remove( drawable_list.begin(), drawable_list.end(), drawable_to_remove );
+		drawable_list.erase( std::remove( drawable_list.begin(), drawable_list.end(), drawable_to_remove ), drawable_list.cend() );
 
 		const auto& shader = *drawable_to_remove->material->shader;
 
