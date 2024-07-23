@@ -1,8 +1,10 @@
 #pragma once
 
 // Engine Includes.
+#include "ImGuiLog.hpp"
 #include "Math/Math.hpp"
 #include "Platform.h"
+#include "Graphics/GLLogger.h"
 
 namespace Engine
 {
@@ -49,6 +51,9 @@ namespace Engine
 		float time_cos;
 		float time_mod_1;
 		float time_mod_2_pi;
+
+		bool show_gl_logger;
+		GLLogger gl_logger;
 
 	private:
 		float time_delta_real;
