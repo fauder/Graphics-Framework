@@ -160,6 +160,8 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\Initialization.h" />
     <ClInclude Include="Engine\Graphics\Buffer.hpp" />
     <ClInclude Include="Engine\Graphics\Drawable.h" />
+    <ClInclude Include="Engine\Graphics\GLLogType.h" />
+    <ClInclude Include="Engine\Graphics\GLLogger.h" />
     <ClInclude Include="Engine\Graphics\Mesh.hpp" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
     <ClInclude Include="Engine\Graphics\PaddedAndCombinedTypes.h" />
@@ -207,6 +209,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Core\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Core\ImGuiUtility.cpp" />
     <ClCompile Include="Engine\Graphics\Drawable.cpp" />
+    <ClCompile Include="Engine\Graphics\GLLogger.cpp" />
     <ClCompile Include="Engine\Graphics\Material.cpp" />
     <ClCompile Include="Engine\Graphics\Renderer.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBufferManager.cpp" />
