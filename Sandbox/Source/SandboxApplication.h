@@ -86,7 +86,7 @@ private:
 	bool auto_calculate_vfov_based_on_90_hfov;
 
 /* Lighting: */
-	const static constexpr int LIGHT_POINT_COUNT = 1;
+	const static constexpr int LIGHT_POINT_COUNT = 15;
 
 	std::vector< Engine::Lighting::SurfaceData > cube_surface_data_array;
 	Engine::Lighting::SurfaceData ground_quad_surface_data;

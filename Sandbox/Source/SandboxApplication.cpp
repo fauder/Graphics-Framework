@@ -229,14 +229,14 @@ void SandboxApplication::Render()
 
 	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 	{
-		cube_material_array[ cube_index ].Set( "DirectionalLightData",	light_directional_data	);
-		cube_material_array[ cube_index ].Set( "SpotLightData",			light_spot_data			);
+		cube_material_array[ cube_index ].Set( "Lighting", "directional_light",	light_directional_data	);
+		cube_material_array[ cube_index ].Set( "Lighting", "spot_light",		light_spot_data			);
 	}
-	ground_quad_material.Set( "DirectionalLightData",	light_directional_data	);
-	ground_quad_material.Set( "SpotLightData",			light_spot_data			);
+	ground_quad_material.Set( "Lighting", "directional_light",	light_directional_data	);
+	ground_quad_material.Set( "Lighting", "spot_light",			light_spot_data			);
 		
-	front_wall_quad_material.Set( "DirectionalLightData",	light_directional_data	);
-	front_wall_quad_material.Set( "SpotLightData",			light_spot_data			);
+	front_wall_quad_material.Set( "Lighting", "directional_light",	light_directional_data	);
+	front_wall_quad_material.Set( "Lighting", "spot_light",			light_spot_data			);
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
@@ -244,14 +244,10 @@ void SandboxApplication::Render()
 		light_point_data.position_view_space = ( Vector4( light_point_data.position_world_space.X(), light_point_data.position_world_space.Y(), light_point_data.position_world_space.Z(), 1.0f ) *
 												 view_transformation ).XYZ();
 
-		// TODO: Correct this when UBO arrays are implemented.
-		//const std::string uniform_name( "uniform_point_light_data[" + std::to_string( i ) + "]" );
-		const std::string uniform_name( "PointLightData" );
-
 		for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
-			cube_material_array[ cube_index ].Set( uniform_name.c_str(), light_point_data );
-		ground_quad_material.Set( uniform_name.c_str(), light_point_data );
-		front_wall_quad_material.Set( uniform_name.c_str(), light_point_data );
+			cube_material_array[ cube_index ].Set( "Lighting", "point_lights", i, light_point_data );
+		ground_quad_material.Set( "Lighting", "point_lights", i, light_point_data );
+		front_wall_quad_material.Set( "Lighting", "point_lights", i, light_point_data );
 	}
 
 	renderer.Render( camera );
@@ -431,18 +427,18 @@ void SandboxApplication::ResetMaterialData()
 	cube_material_array.resize( CUBE_COUNT );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
-		cube_material_array[ i ].SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
-		cube_material_array[ i ].SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
+		cube_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", &container_texture_diffuse_map );
+		cube_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", &container_texture_specular_map );
 	}
 
-	ground_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
-	ground_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
+	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &container_texture_diffuse_map );
+	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", &container_texture_specular_map );
 
-	front_wall_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
-	front_wall_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
+	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &container_texture_diffuse_map );
+	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", &container_texture_specular_map );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
