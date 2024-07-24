@@ -129,8 +129,6 @@
   <ItemGroup>
     <None Include="Asset\Shader\BasicTextured.frag" />
     <None Include="Asset\Shader\BasicTextured.vert" />
-    <None Include="Asset\Shader\Gouraud.frag" />
-    <None Include="Asset\Shader\Gouraud.vert" />
     <None Include="Asset\Shader\Phong.frag" />
     <None Include="Asset\Shader\Phong.vert" />
     <None Include="Asset\Shader\BasicColor.frag" />

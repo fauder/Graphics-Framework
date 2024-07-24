@@ -13,7 +13,5 @@
     <None Include="Asset\Shader\Phong.frag" />
     <None Include="Asset\Shader\Phong.vert" />
     <None Include="Asset\Shader\BasicColor.frag" />
-    <None Include="Asset\Shader\Gouraud.frag" />
-    <None Include="Asset\Shader\Gouraud.vert" />
   </ItemGroup>
 </Project>

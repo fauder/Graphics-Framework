@@ -25,8 +25,6 @@ SandboxApplication::SandboxApplication()
 	Engine::Application(),
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
-	cube_shader( nullptr ),
-	gouraud_shader( "Gouraud" ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
 	container_texture_diffuse_map( "Container (Diffuse) Map" ),
@@ -70,11 +68,8 @@ void SandboxApplication::Initialize()
 	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
 
 /* Shaders: */
-	gouraud_shader.FromFile( R"(Asset/Shader/Gouraud.vert)", R"(Asset/Shader/Gouraud.frag)" );
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
-
-	cube_shader = &phong_shader;
 
 /* Lighting: */
 	ResetLightingData();
@@ -267,7 +262,6 @@ void SandboxApplication::DrawImGui()
 
 	ImGui::ShowDemoWindow();
 
-	Engine::ImGuiDrawer::Draw( gouraud_shader );
 	Engine::ImGuiDrawer::Draw( phong_shader );
 	Engine::ImGuiDrawer::Draw( light_source_shader );
 
@@ -283,8 +277,6 @@ void SandboxApplication::DrawImGui()
 		if( ImGui::Button( "Reset" ) )
 		{
 			ResetLightingData();
-
-			cube_shader = &phong_shader;
 		}
 
 		Engine::ImGuiDrawer::Draw( light_directional_data, "Directional Light Properties" );
@@ -308,25 +300,6 @@ void SandboxApplication::DrawImGui()
 
 		Engine::ImGuiDrawer::Draw( ground_quad_surface_data,	 "Ground Quad Surface Properties" );
 		Engine::ImGuiDrawer::Draw( front_wall_quad_surface_data, "Front Wall Surface Properties"  );
-
-		enum LightingModel
-		{
-			Gouraud = 0,
-			Phong = 1
-		};
-		ImGui::Text( "Lighting Model" );
-		ImGui::SameLine();
-		static LightingModel lighting_model = LightingModel::Phong;
-		bool lighting_model_changed = false;
-		lighting_model_changed |= ImGui::RadioButton( "Gouraud", ( int* )&lighting_model, LightingModel::Gouraud );
-		ImGui::SameLine();
-		lighting_model_changed |= ImGui::RadioButton( "Phong",	( int* )&lighting_model, LightingModel::Phong );
-
-		if( lighting_model_changed )
-		{
-			cube_shader = lighting_model == LightingModel::Gouraud ? &gouraud_shader : &phong_shader;
-			ground_quad_material.SetShader( cube_shader );
-		}
 	}
 
 	ImGui::End();
@@ -451,18 +424,18 @@ void SandboxApplication::ResetMaterialData()
 	cube_material_array.resize( CUBE_COUNT );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
-		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), cube_shader );
 		cube_material_array[ i ].SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
 		cube_material_array[ i ].SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
+		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
 	}
 
-	ground_quad_material     = Engine::Material( "Ground", cube_shader );
 	ground_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
 	ground_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
+	ground_quad_material = Engine::Material( "Ground", &phong_shader );
 
-	front_wall_quad_material = Engine::Material( "Front Wall", cube_shader );
 	front_wall_quad_material.SetTexture( "uniform_surface_data_diffuse_map_slot", &container_texture_diffuse_map );
 	front_wall_quad_material.SetTexture( "uniform_surface_data_specular_map_slot", &container_texture_specular_map );
+	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

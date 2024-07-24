@@ -54,8 +54,7 @@ private:
 	Engine::Mesh cube_mesh;
 
 /* Materials, Shaders & Textures: */
-	Engine::Shader* cube_shader;
-	Engine::Shader gouraud_shader, phong_shader;
+	Engine::Shader phong_shader;
 	Engine::Shader light_source_shader;
 
 	std::vector< Engine::Material > light_source_material_array;
