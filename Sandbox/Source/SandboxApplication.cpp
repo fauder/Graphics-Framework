@@ -85,7 +85,6 @@ void SandboxApplication::Initialize()
 	front_wall_quad_material.Set( "SurfaceData", front_wall_quad_surface_data );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 		cube_material_array[ i ].Set( "SurfaceData", cube_surface_data_array[ i ] );
-	light_source_shader.Bind();
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_data_array[ i ].diffuse_and_attenuation_linear.color );
 
@@ -131,8 +130,6 @@ void SandboxApplication::Initialize()
 		cube_transform_array[ cube_index ]
 			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
-
-		cube_material_array[ cube_index ].Set( "uniform_transform_world", cube_transform_array[ cube_index ].GetFinalMatrix() );
 	}
 
 	Platform::MaximizeWindow();
