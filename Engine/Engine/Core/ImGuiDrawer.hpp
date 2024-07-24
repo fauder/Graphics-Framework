@@ -170,9 +170,6 @@ namespace Engine::ImGuiDrawer
 		Math::Vector< Math::Degrees< Component >, 3 > euler;
 		Math::QuaternionToEuler( quaternion, euler );
 
-		// It would be more intuitive if the X angle (pitch) came before the Y angle (heading), even though that is not the correct order of transformations.
-		std::swap( euler[ 0 ], euler[ 1 ] );
-
 		/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::InputScalarN( name, GetImGuiDataType< Component >(), euler.Data(), euler.Dimension(), NULL, NULL, GetFormat< Component >(), ImGuiInputTextFlags_ReadOnly );
 
@@ -185,12 +182,8 @@ namespace Engine::ImGuiDrawer
 		Math::Vector< Math::Degrees< Component >, 3 > euler;
 		Math::QuaternionToEuler( quaternion, euler );
 
-		// It would be more intuitive if the X angle (pitch) came before the Y angle (heading), even though that is not the correct order of transformations.
-		std::swap( euler[ 0 ], euler[ 1 ] );
-
 		if( ImGui::DragScalarN( name, GetImGuiDataType< Component >(), euler.Data(), euler.Dimension(), 1.0f, NULL, NULL, GetFormat< Component >() ) )
 		{
-			std::swap( euler[ 0 ], euler[ 1 ] ); // Switch back to correct order before feeding these into EulerToQuaternion().
 			quaternion = Math::EulerToQuaternion( euler );
 			return true;
 		}

@@ -315,6 +315,10 @@ namespace Engine::ImGuiDrawer
 		}
 	}
 
+	// TODO: Utilize newly added Uniform buffer member aggregate/array info. Right now, only member names of arrays/structs show inside Uniform Buffers in the Material Window;
+	// For example the ambient term of DirectionalLightData just shows as "Ambient". SpotLightData's is also "Ambient" and they can not be distinguished from each other.
+	// Also, order is semi-random; OpenGL dictated order is seen (I think) in the Material Window. Which is hard to read.
+
 	void Draw( Material& material, ImGuiWindowFlags window_flags )
 	{
 		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
