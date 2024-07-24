@@ -55,6 +55,8 @@ namespace Engine::Math
 	[[ nodiscard( "Clamped value is not assigned back to any variable." ) ]]
 	Value Clamp( const Value value, const Value minimum, const Value maximum ) { return value < minimum ? minimum : value > maximum ? maximum : value; }
 
+	int RoundToMultiple_PowerOf2( const int value, const int multiple );
+
 /* Trigonometry. */
 	template< std::floating_point Value >
 	Value Hypothenuse( const Value x, const Value y ) { return std::sqrt( x * x + y * y ); }
