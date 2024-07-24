@@ -71,7 +71,15 @@ namespace Engine
 
 	void Material::SetTexture( const char* sampler_name_of_new_texture, Texture* texture_to_be_set )
 	{
-		texture_map[ sampler_name_of_new_texture ] = texture_to_be_set;
+		if( const auto found = texture_map.find( sampler_name_of_new_texture ); 
+			found != texture_map.cend() )
+		{
+			found->second = texture_to_be_set;
+		}
+		else
+		{
+			throw std::runtime_error( R"(ERROR::MATERIAL::SetTexture(): given sampler name ")" + std::string( sampler_name_of_new_texture ) + R"(" does not exist!)" );
+		}
 	}
 
 	const Texture* Material::GetTexture( const char* sampler_name_of_new_texture ) const
