@@ -170,9 +170,16 @@ void SandboxApplication::Update()
 	/* Camera transform: */
 	if( camera_is_animated )
 	{
-		// Orbit motion:
-		camera_transform.SetRotation( Engine::Math::EulerToQuaternion( -current_time_as_angle * 0.33f, 0_rad, 0_rad ) );
-		camera_transform.SetTranslation( CUBES_ORIGIN + Vector3::Up() * 0.5f + -camera_transform.Forward() * 30.0f );
+		/* Orbit motion: */
+
+		Engine::Math::Vector< Radians, 3 > old_euler_angles;
+		Engine::Math::QuaternionToEuler( camera_transform.GetRotation(), old_euler_angles );
+		// Don't modify X & Z euler angles; Allow the user to modify them.
+		camera_transform.SetRotation( Engine::Math::EulerToQuaternion( -current_time_as_angle * 0.33f, old_euler_angles.X(), old_euler_angles.Z() ) );
+
+		auto new_pos = CUBES_ORIGIN + -camera_transform.Forward() * 30.0f;
+		new_pos.SetY( camera_transform.GetTranslation().Y() ); // Don't modify Y position; Allow the user to modify it.
+		camera_transform.SetTranslation( new_pos );
 	}
 	else
 	{
