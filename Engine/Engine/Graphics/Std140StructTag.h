@@ -2,5 +2,5 @@
 
 namespace Engine
 {
-	struct UniformBufferTag {};
+	struct Std140StructTag {};
 }

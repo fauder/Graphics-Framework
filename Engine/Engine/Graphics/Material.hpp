@@ -87,7 +87,7 @@ namespace Engine
 			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), uniform_info );
 		}
 
-		template< typename StructType > requires( std::is_base_of_v< UniformBufferTag, StructType > )
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
 		void Set( const char* uniform_buffer_name, const StructType& value )
 		{
 			const auto& uniform_buffer_info = GetUniformBufferInformation( uniform_buffer_name );

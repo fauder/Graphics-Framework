@@ -4,8 +4,8 @@
 #include "Graphics.h"
 #include "Color.hpp"
 #include "Lighting.h"
+#include "Std140StructTag.h"
 #include "Uniform.h"
-#include "UniformBufferTag.h"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
@@ -67,8 +67,7 @@ namespace Engine
 		inline const std::string&	Name()	const { return name;		}
 		inline		 ID				Id()	const { return program_id;	}
 
-	/* Uniform APIs: */
-
+/* Uniform APIs: */
 		inline const std::unordered_map< std::string, Uniform::Information			>& GetUniformInfoMap()			const { return uniform_info_map;		}
 		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return uniform_buffer_info_map; }
 		inline std::size_t GetTotalUniformSize_DefaultBlockOnly() const { return uniform_book_keeping_info.total_size_default_block; }
@@ -248,9 +247,9 @@ namespace Engine
 	 * Instance & Regular   Uniform Buffers are kept & updated by the Material.
 	 */
 
-	/* Uniform setters; By name & value: */
+/* Uniform setters; By name & value: */
 		template< typename UniformType >
-			/* Prohibit Uniform Buffers: */ requires( not std::is_base_of_v< UniformBufferTag, UniformType > )
+		/* Prohibit Uniform Buffers: */ requires( not std::is_base_of_v< Std140StructTag, UniformType > )
 		void SetUniform( const char* uniform_name, const UniformType& value )
 		{
 			const auto& uniform_info = GetUniformInformation( uniform_name );
@@ -258,18 +257,18 @@ namespace Engine
 			SetUniform( uniform_info.location_or_block_index, value );
 		}
 
-	/* Uniform setters; By info. & pointer: */
+/* Uniform setters; By info. & pointer: */
 		void SetUniform( const Uniform::Information& uniform_info, const void* value_pointer );
 
 	private:
-	/* Compilation & Linkage: */
+/* Compilation & Linkage: */
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
 		/*std::string ShaderSource_CommentsStripped( const std::string& shader_source );*/
 
-	/* Shader Introspection: */
+/* Shader Introspection: */
 		void GetUniformBookKeepingInfo();
 		
 		/* Expects empty input vectors. */
@@ -284,12 +283,12 @@ namespace Engine
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name );
 		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_name );
 
-	/* Error Checking/Reporting: */
+/* Error Checking/Reporting: */
 		void LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const;
 		void LogErrors_Linking() const;
 		std::string FormatErrorLog( const char* log ) const;
 
-	/* Misc: */
+/* Misc: */
 		std::string UniformEditorName( const std::string& original_name );
 
 	private:
