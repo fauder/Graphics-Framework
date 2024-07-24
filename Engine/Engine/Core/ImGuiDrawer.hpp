@@ -221,8 +221,8 @@ namespace Engine::ImGuiDrawer
 	bool Draw(		 Camera& camera, const char* name = "##camera" );
 	void Draw( const Camera& camera, const char* name = "##camera" );
 
-	bool Draw(		 Transform& transform, const char* name = "##transform" );
-	void Draw( const Transform& transform, const char* name = "##transform" );
+	bool Draw(		 Transform& transform, const char* name = "##transform", const bool hide_scale = false );
+	void Draw( const Transform& transform, const char* name = "##transform", const bool hide_scale = false );
 
 	void Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );

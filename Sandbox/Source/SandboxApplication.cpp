@@ -307,7 +307,7 @@ void SandboxApplication::DrawImGui()
 
 	ImGui::End();
 
-	Engine::ImGuiDrawer::Draw( camera_transform, "Main Camera" );
+	Engine::ImGuiDrawer::Draw( camera_transform, "Main Camera", true /* hide scale. */);
 
 	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{

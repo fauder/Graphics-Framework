@@ -187,7 +187,7 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
-	bool Draw( Transform& transform, const char* name )
+	bool Draw( Transform& transform, const char* name, const bool hide_scale )
 	{
 		bool is_modified = false;
 
@@ -211,11 +211,14 @@ namespace Engine::ImGuiDrawer
 					transform.SetRotation( rotation );
 				}
 
-				Vector3 scale = transform.GetScaling();
-				if( Draw( scale, "Scale" ) )
+				if( not hide_scale )
 				{
-					is_modified = true;
-					transform.SetScaling( scale );
+					Vector3 scale = transform.GetScaling();
+					if( Draw( scale, "Scale" ) )
+					{
+						is_modified = true;
+						transform.SetScaling( scale );
+					}
 				}
 
 				ImGui::PopID();
@@ -229,7 +232,7 @@ namespace Engine::ImGuiDrawer
 		return is_modified;
 	}
 
-	void Draw( const Engine::Transform& transform, const char* name )
+	void Draw( const Engine::Transform& transform, const char* name, const bool hide_scale )
 	{
 		if( ImGui::Begin( "Transforms", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
@@ -239,7 +242,8 @@ namespace Engine::ImGuiDrawer
 
 				Draw( transform.GetTranslation(),	"Position"  );
 				Draw( transform.GetRotation(),		"Rotation"  );
-				Draw( transform.GetScaling(),		"Scale"		);
+				if( not hide_scale )
+					Draw( transform.GetScaling(),	"Scale"	);
 
 				ImGui::PopID();
 
