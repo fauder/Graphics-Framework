@@ -80,6 +80,7 @@ namespace Engine
 			QueryUniformData();
 			QueryUniformData_BlockIndexAndOffsetForBufferMembers();
 			QueryUniformBufferData();
+			QueryUniformBufferData_Aggregates();
 
 			CalculateTotalUniformSizes();
 			EnumerateUniformBufferCategories();
@@ -271,15 +272,14 @@ namespace Engine
 
 		/* Size below is commented out because array uniforms are not implemented yetand size here refers to array size.It is 1 for non - arrays. */
 
-		std::vector< int > /*corresponding_array_sizes( corresponding_uniform_indices.size() ),*/ correspoding_offsets( corresponding_uniform_indices.size() );
-		//glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_SIZE,		corresponding_array_sizes.data()	);
-		glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET,	correspoding_offsets.data()			);
+		std::vector< int > corresponding_offsets( corresponding_uniform_indices.size() );
+		glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET, corresponding_offsets.data() );
 
 		for( int index = 0; index < corresponding_uniform_indices.size(); index++ )
 		{
 			const auto uniform_index = corresponding_uniform_indices[ index ];
 			const auto block_index   = block_indices[ index ];
-			const auto offset        = correspoding_offsets[ index ];
+			const auto offset        = corresponding_offsets[ index ];
 
 			int length = 0;
 			glGetActiveUniformName( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() );
@@ -333,6 +333,125 @@ namespace Engine
 			}
 
 			offset += size;
+		}
+	}
+
+	void Shader::QueryUniformBufferData_Aggregates()
+	{
+		for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+		{
+			using BufferInfoPair = std::pair< const std::string, Uniform::Information* >;
+			std::vector< BufferInfoPair* > uniform_buffer_info_sorted_by_offset;
+			for( auto& pair : uniform_buffer_info.members_map )
+				uniform_buffer_info_sorted_by_offset.push_back( &pair );
+
+			std::stable_sort( uniform_buffer_info_sorted_by_offset.begin(), uniform_buffer_info_sorted_by_offset.end(),
+							  []( const BufferInfoPair* left, const BufferInfoPair* right )
+			{
+				return left->second->offset < right->second->offset;
+			} );
+
+			for( int i = 0; i < uniform_buffer_info_sorted_by_offset.size(); i++ ) // -> Outer for loop.
+			{
+				const auto& buffer_info_pair = uniform_buffer_info_sorted_by_offset[ i ];
+				const auto& uniform_name     = buffer_info_pair->first;
+				const auto& uniform_info     = buffer_info_pair->second;
+
+				std::string_view uniform_name_without_buffer_name( uniform_name.cbegin() + uniform_buffer_name.size() + 1, uniform_name.cend() ); // +1 for the dot.
+
+				if( const auto bracket_pos = uniform_name_without_buffer_name.find( '[' );
+					bracket_pos != std::string_view::npos )
+				{
+					int stride = uniform_info->size, member_count = 1;
+
+					/* Find the other members of the array's CURRENT element: */
+					bool done_processing_array_element = false;
+					int j = i + 1;
+					for( ; j < uniform_buffer_info_sorted_by_offset.size() && not done_processing_array_element; j++ )
+					{
+						const auto& other_buffer_info_pair = uniform_buffer_info_sorted_by_offset[ j ];
+						const auto& other_uniform_name     = other_buffer_info_pair->first;
+						const auto& other_uniform_info     = other_buffer_info_pair->second;
+
+						std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + uniform_buffer_name.size() + 1, other_uniform_name.cend() ); // +1 for the dot.
+
+						// + 2 to include the index, which has to match for a given array element.
+						if( other_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, bracket_pos + 2 ) ) )
+						{
+							stride += other_uniform_info->size;
+							member_count++;
+						}
+						else
+							done_processing_array_element = true;
+					}
+
+					member_count = j - i - 1; // -1 because j had been incremented once more before the for loop ended.
+					stride       = Math::RoundToMultiple_PowerOf2( stride, sizeof( Vector4 ) ); // Std140 dictates this.
+
+					done_processing_array_element = false;
+					for( ; j < uniform_buffer_info_sorted_by_offset.size() && not done_processing_array_element; j++ )
+					{
+						const auto& other_buffer_info_pair = uniform_buffer_info_sorted_by_offset[ j ];
+						const auto& other_uniform_name     = other_buffer_info_pair->first;
+						const auto& other_uniform_info     = other_buffer_info_pair->second;
+
+						std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + uniform_buffer_name.size() + 1, other_uniform_name.cend() ); // +1 for the dot.
+
+						// No +2 this time; we're looking for the array name only.
+						if( !other_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, bracket_pos ) ) )
+							done_processing_array_element = true;
+					}
+
+					const int element_count = ( j - i - 1 ) / member_count; // -1 because j had been incremented once more before the for loop ended.
+					
+					uniform_buffer_info.members_array_map.emplace( uniform_name_without_buffer_name.substr( 0, bracket_pos ),
+																   Uniform::BufferMemberInformation_Array
+																   { 
+																		.offset        = uniform_info->offset,
+																		.stride        = stride,
+																		.element_count = element_count
+																		/* Can not use designated initializers above because MSVC has a bug apparently. */
+																   } );
+
+					i += j - i - 1 - 1; // Outer for loop's i++ will also increment i, that's why there is a minus 1. The other -1 is the same as the ones above; for loop increments the J for one last time.
+				}
+				else if( const auto dot_pos = uniform_name_without_buffer_name.find( '.' );
+						 dot_pos != std::string_view::npos )
+				{
+					int member_count = 1;
+					int size = uniform_info->size;
+
+					// Don't need to check whether the loop ended naturally or not in this case; If the loop ends naturally, then incrementing i is not important any more.
+
+					for( int j = i + 1; j < uniform_buffer_info_sorted_by_offset.size(); j++ ) // -> Inner for loop.
+					{
+						const auto& next_buffer_info_pair = uniform_buffer_info_sorted_by_offset[ j ];
+						const auto& next_uniform_name     = next_buffer_info_pair->first;
+						const auto& next_uniform_info     = next_buffer_info_pair->second;
+
+						std::string_view next_uniform_name_without_buffer_name( next_uniform_name.cbegin() + uniform_buffer_name.size() + 1, next_uniform_name.cend() ); // +1 for the dot.
+
+						if( next_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, dot_pos ) ) )
+							size += next_uniform_info->size;
+						else
+						{
+							size = Math::RoundToMultiple_PowerOf2( size, sizeof( Vector4 ) ); // Std140 dictates this.
+
+							member_count = j - i;
+							i += member_count - 1; // Outer for loop's i++ will also increment i, that's why there is a minus 1.
+
+							break;
+						}
+					}
+
+					uniform_buffer_info.members_aggregate_map.emplace( uniform_name_without_buffer_name.substr( 0, dot_pos ),
+																	   Uniform::BufferMemberInformation_Aggregate
+																	   {
+																		   .offset = uniform_info->offset,
+																		   .size   = size
+																	   } );
+				}
+			}
 		}
 	}
 

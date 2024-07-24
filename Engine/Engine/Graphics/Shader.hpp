@@ -277,6 +277,7 @@ namespace Engine
 		void QueryUniformData();
 		void QueryUniformData_BlockIndexAndOffsetForBufferMembers();
 		void QueryUniformBufferData();
+		void QueryUniformBufferData_Aggregates();
 		void CalculateTotalUniformSizes();
 		void EnumerateUniformBufferCategories();
 
