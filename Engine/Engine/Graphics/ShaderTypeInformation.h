@@ -216,7 +216,6 @@ namespace Engine
 	}
 }
 
-// TODO: Add missing types as they are needed.
 /* Types not added yet:
  * 
  * GL_SAMPLER_CUBE 	samplerCube

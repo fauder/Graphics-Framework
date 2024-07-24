@@ -274,9 +274,9 @@ namespace Engine
 		/* Expects empty input vectors. */
 		bool GetActiveUniformBlockIndicesAndCorrespondingUniformIndices( const int active_uniform_count,
 																		 std::vector< unsigned int >& block_indices, std::vector< unsigned int >& corresponding_uniform_indices ) const;
-		void QueryUniformData_In_DefaultBlock( std::unordered_map< std::string, Uniform::Information >& uniform_information_map );
-		void QueryUniformData_In_UniformBlocks( std::unordered_map< std::string, Uniform::Information >& uniform_information_map );
-		void QueryUniformBufferData( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_information_map );
+		void QueryUniformData();
+		void QueryUniformData_BlockIndexAndOffsetForBufferMembers();
+		void QueryUniformBufferData();
 		void CalculateTotalUniformSizes();
 		void EnumerateUniformBufferCategories();
 
