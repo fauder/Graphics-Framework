@@ -100,6 +100,7 @@ namespace Engine
 		Buffer( Buffer&& donor )
 			:
 			id( std::exchange( donor.id, -1 ) ),
+			name( std::exchange( donor.name, {} ) ),
 			count( std::exchange( donor.count, 0 ) ),
 			size( std::exchange( donor.size, 0 ) )
 		{
@@ -108,6 +109,7 @@ namespace Engine
 		Buffer& operator = ( Buffer&& donor )
 		{
 			id    = std::exchange( donor.id,	-1 );
+			name  = std::exchange( donor.name,	{} );
 			count = std::exchange( donor.count,  0 );
 			size  = std::exchange( donor.size,	 0 );
 
