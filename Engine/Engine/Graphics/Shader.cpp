@@ -469,6 +469,10 @@ namespace Engine
 
 					members_map.clear(); // Re-use the existing vector with its grown capacity.
 				}
+				else
+				{
+					uniform_buffer_info.members_single.push_back( uniform_info );
+				}
 			}
 		}
 	}

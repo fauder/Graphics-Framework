@@ -79,6 +79,8 @@ namespace Engine
 			std::unordered_map< std::string, BufferMemberInformation_Struct		> members_struct_map;
 			std::unordered_map< std::string, BufferMemberInformation_Array		> members_array_map;
 
+			std::vector< Information* > members_single;
+
 			inline bool IsRegular()		const { return category == BufferCategory::Regular;		}
 			inline bool IsInstance()	const { return category == BufferCategory::Instance;	}
 			inline bool IsGlobal()		const { return category == BufferCategory::Global;		}
