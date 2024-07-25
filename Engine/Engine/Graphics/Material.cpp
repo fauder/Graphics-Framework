@@ -28,7 +28,7 @@ namespace Engine
 		:
 		name( name ),
 		shader( shader ),
-		uniform_blob( shader->GetTotalUniformSize(), std::byte{ 0 } ),
+		uniform_blob( shader->GetTotalUniformSize() ),
 		uniform_blob_offset_of_uniform_buffers( shader->GetTotalUniformSize_DefaultBlockOnly() ),
 		uniform_info_map( &shader->GetUniformInfoMap() ),
 		uniform_buffer_info_map( &shader->GetUniformBufferInfoMap() )
@@ -52,7 +52,7 @@ namespace Engine
 	{
 		this->shader = shader;
 
-		uniform_blob                   = std::vector< std::byte >( shader->GetTotalUniformSize() );
+		uniform_blob                           = Blob( shader->GetTotalUniformSize() );
 		uniform_blob_offset_of_uniform_buffers = shader->GetTotalUniformSize_DefaultBlockOnly();
 
 		uniform_info_map        = ( &shader->GetUniformInfoMap() );
@@ -123,65 +123,50 @@ namespace Engine
 		}
 	}
 
-	void* Material::GetUniformPointer( std::size_t offset )
+	void* Material::ReadFromBlob_Uniform( std::size_t offset )
 	{
-		return GetValuePointerFromBlob( offset );
+		return uniform_blob.Get( offset );
 	}
 
-	const void* Material::GetUniformPointer( std::size_t offset ) const
+	const void* Material::ReadFromBlob_Uniform( std::size_t offset ) const
 	{
-		return GetValuePointerFromBlob( offset );
+		return uniform_blob.Get( offset );
 	}
 
-	void* Material::GetUniformBufferPointer( std::size_t offset )
+	void* Material::ReadFromBlob_UniformBuffer( std::size_t offset )
 	{
-		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
+		return uniform_blob.Get( uniform_blob_offset_of_uniform_buffers + offset );
 	}
 
-	const void* Material::GetUniformBufferPointer( std::size_t offset ) const
+	const void* Material::ReadFromBlob_UniformBuffer( std::size_t offset ) const
 	{
-		return GetValuePointerFromBlob( uniform_blob_offset_of_uniform_buffers + offset );
+		return uniform_blob.Get( uniform_blob_offset_of_uniform_buffers + offset );
 	}
 
-	void Material::CopyValueToBlob( const std::byte* value, const Uniform::Information& uniform_info )
+	void Material::CopyToBlob_Uniform( const std::byte* value, const Uniform::Information& uniform_info )
 	{
-		CopyValueToBlob( value, uniform_info.offset, uniform_info.size );
+		uniform_blob.Set( value, uniform_info.offset, uniform_info.size );
 	}
 
-	void Material::CopyValueToBlob( const std::byte* value, const Uniform::BufferInformation& uniform_buffer_info )
+	void Material::CopyToBlob_UniformBuffer( const std::byte* value, const Uniform::BufferInformation& uniform_buffer_info )
 	{
-		CopyValueToBlob( value, uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset, uniform_buffer_info.size );
-	}
-
-	void Material::CopyValueToBlob( const std::byte* value, const std::size_t offset, const std::size_t size )
-	{
-		std::memcpy( uniform_blob.data() + offset, value, size );
-	}
-
-	void* Material::GetValuePointerFromBlob( std::size_t offset )
-	{
-		return uniform_blob.data() + offset;
-	}
-
-	const void* Material::GetValuePointerFromBlob( std::size_t offset ) const
-	{
-		return uniform_blob.data() + offset;
+		uniform_blob.Set( value, uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset, uniform_buffer_info.size );
 	}
 
 	void Material::UploadUniform( const Uniform::Information& uniform_info )
 	{
-		shader->SetUniform( uniform_info, GetUniformPointer( uniform_info.offset ) );
+		shader->SetUniform( uniform_info, ReadFromBlob_Uniform( uniform_info.offset ) );
 	}
 
 	void Material::UploadUniformBuffer( const Uniform::BufferInformation& uniform_buffer_info, const UniformBuffer& uniform_buffer_to_update )
 	{
-		uniform_buffer_to_update.Update( GetUniformBufferPointer( uniform_buffer_info.offset ) );
+		uniform_buffer_to_update.Update( ReadFromBlob_UniformBuffer( uniform_buffer_info.offset ) );
 	}
 
 	void Material::UploadUniformBuffer_Partial( const Uniform::BufferInformation& uniform_buffer_info, const UniformBuffer& uniform_buffer_to_update,
 												const std::size_t offset, const std::size_t size )
 	{
-		uniform_buffer_to_update.Update_Partial( std::span( ( std::byte* )GetUniformBufferPointer( uniform_buffer_info.offset ), size ), offset );
+		uniform_buffer_to_update.Update_Partial( std::span( ( std::byte* )ReadFromBlob_UniformBuffer( uniform_buffer_info.offset ), size ), offset );
 	}
 
 	void Material::UploadUniforms()
@@ -206,7 +191,7 @@ namespace Engine
 			const auto& sampler_uniform_info = uniform_info_map->at( sampler_name );
 			const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
 
-			CopyValueToBlob( ( const std::byte* )&texture_unit_slot, sampler_uniform_info );
+			CopyToBlob_Uniform( ( const std::byte* )&texture_unit_slot, sampler_uniform_info );
 
 			texture->Activate( texture_unit_slot );
 

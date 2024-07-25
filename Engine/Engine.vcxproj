@@ -158,6 +158,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\ImGuiLog.hpp" />
     <ClInclude Include="Engine\Core\ImGuiUtility.h" />
     <ClInclude Include="Engine\Core\Initialization.h" />
+    <ClInclude Include="Engine\Core\Blob.hpp" />
     <ClInclude Include="Engine\Core\ServiceLocator.h" />
     <ClInclude Include="Engine\Graphics\Buffer.hpp" />
     <ClInclude Include="Engine\Graphics\Drawable.h" />
@@ -207,6 +208,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp" />
+    <ClCompile Include="Engine\Core\Blob.cpp" />
     <ClCompile Include="Engine\Core\ImGuiDrawer.cpp" />
     <ClCompile Include="Engine\Core\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Core\ImGuiUtility.cpp" />

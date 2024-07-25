@@ -4,6 +4,7 @@
 #include "Shader.hpp"
 #include "UniformBuffer.h"
 #include "Texture.h"
+#include "Core/Blob.hpp"
 
 // std Includes.
 #include <cstddef> // std::byte.
@@ -56,7 +57,7 @@ namespace Engine
 							   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
 							   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
 			
-			return GetUniformPointer( uniform_info.offset );
+			return uniform_blob.Get( uniform_info.offset );
 		}
 
 		void* Get( const Uniform::Information& uniform_info )
@@ -65,17 +66,17 @@ namespace Engine
 							   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
 							   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
 
-			return GetUniformPointer( uniform_info.offset );
+			return ReadFromBlob_Uniform( uniform_info.offset );
 		}
 
 		const void* Get( const Uniform::BufferInformation& uniform_buffer_info ) const
 		{
-			return GetUniformBufferPointer( uniform_buffer_info.offset );
+			return ReadFromBlob_UniformBuffer( uniform_buffer_info.offset );
 		}
 
 		void* Get( const Uniform::BufferInformation& uniform_buffer_info )
 		{
-			return GetUniformBufferPointer( uniform_buffer_info.offset );
+			return ReadFromBlob_UniformBuffer( uniform_buffer_info.offset );
 		}
 
 		template< typename UniformType >
@@ -83,8 +84,7 @@ namespace Engine
 		{
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
-			/* Update the value in the internal memory blob: */
-			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), uniform_info );
+			CopyToBlob_Uniform( reinterpret_cast< const std::byte* >( &value ), uniform_info );
 		}
 
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
@@ -92,8 +92,7 @@ namespace Engine
 		{
 			const auto& uniform_buffer_info = GetUniformBufferInformation( uniform_buffer_name );
 
-			/* Update the value in the internal memory blob: */
-			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), uniform_buffer_info );
+			CopyToBlob_UniformBuffer( reinterpret_cast< const std::byte* >( &value ), uniform_buffer_info );
 		}
 
 		/* For setting ARRAY uniforms INSIDE a Uniform Buffer. */
@@ -107,7 +106,7 @@ namespace Engine
 										  array_index * uniform_buffer_member_array_info.stride;
 
 			/* Update the value in the internal memory blob: */
-			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_array_info.stride );
+			uniform_blob.Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_array_info.stride );
 		}
 
 		/* For now, singular uniform arrays vs. struct type arrays are the same regarding this Set() function. Hence, no need to define two separate functions. */
@@ -122,7 +121,7 @@ namespace Engine
 			const auto effective_offset = uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset + uniform_buffer_member_struct_info.offset;
 
 			/* Update the value in the internal memory blob: */
-			CopyValueToBlob( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_struct_info.size );
+			uniform_blob.Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_struct_info.size );
 		}
 
 	/* Textures: */
@@ -139,17 +138,13 @@ namespace Engine
 		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_buffer_name ) const;
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name ) const;
 
-		/* Keep these private as the user may accidentally mix UBO vs non-UBO versions. */
-			  void* GetUniformPointer( std::size_t offset );
-		const void* GetUniformPointer( std::size_t offset ) const;
-			  void* GetUniformBufferPointer( std::size_t offset );
-		const void* GetUniformBufferPointer( std::size_t offset ) const;
+			  void* ReadFromBlob_Uniform( std::size_t offset );
+		const void* ReadFromBlob_Uniform( std::size_t offset ) const;
+			  void* ReadFromBlob_UniformBuffer( std::size_t offset );
+		const void* ReadFromBlob_UniformBuffer( std::size_t offset ) const;
 
-		void CopyValueToBlob( const std::byte* value, const Uniform::Information& uniform_info );
-		void CopyValueToBlob( const std::byte* value, const Uniform::BufferInformation& uniform_buffer_info );
-		void CopyValueToBlob( const std::byte* value, const std::size_t offset, const std::size_t size );
-			  void* GetValuePointerFromBlob( std::size_t offset );
-		const void* GetValuePointerFromBlob( std::size_t offset ) const;
+		void CopyToBlob_Uniform( const std::byte* value, const Uniform::Information& uniform_info );
+		void CopyToBlob_UniformBuffer( const std::byte* value, const Uniform::BufferInformation& uniform_buffer_info );
 
 		void UploadUniform( const Uniform::Information& uniform_info );
 		void UploadUniformBuffer( const Uniform::BufferInformation& uniform_buffer_info, const UniformBuffer& uniform_buffer_to_update );
@@ -169,7 +164,7 @@ namespace Engine
 		 * First M bytes are reserved for default block uniforms & the following N bytes are reserved for Uniform Buffers, 
 		 * where M & N are queried from the shader. 
 		 * For both kinds, the offset parameters point to the relevant part of memory inside the blob. */
-		std::vector< std::byte > uniform_blob;
+		Blob uniform_blob;
 
 		std::size_t uniform_blob_offset_of_uniform_buffers;
 
