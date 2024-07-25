@@ -49,7 +49,7 @@ namespace Engine
 				return BufferCategory::Regular;
 		}
 
-		struct BufferMemberInformation_Aggregate
+		struct BufferMemberInformation_Struct
 		{
 			int offset;
 			int size;
@@ -76,7 +76,7 @@ namespace Engine
 			BufferCategory category;
 
 			std::unordered_map< std::string, Information*						> members_map;
-			std::unordered_map< std::string, BufferMemberInformation_Aggregate	> members_aggregate_map;
+			std::unordered_map< std::string, BufferMemberInformation_Struct		> members_struct_map;
 			std::unordered_map< std::string, BufferMemberInformation_Array		> members_array_map;
 
 			inline bool IsRegular()		const { return category == BufferCategory::Regular;		}

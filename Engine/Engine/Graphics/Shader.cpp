@@ -409,7 +409,8 @@ namespace Engine
 
 					const int element_count = ( j - i - 1 ) / member_count; // -1 because j had been incremented once more before the for loop ended.
 					
-					uniform_buffer_info.members_array_map.emplace( uniform_name_without_buffer_name.substr( 0, bracket_pos ),
+					const auto aggregate_name( uniform_name_without_buffer_name.substr( 0, bracket_pos ) );
+					uniform_buffer_info.members_array_map.emplace( aggregate_name,
 																   Uniform::BufferMemberInformation_Array
 																   { 
 																		.offset        = uniform_info->offset,
@@ -457,7 +458,8 @@ namespace Engine
 						}
 					}
 
-					uniform_buffer_info.members_aggregate_map.emplace( uniform_name_without_buffer_name.substr( 0, dot_pos ),
+					const auto aggregate_name( uniform_name_without_buffer_name.substr( 0, dot_pos ) );
+					uniform_buffer_info.members_struct_map.emplace( aggregate_name,
 																	Uniform::BufferMemberInformation_Struct
 																	{
 																		 .offset = uniform_info->offset,

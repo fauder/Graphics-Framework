@@ -227,12 +227,6 @@ namespace Engine
 		}
 
 		// TODO: Implement partial updates for Regular & Instance uniforms.
-		// TODO: This means there needs to be SetPartial()< Type > (hopefully with a better name) function.
-		/* Idea: 
-		 * We somehow have to keep track of which sub-blob areas are dirty.
-		 * Material may check if there are any dirty flags set for a given uniform buffer's sub-blob inside the main blob.
-		 * If there are any dirty flags set, we do a partial update only for the sub-blobs with dirty flags set and skip the "clean" sub-blobs.
-		 * If there aren't any dirty flags set, we do a full update on the whole buffer blob. */
 	}
 
 	void Material::PopulateTextureMap()

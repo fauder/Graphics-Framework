@@ -117,7 +117,7 @@ namespace Engine
 		void Set( const char* uniform_buffer_name, const char* uniform_member_struct_instance_name, const UniformType& value )
 		{
 			const auto& uniform_buffer_info = GetUniformBufferInformation( uniform_buffer_name );
-			const auto& uniform_buffer_member_struct_info = uniform_buffer_info.members_aggregate_map.at( uniform_member_struct_instance_name );
+			const auto& uniform_buffer_member_struct_info = uniform_buffer_info.members_struct_map.at( uniform_member_struct_instance_name );
 
 			const auto effective_offset = uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset + uniform_buffer_member_struct_info.offset;
 
