@@ -53,6 +53,8 @@ namespace Engine
 		{
 			int offset;
 			int size;
+
+			std::vector< Uniform::Information* > members_map;
 		};
 
 		struct BufferMemberInformation_Array
@@ -60,6 +62,8 @@ namespace Engine
 			int offset;
 			int stride;
 			int element_count;
+
+			std::vector< Uniform::Information* > members_map;
 		};
 
 		struct BufferInformation

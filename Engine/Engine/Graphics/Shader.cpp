@@ -338,6 +338,8 @@ namespace Engine
 
 	void Shader::QueryUniformBufferData_Aggregates()
 	{
+		std::vector< Uniform::Information* > members_map;
+
 		for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 		{
 			using BufferInfoPair = std::pair< const std::string, Uniform::Information* >;
@@ -364,6 +366,8 @@ namespace Engine
 				{
 					int stride = uniform_info->size, member_count = 1;
 
+					members_map.push_back( uniform_info );
+
 					/* Find the other members of the array's CURRENT element: */
 					bool done_processing_array_element = false;
 					int j = i + 1;
@@ -380,6 +384,7 @@ namespace Engine
 						{
 							stride += other_uniform_info->size;
 							member_count++;
+							members_map.push_back( other_uniform_info );
 						}
 						else
 							done_processing_array_element = true;
@@ -409,9 +414,11 @@ namespace Engine
 																   { 
 																		.offset        = uniform_info->offset,
 																		.stride        = stride,
-																		.element_count = element_count
-																		/* Can not use designated initializers above because MSVC has a bug apparently. */
+																		.element_count = element_count,
+																		.members_map   = members_map,
 																   } );
+
+					members_map.clear(); // Re-use the existing vector with its grown capacity.
 
 					i += j - i - 1 - 1; // Outer for loop's i++ will also increment i, that's why there is a minus 1. The other -1 is the same as the ones above; for loop increments the J for one last time.
 				}
@@ -421,18 +428,24 @@ namespace Engine
 					int member_count = 1;
 					int size = uniform_info->size;
 
+					members_map.push_back( uniform_info );
+
 					// Don't need to check whether the loop ended naturally or not in this case; If the loop ends naturally, then incrementing i is not important any more.
 
 					for( int j = i + 1; j < uniform_buffer_info_sorted_by_offset.size(); j++ ) // -> Inner for loop.
 					{
-						const auto& next_buffer_info_pair = uniform_buffer_info_sorted_by_offset[ j ];
-						const auto& next_uniform_name     = next_buffer_info_pair->first;
-						const auto& next_uniform_info     = next_buffer_info_pair->second;
+						const auto& other_buffer_info_pair = uniform_buffer_info_sorted_by_offset[ j ];
+						const auto& other_uniform_name     = other_buffer_info_pair->first;
+						const auto& other_uniform_info     = other_buffer_info_pair->second;
 
-						std::string_view next_uniform_name_without_buffer_name( next_uniform_name.cbegin() + uniform_buffer_name.size() + 1, next_uniform_name.cend() ); // +1 for the dot.
+						std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + uniform_buffer_name.size() + 1, other_uniform_name.cend() ); // +1 for the dot.
 
-						if( next_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, dot_pos ) ) )
-							size += next_uniform_info->size;
+						if( other_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, dot_pos ) ) )
+						{
+							size += other_uniform_info->size;
+
+							members_map.push_back( other_uniform_info );
+						}
 						else
 						{
 							size = Math::RoundToMultiple_PowerOf2( size, sizeof( Vector4 ) ); // Std140 dictates this.
@@ -445,11 +458,14 @@ namespace Engine
 					}
 
 					uniform_buffer_info.members_aggregate_map.emplace( uniform_name_without_buffer_name.substr( 0, dot_pos ),
-																	   Uniform::BufferMemberInformation_Aggregate
-																	   {
-																		   .offset = uniform_info->offset,
-																		   .size   = size
-																	   } );
+																	Uniform::BufferMemberInformation_Struct
+																	{
+																		 .offset = uniform_info->offset,
+																		 .size = size,
+																		 .members_map = members_map
+																	} );
+
+					members_map.clear(); // Re-use the existing vector with its grown capacity.
 				}
 			}
 		}
