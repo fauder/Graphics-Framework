@@ -52,14 +52,14 @@ vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_di
 	vec4 to_light_view_space = normalize( -uniform_lighting.directional_light.direction_view_space );
 
 	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0 );
-	vec3 diffuse               = diffuse_sample * uniform_lighting.directional_light.diffuse.xyz * diffuse_contribution;
+	vec3 diffuse               = diffuse_sample * uniform_lighting.directional_light.diffuse.rgb * diffuse_contribution;
 
 /* Specular term: */
 	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
 	vec4 reflected_light_direction_view_space = reflect( -to_light_view_space, normal_view_space );
 
 	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_surface.shininess );
-	vec3 specular               = specular_sample * uniform_lighting.directional_light.specular.xyz * specular_contribution;
+	vec3 specular               = specular_sample * uniform_lighting.directional_light.specular.rgb * specular_contribution;
 
 	return vec3( ambient + diffuse + specular );
 }
