@@ -416,6 +416,7 @@ namespace Engine
 																		.offset        = uniform_info->offset,
 																		.stride        = stride,
 																		.element_count = element_count,
+																		.editor_name   = UniformEditorName_BufferMemberAggregate( aggregate_name ),
 																		.members_map   = members_map,
 																   } );
 
@@ -464,6 +465,7 @@ namespace Engine
 																	{
 																		 .offset = uniform_info->offset,
 																		 .size = size,
+																		 .editor_name = UniformEditorName_BufferMemberAggregate( aggregate_name ),
 																		 .members_map = members_map
 																	} );
 
@@ -614,9 +616,12 @@ namespace Engine
 		return "\n    " + error_log_string;
 	}
 
-	std::string Shader::UniformEditorName( const std::string& original_name )
+	std::string Shader::UniformEditorName( const std::string_view original_name )
 	{
-		std::string editor_name( original_name );
+		const auto null_terminator_pos = original_name.find( '\0' );
+		std::string editor_name( original_name.cbegin(), null_terminator_pos != std::string::npos
+																? original_name.cbegin() + null_terminator_pos + 1
+																: original_name.cend() );
 
 		/* First get rid of parent struct/block names: */
 		if( const auto last_dot_pos = editor_name.find_last_of( '.' );
@@ -641,6 +646,24 @@ namespace Engine
 
 		if( editor_name.compare( 0, 7, "UNIFORM", 7 ) == 0 || editor_name.compare( 0, 7, "Uniform", 7 ) == 0 )
 			editor_name.erase( 0, 7 );
+
+		for( auto index = 1; index < editor_name.size(); index++ )
+			if( editor_name[ index - 1 ] == ' ' )
+				editor_name[ index ] = std::toupper( editor_name[ index ] );
+
+		return editor_name;
+	}
+
+	std::string Shader::UniformEditorName_BufferMemberAggregate( const std::string_view aggregate_name )
+	{
+		std::string editor_name( aggregate_name );
+
+		std::replace( editor_name.begin(), editor_name.end(), '_', ' ' );
+
+		if( std::isalpha( editor_name[ 0 ] ) )
+			editor_name[ 0 ] = std::toupper( editor_name[ 0 ] );
+		else if( editor_name.starts_with( ' ' ) )
+			editor_name = editor_name.erase( 0, 1 );
 
 		for( auto index = 1; index < editor_name.size(); index++ )
 			if( editor_name[ index - 1 ] == ' ' )

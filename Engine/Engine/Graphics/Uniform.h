@@ -54,6 +54,8 @@ namespace Engine
 			int offset;
 			int size;
 
+			std::string editor_name;
+
 			std::vector< Uniform::Information* > members_map;
 		};
 
@@ -62,6 +64,8 @@ namespace Engine
 			int offset;
 			int stride;
 			int element_count;
+
+			std::string editor_name;
 
 			std::vector< Uniform::Information* > members_map;
 		};
