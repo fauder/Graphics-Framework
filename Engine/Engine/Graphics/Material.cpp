@@ -35,7 +35,6 @@ namespace Engine
 	{
 		ASSERT_DEBUG_ONLY( HasShaderAssigned() && "Parameter 'shader' passed to Material::Material( const std::string& name, Shader* const shader ) is nullptr!" );
 
-		PopulateAndSetupUniformBufferMap();
 		PopulateTextureMap();
 	}
 
@@ -59,7 +58,6 @@ namespace Engine
 		uniform_info_map        = ( &shader->GetUniformInfoMap() );
 		uniform_buffer_info_map = ( &shader->GetUniformBufferInfoMap() );
 
-		PopulateAndSetupUniformBufferMap();
 		PopulateTextureMap();
 	}
 
@@ -93,23 +91,12 @@ namespace Engine
 		return nullptr;
 	}
 
-	void Material::PopulateAndSetupUniformBufferMap()
+	void Material::CacheUniformBufferMap( const std::unordered_map< std::string, UniformBuffer >& regular_uniform_buffers_map )
 	{
-		for( auto& [ uniform_buffer_name, uniform_buffer_info ] : *uniform_buffer_info_map )
-		{
-			/* .first gets the resulting iterator. Calling ->second on it gets the underlying Uniform Buffer object. */
+		for( const auto& [ uniform_buffer_name, uniform_buffer ] : regular_uniform_buffers_map )
+			uniform_buffer_map_regular.try_emplace( uniform_buffer_name, &uniform_buffer );
 
-			if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
-			{
-				auto& buffer = uniform_buffer_map_regular.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-				UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
-			}
-			else if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
-			{
-				auto& created_buffer = uniform_buffer_map_instance.try_emplace( uniform_buffer_name, uniform_buffer_info.size , uniform_buffer_name ).first->second;
-				UniformBufferManager::ConnectBufferToBlock( created_buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
-			}
-		}
+		// TODO: Cache Instance Uniform Buffers too, IF Material will take care of them.
 	}
 
 	const Uniform::BufferInformation& Material::GetUniformBufferInformation( const std::string& uniform_buffer_name ) const
@@ -206,10 +193,10 @@ namespace Engine
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : *uniform_buffer_info_map )
 		{
 			if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
-				UploadUniformBuffer( uniform_buffer_info, uniform_buffer_map_regular[ uniform_buffer_name ] );
-			else if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
-				UploadUniformBuffer( uniform_buffer_info, uniform_buffer_map_instance[ uniform_buffer_name ] );
+				UploadUniformBuffer( uniform_buffer_info, *uniform_buffer_map_regular[ uniform_buffer_name ] );
 		}
+
+		// TODO: Upload Instance Uniforms *somewhere*.
 
 		unsigned int texture_unit_slots_in_use = 0; // This can be controlled via a central manager class if more complex use-cases arise. For now every Material will act as if it is the only one using Texture Unit slots.
 

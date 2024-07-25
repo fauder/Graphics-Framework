@@ -90,8 +90,10 @@ namespace Engine
 		Color4 clear_color;
 		ClearTarget clear_target;
 
-		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_intrinsic;
+		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_regular;
+		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_instance;
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_global;
+		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_intrinsic;
 
 		// TODO: Probably going to need to keep a blob similar to Material's here for intrinsic & global uniforms.
 	};

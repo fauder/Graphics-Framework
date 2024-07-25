@@ -134,7 +134,7 @@ namespace Engine
 		inline const Shader* GetShader() const { return shader; };
 
 	/* Uniform: */
-		void PopulateAndSetupUniformBufferMap();
+		void CacheUniformBufferMap( const std::unordered_map< std::string, UniformBuffer >& regular_uniform_buffers_map );
 
 		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_buffer_name ) const;
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name ) const;
@@ -177,8 +177,8 @@ namespace Engine
 		const std::unordered_map< std::string, Uniform::Information			>* uniform_info_map;
 		const std::unordered_map< std::string, Uniform::BufferInformation	>* uniform_buffer_info_map;
 
-		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_regular;
-		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_instance;
+		std::unordered_map< std::string, const UniformBuffer* > uniform_buffer_map_regular;
+		// std::unordered_map< std::string, const UniformBuffer* > uniform_buffer_map_instance;
 
 		std::unordered_map< std::string, Texture* > texture_map;
 	};
