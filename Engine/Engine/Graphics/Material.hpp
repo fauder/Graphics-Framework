@@ -51,34 +51,11 @@ namespace Engine
 		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return *uniform_buffer_info_map;	}
 		inline const std::unordered_map< std::string, Texture*						>& GetTextureMap()				const { return texture_map;					}
 
-		const void* Get( const Uniform::Information& uniform_info ) const
-		{
-			ASSERT_DEBUG_ONLY( not uniform_info.is_buffer_member &&
-							   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
-							   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
-			
-			return uniform_blob.Get( uniform_info.offset );
-		}
-
-		void* Get( const Uniform::Information& uniform_info )
-		{
-			ASSERT_DEBUG_ONLY( not uniform_info.is_buffer_member &&
-							   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
-							   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
-
-			return ReadFromBlob_Uniform( uniform_info.offset );
-		}
-
-		const void* Get( const Uniform::BufferInformation& uniform_buffer_info ) const
-		{
-			return ReadFromBlob_UniformBuffer( uniform_buffer_info.offset );
-		}
-
-		void* Get( const Uniform::BufferInformation& uniform_buffer_info )
-		{
-			return ReadFromBlob_UniformBuffer( uniform_buffer_info.offset );
-		}
-
+		const void* Get( const Uniform::Information& uniform_info ) const;
+			  void* Get( const Uniform::Information& uniform_info );
+		const void* Get( const Uniform::BufferInformation& uniform_buffer_info ) const;
+			  void* Get( const Uniform::BufferInformation& uniform_buffer_info );
+		
 		template< typename UniformType >
 		void Set( const char* uniform_name, const UniformType& value )
 		{
