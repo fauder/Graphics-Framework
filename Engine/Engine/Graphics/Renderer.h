@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Drawable.h"
+#include "Core/DirtyBlob.h"
 #include "Scene/Camera.h"
 
 // std Includes.
@@ -34,7 +35,9 @@ namespace Engine
 		~Renderer();
 
 	/* Main: */
+		void Update( Camera& camera );
 		void Render( Camera& camera );
+		void OnProjectionParametersChange( Camera& camera );
 
 	/* Drawables: */
 		void AddDrawable( Drawable* drawable_to_add );
@@ -69,9 +72,59 @@ namespace Engine
 		void Render_Indexed( const Mesh& mesh );
 		void Render_NonIndexed( const Mesh& mesh );
 
-	/* Shaders: */
-		// TODO: Provide Intrinsic setting/getting functions.
+	/* Intrinsic Uniforms: */
+		const void* GetIntrinsic( const char* uniform_buffer_name, const Uniform::BufferInformation& uniform_buffer_info ) const;
+			  void* GetIntrinsic( const char* uniform_buffer_name, const Uniform::BufferInformation& uniform_buffer_info );
 
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void SetIntrinsic( const char* uniform_buffer_name, const StructType& value )
+		{
+			const auto& uniform_buffer_info = *uniform_buffer_info_map_intrinsic[ uniform_buffer_name ];
+
+			uniform_blob_map_intrinsic[ uniform_buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), uniform_buffer_info.offset, uniform_buffer_info.size );
+		}
+
+		/* For PARTIAL setting ARRAY uniforms INSIDE a Uniform Buffer. */
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void SetIntrinsic( const char* uniform_buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
+		{
+			const auto& uniform_buffer_info              = *uniform_buffer_info_map_intrinsic[ uniform_buffer_name ];
+			const auto& uniform_buffer_member_array_info = uniform_buffer_info.members_array_map.at( uniform_member_array_instance_name );
+
+			const auto effective_offset = uniform_buffer_member_array_info.offset + 
+										  array_index * uniform_buffer_member_array_info.stride;
+
+			/* Update the value in the internal memory blob: */
+			uniform_blob_map_intrinsic[ uniform_buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_array_info.stride );
+		}
+
+		/* For PARTIAL setting STRUCT uniforms INSIDE a Uniform Buffer. */
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void SetIntrinsic( const char* uniform_buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
+		{
+			const auto& uniform_buffer_info               = *uniform_buffer_info_map_intrinsic[ uniform_buffer_name ];
+			const auto& uniform_buffer_member_struct_info = uniform_buffer_info.members_struct_map.at( uniform_member_struct_instance_name );
+
+			const auto effective_offset = uniform_buffer_member_struct_info.offset;
+
+			/* Update the value in the internal memory blob: */
+			uniform_blob_map_intrinsic[ uniform_buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_struct_info.size );
+		}
+
+		/* For PARTIAL setting NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
+		template< typename UniformType >
+		void SetIntrinsic( const char* uniform_buffer_name, const char* uniform_member_name, const UniformType& value )
+		{
+			const auto& uniform_buffer_info = *uniform_buffer_info_map_intrinsic[ uniform_buffer_name ];
+			const auto& uniform_info        = uniform_buffer_info.members_single_map.at( uniform_member_name );
+
+			/* Update the value in the internal memory blob: */
+			uniform_blob_map_intrinsic[ uniform_buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), uniform_info->offset, uniform_info->size );
+		}
+
+		void UploadIntrinsics();
+
+	/* Shaders: */
 		void RegisterShader( const Shader& shader );
 		void UnregisterShader( const Shader& shader );
 
@@ -95,6 +148,10 @@ namespace Engine
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_global;
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_intrinsic;
 
-		// TODO: Probably going to need to keep a blob similar to Material's here for intrinsic & global uniforms.
+		//std::unordered_map< std::string, const Uniform::BufferInformation > uniform_buffer_info_map_global;
+		std::unordered_map< std::string, const Uniform::BufferInformation* > uniform_buffer_info_map_intrinsic;
+
+		//std::unordered_map< std::string, DirtyBlob > uniform_blob_map_global;
+		std::unordered_map< std::string, DirtyBlob > uniform_blob_map_intrinsic;
 	};
 }

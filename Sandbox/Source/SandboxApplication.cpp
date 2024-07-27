@@ -201,6 +201,8 @@ void SandboxApplication::Update()
 		camera_transform.OffsetTranslation( camera_transform.Right()   * -camera_move_speed * time_delta );
 	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_D ) )
 		camera_transform.OffsetTranslation( camera_transform.Right()   * +camera_move_speed * time_delta );
+
+	renderer.Update( camera );
 }
 
 void SandboxApplication::Render()
@@ -496,5 +498,7 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 		camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
 		if( auto_calculate_vfov_based_on_90_hfov )
 			camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
+
+		renderer.OnProjectionParametersChange( camera );
 	}
 }

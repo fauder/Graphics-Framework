@@ -17,23 +17,22 @@ namespace Engine
 	{
 	}
 
+	void Renderer::Update( Camera& camera )
+	{
+		SetIntrinsic( "_Intrinsic_", "_INTRINSIC_TRANSFORM_VIEW", camera.GetViewMatrix() );
+	}
+
 	void Renderer::Render( Camera& camera )
 	{
 		Clear();
 
-		auto& intrinsic_camera_matrices_uniform_buffer = uniform_buffer_map_intrinsic[ "_Intrinsic_" ];
+		UploadIntrinsics();
 
-		const auto& view_matrix       = camera.GetViewMatrix();
-		const auto& projection_matrix = camera.GetProjectionMatrix();
-		// TODO: After blob & intrinsic getter/setters are implemented, replace the hard-coded calls below with the proper ones.
-		intrinsic_camera_matrices_uniform_buffer.Update_Partial( std::span( ( std::byte* )view_matrix.Data(),		sizeof( view_matrix ) ),		0 );
-		intrinsic_camera_matrices_uniform_buffer.Update_Partial( std::span( ( std::byte* )projection_matrix.Data(), sizeof( projection_matrix ) ), 64 );
+		// TODO: Upload Globals.
 		
 		for( const auto& [ shader_id, shader ] : shaders_in_flight )
 		{
 			shader->Bind();
-
-			// TODO: Upload Globals.
 
 			for( auto& [ material_name, material ] : materials_in_flight )
 			{
@@ -47,9 +46,8 @@ namespace Engine
 
 							material->Set( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
 
-							drawable->material->UploadUniforms();
+							material->UploadUniforms();
 
-							// TODO: Implement Instance uniforms.
 							// TODO: Upload Instance uniforms.
 
 							Render( *drawable->mesh );
@@ -58,6 +56,11 @@ namespace Engine
 				}
 			}
 		}
+	}
+
+	void Renderer::OnProjectionParametersChange( Camera& camera )
+	{
+		SetIntrinsic( "_Intrinsic_", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );
 	}
 
 	void Renderer::AddDrawable( Drawable* drawable_to_add )
@@ -72,6 +75,7 @@ namespace Engine
 		if( not shaders_registered.contains( shader->Id() ) )
 			RegisterShader( *shader );
 
+		/* Renderer creates & keeps the Uniform Buffer Objects. So it can "lend" them to Material for it to cache them. */
 		drawable_to_add->material->CacheUniformBufferMap( uniform_buffer_map_regular );
 	}
 
@@ -152,11 +156,35 @@ namespace Engine
 		glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() );
 	}
 
+	const void* Renderer::GetIntrinsic( const char* uniform_buffer_name, const Uniform::BufferInformation& uniform_buffer_info ) const
+	{
+		return uniform_blob_map_intrinsic.at( uniform_buffer_name ).Get( uniform_buffer_info.offset );
+	}
+
+	void* Renderer::GetIntrinsic( const char* uniform_buffer_name, const Uniform::BufferInformation& uniform_buffer_info )
+	{
+		return uniform_blob_map_intrinsic[ uniform_buffer_name ].Get( uniform_buffer_info.offset );
+	}
+
+	void Renderer::UploadIntrinsics()
+	{
+		for( auto& [ uniform_buffer_name_intrinsic, uniform_blob_intrinsic ] : uniform_blob_map_intrinsic )
+		{
+			const auto& uniform_buffer      = uniform_buffer_map_intrinsic[ uniform_buffer_name_intrinsic ];
+			const auto& uniform_buffer_info = uniform_buffer_info_map_intrinsic[ uniform_buffer_name_intrinsic ];
+
+			if( uniform_blob_intrinsic.IsDirty() )
+			{
+				uniform_blob_intrinsic.MergeConsecutiveDirtySections();
+				const auto& dirty_sections = uniform_blob_intrinsic.DirtySections();
+				for( auto& dirty_section : dirty_sections )
+					uniform_buffer.Update_Partial( uniform_blob_intrinsic.SpanFromSection( dirty_section ), dirty_section.offset );
+			}
+		}
+	}
+
 	void Renderer::RegisterShader( const Shader& shader )
 	{
-		// TODO: Create a dummy "intrinsics" shader with all the intrinsics the Engine will support defined and use that shader (direct member of Renderer) to gather Intrinsics info.?
-		// TODO: If the above plan is implemented, move the first if block below to somewhere else and only register global uniform info from new shaders to be registered.
-
 		if( shader.HasRegularUniformBlocks() )
 		{
 			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : shader.GetUniformBufferInfoMap() )
@@ -189,8 +217,12 @@ namespace Engine
 				{
 					auto& buffer = uniform_buffer_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Global );
+
+					//uniform_blob_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size );
 				}
 			}
+
+			//uniform_buffer_info_map_global.try_emplace( uniform_buffer_name, &uniform_buffer_info );
 		}
 
 		if( shader.HasIntrinsicUniformBlocks() )
@@ -201,7 +233,11 @@ namespace Engine
 				{
 					auto& buffer = uniform_buffer_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Intrinsic );
+
+					uniform_blob_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size );
 				}
+
+				uniform_buffer_info_map_intrinsic.try_emplace( uniform_buffer_name, &uniform_buffer_info );
 			}
 		}
 
