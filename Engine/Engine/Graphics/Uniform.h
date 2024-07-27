@@ -79,11 +79,10 @@ namespace Engine
 
 			BufferCategory category;
 
-			std::unordered_map< std::string, Information*						> members_map;
-			std::unordered_map< std::string, BufferMemberInformation_Struct		> members_struct_map;
-			std::unordered_map< std::string, BufferMemberInformation_Array		> members_array_map;
-
-			std::vector< Information* > members_single;
+			std::unordered_map< std::string, Information*						> members_map;			// Key is qualified by the buffer name. Example: "Lighting.spot_light_data".
+			std::unordered_map< std::string, BufferMemberInformation_Struct		> members_struct_map;	// Key is the uniform name alone. Example: "spot_light_data".
+			std::unordered_map< std::string, BufferMemberInformation_Array		> members_array_map;	// Key is the uniform name alone. Example: "point_lights".
+			std::unordered_map< std::string, Information*						> members_single_map;	// Key is the uniform name alone. Example: "color_modulation".
 
 			inline bool IsRegular()		const { return category == BufferCategory::Regular;		}
 			inline bool IsInstance()	const { return category == BufferCategory::Instance;	}

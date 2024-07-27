@@ -127,12 +127,12 @@ namespace Engine
 		void Set( const char* uniform_buffer_name, const char* uniform_member_name, const UniformType& value )
 		{
 			const auto& uniform_buffer_info = GetUniformBufferInformation( uniform_buffer_name );
-			const auto& uniform_info        = GetUniformInformation( std::string( uniform_buffer_name ) + "." + uniform_member_name );
+			const auto& uniform_info        = uniform_buffer_info.members_single_map.at( uniform_member_name );
 
-			const auto effective_offset = uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset + uniform_info.offset;
+			const auto effective_offset = uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset + uniform_info->offset;
 
 			/* Update the value in the internal memory blob: */
-			uniform_blob.Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_info.size );
+			uniform_blob.Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_info->size );
 		}
 
 	/* Textures: */

@@ -359,7 +359,10 @@ namespace Engine
 				const auto& uniform_name     = buffer_info_pair->first;
 				const auto& uniform_info     = buffer_info_pair->second;
 
-				std::string_view uniform_name_without_buffer_name( uniform_name.cbegin() + uniform_buffer_name.size() + 1, uniform_name.cend() ); // +1 for the dot.
+				const std::string_view uniform_name_without_buffer_name( uniform_name.cbegin() + ( uniform_name.starts_with( uniform_buffer_name )
+																								   ? uniform_buffer_name.size() + 1 // +1 for the dot.
+																								   : 0 ),
+																		 uniform_name.cend() );
 
 				if( const auto bracket_pos = uniform_name_without_buffer_name.find( '[' );
 					bracket_pos != std::string_view::npos )
@@ -377,7 +380,10 @@ namespace Engine
 						const auto& other_uniform_name     = other_buffer_info_pair->first;
 						const auto& other_uniform_info     = other_buffer_info_pair->second;
 
-						std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + uniform_buffer_name.size() + 1, other_uniform_name.cend() ); // +1 for the dot.
+						const std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + ( other_uniform_name.starts_with( uniform_buffer_name )
+																													   ? uniform_buffer_name.size() + 1 // +1 for the dot.
+																													   : 0 ),
+																					   other_uniform_name.cend() );
 
 						// + 2 to include the index, which has to match for a given array element.
 						if( other_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, bracket_pos + 2 ) ) )
@@ -394,13 +400,17 @@ namespace Engine
 					stride       = Math::RoundToMultiple_PowerOf2( stride, sizeof( Vector4 ) ); // Std140 dictates this.
 
 					done_processing_array_element = false;
+					/* Now count the elements. If the array had 1 element, done_processing_array_element will cause the below loop to skip immediately. */
 					for( ; j < uniform_buffer_info_sorted_by_offset.size() && not done_processing_array_element; j++ )
 					{
 						const auto& other_buffer_info_pair = uniform_buffer_info_sorted_by_offset[ j ];
 						const auto& other_uniform_name     = other_buffer_info_pair->first;
 						const auto& other_uniform_info     = other_buffer_info_pair->second;
 
-						std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + uniform_buffer_name.size() + 1, other_uniform_name.cend() ); // +1 for the dot.
+						const std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + ( other_uniform_name.starts_with( uniform_buffer_name )
+																													   ? uniform_buffer_name.size() + 1 // +1 for the dot.
+																													   : 0 ),
+																					   other_uniform_name.cend() );
 
 						// No +2 this time; we're looking for the array name only.
 						if( !other_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, bracket_pos ) ) )
@@ -440,7 +450,10 @@ namespace Engine
 						const auto& other_uniform_name     = other_buffer_info_pair->first;
 						const auto& other_uniform_info     = other_buffer_info_pair->second;
 
-						std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + uniform_buffer_name.size() + 1, other_uniform_name.cend() ); // +1 for the dot.
+						const std::string_view other_uniform_name_without_buffer_name( other_uniform_name.cbegin() + ( other_uniform_name.starts_with( uniform_buffer_name )
+																													   ? uniform_buffer_name.size() + 1 // +1 for the dot.
+																													   : 0 ),
+																					   other_uniform_name.cend() );
 
 						if( other_uniform_name_without_buffer_name.starts_with( uniform_name_without_buffer_name.substr( 0, dot_pos ) ) )
 						{
@@ -473,7 +486,7 @@ namespace Engine
 				}
 				else
 				{
-					uniform_buffer_info.members_single.push_back( uniform_info );
+					uniform_buffer_info.members_single_map.emplace( uniform_name_without_buffer_name, uniform_info );
 				}
 			}
 		}

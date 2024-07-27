@@ -445,7 +445,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& uniform_buffer_member_single_info : uniform_buffer_info.members_single )
+							for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
 							{
 								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
 
@@ -607,7 +607,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& uniform_buffer_member_single_info : uniform_buffer_info.members_single )
+							for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
 							{
 								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
 
