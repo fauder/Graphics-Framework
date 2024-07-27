@@ -95,12 +95,12 @@ namespace Engine
 			CopyToBlob_UniformBuffer( reinterpret_cast< const std::byte* >( &value ), uniform_buffer_info );
 		}
 
-		/* For setting ARRAY uniforms INSIDE a Uniform Buffer. */
-		template< typename UniformType >
-		void Set( const char* uniform_buffer_name, const char* uniform_member_array_name, const unsigned int array_index, const UniformType& value )
+		/* For PARTIAL setting ARRAY uniforms INSIDE a Uniform Buffer. */
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void Set( const char* uniform_buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
 		{
 			const auto& uniform_buffer_info              = GetUniformBufferInformation( uniform_buffer_name );
-			const auto& uniform_buffer_member_array_info = uniform_buffer_info.members_array_map.at( uniform_member_array_name );
+			const auto& uniform_buffer_member_array_info = uniform_buffer_info.members_array_map.at( uniform_member_array_instance_name );
 
 			const auto effective_offset = uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset + uniform_buffer_member_array_info.offset + 
 										  array_index * uniform_buffer_member_array_info.stride;
@@ -109,19 +109,30 @@ namespace Engine
 			uniform_blob.Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_array_info.stride );
 		}
 
-		/* For now, singular uniform arrays vs. struct type arrays are the same regarding this Set() function. Hence, no need to define two separate functions. */
-
-		/* For setting uniforms INSIDE a Uniform Buffer. */
-		template< typename UniformType >
-		void Set( const char* uniform_buffer_name, const char* uniform_member_struct_instance_name, const UniformType& value )
+		/* For PARTIAL setting STRUCT uniforms INSIDE a Uniform Buffer. */
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void Set( const char* uniform_buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
 		{
-			const auto& uniform_buffer_info = GetUniformBufferInformation( uniform_buffer_name );
+			const auto& uniform_buffer_info               = GetUniformBufferInformation( uniform_buffer_name );
 			const auto& uniform_buffer_member_struct_info = uniform_buffer_info.members_struct_map.at( uniform_member_struct_instance_name );
 
 			const auto effective_offset = uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset + uniform_buffer_member_struct_info.offset;
 
 			/* Update the value in the internal memory blob: */
 			uniform_blob.Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_buffer_member_struct_info.size );
+		}
+
+		/* For PARTIAL setting NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
+		template< typename UniformType >
+		void Set( const char* uniform_buffer_name, const char* uniform_member_name, const UniformType& value )
+		{
+			const auto& uniform_buffer_info = GetUniformBufferInformation( uniform_buffer_name );
+			const auto& uniform_info        = GetUniformInformation( std::string( uniform_buffer_name ) + "." + uniform_member_name );
+
+			const auto effective_offset = uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset + uniform_info.offset;
+
+			/* Update the value in the internal memory blob: */
+			uniform_blob.Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, uniform_info.size );
 		}
 
 	/* Textures: */
