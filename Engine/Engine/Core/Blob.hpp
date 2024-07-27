@@ -1,5 +1,6 @@
 #pragma once
 
+// std Includes.
 #include <cstddef> // std::byte.
 #include <vector>
 
@@ -8,7 +9,7 @@ namespace Engine
 	class Blob
 	{
 	public:
-		Blob();
+		Blob() = default;
 		Blob( const std::size_t size );
 
 		/* Prohibit copying. */
@@ -19,7 +20,7 @@ namespace Engine
 		Blob( Blob&& donor )				= default;
 		Blob& operator=( Blob&& donor )		= default;
 
-		~Blob();
+		~Blob() = default;
 
 	/* Set/Get: */
 		template< typename Type >
@@ -50,7 +51,8 @@ namespace Engine
 		void WriteBytes( const std::byte* value, const std::size_t offset, const std::size_t size );
 		void* ReadBytes( std::size_t offset );
 		const void* ReadBytes( std::size_t offset ) const;
-	private:
+
+	protected:
 		std::vector< std::byte > bytes;
 	};
 }

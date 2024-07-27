@@ -3,17 +3,9 @@
 
 namespace Engine
 {
-	Blob::Blob()
-	{
-	}
-
 	Blob::Blob( const std::size_t size )
 		:
 		bytes( size, std::byte{ 0 } )
-	{
-	}
-
-	Blob::~Blob()
 	{
 	}
 
@@ -32,7 +24,7 @@ namespace Engine
 		return ReadBytes( offset );
 	}
 
-/* 
+/*
  * PRIVATE API
  */
 
