@@ -16,11 +16,11 @@ namespace Engine
 	private:
 		struct GLLogGroup
 		{
-			GLLogGroup( GLLogger* logger, const char* group_name, const unsigned int id = 0 )
+			GLLogGroup( GLLogger* logger, const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 )
 				:
 				logger( logger )
 			{
-				logger->PushGroup( group_name, id );
+				logger->PushGroup( group_name, omit_empty_group, id );
 			}
 
 			GLLogGroup( const GLLogGroup& other )            = delete;
@@ -57,7 +57,9 @@ namespace Engine
 		void Insert( const char* message, const unsigned int id = 0 );
 
 	/* Grouping: */
-		void PushGroup( const char* group_name, const unsigned int id = 0 );
+		/* omit_empty_group: If true, defers the push operation until an actual log is recorded between this function call & the PopGroup() call. If no calls were made in-between,
+		 * the group is not pushed/popped. It is effectively omitted. */
+		void PushGroup( const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
 		void PopGroup();
 
 		GLLogGroup TemporaryLogGroup( const char* group_name, const unsigned int id = 0 );

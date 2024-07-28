@@ -59,7 +59,7 @@ void SandboxApplication::Initialize()
 
 	//Engine::Math::Random::SeedRandom();
 
-	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init." ) );
+	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init.", true /* omit if the group is empty */ ) );
 
 /* Textures: */
 	Engine::Texture::INITIALIZE();
@@ -142,7 +142,7 @@ void SandboxApplication::Shutdown()
 
 void SandboxApplication::Update()
 {
-	auto log_group = gl_logger.TemporaryLogGroup( "Sandbox Update" );
+	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Update", true /* omit if the group is empty */ ) );
 
 	current_time_as_angle = Radians( time_current );
 
@@ -211,7 +211,6 @@ void SandboxApplication::Render()
 
 	Engine::Application::Render();
 
-	auto log_group = gl_logger.TemporaryLogGroup( "Sandbox Render" );
 
 /* 
  * Lighting information for materials using the cube shader:
@@ -251,6 +250,7 @@ void SandboxApplication::Render()
 		ground_quad_material.Set( "Lighting", "point_lights", i, light_point_data );
 		front_wall_quad_material.Set( "Lighting", "point_lights", i, light_point_data );
 	}
+	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render", true /* omit if the group is empty */ ) );
 
 	renderer.Render( camera );
 }
@@ -258,12 +258,12 @@ void SandboxApplication::Render()
 void SandboxApplication::DrawImGui()
 {
 	{
-		auto log_group = gl_logger.TemporaryLogGroup( "Application ImGui" );
+		auto log_group( gl_logger.TemporaryLogGroup( "Application ImGui", true /* omit if the group is empty */ ) );
 
 		Application::DrawImGui();
 	}
 
-	auto log_group = gl_logger.TemporaryLogGroup( "Sandbox ImGui" );
+	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox ImGui", true /* omit if the group is empty */ ) );
 
 	ImGui::ShowDemoWindow();
 

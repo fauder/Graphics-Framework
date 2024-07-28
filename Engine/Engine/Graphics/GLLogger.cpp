@@ -29,11 +29,17 @@ namespace Engine
 		glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, id, GL_DEBUG_SEVERITY_NOTIFICATION, -1, message );
 	}
 
-	void GLLogger::PushGroup( const char* group_name, const unsigned int id )
+	/* omit_empty_group: If true, defers the push operation until an actual log is recorded between this function call & the PopGroup() call. If no calls were made in-between,
+	 * the group is not pushed/popped. It is effectively omitted. */
+	void GLLogger::PushGroup( const char* group_name, const bool omit_empty_group, const unsigned int id )
 	{
-		empty_log_groups.push( group_name );
-
-		/* Defer actual glPushDebugGroup() to InternalDebugOutputCallback(); This way a group can be checked to see if it is emptyand if so, skipped.Else, it is pushed first. */
+		if( omit_empty_group )
+		{
+			/* Defer actual glPushDebugGroup() to InternalDebugOutputCallback(); This way a group can be checked to see if it is emptyand if so, skipped.Else, it is pushed first. */
+			empty_log_groups.push( group_name );
+		}
+		else
+			glPushDebugGroup( GL_DEBUG_SOURCE_APPLICATION, id, -1, group_name );
 	}
 
 	void GLLogger::PopGroup()
