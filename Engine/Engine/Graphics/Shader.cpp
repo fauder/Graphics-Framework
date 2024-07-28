@@ -420,7 +420,7 @@ namespace Engine
 							done_processing_array_element = true;
 					}
 
-					const int element_count = ( j - i - 1 ) / member_count; // -1 because j had been incremented once more before the for loop ended.
+					const int element_count = ( j - i - ( done_processing_array_element ? 1 : 0 ) ) / member_count; // -1 because j had been incremented once more before the for loop ended.
 					
 					const auto aggregate_name( uniform_name_without_buffer_name.substr( 0, bracket_pos ) );
 					uniform_buffer_info.members_array_map.emplace( aggregate_name,
@@ -435,7 +435,7 @@ namespace Engine
 
 					members_map.clear(); // Re-use the existing vector with its grown capacity.
 
-					i += j - i - 1 - 1; // Outer for loop's i++ will also increment i, that's why there is a minus 1. The other -1 is the same as the ones above; for loop increments the J for one last time.
+					i += j - i - ( done_processing_array_element ? 1 : 0 ) - 1; // Outer for loop's i++ will also increment i, that's why there is a minus 1. The other -1 is the same as the ones above; for loop increments the J for one last time.
 				}
 				else if( const auto dot_pos = uniform_name_without_buffer_name.find( '.' );
 						 dot_pos != std::string_view::npos )
