@@ -19,7 +19,49 @@ namespace Engine
 
 	void Renderer::Update( Camera& camera )
 	{
-		SetIntrinsic( "_Intrinsic_", "_INTRINSIC_TRANSFORM_VIEW", camera.GetViewMatrix() );
+		const auto& view_matrix     = camera.GetViewMatrix();
+		const auto& view_matrix_3x3 = view_matrix.SubMatrix< 3 >();
+
+		SetIntrinsic( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
+
+		SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", ( bool )light_directional );
+		if( light_directional )
+		{
+			light_directional->data.direction_world_space = light_directional->transform->Forward(); // This is for the cpu-side inspection. Not necessary for the shaders.
+			light_directional->data.direction_view_space  = light_directional->data.direction_world_space * view_matrix_3x3;
+			SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
+		}
+
+		SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point.size() );
+		for( auto index = 0; index < lights_point.size(); index++ )
+		{
+			auto& point_light = lights_point[ index ];
+
+			point_light->data.position_world_space = point_light->transform->GetTranslation(); // This is for the cpu-side inspection. Not necessary for the shaders.
+
+			/* Shaders expect the lights' position & direction in view space. */
+			point_light->data.position_view_space  = point_light->data.position_world_space * view_matrix_3x3;
+			SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", index, point_light->data );
+		}
+
+		SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot.size() );
+		for( auto index = 0; index < lights_spot.size(); index++ )
+		{
+			auto& spot_light = lights_spot[ index ];
+
+			spot_light->data.position_world_space  = spot_light->transform->GetTranslation();	// This is for the cpu-side inspection. Not necessary for the shaders.
+			spot_light->data.direction_world_space = spot_light->transform->Forward();			// This is for the cpu-side inspection. Not necessary for the shaders.
+
+			/* Shaders expect the lights' position & direction in view space. */
+
+			spot_light->data.position_view_space_and_cos_cutoff_angle_inner.vector = spot_light->data.position_world_space * view_matrix_3x3;
+			spot_light->data.position_view_space_and_cos_cutoff_angle_inner.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_inner ) );
+
+			spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->data.direction_world_space * view_matrix_3x3;
+			spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
+
+			SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", index, spot_light->data );
+		}
 	}
 
 	void Renderer::Render( Camera& camera )
@@ -60,7 +102,7 @@ namespace Engine
 
 	void Renderer::OnProjectionParametersChange( Camera& camera )
 	{
-		SetIntrinsic( "_Intrinsic_", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );
+		SetIntrinsic( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );
 	}
 
 	void Renderer::AddDrawable( Drawable* drawable_to_add )
@@ -81,7 +123,7 @@ namespace Engine
 
 	void Renderer::RemoveDrawable( const Drawable* drawable_to_remove )
 	{
-		drawable_list.erase( std::remove( drawable_list.begin(), drawable_list.end(), drawable_to_remove ), drawable_list.cend() );
+		std::erase( drawable_list, drawable_to_remove );
 
 		const auto& shader = *drawable_to_remove->material->shader;
 
@@ -98,7 +140,52 @@ namespace Engine
 		drawable_list.clear();
 		shaders_in_flight.clear();
 		materials_in_flight.clear();
-		shaders_registered.clear();
+	}
+
+	void Renderer::AddDirectionalLight( DirectionalLight* light_to_add )
+	{
+		if( light_directional )
+			throw std::runtime_error( "Only 1 Directional Light can be active at a time!" );
+
+		light_directional = light_to_add;
+	}
+
+	void Renderer::RemoveDirectionalLight()
+	{
+		if( !light_directional )
+			throw std::runtime_error( "No Directional Light set yet!" );
+
+		light_directional = nullptr;
+	}
+
+	void Renderer::AddPointLight( PointLight* light_to_add )
+	{
+		lights_point.push_back( light_to_add );
+	}
+
+	void Renderer::RemovePointLight( PointLight* light_to_remove )
+	{
+		std::erase( lights_point, light_to_remove );
+	}
+
+	void Renderer::RemoveAllPointLights()
+	{
+		lights_point.clear();
+	}
+
+	void Renderer::AddSpotLight( SpotLight* light_to_add )
+	{
+		lights_spot.push_back( light_to_add );
+	}
+
+	void Renderer::RemoveSpotLight( SpotLight* light_to_remove )
+	{
+		std::erase( lights_spot, light_to_remove );
+	}
+
+	void Renderer::RemoveAllSpotLights()
+	{
+		lights_spot.clear();
 	}
 
 	void Renderer::SetClearColor( const Color3& new_clear_color )
@@ -179,6 +266,8 @@ namespace Engine
 				const auto& dirty_sections = uniform_blob_intrinsic.DirtySections();
 				for( auto& dirty_section : dirty_sections )
 					uniform_buffer.Update_Partial( uniform_blob_intrinsic.SpanFromSection( dirty_section ), dirty_section.offset );
+
+				uniform_blob_intrinsic.ClearDirtySections();
 			}
 		}
 	}

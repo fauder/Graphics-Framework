@@ -4,6 +4,9 @@
 #include "Drawable.h"
 #include "Core/DirtyBlob.h"
 #include "Scene/Camera.h"
+#include "Lighting/DirectionalLight.h"
+#include "Lighting/PointLight.h"
+#include "Lighting/SpotLight.h"
 
 // std Includes.
 #include <unordered_map>
@@ -45,6 +48,19 @@ namespace Engine
 		// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
 		void RemoveDrawable( const Drawable* drawable_to_remove );
 		void RemoveAllDrawables();
+
+	/* Lights: */
+		void AddDirectionalLight( DirectionalLight* light_to_add );
+		void RemoveDirectionalLight();
+		/* Only 1 Directional Light can be active at a time! */
+
+		void AddPointLight( PointLight* light_to_add );
+		void RemovePointLight( PointLight* light_to_remove );
+		void RemoveAllPointLights();
+
+		void AddSpotLight( SpotLight* light_to_add );
+		void RemoveSpotLight( SpotLight* light_to_remove );
+		void RemoveAllSpotLights();
 
 	/* Shaders: */
 		// TODO: Provide Global setting/getting functions.
@@ -134,6 +150,10 @@ namespace Engine
 
 	private:
 		std::vector< Drawable* > drawable_list;
+
+		DirectionalLight*			light_directional;
+		std::vector< PointLight* >	lights_point;
+		std::vector< SpotLight*	 >	lights_spot;
 
 		std::unordered_map< Shader::ID, const Shader* > shaders_registered;
 

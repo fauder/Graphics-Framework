@@ -165,6 +165,10 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Drawable.h" />
     <ClInclude Include="Engine\Graphics\GLLogType.h" />
     <ClInclude Include="Engine\Graphics\GLLogger.h" />
+    <ClInclude Include="Engine\Graphics\Lighting\DirectionalLight.h" />
+    <ClInclude Include="Engine\Graphics\Lighting\Light.hpp" />
+    <ClInclude Include="Engine\Graphics\Lighting\PointLight.h" />
+    <ClInclude Include="Engine\Graphics\Lighting\SpotLight.h" />
     <ClInclude Include="Engine\Graphics\Macros.h" />
     <ClInclude Include="Engine\Graphics\Mesh.hpp" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
@@ -179,7 +183,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Graphics.h" />
     <ClInclude Include="Engine\Core\ImGuiSetup.h" />
     <ClInclude Include="Engine\Core\Platform.h" />
-    <ClInclude Include="Engine\Graphics\Lighting.h" />
+    <ClInclude Include="Engine\Graphics\Lighting\Lighting.h" />
     <ClInclude Include="Engine\Graphics\MeshUtility.hpp" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Cube.h" />
     <ClInclude Include="Engine\Graphics\Shader.hpp" />

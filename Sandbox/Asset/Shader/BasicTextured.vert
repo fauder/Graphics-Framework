@@ -7,7 +7,7 @@ out vec2 varying_uv;
 
 uniform mat4x4 uniform_transform_world;
 
-layout ( std140 ) uniform _Intrinsic_
+layout ( std140 ) uniform _Intrinsic_Other
 {
     mat4x4 _INTRINSIC_TRANSFORM_VIEW;
     mat4x4 _INTRINSIC_TRANSFORM_PROJECTION;

@@ -1,10 +1,10 @@
 #pragma once
 
 // Engine Includes.
-#include "Color.hpp"
+#include "Graphics/Color.hpp"
+#include "Graphics/PaddedAndCombinedTypes.h"
+#include "Graphics/Std140StructTag.h"
 #include "Math/Vector.hpp"
-#include "PaddedAndCombinedTypes.h"
-#include "Std140StructTag.h"
 
 namespace Engine::Lighting
 {

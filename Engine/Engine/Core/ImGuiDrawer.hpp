@@ -3,7 +3,7 @@
 // Engine Includes.
 #include "Core/ImGuiSetup.h"
 #include "Graphics/Color.hpp"
-#include "Graphics/Lighting.h"
+#include "Graphics/Lighting/Lighting.h"
 #include "Graphics/Material.hpp"
 #include "Math/Quaternion.hpp"
 #include "Scene/Camera.h"

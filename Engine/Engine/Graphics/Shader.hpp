@@ -3,7 +3,7 @@
 // Engine Includes.
 #include "Graphics.h"
 #include "Color.hpp"
-#include "Lighting.h"
+#include "Lighting/Lighting.h"
 #include "Std140StructTag.h"
 #include "Uniform.h"
 #include "Math/Concepts.h"

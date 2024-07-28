@@ -1,6 +1,6 @@
 // Engine Includes.
 #include "Engine.h"
-#include "Engine/Graphics/Lighting.h"
+#include "Engine/Graphics/Lighting/Lighting.h"
 #include "Engine/Graphics/Material.hpp"
 #include "Engine/Graphics/Mesh.hpp"
 #include "Engine/Graphics/Renderer.h"
@@ -65,13 +65,19 @@ private:
 	Engine::Texture container_texture_diffuse_map, container_texture_specular_map;
 
 /* Scene: */
-	std::vector< Engine::Transform > light_source_transform_array;
+	Engine::Transform camera_transform;
+
+	/* Lights: */
+	Engine::Transform light_directional_transform;
+	std::vector< Engine::Transform > light_point_transform_array;
+	Engine::Transform light_spot_transform;
+
+	/* GameObjects: */
 	std::vector< Engine::Transform > cube_transform_array;
 	Engine::Transform ground_quad_transform;
 	Engine::Transform front_wall_quad_transform;
 
 /* Camera: */
-	Engine::Transform camera_transform;
 	Engine::Camera camera;
 	float camera_rotation_speed;
 	float camera_move_speed;
@@ -92,9 +98,9 @@ private:
 	Engine::Lighting::SurfaceData ground_quad_surface_data;
 	Engine::Lighting::SurfaceData front_wall_quad_surface_data;
 
-	Engine::Lighting::DirectionalLightData light_directional_data;
-	std::vector< Engine::Lighting::PointLightData > light_point_data_array;
-	Engine::Lighting::SpotLightData light_spot_data;
+	Engine::DirectionalLight light_directional;
+	std::vector< Engine::PointLight > light_point_array;
+	Engine::SpotLight light_spot;
 
 	float light_point_orbit_radius;
 	bool light_point_is_animated;
