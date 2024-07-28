@@ -396,8 +396,11 @@ namespace Engine
 							done_processing_array_element = true;
 					}
 
-					member_count = j - i - 1; // -1 because j had been incremented once more before the for loop ended.
+					member_count = j - i - ( done_processing_array_element ? 1 : 0 ); // -1 because j had been incremented once more before the for loop ended.
 					stride       = Math::RoundToMultiple_PowerOf2( stride, sizeof( Vector4 ) ); // Std140 dictates this.
+
+					if( done_processing_array_element )
+						j--;
 
 					done_processing_array_element = false;
 					/* Now count the elements. If the array had 1 element, done_processing_array_element will cause the below loop to skip immediately. */
