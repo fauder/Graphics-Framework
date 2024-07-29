@@ -4,6 +4,7 @@
 #include "Graphics.h"
 
 // std Includes.
+#include <optional>
 #include <string>
 #include <unordered_map>
 
@@ -15,6 +16,7 @@ namespace Engine
 		friend class Material;
 		friend class UniformBufferBindingPointManager;
 		friend class Renderer;
+		friend class UniformBufferManagement;
 
 		using BindingPoint = unsigned int;
 
