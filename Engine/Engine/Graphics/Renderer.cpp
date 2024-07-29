@@ -1,6 +1,5 @@
 // Engine Includes.
 #include "Renderer.h"
-
 #include "UniformBufferBindingPointManager.h"
 
 namespace Engine
@@ -22,17 +21,17 @@ namespace Engine
 		const auto& view_matrix     = camera.GetViewMatrix();
 		const auto& view_matrix_3x3 = view_matrix.SubMatrix< 3 >();
 
-		SetIntrinsic( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
+		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
 
-		SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", ( bool )light_directional );
+		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", ( bool )light_directional );
 		if( light_directional )
 		{
 			light_directional->data.direction_world_space = light_directional->transform->Forward(); // This is for the cpu-side inspection. Not necessary for the shaders.
 			light_directional->data.direction_view_space  = light_directional->data.direction_world_space * view_matrix_3x3;
-			SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
+			uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
 		}
 
-		SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point.size() );
+		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point.size() );
 		for( auto index = 0; index < lights_point.size(); index++ )
 		{
 			auto& point_light = lights_point[ index ];
@@ -41,10 +40,10 @@ namespace Engine
 
 			/* Shaders expect the lights' position & direction in view space. */
 			point_light->data.position_view_space  = point_light->data.position_world_space * view_matrix_3x3;
-			SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", index, point_light->data );
+			uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", index, point_light->data );
 		}
 
-		SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot.size() );
+		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot.size() );
 		for( auto index = 0; index < lights_spot.size(); index++ )
 		{
 			auto& spot_light = lights_spot[ index ];
@@ -60,7 +59,7 @@ namespace Engine
 			spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->data.direction_world_space * view_matrix_3x3;
 			spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
 
-			SetIntrinsic( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", index, spot_light->data );
+			uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", index, spot_light->data );
 		}
 	}
 
@@ -68,7 +67,7 @@ namespace Engine
 	{
 		Clear();
 
-		UploadIntrinsics();
+		UploadIntrinsicsAndGlobals();
 
 		// TODO: Upload Globals.
 		
@@ -102,7 +101,7 @@ namespace Engine
 
 	void Renderer::OnProjectionParametersChange( Camera& camera )
 	{
-		SetIntrinsic( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );
+		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );
 	}
 
 	void Renderer::AddDrawable( Drawable* drawable_to_add )
@@ -243,90 +242,52 @@ namespace Engine
 		glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() );
 	}
 
-	const void* Renderer::GetIntrinsic( const char* uniform_buffer_name, const Uniform::BufferInformation& uniform_buffer_info ) const
+	void Renderer::UploadIntrinsicsAndGlobals()
 	{
-		return uniform_blob_map_intrinsic.at( uniform_buffer_name ).Get( uniform_buffer_info.offset );
-	}
-
-	void* Renderer::GetIntrinsic( const char* uniform_buffer_name, const Uniform::BufferInformation& uniform_buffer_info )
-	{
-		return uniform_blob_map_intrinsic[ uniform_buffer_name ].Get( uniform_buffer_info.offset );
-	}
-
-	void Renderer::UploadIntrinsics()
-	{
-		for( auto& [ uniform_buffer_name_intrinsic, uniform_blob_intrinsic ] : uniform_blob_map_intrinsic )
-		{
-			const auto& uniform_buffer      = uniform_buffer_map_intrinsic[ uniform_buffer_name_intrinsic ];
-			const auto& uniform_buffer_info = uniform_buffer_info_map_intrinsic[ uniform_buffer_name_intrinsic ];
-
-			if( uniform_blob_intrinsic.IsDirty() )
-			{
-				uniform_blob_intrinsic.MergeConsecutiveDirtySections();
-				const auto& dirty_sections = uniform_blob_intrinsic.DirtySections();
-				for( auto& dirty_section : dirty_sections )
-					uniform_buffer.Update_Partial( uniform_blob_intrinsic.SpanFromSection( dirty_section ), dirty_section.offset );
-
-				uniform_blob_intrinsic.ClearDirtySections();
-			}
-		}
+		uniform_buffer_management_intrinsic.UploadAll();
 	}
 
 	void Renderer::RegisterShader( const Shader& shader )
 	{
-		if( shader.HasRegularUniformBlocks() )
+		if( shader.HasUniformBlocks() )
 		{
-			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : shader.GetUniformBufferInfoMap() )
-			{
-				if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
-				{
-					auto& buffer = uniform_buffer_map_regular.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
-				}
-			}
-		}
+			const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap();
 
-		if( shader.HasInstanceUniformBlocks() )
-		{
-			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : shader.GetUniformBufferInfoMap() )
+			if( shader.HasRegularUniformBlocks() )
 			{
-				if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
-					auto& buffer = uniform_buffer_map_instance.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
-				}
-			}
-		}
-
-		if( shader.HasGlobalUniformBlocks() )
-		{
-			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : shader.GetUniformBufferInfoMap() )
-			{
-				if( uniform_buffer_info.category == Uniform::BufferCategory::Global )
-				{
-					auto& buffer = uniform_buffer_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Global );
-
-					//uniform_blob_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size );
+					if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
+					{
+						auto& buffer = uniform_buffer_map_regular.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
+						UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
+					}
 				}
 			}
 
-			//uniform_buffer_info_map_global.try_emplace( uniform_buffer_name, &uniform_buffer_info );
-		}
-
-		if( shader.HasIntrinsicUniformBlocks() )
-		{
-			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : shader.GetUniformBufferInfoMap() )
+			if( shader.HasInstanceUniformBlocks() )
 			{
-				if( uniform_buffer_info.category == Uniform::BufferCategory::Intrinsic )
+				for( auto& [uniform_buffer_name, uniform_buffer_info] : uniform_buffer_info_map )
 				{
-					auto& buffer = uniform_buffer_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Intrinsic );
-
-					uniform_blob_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size );
+					if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
+					{
+						auto& buffer = uniform_buffer_map_instance.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
+						UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
+					}
 				}
+			}
 
-				uniform_buffer_info_map_intrinsic.try_emplace( uniform_buffer_name, &uniform_buffer_info );
+			// TODO: Implement Globals here.
+
+			if( shader.HasIntrinsicUniformBlocks() )
+			{
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+				{
+					if( uniform_buffer_info.category == Uniform::BufferCategory::Intrinsic )
+					{
+						uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+					}
+				}
 			}
 		}
 

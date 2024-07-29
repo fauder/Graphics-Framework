@@ -79,6 +79,8 @@ namespace Engine
 		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;	}
 		inline bool HasInstanceUniformBlocks()	const { return uniform_book_keeping_info.instance_block_count;	}
 		inline bool HasRegularUniformBlocks()	const { return uniform_book_keeping_info.regular_block_count;	}
+		
+		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasInstanceUniformBlocks() || HasRegularUniformBlocks(); }
 
 #pragma region Uniform Set< Type > Functions
 		template< typename UniformType >
