@@ -6,11 +6,11 @@
 
 // Engine Includes.
 #include "Shader.hpp"
-#include "UniformBufferManager.h"
+#include "UniformBufferBindingPointManager.h"
 
 namespace Engine
 {
-	Uniform::BindingPoint UniformBufferManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BufferInformation& uniform_buffer_info )
+	Uniform::BindingPoint UniformBufferBindingPointManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BufferInformation& uniform_buffer_info )
 	{
 		auto& instance = Instance();
 
@@ -28,7 +28,7 @@ namespace Engine
 		}
 	}
 
-	void UniformBufferManager::ConnectBufferToBlock( const UniformBuffer& uniform_buffer, const std::string& block_name, const Uniform::BufferCategory category )
+	void UniformBufferBindingPointManager::ConnectBufferToBlock( const UniformBuffer& uniform_buffer, const std::string& block_name, const Uniform::BufferCategory category )
 	{
 		auto& instance = Instance();
 
@@ -54,16 +54,16 @@ namespace Engine
 		{
 			BindBufferToBindingPoint( uniform_buffer, *binding_point );
 		}
-#ifdef _DEBUG
+	#ifdef _DEBUG
 		else
 		{
-			throw std::runtime_error( "UniformBufferManager::ConnectBufferToBlock(): Block with name \"" + block_name + "\" was not registered." );
+			throw std::runtime_error( "UniformBufferBindingPointManager::ConnectBufferToBlock(): Block with name \"" + block_name + "\" was not registered." );
 		#if defined( _WIN32 )
 			if( IsDebuggerPresent() )
-				OutputDebugStringA( ( "\nUniformBufferManager::ConnectBufferToBlock(): Block with name \"" + block_name + "\" was not registered.\n" ).c_str() );
+				OutputDebugStringA( ( "\nUniformBufferBindingPointManager::ConnectBufferToBlock(): Block with name \"" + block_name + "\" was not registered.\n" ).c_str() );
 		#endif // _WIN32
 		}
-#endif // _DEBUG
+	#endif // _DEBUG
 	}
 
 /*
@@ -72,7 +72,7 @@ namespace Engine
  *
  */
 
-	UniformBufferManager::UniformBufferManager()
+	UniformBufferBindingPointManager::UniformBufferBindingPointManager()
 		:
 		/* Divide max. binding points = max. uniform buffers/blocks allowed into 4 categories and determine their starting offsets from 0. */
 		binding_point_max_count( QueryMaximumUniformBufferBindingCount() ),
@@ -83,7 +83,8 @@ namespace Engine
 	{
 	}
 
-	Uniform::BindingPoint UniformBufferManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BindingPointBookKeeping& binding_point_book_keeping )
+	Uniform::BindingPoint UniformBufferBindingPointManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, 
+																				  Uniform::BindingPointBookKeeping& binding_point_book_keeping )
 	{
 		auto& instance = Instance();
 
@@ -109,28 +110,28 @@ namespace Engine
 				return binding_point_to_assign;
 			}
 
-#ifdef _DEBUG
-			throw std::runtime_error( "UniformBufferManager::RegisterUniformBuffer(): Maximum binding point count has been reached. Can not assign new blocks/buffers." );
-#if defined( _WIN32 )
+		#ifdef _DEBUG
+			throw std::runtime_error( "UniformBufferBindingPointManager::RegisterUniformBuffer(): Maximum binding point count has been reached. Can not assign new blocks/buffers." );
+		#if defined( _WIN32 )
 			if( IsDebuggerPresent() )
-				OutputDebugStringA( "\nUniformBufferManager::RegisterUniformBuffer(): Maximum binding point count has been reached. Can not assign new blocks/buffers.\n" );
-#endif // _WIN32
-#endif // _DEBUG
+				OutputDebugStringA( "\nUniformBufferBindingPointManager::RegisterUniformBuffer(): Maximum binding point count has been reached. Can not assign new blocks/buffers.\n" );
+		#endif // _WIN32
+		#endif // _DEBUG
 		}
 	}
 
-	void UniformBufferManager::BindBufferToBindingPoint( const UniformBuffer& uniform_buffer, const Uniform::BindingPoint binding_point )
+	void UniformBufferBindingPointManager::BindBufferToBindingPoint( const UniformBuffer& uniform_buffer, const Uniform::BindingPoint binding_point )
 	{
 		glBindBufferBase( GL_UNIFORM_BUFFER, binding_point, uniform_buffer.Id() );
 	}
 
-	void UniformBufferManager::BindBufferToBindingPoint_Partial( const UniformBuffer& uniform_buffer, const Uniform::BindingPoint binding_point,
-																 const unsigned int offset, const unsigned int size )
+	void UniformBufferBindingPointManager::BindBufferToBindingPoint_Partial( const UniformBuffer& uniform_buffer, const Uniform::BindingPoint binding_point,
+																			 const unsigned int offset, const unsigned int size )
 	{
 		glBindBufferRange( GL_UNIFORM_BUFFER, binding_point, uniform_buffer.Id(), ( GLintptr )offset, ( GLsizeiptr )size );
 	}
 
-	unsigned int UniformBufferManager::QueryMaximumUniformBufferBindingCount()
+	unsigned int UniformBufferBindingPointManager::QueryMaximumUniformBufferBindingCount()
 	{
 		unsigned int query_result;
 		glGetIntegerv( GL_MAX_UNIFORM_BUFFER_BINDINGS, ( int* )&query_result );

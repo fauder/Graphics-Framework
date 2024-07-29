@@ -13,11 +13,11 @@ namespace Engine
 	class Shader;
 
 	// Singleton.
-	class UniformBufferManager
+	class UniformBufferBindingPointManager
 	{
 	public:
-		UniformBufferManager( UniformBufferManager const& ) = delete;
-		void operator = ( UniformBufferManager const& )		= delete;
+		UniformBufferBindingPointManager( UniformBufferBindingPointManager const& ) = delete;
+		void operator = ( UniformBufferBindingPointManager const& ) = delete;
 
 	/* Block registering API: */
 		static Uniform::BindingPoint RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BufferInformation& uniform_buffer_info );
@@ -27,12 +27,12 @@ namespace Engine
 
 	private:
 	/* Private default constructor. */
-		UniformBufferManager();
+		UniformBufferBindingPointManager();
 
 	/* Singleton related: */
-		static UniformBufferManager& Instance()
+		static UniformBufferBindingPointManager& Instance()
 		{
-			static UniformBufferManager instance;
+			static UniformBufferBindingPointManager instance;
 			return instance;
 		}
 

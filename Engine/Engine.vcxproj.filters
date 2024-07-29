@@ -150,7 +150,7 @@
     <ClInclude Include="Engine\Graphics\UniformBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\UniformBufferManager.h">
+    <ClInclude Include="Engine\Graphics\UniformBufferBindingPointManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\Buffer.hpp">
@@ -242,7 +242,7 @@
     <ClCompile Include="Engine\Graphics\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\UniformBufferManager.cpp">
+    <ClCompile Include="Engine\Graphics\UniformBufferBindingPointManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Core\ImGuiDrawer.cpp">

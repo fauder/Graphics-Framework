@@ -1,7 +1,7 @@
 // Engine Includes.
 #include "Renderer.h"
 
-#include "UniformBufferManager.h"
+#include "UniformBufferBindingPointManager.h"
 
 namespace Engine
 {
@@ -281,7 +281,7 @@ namespace Engine
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
 				{
 					auto& buffer = uniform_buffer_map_regular.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
+					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
 				}
 			}
 		}
@@ -293,7 +293,7 @@ namespace Engine
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
 				{
 					auto& buffer = uniform_buffer_map_instance.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
+					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
 				}
 			}
 		}
@@ -305,7 +305,7 @@ namespace Engine
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Global )
 				{
 					auto& buffer = uniform_buffer_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Global );
+					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Global );
 
 					//uniform_blob_map_global.try_emplace( uniform_buffer_name, uniform_buffer_info.size );
 				}
@@ -321,7 +321,7 @@ namespace Engine
 				if( uniform_buffer_info.category == Uniform::BufferCategory::Intrinsic )
 				{
 					auto& buffer = uniform_buffer_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-					UniformBufferManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Intrinsic );
+					UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Intrinsic );
 
 					uniform_blob_map_intrinsic.try_emplace( uniform_buffer_name, uniform_buffer_info.size );
 				}

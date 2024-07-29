@@ -13,7 +13,7 @@ namespace Engine
 	{
 		friend class Shader;
 		friend class Material;
-		friend class UniformBufferManager;
+		friend class UniformBufferBindingPointManager;
 		friend class Renderer;
 
 		using BindingPoint = unsigned int;

@@ -1,6 +1,5 @@
 // Engine Includes.
 #include "Material.hpp"
-#include "UniformBufferManager.h"
 
 namespace Engine
 {
