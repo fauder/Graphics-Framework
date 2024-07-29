@@ -13,5 +13,6 @@
     <None Include="Asset\Shader\Phong.frag" />
     <None Include="Asset\Shader\Phong.vert" />
     <None Include="Asset\Shader\BasicColor.frag" />
+    <None Include="Asset\Shader\Intrinsic.inc" />
   </ItemGroup>
 </Project>
