@@ -12,6 +12,7 @@
 
 // std Includes.
 #include <array>
+#include <filesystem>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -263,6 +264,8 @@ namespace Engine
 	private:
 /* Compilation & Linkage: */
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
+		std::vector< std::string > PreprocessShaderStage_GetIncludeFilePaths( const std::string& source ) const;
+		bool PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
@@ -285,6 +288,7 @@ namespace Engine
 		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_name );
 
 /* Error Checking/Reporting: */
+		void LogErrors( const std::string& error_string ) const;
 		void LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const;
 		void LogErrors_Linking() const;
 		std::string FormatErrorLog( const char* log ) const;
