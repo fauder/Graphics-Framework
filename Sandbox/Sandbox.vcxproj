@@ -83,7 +83,7 @@
       <Path />
     </BuildLog>
     <PostBuildEvent>
-      <Command>CALL "$(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.bat</Command>
+      <Command>python $(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.py</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -111,7 +111,7 @@
       <Path />
     </BuildLog>
     <PostBuildEvent>
-      <Command>CALL "$(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.bat</Command>
+      <Command>python $(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.py</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -132,6 +132,7 @@
     <None Include="Asset\Shader\Phong.frag" />
     <None Include="Asset\Shader\Phong.vert" />
     <None Include="Asset\Shader\BasicColor.frag" />
+    <None Include="Asset\Shader\Intrinsic.inc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
