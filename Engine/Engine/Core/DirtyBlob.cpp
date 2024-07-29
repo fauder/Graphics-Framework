@@ -19,6 +19,13 @@ namespace Engine
 		dirty_sections.push_back( Section{ offset, size } );
 	}
 
+	void DirtyBlob::Clear()
+	{
+		Blob::Clear();
+
+		dirty_sections.clear();
+	}
+
 	void DirtyBlob::MergeConsecutiveDirtySections()
 	{
 		std::sort( dirty_sections.begin(), dirty_sections.end() );

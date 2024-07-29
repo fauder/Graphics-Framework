@@ -1,5 +1,9 @@
 // Engine Includes.
+#include "Assertion.h"
 #include "Blob.hpp"
+
+// std Includes.
+#include <stdexcept> // std::logic_error.
 
 namespace Engine
 {
@@ -22,6 +26,23 @@ namespace Engine
 	const void* Blob::Get( const std::size_t offset ) const
 	{
 		return ReadBytes( offset );
+	}
+
+	void Blob::Allocate( const std::size_t size, const std::byte value )
+	{
+		bytes.insert( bytes.end(), size, value );
+	}
+
+	void Blob::Deallocate( const std::size_t size )
+	{
+		ASSERT_DEBUG_ONLY( size < bytes.size() && "Attempting to deallocate more bytes than presently allocated." );
+
+		bytes.erase( bytes.end() - size, bytes.end() );
+	}
+
+	void Blob::Clear()
+	{
+		bytes.clear();
 	}
 
 /*

@@ -47,6 +47,11 @@ namespace Engine
 			return reinterpret_cast< const Type& >( *( ( const Type* )pointer ) );
 		}
 
+	/* Allocation/Deallocation: */
+		void Allocate( const std::size_t size, const std::byte value = std::byte{ 0 } );
+		void Deallocate( const std::size_t size );
+		void Clear();
+
 	private:
 		void WriteBytes( const std::byte* value, const std::size_t offset, const std::size_t size );
 		void* ReadBytes( std::size_t offset );

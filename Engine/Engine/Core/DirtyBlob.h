@@ -43,6 +43,9 @@ namespace Engine
 
 		void Set( const std::byte* value, const std::size_t offset, const std::size_t size );
 
+	/* Allocation/Deallocation: */
+		void Clear();
+		
 	/* Dirty API: */
 		inline bool IsDirty() const { return not dirty_sections.empty(); }
 		void MergeConsecutiveDirtySections();
