@@ -1,4 +1,7 @@
 #version 460 core
+#extension GL_ARB_shading_language_include : require
+
+#include "_Intrinsic_Other.glsl"
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
@@ -9,12 +12,6 @@ out vec4 varying_normal_view_space;
 out vec2 varying_tex_coords;
 
 uniform mat4x4 uniform_transform_world;
-
-layout ( row_major, std140 ) uniform _Intrinsic_Other
-{
-    mat4x4 _INTRINSIC_TRANSFORM_VIEW;
-    mat4x4 _INTRINSIC_TRANSFORM_PROJECTION;
-};
 
 void main()
 {
