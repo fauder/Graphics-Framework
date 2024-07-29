@@ -10,6 +10,7 @@
     <ClCompile Include="ImGui\imgui_tables.cpp" />
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
     <ClCompile Include="stb\stb_image.cpp" />
+    <ClCompile Include="stb\std_include.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GLAD\glad.h" />
@@ -26,5 +27,6 @@
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="KHR\khrplatform.h" />
     <ClInclude Include="stb\stb_image.h" />
+    <ClInclude Include="stb\stb_include.h" />
   </ItemGroup>
 </Project>

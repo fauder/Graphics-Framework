@@ -14,6 +14,10 @@
 
 // std Includes.
 #include <numeric> // std::iota.
+#include <regex>
+
+// Vendor Includes.
+#include <stb/stb_include.h>
 
 namespace Engine
 {
@@ -40,20 +44,28 @@ namespace Engine
 	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
 	{
 		unsigned int vertex_shader_id = 0, fragment_shader_id = 0;
-
-		const auto vertex_shader_source = ParseShaderFromFile( vertex_shader_source_file_path, ShaderType::VERTEX );
-		if( vertex_shader_source )
+		
+		if( auto vertex_shader_source = ParseShaderFromFile( vertex_shader_source_file_path, ShaderType::VERTEX ); 
+			vertex_shader_source )
 		{
-			if( !CompileShader( vertex_shader_source->c_str(), vertex_shader_id, ShaderType::VERTEX ) )
+			auto& shader_source = *vertex_shader_source;
+
+			PreProcessShaderStage_IncludeDirectives( vertex_shader_source_file_path, shader_source, ShaderType::VERTEX );
+
+			if( !CompileShader( shader_source.c_str(), vertex_shader_id, ShaderType::VERTEX ) )
 				return false;
 		}
 		else
 			return false;
-
-		const auto fragment_shader_source = ParseShaderFromFile( fragment_shader_source_file_path, ShaderType::FRAGMENT );
-		if( fragment_shader_source )
+		
+		if( auto fragment_shader_source = ParseShaderFromFile( fragment_shader_source_file_path, ShaderType::FRAGMENT ); 
+			fragment_shader_source )
 		{
-			if( !CompileShader( fragment_shader_source->c_str(), fragment_shader_id, ShaderType::FRAGMENT ) )
+			auto& shader_source = *fragment_shader_source;
+
+			PreProcessShaderStage_IncludeDirectives( fragment_shader_source_file_path, shader_source, ShaderType::FRAGMENT );
+
+			if( !CompileShader( shader_source.c_str(), fragment_shader_id, ShaderType::FRAGMENT ) )
 				return false;
 		}
 		else
@@ -144,13 +156,55 @@ namespace Engine
 
 	std::optional< std::string > Shader::ParseShaderFromFile( const char* file_path, const ShaderType shader_type )
 	{
-		std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::FILE_NOT_SUCCESSFULLY_READ\nShader name: " + name + "\n" );
+		const std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::FILE_NOT_SUCCESSFULLY_READ\nShader name: " + name + "\n" );
 
 		if( const auto source = Engine::Utility::ReadFileIntoString( file_path, error_prompt.c_str() );
 			source )
 			return *source;
 
 		return std::nullopt;
+	}
+
+	std::vector< std::string > Shader::PreprocessShaderStage_GetIncludeFilePaths( const std::string& source ) const
+	{
+		std::regex pattern( R"(#include\s*"\s*(\S+)\s*")" );
+		std::smatch matches;
+		std::regex_search( source, matches, pattern );
+
+		std::vector< std::string > includes;
+		
+		for( auto match_index = 1 /* First match is the pattern itself. */; match_index < matches.size(); match_index++ )
+		{
+			const auto& match = matches[ match_index ];
+			if( match.length() != 0 && match.matched )
+				includes.push_back( match );
+		}
+
+		return includes;
+	}
+
+	bool Shader::PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source, const ShaderType shader_type )
+	{
+		static char error_string[ 256 ];
+
+		const std::string shader_file_name( shader_source_path.filename().string() );
+		const std::filesystem::path directory_path( shader_source_path.parent_path() );
+
+		std::unique_ptr< char* > preprocessed_source = std::make_unique< char* >( stb_include_string( shader_source.data(),
+																									  nullptr,
+																									  const_cast< char* >( directory_path.string().c_str() ),
+																									  const_cast< char* >( shader_file_name.c_str() ),
+																									  error_string ) );
+		if( not *preprocessed_source )
+		{
+			const std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::INCLUDE_FILE_NOT_SUCCESSFULLY_READ\nShader name: " + name + "\n\t" 
+											+ error_string );
+			LogErrors( error_prompt );
+			return false;
+		}
+
+		shader_source = *preprocessed_source;
+		return true;
 	}
 
 	bool Shader::CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type )
@@ -597,18 +651,23 @@ namespace Engine
 	#endif // DEBUG
 	}
 
+	void Shader::LogErrors( const std::string& error_string ) const
+	{
+		std::cerr << error_string;
+#if defined( _WIN32 ) && defined( _DEBUG )
+		if( IsDebuggerPresent() )
+			OutputDebugStringA( ( "\n" + error_string + "\n" ).c_str() );
+#endif // _WIN32 && _DEBUG
+		throw std::logic_error( error_string );
+	}
+
 	void Shader::LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const
 	{
 		char info_log[ 512 ];
 		glGetShaderInfoLog( shader_id, 512, NULL, info_log );
 
 		const std::string complete_error_string( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::COMPILE:\nShader name: " + name + FormatErrorLog( info_log ) );
-		std::cerr << complete_error_string;
-#if defined( _WIN32 ) && defined( _DEBUG )
-		if( IsDebuggerPresent() )
-			OutputDebugStringA( ( "\n" + complete_error_string + "\n" ).c_str() );
-#endif // _WIN32 && _DEBUG
-		throw std::logic_error( complete_error_string );
+		LogErrors( complete_error_string );
 	}
 
 	void Shader::LogErrors_Linking() const
@@ -617,12 +676,7 @@ namespace Engine
 		glGetProgramInfoLog( program_id, 512, NULL, info_log );
 
 		const std::string complete_error_string( "ERROR::SHADER::PROGRAM::LINK:\nShader name: " + name + FormatErrorLog( info_log ) );
-		std::cerr << complete_error_string;
-#if defined( _WIN32 ) && defined( _DEBUG )
-		if( IsDebuggerPresent() )
-			OutputDebugStringA( ( "\n" + complete_error_string + "\n" ).c_str() );
-#endif // _WIN32 && _DEBUG
-		throw std::logic_error( complete_error_string );
+		LogErrors( complete_error_string );
 	}
 
 	std::string Shader::FormatErrorLog( const char* log ) const
