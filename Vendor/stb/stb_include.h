@@ -38,14 +38,14 @@
 #define STB_INCLUDE_STB_INCLUDE_H
 
 // Do include-processing on the string 'str'. To free the return value, pass it to free()
-char *stb_include_string(char *str, char *inject, char *path_to_includes, char *filename_for_line_directive, char error[256]);
+char *stb_include_string(const char *str, const char *inject, const char *path_to_includes, const char *filename_for_line_directive, char error[256]);
 
 // Concatenate the strings 'strs' and do include-processing on the result. To free the return value, pass it to free()
-char *stb_include_strings(char **strs, int count, char *inject, char *path_to_includes, char *filename_for_line_directive, char error[256]);
+char *stb_include_strings(const char **strs, int count, const char *inject, const char *path_to_includes, const char *filename_for_line_directive, char error[256]);
 
 // Load the file 'filename' and do include-processing on the string therein. note that
 // 'filename' is opened directly; 'path_to_includes' is not used. To free the return value, pass it to free()
-char *stb_include_file(char *filename, char *inject, char *path_to_includes, char error[256]);
+char *stb_include_file(const char *filename, const char *inject, const char *path_to_includes, char error[256]);
 
 #endif
 
@@ -56,7 +56,7 @@ char *stb_include_file(char *filename, char *inject, char *path_to_includes, cha
 #include <stdlib.h>
 #include <string.h>
 
-static char *stb_include_load_file(char *filename, size_t *plen)
+static char *stb_include_load_file(const char *filename, size_t *plen)
 {
    char *text;
    size_t len;
@@ -78,39 +78,39 @@ typedef struct
 {
    int offset;
    int end;
-   char *filename;
+   const char *filename;
    int next_line_after;
 } include_info;
 
-static include_info *stb_include_append_include(include_info *array, int len, int offset, int end, char *filename, int next_line)
+static include_info *stb_include_append_include(include_info *array, const int len, const int offset, const int end, const char *filename, const int next_line)
 {
    include_info *z = (include_info *) realloc(array, sizeof(*z) * (len+1));
-   z[len].offset   = offset;
-   z[len].end      = end;
-   z[len].filename = filename;
+   z[len].offset          = offset;
+   z[len].end             = end;
+   z[len].filename        = filename;
    z[len].next_line_after = next_line;
    return z;
 }
 
-static void stb_include_free_includes(include_info *array, int len)
+static void stb_include_free_includes(include_info *array, const int len)
 {
    int i;
    for (i=0; i < len; ++i)
-      free(array[i].filename);
+      free( (void*)array[i].filename);
    free(array);
 }
 
-static int stb_include_isspace(int ch)
+static int stb_include_isspace(const int ch)
 {
    return (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n');
 }
 
 // find location of all #include and #inject
-static int stb_include_find_includes(char *text, include_info **plist)
+static int stb_include_find_includes(const char *text, include_info **plist)
 {
    int line_count = 1;
    int inc_count = 0;
-   char *s = text, *start;
+   const char *s = text, *start;
    include_info *list = NULL;
    while (*s) {
       // parse is always at start of line when we reach here
@@ -126,7 +126,7 @@ static int stb_include_find_includes(char *text, include_info **plist)
             while (*s == ' ' || *s == '\t')
                ++s;
             if (*s == '"') {
-               char *t = ++s;
+               const char *t = ++s;
                while (*t != '"' && *t != '\n' && *t != '\r' && *t != 0)
                   ++t;
                if (*t == '"') {
@@ -173,7 +173,7 @@ static void stb_include_itoa(char str[9], int n)
    }
 }
 
-static char *stb_include_append(char *str, size_t *curlen, char *addstr, size_t addlen)
+static char *stb_include_append(char *str, size_t *curlen, const char *addstr, const size_t addlen)
 {
    str = (char *) realloc(str, *curlen + addlen);
    memcpy(str + *curlen, addstr, addlen);
@@ -181,7 +181,7 @@ static char *stb_include_append(char *str, size_t *curlen, char *addstr, size_t 
    return str;
 }
 
-char *stb_include_string(char *str, char *inject, char *path_to_includes, char *filename, char error[256])
+char *stb_include_string(const char *str, const char *inject, const char *path_to_includes, const char *filename, char error[256])
 {
    char temp[4096];
    include_info *inc_list;
@@ -250,7 +250,7 @@ char *stb_include_string(char *str, char *inject, char *path_to_includes, char *
    return text;
 }
 
-char *stb_include_strings(char **strs, int count, char *inject, char *path_to_includes, char *filename, char error[256])
+char *stb_include_strings(const char **strs, const int count, const char *inject, const char *path_to_includes, const char *filename, char error[256])
 {
    char *text;
    char *result;
@@ -269,7 +269,7 @@ char *stb_include_strings(char **strs, int count, char *inject, char *path_to_in
    return result;
 }
 
-char *stb_include_file(char *filename, char *inject, char *path_to_includes, char error[256])
+char *stb_include_file(const char *filename, const char *inject, const char *path_to_includes, char error[256])
 {
    size_t len;
    char *result;
@@ -286,7 +286,7 @@ char *stb_include_file(char *filename, char *inject, char *path_to_includes, cha
 }
 
 #if 0 // @TODO, GL_ARB_shader_language_include-style system that doesn't touch filesystem
-char *stb_include_preloaded(char *str, char *inject, char *includes[][2], char error[256])
+char *stb_include_preloaded(const char *str, const char *inject, const char *includes[][2], char error[256])
 {
 
 }
