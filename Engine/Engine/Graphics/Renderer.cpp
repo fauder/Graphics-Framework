@@ -23,7 +23,7 @@ namespace Engine
 
 		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
 
-		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", ( bool )light_directional );
+		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", light_directional ? 1u : 0u );
 		if( light_directional )
 		{
 			light_directional->data.direction_world_space = light_directional->transform->Forward(); // This is for the cpu-side inspection. Not necessary for the shaders.
