@@ -5,6 +5,7 @@
 #include "Graphics/Color.hpp"
 #include "Graphics/Lighting/Lighting.h"
 #include "Graphics/Material.hpp"
+#include "Graphics/UniformBufferManagement.hpp"
 #include "Math/Quaternion.hpp"
 #include "Scene/Camera.h"
 
@@ -226,6 +227,9 @@ namespace Engine::ImGuiDrawer
 
 	bool Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+
+	bool Draw(		 UniformBufferManagement& buffer_management, const char* name = "##buffer-management", ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const UniformBufferManagement& buffer_management, const char* name = "##buffer-management", ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 
 	void Draw( const Shader& shader,		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 

@@ -13,5 +13,4 @@ namespace Engine
 		LightDataType data;
 		Transform* transform;
 	};
-
 }
