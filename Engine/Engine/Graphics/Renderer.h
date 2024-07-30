@@ -65,7 +65,35 @@ namespace Engine
 		void RemoveAllSpotLights();
 
 	/* Shaders: */
-		// TODO: Provide Global setting/getting functions.
+		const void* GetShaderGlobal( const std::string& buffer_name ) const;
+			  void* GetShaderGlobal( const std::string& buffer_name );
+
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void SetShaderGlobal( const std::string& buffer_name, const StructType& value )
+		{
+			uniform_buffer_management_global.Set( buffer_name, value );
+		}
+
+		/* For PARTIAL setting ARRAY uniforms INSIDE a Uniform Buffer. */
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void SetShaderGlobal( const std::string& buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
+		{
+			uniform_buffer_management_global.Set( buffer_name, uniform_member_array_instance_name, array_index, value );
+		}
+
+		/* For PARTIAL setting STRUCT uniforms INSIDE a Uniform Buffer. */
+		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
+		void SetShaderGlobal( const std::string& buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
+		{
+			uniform_buffer_management_global.Set( buffer_name, uniform_member_struct_instance_name, value );
+		}
+		
+		/* For PARTIAL setting NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
+		template< typename UniformType >
+		void SetShaderGlobal( const std::string& buffer_name, const char* uniform_member_name, const UniformType& value )
+		{
+			uniform_buffer_management_global.Set( buffer_name, uniform_member_name, value );
+		}
 
 	/* Clearing: */
 		void SetClearColor( const Color3& new_clear_color );
@@ -118,7 +146,7 @@ namespace Engine
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_regular;
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_instance;
 
-		//UniformBufferManagement uniform_buffer_management_global;
+		UniformBufferManagement uniform_buffer_management_global;
 		UniformBufferManagement uniform_buffer_management_intrinsic;
 	};
 }

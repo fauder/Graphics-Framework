@@ -103,6 +103,7 @@ namespace Engine
 	void Renderer::RenderImGui()
 	{
 		ImGuiDrawer::Draw( uniform_buffer_management_intrinsic, "Shader Intrinsics" );
+		ImGuiDrawer::Draw( uniform_buffer_management_global,	"Shader Globals" );
 	}
 
 	void Renderer::OnProjectionParametersChange( Camera& camera )
@@ -193,6 +194,16 @@ namespace Engine
 		lights_spot.clear();
 	}
 
+	const void* Renderer::GetShaderGlobal( const std::string& buffer_name ) const
+	{
+		return uniform_buffer_management_global.Get( buffer_name );
+	}
+
+	void* Renderer::GetShaderGlobal( const std::string& buffer_name )
+	{
+		return uniform_buffer_management_global.Get( buffer_name );
+	}
+
 	void Renderer::SetClearColor( const Color3& new_clear_color )
 	{
 		clear_color = new_clear_color;
@@ -251,6 +262,7 @@ namespace Engine
 	void Renderer::UploadIntrinsicsAndGlobals()
 	{
 		uniform_buffer_management_intrinsic.UploadAll();
+		uniform_buffer_management_global.UploadAll();
 	}
 
 	void Renderer::RegisterShader( const Shader& shader )
@@ -283,7 +295,16 @@ namespace Engine
 				}
 			}
 
-			// TODO: Implement Globals here.
+			if( shader.HasGlobalUniformBlocks() )
+			{
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+				{
+					if( uniform_buffer_info.category == Uniform::BufferCategory::Global )
+					{
+						uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+					}
+				}
+			}
 
 			if( shader.HasIntrinsicUniformBlocks() )
 			{

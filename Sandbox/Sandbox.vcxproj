@@ -132,6 +132,7 @@
     <None Include="Asset\Shader\Phong.frag" />
     <None Include="Asset\Shader\Phong.vert" />
     <None Include="Asset\Shader\BasicColor.frag" />
+    <None Include="Asset\Shader\_Global.glsl" />
     <None Include="Asset\Shader\_Intrinsic_Lighting.glsl" />
     <None Include="Asset\Shader\_Intrinsic_Other.glsl" />
   </ItemGroup>

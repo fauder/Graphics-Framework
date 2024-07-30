@@ -15,5 +15,6 @@
     <None Include="Asset\Shader\BasicColor.frag" />
     <None Include="Asset\Shader\_Intrinsic_Lighting.glsl" />
     <None Include="Asset\Shader\_Intrinsic_Other.glsl" />
+    <None Include="Asset\Shader\_Global.glsl" />
   </ItemGroup>
 </Project>
