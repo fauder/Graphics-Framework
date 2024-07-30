@@ -35,14 +35,14 @@ namespace Engine
 		}
 	}
 
-	const void* UniformBufferManagement::Get( const std::string& buffer_name, const Uniform::BufferInformation& buffer_info ) const
+	const void* UniformBufferManagement::Get( const std::string& buffer_name ) const
 	{
-		return blob_map.at( buffer_name ).Get( buffer_info.offset );
+		return blob_map.at( buffer_name ).Get( 0 );
 	}
 
-	void* UniformBufferManagement::Get( const std::string& buffer_name, const Uniform::BufferInformation& buffer_info )
+	void* UniformBufferManagement::Get( const std::string& buffer_name )
 	{
-		return blob_map[ buffer_name ].Get( buffer_info.offset );
+		return blob_map[ buffer_name ].Get( 0 );
 	}
 
 	void UniformBufferManagement::UploadAll()

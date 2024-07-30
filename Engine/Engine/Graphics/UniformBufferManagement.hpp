@@ -30,8 +30,8 @@ namespace Engine
 		void UnregisterAllBuffers();
 
 	/* Uniform Set/Get: */
-		const void* Get( const std::string& buffer_name, const Uniform::BufferInformation& buffer_info ) const;
-			  void* Get( const std::string& buffer_name, const Uniform::BufferInformation& buffer_info );
+		const void* Get( const std::string& buffer_name ) const;
+			  void* Get( const std::string& buffer_name );
 
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
 		void Set( const std::string& buffer_name, const StructType& value )
