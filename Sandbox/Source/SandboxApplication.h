@@ -30,7 +30,7 @@ public:
 
 	virtual void Render() override;
 
-	virtual void DrawImGui() override;
+	virtual void RenderImGui() override;
 	virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods ) override;
 	virtual void OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels ) override;
 

@@ -72,7 +72,7 @@ namespace Engine
 			Render();
 
 			ImGuiSetup::BeginFrame();
-			DrawImGui();
+			RenderImGui();
 			ImGuiSetup::EndFrame();
 
 			Platform::SwapBuffers();
@@ -136,7 +136,7 @@ namespace Engine
 		time_mod_2_pi = std::fmod( time_current, Constants< float >::Two_Pi() );
 	}
 
-	void Application::DrawImGui()
+	void Application::RenderImGui()
 	{
 		RenderImGui_FrameStatistics();
 

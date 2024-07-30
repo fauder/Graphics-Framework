@@ -25,7 +25,7 @@ namespace Engine
 
 		virtual void OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods );
 		virtual void OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels );
-		virtual void DrawImGui();
+		virtual void RenderImGui();
 
 	protected:
 		void FreezeTime()   { time_multiplier = 0.0f; }

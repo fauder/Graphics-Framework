@@ -224,12 +224,12 @@ void SandboxApplication::Render()
 	renderer.Render( camera );
 }
 
-void SandboxApplication::DrawImGui()
+void SandboxApplication::RenderImGui()
 {
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Application ImGui", true /* omit if the group is empty */ ) );
 
-		Application::DrawImGui();
+		Application::RenderImGui();
 	}
 
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox ImGui", true /* omit if the group is empty */ ) );
