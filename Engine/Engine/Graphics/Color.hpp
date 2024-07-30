@@ -42,6 +42,7 @@ namespace Engine
 		static constexpr Color3 Red()								{ return Color3( 1.0f, 0.0f, 0.0f ); }
 		static constexpr Color3 Green()								{ return Color3( 0.0f, 1.0f, 0.0f ); }
 		static constexpr Color3 Blue()								{ return Color3( 0.0f, 0.0f, 1.0f ); }
+		static constexpr Color3 Teal()								{ return Color3( 0.0f, 0.5f, 0.5f ); }
 		static constexpr Color3 Cyan()								{ return Color3( 0.0f, 1.0f, 1.0f ); }
 		static constexpr Color3 Magenta()							{ return Color3( 1.0f, 0.0f, 1.0f ); }
 		static constexpr Color3 Yellow()							{ return Color3( 1.0f, 1.0f, 0.0f ); }
@@ -93,6 +94,7 @@ namespace Engine
 		static constexpr Color4 Red( float alpha = 1.0f )							{ return Color4( 1.0f, 0.0f, 0.0f, alpha ); }
 		static constexpr Color4 Green( float alpha = 1.0f )							{ return Color4( 0.0f, 1.0f, 0.0f, alpha ); }
 		static constexpr Color4 Blue( float alpha = 1.0f )							{ return Color4( 0.0f, 0.0f, 1.0f, alpha ); }
+		static constexpr Color4 Teal( float alpha = 1.0f )							{ return Color4( 0.0f, 0.5f, 0.5f, alpha ); }
 		static constexpr Color4 Cyan( float alpha = 1.0f )							{ return Color4( 0.0f, 1.0f, 1.0f, alpha ); }
 		static constexpr Color4 Magenta( float alpha = 1.0f )						{ return Color4( 1.0f, 0.0f, 1.0f, alpha ); }
 		static constexpr Color4 Yellow( float alpha = 1.0f )						{ return Color4( 1.0f, 1.0f, 0.0f, alpha ); }
