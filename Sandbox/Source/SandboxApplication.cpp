@@ -328,6 +328,8 @@ void SandboxApplication::RenderImGui()
 	}
 
 	ImGui::End();
+
+	renderer.RenderImGui();
 }
 
 void SandboxApplication::UpdateViewMatrix()

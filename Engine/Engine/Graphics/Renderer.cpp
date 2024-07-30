@@ -99,6 +99,10 @@ namespace Engine
 		}
 	}
 
+	void Renderer::RenderImGui()
+	{
+	}
+
 	void Renderer::OnProjectionParametersChange( Camera& camera )
 	{
 		uniform_buffer_management_intrinsic.Set( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );

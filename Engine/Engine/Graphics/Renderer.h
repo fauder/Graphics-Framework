@@ -41,6 +41,7 @@ namespace Engine
 	/* Main: */
 		void Update( Camera& camera );
 		void Render( Camera& camera );
+		void RenderImGui();
 		void OnProjectionParametersChange( Camera& camera );
 
 	/* Drawables: */
