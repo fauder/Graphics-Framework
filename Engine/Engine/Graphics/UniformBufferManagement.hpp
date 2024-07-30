@@ -38,7 +38,7 @@ namespace Engine
 		{
 			const auto& buffer_info = *buffer_info_map[ buffer_name ];
 
-			blob_map[ buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), buffer_info.offset, buffer_info.size );
+			blob_map[ buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), 0 /* because every buffer has its own blob. */, buffer_info.size);
 		}
 
 		/* For PARTIAL setting ARRAY uniforms INSIDE a Uniform Buffer. */
