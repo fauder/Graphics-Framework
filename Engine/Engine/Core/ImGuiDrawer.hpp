@@ -224,7 +224,7 @@ namespace Engine::ImGuiDrawer
 	bool Draw(		 Transform& transform, const char* name = "##transform", const bool hide_scale = false );
 	void Draw( const Transform& transform, const char* name = "##transform", const bool hide_scale = false );
 
-	void Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 
 	void Draw( const Shader& shader,		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );

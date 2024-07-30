@@ -319,8 +319,10 @@ namespace Engine::ImGuiDrawer
 		}
 	}
 
-	void Draw( Material& material, ImGuiWindowFlags window_flags )
+	bool Draw( Material& material, ImGuiWindowFlags window_flags )
 	{
+		bool is_modified = false;
+
 		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			if( ImGui::TreeNodeEx( material.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
@@ -358,7 +360,7 @@ namespace Engine::ImGuiDrawer
 
 						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 						ImGui::PushID( ( void* )&uniform_info );
-						Draw( uniform_info.type, material.Get( uniform_info ) );
+						is_modified |= Draw( uniform_info.type, material.Get( uniform_info ) );
 						ImGui::PopID();
 					}
 
@@ -391,7 +393,7 @@ namespace Engine::ImGuiDrawer
 										ImGui::TableNextColumn();
 
 										ImGui::PushID( ( void* )uniform_buffer_member_info );
-										Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
+										is_modified |= Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
 										ImGui::PopID();
 									}
 
@@ -429,7 +431,7 @@ namespace Engine::ImGuiDrawer
 												std::byte* effective_offset = memory_blob + uniform_buffer_member_info->offset + array_index * uniform_buffer_member_array_info.stride;
 
 												ImGui::PushID( effective_offset );
-												Draw( uniform_buffer_member_info->type, effective_offset );
+												is_modified |= Draw( uniform_buffer_member_info->type, effective_offset );
 												ImGui::PopID();
 											}
 
@@ -452,7 +454,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextColumn();
 
 								ImGui::PushID( ( void* )uniform_buffer_member_single_info );
-								Draw( uniform_buffer_member_single_info->type, memory_blob + uniform_buffer_member_single_info->offset );
+								is_modified |= Draw( uniform_buffer_member_single_info->type, memory_blob + uniform_buffer_member_single_info->offset );
 								ImGui::PopID();
 							}
 
@@ -470,7 +472,7 @@ namespace Engine::ImGuiDrawer
 
 						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 						ImGui::PushID( ( void* )&texture_pointer );
-						Draw( texture_pointer, uniform_sampler_name.c_str() );
+						is_modified |= Draw( texture_pointer, uniform_sampler_name.c_str() );
 						ImGui::PopID();
 					}
 
@@ -482,6 +484,8 @@ namespace Engine::ImGuiDrawer
 		}
 
 		ImGui::End();
+
+		return is_modified;
 	}
 
 	void Draw( const Material& material, ImGuiWindowFlags window_flags )
