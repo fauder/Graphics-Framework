@@ -1,6 +1,7 @@
 // Engine Includes.
 #include "Renderer.h"
 #include "UniformBufferBindingPointManager.h"
+#include "Core/ImGuiDrawer.hpp"
 
 namespace Engine
 {
@@ -101,6 +102,7 @@ namespace Engine
 
 	void Renderer::RenderImGui()
 	{
+		ImGuiDrawer::Draw( uniform_buffer_management_intrinsic, "Shader Intrinsics" );
 	}
 
 	void Renderer::OnProjectionParametersChange( Camera& camera )
