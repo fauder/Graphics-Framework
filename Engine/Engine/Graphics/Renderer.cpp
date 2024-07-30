@@ -269,10 +269,10 @@ namespace Engine
 	{
 		if( shader.HasUniformBlocks() )
 		{
-			const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap();
-
 			if( shader.HasRegularUniformBlocks() )
 			{
+				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Regular();
+
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
 					if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
@@ -285,18 +285,24 @@ namespace Engine
 
 			if( shader.HasInstanceUniformBlocks() )
 			{
-				for( auto& [uniform_buffer_name, uniform_buffer_info] : uniform_buffer_info_map )
+				throw std::logic_error( "Not properly implemented yet. Uncomment the code below and check if it is correct." );
+
+				/*const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Instance();
+
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
 					if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
 					{
 						auto& buffer = uniform_buffer_map_instance.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
 						UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
 					}
-				}
+				}*/
 			}
 
 			if( shader.HasGlobalUniformBlocks() )
 			{
+				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
+
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
 					if( uniform_buffer_info.category == Uniform::BufferCategory::Global )
@@ -308,6 +314,8 @@ namespace Engine
 
 			if( shader.HasIntrinsicUniformBlocks() )
 			{
+				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
+
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
 					if( uniform_buffer_info.category == Uniform::BufferCategory::Intrinsic )

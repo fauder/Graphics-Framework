@@ -91,13 +91,29 @@ namespace Engine
 
 			QueryUniformData();
 			QueryUniformData_BlockIndexAndOffsetForBufferMembers();
-			QueryUniformBufferData();
-			QueryUniformBufferData_Aggregates();
+			QueryUniformBufferData( uniform_buffer_info_map_regular, Uniform::BufferCategory::Regular );
+			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_regular );
+			// TODO: Uncomment code below when Instance uniforms are implemented.
+			/*QueryUniformBufferData( uniform_buffer_info_map_instance, Uniform::BufferCategory::Instance );
+			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_instance	);*/
+			QueryUniformBufferData( uniform_buffer_info_map_global, Uniform::BufferCategory::Global );
+			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_global );
+			QueryUniformBufferData( uniform_buffer_info_map_intrinsic, Uniform::BufferCategory::Intrinsic );
+			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_intrinsic );
 
 			CalculateTotalUniformSizes();
 			EnumerateUniformBufferCategories();
 
-			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_regular )
+				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
+
+			/*for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_instance )
+				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );*/
+
+			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_global )
+				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
+
+			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_intrinsic )
 				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 		}
 
@@ -348,7 +364,7 @@ namespace Engine
 		}
 	}
 
-	void Shader::QueryUniformBufferData()
+	void Shader::QueryUniformBufferData( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_info_map, const Uniform::BufferCategory category_of_interest )
 	{
 		int active_uniform_block_count = 0;
 		glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCKS, &active_uniform_block_count );
@@ -371,26 +387,29 @@ namespace Engine
 
 			const auto category = Uniform::DetermineBufferCategory( name );
 
-			auto& uniform_buffer_information = uniform_buffer_info_map[ name.c_str() ] = 
+			if( category == category_of_interest )
 			{
-				.binding_point = -1, // This will be filled later via BufferManager::ConnectBufferToBlock().
-				.size          = size,
-				.offset        = offset,
-				.category	   = category
-			};
+				auto& uniform_buffer_information = uniform_buffer_info_map[ name.c_str() ] =
+				{
+					.binding_point = -1, // This will be filled later via BufferManager::ConnectBufferToBlock().
+					.size          = size,
+					.offset        = offset,
+					.category	   = category
+				};
 
-			/* Add members and set their block indices. */
-			for( auto& [ uniform_name, uniform_info ] : uniform_info_map )
-			{
-				if( uniform_info.is_buffer_member && uniform_info.location_or_block_index == uniform_block_index )
-					uniform_buffer_information.members_map.emplace( uniform_name.data(), &uniform_info );
+				/* Add members and set their block indices. */
+				for( auto& [ uniform_name, uniform_info ] : uniform_info_map )
+				{
+					if( uniform_info.is_buffer_member && uniform_info.location_or_block_index == uniform_block_index )
+						uniform_buffer_information.members_map.emplace( uniform_name.data(), &uniform_info );
+				}
+
+				offset += size;
 			}
-
-			offset += size;
 		}
 	}
 
-	void Shader::QueryUniformBufferData_Aggregates()
+	void Shader::QueryUniformBufferData_Aggregates( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_info_map )
 	{
 		std::vector< Uniform::Information* > members_map;
 
@@ -584,39 +603,32 @@ namespace Engine
 
 	void Shader::CalculateTotalUniformSizes()
 	{
-		uniform_book_keeping_info.total_size_default_block = 0, uniform_book_keeping_info.total_size_uniform_blocks = 0;
+		uniform_book_keeping_info.default_block_size = 0;
 
 		/* Sum of default block (i.e., not in any explicit Uniform Buffer) uniforms: */
 		for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
 			if( not uniform_info.is_buffer_member ) // Skip buffer members, as their layout (std140) means their total buffer size is calculated differently.
-				uniform_book_keeping_info.total_size_default_block += uniform_info.size;
+				uniform_book_keeping_info.default_block_size += uniform_info.size;
 
 		/* Now add buffer block sizes (calculated before): */
-		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-			uniform_book_keeping_info.total_size_uniform_blocks += uniform_buffer_info.size;
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_regular )
+			uniform_book_keeping_info.regular_total_size = uniform_buffer_info.size;
+		/*for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_instance )
+			uniform_book_keeping_info.instance_total_size = uniform_buffer_info.size;*/
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_global )
+			uniform_book_keeping_info.global_total_size = uniform_buffer_info.size;
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_intrinsic )
+			uniform_book_keeping_info.intrinsic_total_size = uniform_buffer_info.size;
 
-		uniform_book_keeping_info.total_size = uniform_book_keeping_info.total_size_default_block + uniform_book_keeping_info.total_size_uniform_blocks;
-
-		// TODO: Make a distinction between real total size and total size without intrinsics & globals, as Material uses this total size to allocate its blob (and it shouldn't allocate for Intrinsics/Globals).
+		uniform_book_keeping_info.total_size = uniform_book_keeping_info.default_block_size + uniform_book_keeping_info.TotalSize_Blocks();
 	}
 
 	void Shader::EnumerateUniformBufferCategories()
 	{
-		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-		{
-			switch( uniform_buffer_info.category )
-			{
-				case Uniform::BufferCategory::Instance:
-					uniform_book_keeping_info.instance_block_count++; break;
-				case Uniform::BufferCategory::Global:
-					uniform_book_keeping_info.global_block_count++; break;
-				case Uniform::BufferCategory::Intrinsic:
-					uniform_book_keeping_info.intrinsic_block_count++; break;
-				// case Uniform::BufferCategory::Regular:
-				default:
-					uniform_book_keeping_info.regular_block_count++; break;
-			}
-		}
+		uniform_book_keeping_info.regular_block_count   = ( int )uniform_buffer_info_map_regular.size();
+		//uniform_book_keeping_info.instance_block_count  = ( int )uniform_buffer_info_map_instance.size();
+		uniform_book_keeping_info.global_block_count    = ( int )uniform_buffer_info_map_global.size();
+		uniform_book_keeping_info.intrinsic_block_count = ( int )uniform_buffer_info_map_intrinsic.size();
 	}
 
 	const Uniform::Information& Shader::GetUniformInformation( const std::string& uniform_name )
@@ -632,22 +644,6 @@ namespace Engine
 		}
 	#else
 		return uniform_info_map[ uniform_name ];
-	#endif // DEBUG
-	}
-
-	const Uniform::BufferInformation& Shader::GetUniformBufferInformation( const std::string& uniform_name )
-	{
-	#ifdef _DEBUG
-		try
-		{
-			return uniform_buffer_info_map.at( uniform_name );
-		}
-		catch( const std::exception& )
-		{
-			throw std::runtime_error( R"(ERROR::SHADER::GetUniformBufferInformation(): uniform ")" + std::string( uniform_name ) + R"(" does not exist!)" );
-		}
-	#else
-		return uniform_buffer_info_map[ uniform_name ];
 	#endif // DEBUG
 	}
 

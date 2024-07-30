@@ -69,11 +69,17 @@ namespace Engine
 		inline		 ID				Id()	const { return program_id;	}
 
 /* Uniform APIs: */
-		inline const std::unordered_map< std::string, Uniform::Information			>& GetUniformInfoMap()			const { return uniform_info_map;		}
-		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return uniform_buffer_info_map; }
-		inline std::size_t GetTotalUniformSize_DefaultBlockOnly() const { return uniform_book_keeping_info.total_size_default_block; }
-		inline std::size_t GetTotalUniformSize_UniformBlocksOnly() const { return uniform_book_keeping_info.total_size_uniform_blocks; }
-		inline std::size_t GetTotalUniformSize() const { return uniform_book_keeping_info.total_size; }
+		inline const std::unordered_map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
+
+		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Regular()	const { return uniform_buffer_info_map_regular;		}
+		//inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Instance()	const { return uniform_buffer_info_map_instance;	}
+		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Global()		const { return uniform_buffer_info_map_global;		}
+		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Intrinsic()	const { return uniform_buffer_info_map_intrinsic;	}
+
+		inline std::size_t GetTotalUniformSize_DefaultBlockOnly()	const { return uniform_book_keeping_info.default_block_size;			}
+		inline std::size_t GetTotalUniformSize_UniformBlocksOnly()	const { return uniform_book_keeping_info.TotalSize_Blocks();			}
+		inline std::size_t GetTotalUniformSize_ForMaterial()		const { return uniform_book_keeping_info.TotalSize_ForMaterialBlob();	}
+		inline std::size_t GetTotalUniformSize()					const { return uniform_book_keeping_info.total_size;					}
 
 		inline bool HasIntrinsicUniformBlocks()	const { return uniform_book_keeping_info.intrinsic_block_count;	}
 		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;	}
@@ -281,13 +287,12 @@ namespace Engine
 																		 std::vector< unsigned int >& block_indices, std::vector< unsigned int >& corresponding_uniform_indices ) const;
 		void QueryUniformData();
 		void QueryUniformData_BlockIndexAndOffsetForBufferMembers();
-		void QueryUniformBufferData();
-		void QueryUniformBufferData_Aggregates();
+		void QueryUniformBufferData( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_info_map, const Uniform::BufferCategory category );
+		void QueryUniformBufferData_Aggregates( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_info_map );
 		void CalculateTotalUniformSizes();
 		void EnumerateUniformBufferCategories();
 
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name );
-		const Uniform::BufferInformation& GetUniformBufferInformation( const std::string& uniform_name );
 
 /* Error Checking/Reporting: */
 		void LogErrors( const std::string& error_string ) const;
@@ -304,7 +309,11 @@ namespace Engine
 		std::string name;
 
 		std::unordered_map< std::string, Uniform::Information		> uniform_info_map;
-		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map;
+
+		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_regular;
+		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_instance;
+		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_global;
+		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_intrinsic;
 
 		Uniform::ActiveUniformBookKeepingInformation uniform_book_keeping_info;
 	};

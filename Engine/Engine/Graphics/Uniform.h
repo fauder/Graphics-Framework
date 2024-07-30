@@ -110,8 +110,13 @@ namespace Engine
 			std::string name_holder;
 			int count;
 			int name_max_length;
-			std::size_t total_size, total_size_default_block, total_size_uniform_blocks;
+			std::size_t default_block_size;
+			std::size_t regular_total_size, /*instance_total_size, */global_total_size, intrinsic_total_size;
+			std::size_t total_size;
 			int intrinsic_block_count, global_block_count, instance_block_count, regular_block_count;
+
+			inline std::size_t TotalSize_ForMaterialBlob() const { return default_block_size + regular_total_size; }
+			inline std::size_t TotalSize_Blocks() const { return regular_total_size + /*instance_total_size + */global_total_size + intrinsic_total_size; }
 		};
 
 		class BindingPointBookKeeping

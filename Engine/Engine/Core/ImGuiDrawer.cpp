@@ -894,8 +894,7 @@ namespace Engine::ImGuiDrawer
 	{
 		if( ImGui::Begin( "Shaders", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
-			const auto& uniform_info_map        = shader.GetUniformInfoMap();
-			const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap();
+			const auto& uniform_info_map = shader.GetUniformInfoMap();
 
 			if( ImGui::TreeNodeEx( shader.Name().c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
 			{
@@ -947,42 +946,50 @@ namespace Engine::ImGuiDrawer
 
 					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
-					for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					auto DrawUniformBufferInfos = []( const auto& uniform_buffer_info_map )
 					{
-						ImGui::TableNextColumn();
-
-						if( ImGui::TreeNodeEx( uniform_buffer_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+						for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 						{
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.binding_point );
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.size );
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.offset );
-							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_info.CategoryString( uniform_buffer_info.category ) );
+							ImGui::TableNextColumn();
 
-							for( const auto& [ uniform_name, uniform_info ] : uniform_buffer_info.members_map )
+							if( ImGui::TreeNodeEx( uniform_buffer_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 							{
-								ImGui::TableNextColumn();
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.binding_point );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.size );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.offset );
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_info.CategoryString( uniform_buffer_info.category ) );
 
-								if( ImGui::TreeNodeEx( uniform_name.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen ) )
+								for( const auto& [ uniform_name, uniform_info ] : uniform_buffer_info.members_map )
 								{
-									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->location_or_block_index );
-									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->size );
-									ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->offset );
-									ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info->type ) );
+									ImGui::TableNextColumn();
+
+									if( ImGui::TreeNodeEx( uniform_name.c_str(), ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen ) )
+									{
+										ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->location_or_block_index );
+										ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->size );
+										ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->offset );
+										ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info->type ) );
+									}
 								}
+
+								ImGui::TreePop();
+
+								ImGui::TableNextRow();
 							}
-
-							ImGui::TreePop();
-
-							ImGui::TableNextRow();
+							else
+							{
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.binding_point );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.size );
+								ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.offset );
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_info.CategoryString( uniform_buffer_info.category ) );
+							}
 						}
-						else
-						{
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.binding_point );
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.size );
-							ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_buffer_info.offset );
-							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_info.CategoryString( uniform_buffer_info.category ) );
-						}
-					}
+					};
+
+					DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Regular() );
+					//DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Instance() );
+					DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Global() );
+					DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Intrinsic() );
 
 					ImGui::PopStyleColor();
 

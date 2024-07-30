@@ -27,10 +27,10 @@ namespace Engine
 		:
 		name( name ),
 		shader( shader ),
-		uniform_blob( shader->GetTotalUniformSize() ),
+		uniform_blob( shader->GetTotalUniformSize_ForMaterial() ),
 		uniform_blob_offset_of_uniform_buffers( shader->GetTotalUniformSize_DefaultBlockOnly() ),
 		uniform_info_map( &shader->GetUniformInfoMap() ),
-		uniform_buffer_info_map( &shader->GetUniformBufferInfoMap() )
+		uniform_buffer_info_map( &shader->GetUniformBufferInfoMap_Regular() )
 	{
 		ASSERT_DEBUG_ONLY( HasShaderAssigned() && "Parameter 'shader' passed to Material::Material( const std::string& name, Shader* const shader ) is nullptr!" );
 
@@ -51,11 +51,11 @@ namespace Engine
 	{
 		this->shader = shader;
 
-		uniform_blob                           = Blob( shader->GetTotalUniformSize() );
+		uniform_blob                           = Blob( shader->GetTotalUniformSize_ForMaterial() );
 		uniform_blob_offset_of_uniform_buffers = shader->GetTotalUniformSize_DefaultBlockOnly();
 
 		uniform_info_map        = ( &shader->GetUniformInfoMap() );
-		uniform_buffer_info_map = ( &shader->GetUniformBufferInfoMap() );
+		uniform_buffer_info_map = ( &shader->GetUniformBufferInfoMap_Regular() );
 
 		PopulateTextureMap();
 	}
