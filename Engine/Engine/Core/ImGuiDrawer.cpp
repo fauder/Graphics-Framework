@@ -366,8 +366,7 @@ namespace Engine::ImGuiDrawer
 
 					for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 					{
-						if( uniform_buffer_info.IsGlobalOrIntrinsic() )
-							continue;
+						ASSERT_DEBUG_ONLY( not uniform_buffer_info.IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
 
 						ImGui::TableNextColumn();
 
@@ -531,8 +530,7 @@ namespace Engine::ImGuiDrawer
 
 					for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 					{
-						if( uniform_buffer_info.IsGlobalOrIntrinsic() )
-							continue;
+						ASSERT_DEBUG_ONLY( not uniform_buffer_info.IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
 
 						ImGui::TableNextColumn();
 
