@@ -77,8 +77,10 @@ namespace Engine
 
 			for( auto& [ material_name, material ] : materials_in_flight )
 			{
-				if( shader->Id() == material->shader->Id() )
+				if( material->shader->Id() == shader->Id() )
 				{
+					material->UploadUniforms();
+
 					for( auto& drawable : drawable_list )
 					{
 						if( drawable->material->Name() == material_name )
@@ -86,8 +88,6 @@ namespace Engine
 							drawable->mesh->Bind();
 
 							material->Set( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
-
-							material->UploadUniforms();
 
 							// TODO: Upload Instance uniforms.
 
