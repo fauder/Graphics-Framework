@@ -159,6 +159,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\ImGuiUtility.h" />
     <ClInclude Include="Engine\Core\Initialization.h" />
     <ClInclude Include="Engine\Core\Blob.hpp" />
+    <ClInclude Include="Engine\Core\Optimization.h" />
     <ClInclude Include="Engine\Core\ServiceLocator.h" />
     <ClInclude Include="Engine\Core\DirtyBlob.h" />
     <ClInclude Include="Engine\Graphics\Buffer.hpp" />
