@@ -10,7 +10,7 @@
 #include "GLLogger.h"
 #include "Shader.hpp"
 #include "ShaderTypeInformation.h"
-#include "UniformBufferBindingPointManager.h"
+#include "UniformBlockBindingPointManager.h"
 
 // std Includes.
 #include <numeric> // std::iota.
@@ -105,16 +105,16 @@ namespace Engine
 			EnumerateUniformBufferCategories();
 
 			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_regular )
-				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
+				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 
 			/*for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_instance )
-				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );*/
+				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );*/
 
 			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_global )
-				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
+				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 
 			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_intrinsic )
-				UniformBufferBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
+				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 		}
 
 		return link_result;

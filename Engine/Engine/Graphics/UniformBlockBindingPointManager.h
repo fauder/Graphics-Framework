@@ -1,7 +1,5 @@
 #pragma once
 
-// TODO: Rename to UniformBlockBindingPointManager.
-
 // Engine Includes.
 #include "UniformBuffer.h"
 #include "Uniform.h"
@@ -15,11 +13,11 @@ namespace Engine
 	class Shader;
 
 	// Singleton.
-	class UniformBufferBindingPointManager
+	class UniformBlockBindingPointManager
 	{
 	public:
-		UniformBufferBindingPointManager( UniformBufferBindingPointManager const& ) = delete;
-		void operator = ( UniformBufferBindingPointManager const& ) = delete;
+		UniformBlockBindingPointManager( UniformBlockBindingPointManager const& ) = delete;
+		void operator = ( UniformBlockBindingPointManager const& ) = delete;
 
 	/* Block registering API: */
 		static Uniform::BindingPoint RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BufferInformation& uniform_buffer_info );
@@ -29,12 +27,12 @@ namespace Engine
 
 	private:
 	/* Private default constructor. */
-		UniformBufferBindingPointManager();
+		UniformBlockBindingPointManager();
 
 	/* Singleton related: */
-		static UniformBufferBindingPointManager& Instance()
+		static UniformBlockBindingPointManager& Instance()
 		{
-			static UniformBufferBindingPointManager instance;
+			static UniformBlockBindingPointManager instance;
 			return instance;
 		}
 

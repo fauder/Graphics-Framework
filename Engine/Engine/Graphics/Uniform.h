@@ -14,7 +14,7 @@ namespace Engine
 	{
 		friend class Shader;
 		friend class Material;
-		friend class UniformBufferBindingPointManager;
+		friend class UniformBlockBindingPointManager;
 		friend class Renderer;
 		friend class UniformBufferManager;
 		friend class UniformBufferManagement;

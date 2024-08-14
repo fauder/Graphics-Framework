@@ -1,6 +1,6 @@
 // Engine Includes.
 #include "UniformBufferManager.h"
-#include "UniformBufferBindingPointManager.h"
+#include "UniformBlockBindingPointManager.h"
 #include "Core/Optimization.h"
 
 namespace Engine
@@ -14,7 +14,7 @@ namespace Engine
 			case Uniform::BufferCategory::Regular:
 			{
 				auto& buffer = instance.uniform_buffer_map_regular.try_emplace( buffer_name, buffer_info.size, buffer_name ).first->second;
-				UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Regular );
+				UniformBlockBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Regular );
 
 				return &buffer;
 			}
@@ -23,21 +23,21 @@ namespace Engine
 				throw std::runtime_error( "Instance Uniforms not implemented yet!" );
 
 				auto& buffer = instance.uniform_buffer_map_instance.try_emplace( buffer_name, buffer_info.size, buffer_name ).first->second;
-				UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Instance );
+				UniformBlockBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Instance );
 
 				return &buffer;
 			}
 			case Uniform::BufferCategory::Global:
 			{
 				auto& buffer = instance.uniform_buffer_map_global.try_emplace( buffer_name, buffer_info.size, buffer_name ).first->second;
-				UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Global );
+				UniformBlockBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Global );
 
 				return &buffer;
 			}
 			case Uniform::BufferCategory::Intrinsic:
 			{
 				auto& buffer = instance.uniform_buffer_map_intrinsic.try_emplace( buffer_name, buffer_info.size, buffer_name ).first->second;
-				UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Intrinsic );
+				UniformBlockBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Intrinsic );
 
 				return &buffer;
 			}
