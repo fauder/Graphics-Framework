@@ -68,9 +68,8 @@ namespace Engine
 	{
 		Clear();
 
-		UploadIntrinsicsAndGlobals();
-
-		// TODO: Upload Globals.
+		UploadIntrinsics();
+		UploadGlobals();
 		
 		for( const auto& [ shader_id, shader ] : shaders_in_flight )
 		{
@@ -259,9 +258,13 @@ namespace Engine
 		glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() );
 	}
 
-	void Renderer::UploadIntrinsicsAndGlobals()
+	void Renderer::UploadIntrinsics()
 	{
 		uniform_buffer_management_intrinsic.UploadAll();
+	}
+
+	void Renderer::UploadGlobals()
+	{
 		uniform_buffer_management_global.UploadAll();
 	}
 
