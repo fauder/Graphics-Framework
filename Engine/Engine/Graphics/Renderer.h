@@ -144,9 +144,6 @@ namespace Engine
 		Color4 clear_color;
 		ClearTarget clear_target;
 
-		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_regular;
-		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_instance;
-
 		UniformBufferManagement uniform_buffer_management_global;
 		UniformBufferManagement uniform_buffer_management_intrinsic;
 	};

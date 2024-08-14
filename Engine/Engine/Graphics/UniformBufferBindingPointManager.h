@@ -1,5 +1,7 @@
 #pragma once
 
+// TODO: Rename to UniformBlockBindingPointManager.
+
 // Engine Includes.
 #include "UniformBuffer.h"
 #include "Uniform.h"

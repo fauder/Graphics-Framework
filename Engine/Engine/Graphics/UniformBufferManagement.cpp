@@ -1,6 +1,7 @@
 // Engine Includes.
 #include "UniformBufferManagement.hpp"
 #include "UniformBufferBindingPointManager.h"
+#include "UniformBufferManager.h"
 
 namespace Engine
 {
@@ -8,8 +9,7 @@ namespace Engine
 	{
 		if( buffer_info_map.try_emplace( buffer_name, buffer_info ).second ) // .second returns whether the emplace was successfull or not.
 		{
-			auto& buffer = buffer_map.try_emplace( buffer_name, buffer_info->size, buffer_name ).first->second;
-			UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, buffer_info->category );
+			buffer_map.emplace( buffer_name, UniformBufferManager::CreateOrRequest( buffer_name, *buffer_info ) );
 
 			blob_map.emplace( buffer_name, buffer_info->size );
 		}
@@ -57,7 +57,7 @@ namespace Engine
 				uniform_blob.MergeConsecutiveDirtySections();
 				const auto& dirty_sections = uniform_blob.DirtySections();
 				for( auto& dirty_section : dirty_sections )
-					uniform_buffer.Update_Partial( uniform_blob.SpanFromSection( dirty_section ), dirty_section.offset );
+					uniform_buffer->Update_Partial( uniform_blob.SpanFromSection( dirty_section ), dirty_section.offset );
 
 				uniform_blob.ClearDirtySections();
 			}

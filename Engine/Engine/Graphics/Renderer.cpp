@@ -1,6 +1,7 @@
 // Engine Includes.
 #include "Renderer.h"
 #include "UniformBufferBindingPointManager.h"
+#include "UniformBufferManager.h"
 #include "Core/ImGuiDrawer.hpp"
 
 namespace Engine
@@ -121,9 +122,6 @@ namespace Engine
 
 		if( not shaders_registered.contains( shader->Id() ) )
 			RegisterShader( *shader );
-
-		/* Renderer creates & keeps the Uniform Buffer Objects. So it can "lend" them to Material for it to cache them. */
-		drawable_to_add->material->CacheUniformBufferMap( uniform_buffer_map_regular );
 	}
 
 	void Renderer::RemoveDrawable( const Drawable* drawable_to_remove )
@@ -272,47 +270,15 @@ namespace Engine
 	{
 		if( shader.HasUniformBlocks() )
 		{
-			if( shader.HasRegularUniformBlocks() )
-			{
-				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Regular();
-
-				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-				{
-					if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
-					{
-						auto& buffer = uniform_buffer_map_regular.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-						UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Regular );
-					}
-				}
-			}
-
-			if( shader.HasInstanceUniformBlocks() )
-			{
-				throw std::logic_error( "Not properly implemented yet. Uncomment the code below and check if it is correct." );
-
-				/*const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Instance();
-
-				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-				{
-					if( uniform_buffer_info.category == Uniform::BufferCategory::Instance )
-					{
-						auto& buffer = uniform_buffer_map_instance.try_emplace( uniform_buffer_name, uniform_buffer_info.size, uniform_buffer_name ).first->second;
-						UniformBufferBindingPointManager::ConnectBufferToBlock( buffer, uniform_buffer_name, Uniform::BufferCategory::Instance );
-					}
-				}*/
-			}
+			/* Regular & Instance Uniform Buffers are handled by the Material class.
+			 * Globals & Intrinsics are registered here. */
 
 			if( shader.HasGlobalUniformBlocks() )
 			{
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-				{
-					if( uniform_buffer_info.category == Uniform::BufferCategory::Global )
-					{
-						uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
-					}
-				}
+					uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
 			}
 
 			if( shader.HasIntrinsicUniformBlocks() )
@@ -320,12 +286,7 @@ namespace Engine
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-				{
-					if( uniform_buffer_info.category == Uniform::BufferCategory::Intrinsic )
-					{
-						uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
-					}
-				}
+					uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
 			}
 		}
 

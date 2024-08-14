@@ -177,6 +177,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\UniformBufferManagement.hpp" />
     <ClInclude Include="Engine\Graphics\UniformBufferBindingPointManager.h" />
     <ClInclude Include="Engine\Graphics\Uniform.h" />
+    <ClInclude Include="Engine\Graphics\UniformBufferManager.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Graphics\Color.hpp" />
     <ClInclude Include="Engine\Graphics\IndexBuffer.h" />
@@ -225,6 +226,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Graphics\Renderer.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBufferBindingPointManager.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBufferManagement.cpp" />
+    <ClCompile Include="Engine\Graphics\UniformBufferManager.cpp" />
     <ClCompile Include="Engine\Scene\Camera.cpp" />
     <ClCompile Include="Engine\Core\Platform.cpp" />
     <ClCompile Include="Engine\Graphics\Shader.cpp" />

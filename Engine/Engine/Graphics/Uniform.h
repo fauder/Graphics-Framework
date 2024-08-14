@@ -16,6 +16,7 @@ namespace Engine
 		friend class Material;
 		friend class UniformBufferBindingPointManager;
 		friend class Renderer;
+		friend class UniformBufferManager;
 		friend class UniformBufferManagement;
 
 		using BindingPoint = unsigned int;

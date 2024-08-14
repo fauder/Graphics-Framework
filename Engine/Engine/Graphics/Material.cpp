@@ -7,9 +7,7 @@ namespace Engine
 		:
 		name( "<unnamed>" ),
 		shader( nullptr ),
-		uniform_info_map( nullptr ),
-		uniform_buffer_info_map( nullptr ),
-		uniform_blob_offset_of_uniform_buffers( 0 )
+		uniform_info_map( nullptr )
 	{
 	}
 
@@ -17,9 +15,7 @@ namespace Engine
 		:
 		name( name ),
 		shader( nullptr ),
-		uniform_info_map( nullptr ),
-		uniform_buffer_info_map( nullptr ),
-		uniform_blob_offset_of_uniform_buffers( 0 )
+		uniform_info_map( nullptr )
 	{
 	}
 
@@ -27,12 +23,17 @@ namespace Engine
 		:
 		name( name ),
 		shader( shader ),
-		uniform_blob( shader->GetTotalUniformSize_ForMaterial() ),
-		uniform_blob_offset_of_uniform_buffers( shader->GetTotalUniformSize_DefaultBlockOnly() ),
-		uniform_info_map( &shader->GetUniformInfoMap() ),
-		uniform_buffer_info_map( &shader->GetUniformBufferInfoMap_Regular() )
+		uniform_blob_default_block( shader->GetTotalUniformSize_DefaultBlockOnly() ),
+		uniform_info_map( &shader->GetUniformInfoMap() )
 	{
 		ASSERT_DEBUG_ONLY( HasShaderAssigned() && "Parameter 'shader' passed to Material::Material( const std::string& name, Shader* const shader ) is nullptr!" );
+		
+		const auto& uniform_buffer_info_map = shader->GetUniformBufferInfoMap_Regular();
+
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+
+		// TODO: Register Instance UBOs (if the Material itself will handle Instance uniforms).
 
 		PopulateTextureMap();
 	}
@@ -51,11 +52,16 @@ namespace Engine
 	{
 		this->shader = shader;
 
-		uniform_blob                           = Blob( shader->GetTotalUniformSize_ForMaterial() );
-		uniform_blob_offset_of_uniform_buffers = shader->GetTotalUniformSize_DefaultBlockOnly();
+		uniform_blob_default_block = Blob( shader->GetTotalUniformSize_DefaultBlockOnly() );
 
-		uniform_info_map        = ( &shader->GetUniformInfoMap() );
-		uniform_buffer_info_map = ( &shader->GetUniformBufferInfoMap_Regular() );
+		uniform_info_map = ( &shader->GetUniformInfoMap() );
+
+		const auto& uniform_buffer_info_map = shader->GetUniformBufferInfoMap_Regular();
+
+		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+
+		// TODO: Register Instance UBOs (if the Material itself will handle Instance uniforms).
 
 		PopulateTextureMap();
 	}
@@ -66,7 +72,7 @@ namespace Engine
 						   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
 						   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
 
-		return uniform_blob.Get( uniform_info.offset );
+		return uniform_blob_default_block.Get( uniform_info.offset );
 	}
 
 	void* Material::Get( const Uniform::Information& uniform_info )
@@ -75,17 +81,17 @@ namespace Engine
 						   "Material::Get( const Uniform::Information& ) called to obtain value of a UBO member.\n"
 						   "Call Material::Get( const Uniform::BufferInformation& ) version instead." );
 
-		return ReadFromBlob_Uniform( uniform_info.offset );
+		return uniform_blob_default_block.Get( uniform_info.offset );
 	}
 
-	const void* Material::Get( const Uniform::BufferInformation& uniform_buffer_info ) const
+	const void* Material::Get( const std::string& uniform_buffer_name ) const
 	{
-		return ReadFromBlob_UniformBuffer( uniform_buffer_info.offset );
+		return uniform_buffer_management_regular.Get( uniform_buffer_name );
 	}
 
-	void* Material::Get( const Uniform::BufferInformation& uniform_buffer_info )
+	void* Material::Get( const std::string& uniform_buffer_name )
 	{
-		return ReadFromBlob_UniformBuffer( uniform_buffer_info.offset );
+		return uniform_buffer_management_regular.Get( uniform_buffer_name );
 	}
 
 /*
@@ -118,26 +124,6 @@ namespace Engine
 		return nullptr;
 	}
 
-	void Material::CacheUniformBufferMap( const std::unordered_map< std::string, UniformBuffer >& regular_uniform_buffers_map )
-	{
-		for( const auto& [ uniform_buffer_name, uniform_buffer ] : regular_uniform_buffers_map )
-			uniform_buffer_map_regular.try_emplace( uniform_buffer_name, &uniform_buffer );
-
-		// TODO: Cache Instance Uniform Buffers too, IF Material will take care of them.
-	}
-
-	const Uniform::BufferInformation& Material::GetUniformBufferInformation( const std::string& uniform_buffer_name ) const
-	{
-		try
-		{
-			return uniform_buffer_info_map->at( uniform_buffer_name );
-		}
-		catch( const std::exception& )
-		{
-			throw std::runtime_error( R"(ERROR::MATERIAL::GetUniformBufferInformation(): uniform buffer ")" + std::string( uniform_buffer_name ) + R"(" does not exist!)" );
-		}
-	}
-
 	const Uniform::Information& Material::GetUniformInformation( const std::string& uniform_name ) const
 	{
 		try
@@ -150,50 +136,9 @@ namespace Engine
 		}
 	}
 
-	void* Material::ReadFromBlob_Uniform( std::size_t offset )
-	{
-		return uniform_blob.Get( offset );
-	}
-
-	const void* Material::ReadFromBlob_Uniform( std::size_t offset ) const
-	{
-		return uniform_blob.Get( offset );
-	}
-
-	void* Material::ReadFromBlob_UniformBuffer( std::size_t offset )
-	{
-		return uniform_blob.Get( uniform_blob_offset_of_uniform_buffers + offset );
-	}
-
-	const void* Material::ReadFromBlob_UniformBuffer( std::size_t offset ) const
-	{
-		return uniform_blob.Get( uniform_blob_offset_of_uniform_buffers + offset );
-	}
-
-	void Material::CopyToBlob_Uniform( const std::byte* value, const Uniform::Information& uniform_info )
-	{
-		uniform_blob.Set( value, uniform_info.offset, uniform_info.size );
-	}
-
-	void Material::CopyToBlob_UniformBuffer( const std::byte* value, const Uniform::BufferInformation& uniform_buffer_info )
-	{
-		uniform_blob.Set( value, uniform_blob_offset_of_uniform_buffers + uniform_buffer_info.offset, uniform_buffer_info.size );
-	}
-
 	void Material::UploadUniform( const Uniform::Information& uniform_info )
 	{
-		shader->SetUniform( uniform_info, ReadFromBlob_Uniform( uniform_info.offset ) );
-	}
-
-	void Material::UploadUniformBuffer( const Uniform::BufferInformation& uniform_buffer_info, const UniformBuffer& uniform_buffer_to_update )
-	{
-		uniform_buffer_to_update.Update( ReadFromBlob_UniformBuffer( uniform_buffer_info.offset ) );
-	}
-
-	void Material::UploadUniformBuffer_Partial( const Uniform::BufferInformation& uniform_buffer_info, const UniformBuffer& uniform_buffer_to_update,
-												const std::size_t offset, const std::size_t size )
-	{
-		uniform_buffer_to_update.Update_Partial( std::span( ( std::byte* )ReadFromBlob_UniformBuffer( uniform_buffer_info.offset ), size ), offset );
+		shader->SetUniform( uniform_info, uniform_blob_default_block.Get( uniform_info.offset ) );
 	}
 
 	void Material::UploadUniforms()
@@ -202,11 +147,7 @@ namespace Engine
 			if( not uniform_info.is_buffer_member )
 				UploadUniform( uniform_info );
 
-		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : *uniform_buffer_info_map )
-		{
-			if( uniform_buffer_info.category == Uniform::BufferCategory::Regular )
-				UploadUniformBuffer( uniform_buffer_info, *uniform_buffer_map_regular[ uniform_buffer_name ] );
-		}
+		uniform_buffer_management_regular.UploadAll();
 
 		// TODO: Upload Instance Uniforms *somewhere*.
 
@@ -218,14 +159,12 @@ namespace Engine
 			const auto& sampler_uniform_info = uniform_info_map->at( sampler_name );
 			const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
 
-			CopyToBlob_Uniform( ( const std::byte* )&texture_unit_slot, sampler_uniform_info );
+			uniform_blob_default_block.Set( ( const std::byte* )&texture_unit_slot, sampler_uniform_info.offset, sampler_uniform_info.size );
 
 			texture->Activate( texture_unit_slot );
 
 			UploadUniform( sampler_uniform_info );
 		}
-
-		// TODO: Implement partial updates for Regular & Instance uniforms.
 	}
 
 	void Material::PopulateTextureMap()

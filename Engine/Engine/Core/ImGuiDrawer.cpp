@@ -366,7 +366,7 @@ namespace Engine::ImGuiDrawer
 
 					for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 					{
-						ASSERT_DEBUG_ONLY( not uniform_buffer_info.IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
+						ASSERT_DEBUG_ONLY( not uniform_buffer_info->IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
 
 						ImGui::TableNextColumn();
 
@@ -375,9 +375,9 @@ namespace Engine::ImGuiDrawer
 							ImGui::TableNextRow();
 							/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 
-							std::byte* memory_blob = ( std::byte* )material.Get( uniform_buffer_info );
+							std::byte* memory_blob = ( std::byte* )material.Get( uniform_buffer_name );
 
-							for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info.members_struct_map )
+							for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info->members_struct_map )
 							{
 								ImGui::TableNextColumn();
 
@@ -402,7 +402,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info.members_array_map )
+							for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info->members_array_map )
 							{
 								ImGui::TableNextColumn();
 
@@ -446,7 +446,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
+							for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info->members_single_map )
 							{
 								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
 
@@ -530,7 +530,7 @@ namespace Engine::ImGuiDrawer
 
 					for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 					{
-						ASSERT_DEBUG_ONLY( not uniform_buffer_info.IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
+						ASSERT_DEBUG_ONLY( not uniform_buffer_info->IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
 
 						ImGui::TableNextColumn();
 
@@ -538,9 +538,9 @@ namespace Engine::ImGuiDrawer
 						{
 							ImGui::TableNextRow();
 
-							const std::byte* memory_blob = ( std::byte* )material.Get( uniform_buffer_info );
+							const std::byte* memory_blob = ( std::byte* )material.Get( uniform_buffer_name );
 
-							for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info.members_struct_map )
+							for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info->members_struct_map )
 							{
 								ImGui::TableNextColumn();
 
@@ -565,7 +565,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info.members_array_map )
+							for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info->members_array_map )
 							{
 								ImGui::TableNextColumn();
 
@@ -609,7 +609,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
+							for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info->members_single_map )
 							{
 								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
 
