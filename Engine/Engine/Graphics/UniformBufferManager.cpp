@@ -1,6 +1,7 @@
 // Engine Includes.
 #include "UniformBufferManager.h"
 #include "UniformBufferBindingPointManager.h"
+#include "Core/Optimization.h"
 
 namespace Engine
 {
@@ -41,6 +42,8 @@ namespace Engine
 				return &buffer;
 			}
 		}
+
+		UNREACHABLE();
 	}
 
 /*
