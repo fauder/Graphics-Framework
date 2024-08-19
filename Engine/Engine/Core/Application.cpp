@@ -50,7 +50,9 @@ namespace Engine
 				this->OnFramebufferResizeEventInternal( width_new_pixels, height_new_pixels );
 			} );
 
+#ifdef _DEBUG
 		Platform::SetGLDebugOutputCallback( gl_logger.GetCallback() );
+#endif // _DEBUG
 	}
 
 	void Application::Shutdown()

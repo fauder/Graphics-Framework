@@ -233,10 +233,12 @@ namespace Platform
 		glfwPollEvents();
 	}
 
+#ifdef _DEBUG
 	void SetGLDebugOutputCallback( std::function< void( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters ) > callback )
 	{
 		GL_DEBUG_OUTPUT_CALLBACK = callback;
 	}
+#endif // _DEBUG
 
 	void SetKeyboardEventCallback( std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods ) > callback )
 	{
