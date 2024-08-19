@@ -180,6 +180,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\UniformBlockBindingPointManager.h" />
     <ClInclude Include="Engine\Graphics\Uniform.h" />
     <ClInclude Include="Engine\Graphics\UniformBufferManager.h" />
+    <ClInclude Include="Engine\Graphics\UsageHint.h" />
     <ClInclude Include="Engine\Scene\Camera.h" />
     <ClInclude Include="Engine\Graphics\Color.hpp" />
     <ClInclude Include="Engine\Graphics\IndexBuffer.h" />

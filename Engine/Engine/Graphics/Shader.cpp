@@ -44,8 +44,11 @@ namespace Engine
 	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
 	{
 		unsigned int vertex_shader_id = 0, fragment_shader_id = 0;
+
+		std::optional< std::string > vertex_shader_source;
+		std::optional< std::string > fragment_shader_source;
 		
-		if( auto vertex_shader_source = ParseShaderFromFile( vertex_shader_source_file_path, ShaderType::VERTEX ); 
+		if( vertex_shader_source = ParseShaderFromFile( vertex_shader_source_file_path, ShaderType::VERTEX ); 
 			vertex_shader_source )
 		{
 			auto& shader_source = *vertex_shader_source;
@@ -58,7 +61,7 @@ namespace Engine
 		else
 			return false;
 		
-		if( auto fragment_shader_source = ParseShaderFromFile( fragment_shader_source_file_path, ShaderType::FRAGMENT ); 
+		if( fragment_shader_source = ParseShaderFromFile( fragment_shader_source_file_path, ShaderType::FRAGMENT ); 
 			fragment_shader_source )
 		{
 			auto& shader_source = *fragment_shader_source;
@@ -90,6 +93,10 @@ namespace Engine
 				return true;
 
 			QueryUniformData();
+
+			ParseShaderSource_UniformUsageHints( *vertex_shader_source,		ShaderType::VERTEX		);
+			ParseShaderSource_UniformUsageHints( *fragment_shader_source,	ShaderType::FRAGMENT	);
+
 			QueryUniformData_BlockIndexAndOffsetForBufferMembers();
 			QueryUniformBufferData( uniform_buffer_info_map_regular, Uniform::BufferCategory::Regular );
 			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_regular );
@@ -253,6 +260,104 @@ namespace Engine
 		return true;
 	}
 
+#pragma region Unnecessary Old Stuff
+///* Expects: To be called after the shader whose source is passed is compiled & linked successfully. */
+//	std::string Shader::ShaderSource_CommentsStripped( const std::string& shader_source )
+//	{
+//		/* This function is called AFTER the shader is compiled & linked. So it is known for a fact that the block comments have matching pairs of begin/end symbols. */
+//
+//		auto Strip = [ &shader_source ]( const std::string& source_string, const std::string& comment_begin_token, const std::string& comment_end_token,
+//										 const bool do_not_erase_new_line = false )->std::string
+//		{
+//			std::string stripped_shader_source;
+//			std::size_t current_pos = source_string.find( comment_begin_token, 0 ), last_begin_pos = 0;
+//
+//			while( current_pos != std::string::npos )
+//			{
+//				const std::size_t comment_start_pos = current_pos;
+//				const std::size_t comment_end_pos = source_string.find( comment_end_token, current_pos + comment_begin_token.size() );
+//
+//				stripped_shader_source += source_string.substr( last_begin_pos, comment_start_pos - last_begin_pos );
+//				last_begin_pos = comment_end_pos + comment_end_token.size() - ( int )do_not_erase_new_line;
+//
+//				current_pos = source_string.find( comment_begin_token, last_begin_pos );
+//			}
+//
+//			/* Add the remaining part of the source string.*/
+//			stripped_shader_source += source_string.substr( last_begin_pos );
+//
+//			return stripped_shader_source;
+//		};
+//
+//		return Strip( Strip( shader_source, "/*", "*/" ), "//", "\n", true );
+//	}
+#pragma endregion
+
+	void Shader::ParseShaderSource_UniformUsageHints( const std::string& shader_source, const ShaderType shader_type )
+	{
+		std::size_t current_pos = 0;
+		do
+		{
+			if( const auto comment_block_start_token_pos = shader_source.find( "/*", current_pos );
+				comment_block_start_token_pos != std::string::npos )
+			{
+				current_pos = comment_block_start_token_pos;
+				if( const auto comment_block_end_token_pos = shader_source.find( "*/", current_pos );
+					comment_block_end_token_pos != std::string::npos )
+				{
+					if( const auto hint_token_pos = shader_source.find( "_hint_", current_pos );
+						hint_token_pos != std::string::npos )
+					{
+						if( const auto token_end_pos = shader_source.find( ' ', current_pos + 6 /* to get past "_hint_" */ );
+							token_end_pos != std::string::npos )
+						{
+							current_pos = hint_token_pos + 6 /* to get past "_hint_" */;
+							const std::string hint_string( shader_source.substr( current_pos, token_end_pos - current_pos ) );
+							const auto hint = UsageHint_StringToEnum( hint_string );
+
+							if( const auto semicolon_pos = std::string_view( shader_source ).rfind( ';', comment_block_start_token_pos);
+								semicolon_pos != std::string::npos )
+							{
+								if( const auto delimiter_whitespace_pos = std::string_view( shader_source ).rfind( ' ', semicolon_pos );
+									delimiter_whitespace_pos != std::string::npos )
+								{
+									const std::string uniform_name( shader_source.substr( delimiter_whitespace_pos + 1, semicolon_pos - delimiter_whitespace_pos - 1 ) );
+
+									if( auto iterator = uniform_info_map.find( uniform_name );
+										iterator != uniform_info_map.cend() && iterator->second.usage_hint != UsageHint::Unassigned && hint != iterator->second.usage_hint )
+									{
+										const std::string complete_error_string( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) +
+																				 "::POST-LINK::PARSE_UNIFORM_USAGE_HINTS:\nShader name: " + name +
+																				 "\nMismatched uniform usage hints detected." );
+
+										LogErrors( complete_error_string );
+									}
+									else
+										uniform_info_map[ uniform_name ].usage_hint = hint;
+								}
+							}
+						}
+					}
+					else
+						current_pos++; // To prevent endless loop on find() calls.
+				}
+				else
+					current_pos++; // To prevent endless loop on find() calls.
+			}
+			else if( ( current_pos = shader_source.find( "//", current_pos ) ) != std::string::npos )
+			{
+				if( const auto hint_token_pos = shader_source.find( "_hint_", current_pos );
+					hint_token_pos != std::string::npos )
+				{
+					throw std::logic_error( "Not implemented yet!" );
+				}
+				else
+					current_pos++; // To prevent endless loop on find() calls.
+			}
+		}
+		while( current_pos != std::string::npos && current_pos != 0 );
+	}
+
 	void Shader::GetUniformBookKeepingInfo()
 	{
 		glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &uniform_book_keeping_info.count );
@@ -314,14 +419,15 @@ namespace Engine
 
 			const bool is_buffer_member = location == -1;
 
-			uniform_info_map[ uniform_book_keeping_info.name_holder.c_str() ] =
+			uniform_info_map[ uniform_book_keeping_info.name_holder.c_str() ] = 
 			{
 				.location_or_block_index = location,
 				.size                    = size,
 				.offset                  = is_buffer_member ? -1 : offset,
 				.type                    = type,
 				.is_buffer_member		 = is_buffer_member,
-				.editor_name			 = UniformEditorName( uniform_book_keeping_info.name_holder )
+				.editor_name			 = UniformEditorName( uniform_book_keeping_info.name_holder ),
+				.usage_hint				 = UsageHint::Unassigned
 			};
 
 			offset += !is_buffer_member * size;
@@ -561,39 +667,6 @@ namespace Engine
 			}
 		}
 	}
-
-#pragma region Unnecessary Old Stuff
-	/* Expects: To be called after the shader whose source is passed is compiled & linked successfully. */
-	//std::string Shader::ShaderSource_CommentsStripped( const std::string& shader_source )
-	//{
-	//	/* This function is called AFTER the shader is compiled & linked. So it is known for a fact that the block comments have matching pairs of begin/end symbols. */
-
-	//	auto Strip = [ &shader_source ]( const std::string& source_string, const std::string& comment_begin_token, const std::string& comment_end_token,
-	//									 const bool do_not_erase_new_line = false ) -> std::string
-	//	{
-	//		std::string stripped_shader_source;
-	//		std::size_t current_pos = source_string.find( comment_begin_token, 0 ), last_begin_pos = 0;
-
-	//		while( current_pos != std::string::npos )
-	//		{
-	//			const std::size_t comment_start_pos = current_pos;
-	//			const std::size_t comment_end_pos   = source_string.find( comment_end_token, current_pos + comment_begin_token.size() );
-
-	//			stripped_shader_source += source_string.substr( last_begin_pos, comment_start_pos - last_begin_pos );
-	//			last_begin_pos = comment_end_pos + comment_end_token.size() - ( int )do_not_erase_new_line;
-
-	//			current_pos = source_string.find( comment_begin_token, last_begin_pos );
-	//		}
-
-	//		/* Add the remaining part of the source string.*/
-	//		stripped_shader_source += source_string.substr( last_begin_pos );
-
-	//		return stripped_shader_source;
-	//	};
-
-	//	return Strip( Strip( shader_source, "/*", "*/" ), "//", "\n", true );
-	//}
-#pragma endregion
 
 	void Shader::CalculateTotalUniformSizes()
 	{

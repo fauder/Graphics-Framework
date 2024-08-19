@@ -2,9 +2,9 @@
 
 out vec4 out_color;
 
-uniform vec3 uniform_color;
+uniform vec4 uniform_color; /* _hint_color3 */
 
 void main()
 {
-	out_color = vec4( uniform_color, 1.0 );
+	out_color = uniform_color;
 }
