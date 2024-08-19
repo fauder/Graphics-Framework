@@ -1,6 +1,7 @@
 // Engine Includes.
 #include "Engine.h"
 #include "Engine/Graphics/Lighting/Lighting.h"
+#include "Engine/Graphics/MaterialData/MaterialData.h"
 #include "Engine/Graphics/Material.hpp"
 #include "Engine/Graphics/Mesh.hpp"
 #include "Engine/Graphics/Renderer.h"
@@ -94,9 +95,9 @@ private:
 /* Lighting: */
 	const static constexpr int LIGHT_POINT_COUNT = 15;
 
-	std::vector< Engine::Lighting::SurfaceData > cube_surface_data_array;
-	Engine::Lighting::SurfaceData ground_quad_surface_data;
-	Engine::Lighting::SurfaceData front_wall_quad_surface_data;
+	std::vector< Engine::MaterialData::PhongMaterialData > cube_surface_data_array;
+	Engine::MaterialData::PhongMaterialData ground_quad_surface_data;
+	Engine::MaterialData::PhongMaterialData front_wall_quad_surface_data;
 
 	Engine::DirectionalLight light_directional;
 	std::vector< Engine::PointLight > light_point_array;

@@ -4,6 +4,7 @@
 #include "Core/ImGuiSetup.h"
 #include "Graphics/Color.hpp"
 #include "Graphics/Lighting/Lighting.h"
+#include "Graphics/MaterialData/MaterialData.h"
 #include "Graphics/Material.hpp"
 #include "Graphics/UniformBufferManagement.hpp"
 #include "Math/Quaternion.hpp"
@@ -239,6 +240,6 @@ namespace Engine::ImGuiDrawer
 	void Draw( const Lighting::PointLightData&			point_light_data,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	bool Draw(		 Lighting::SpotLightData&			spot_light_data,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Lighting::SpotLightData&			spot_light_data,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	bool Draw(		 Lighting::SurfaceData&				surface_data,			const char* surface_name,										ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const Lighting::SurfaceData&				surface_data,			const char* surface_name,										ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw(		 MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name,										ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name,										ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 }

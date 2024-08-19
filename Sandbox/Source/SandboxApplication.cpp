@@ -394,7 +394,7 @@ void SandboxApplication::ResetLightingData()
 		.transform = &light_spot_transform
 	};
 
-	cube_surface_data_array = std::vector< Engine::Lighting::SurfaceData >( CUBE_COUNT, 
+	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, 
 	{
 		.shininess = 32.0f
 	} );

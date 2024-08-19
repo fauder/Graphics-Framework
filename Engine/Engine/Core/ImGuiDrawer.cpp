@@ -1145,7 +1145,7 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
-	bool Draw( Lighting::SurfaceData& surface_data, const char* surface_name, ImGuiWindowFlags window_flags )
+	bool Draw( MaterialData::PhongMaterialData& phong_material_data, const char* surface_name, ImGuiWindowFlags window_flags )
 	{
 		bool is_modified = false;
 
@@ -1155,7 +1155,7 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::PushID( surface_name );
 
-			is_modified |= ImGui::SliderFloat( "Shininess",	&surface_data.shininess, 0.1f, 64.0f, "%.2f", ImGuiSliderFlags_Logarithmic );
+			is_modified |= ImGui::SliderFloat( "Shininess",	&phong_material_data.shininess, 0.1f, 64.0f, "%.2f", ImGuiSliderFlags_Logarithmic );
 
 			ImGui::PopID();
 		}
@@ -1165,7 +1165,7 @@ namespace Engine::ImGuiDrawer
 		return is_modified;
 	}
 
-	void Draw( const Lighting::SurfaceData& surface_data, const char* surface_name, ImGuiWindowFlags window_flags )
+	void Draw( const MaterialData::PhongMaterialData& phong_material_data, const char* surface_name, ImGuiWindowFlags window_flags )
 	{
 		if( ImGui::Begin( "Surface Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
@@ -1176,7 +1176,7 @@ namespace Engine::ImGuiDrawer
 			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
-			ImGui::InputFloat( "Shininess", const_cast< float* >( &surface_data.shininess ), 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_ReadOnly );
+			ImGui::InputFloat( "Shininess", const_cast< float* >( &phong_material_data.shininess ), 0.0f, 0.0f, "%.3f", ImGuiInputTextFlags_ReadOnly );
 
 			ImGui::PopStyleColor();
 

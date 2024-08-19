@@ -166,6 +166,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Drawable.h" />
     <ClInclude Include="Engine\Graphics\GLLogType.h" />
     <ClInclude Include="Engine\Graphics\GLLogger.h" />
+    <ClInclude Include="Engine\Graphics\MaterialData\MaterialData.h" />
     <ClInclude Include="Engine\Graphics\Lighting\DirectionalLight.h" />
     <ClInclude Include="Engine\Graphics\Lighting\Light.hpp" />
     <ClInclude Include="Engine\Graphics\Lighting\PointLight.h" />

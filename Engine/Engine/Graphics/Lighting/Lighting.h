@@ -41,10 +41,4 @@ namespace Engine::Lighting
 		Vector3 position_world_space, direction_world_space;
 		Degrees cutoff_angle_inner, cutoff_angle_outer;
 	};
-
-	/* This is also named Material in some sources, but since the name Material is more widely used to define [Shader + Uniforms + Textures] instead, this struct is named SurfaceData */
-	struct SurfaceData : public Std140StructTag
-	{
-		float shininess;
-	};
 }
