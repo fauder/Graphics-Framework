@@ -139,7 +139,7 @@ namespace Engine
 		/* Map pointer below is assigned only when the Shader itself is assigned to the Material, through Shader::GetUniformInfoMap(). */
 		const std::unordered_map< std::string, Uniform::Information >* uniform_info_map;
 
-		UniformBufferManagement uniform_buffer_management_regular; 
+		UniformBufferManagement< Blob > uniform_buffer_management_regular; 
 
 		std::unordered_map< std::string, Texture* > texture_map;
 	};

@@ -4,6 +4,7 @@
 #include "Std140StructTag.h"
 #include "Uniform.h"
 #include "UniformBuffer.h"
+#include "UniformBufferManager.h"
 #include "Core/DirtyBlob.h"
 
 // std Includes.
@@ -11,6 +12,7 @@
 
 namespace Engine
 {
+	template< typename BlobType > requires( std::is_base_of_v< Blob, BlobType > )
 	class UniformBufferManagement
 	{
 	public:
@@ -30,13 +32,46 @@ namespace Engine
 		inline const std::unordered_map< std::string, const Uniform::BufferInformation* >& GetBufferInformationMap() const { return buffer_info_map; }
 
 	/* Register/Unregister Buffer API: */
-		void RegisterBuffer( const std::string& buffer_name, const Uniform::BufferInformation* buffer_info );
-		void UnregisterBuffer( const std::string& buffer_name );
-		void UnregisterAllBuffers();
+		void RegisterBuffer( const std::string& buffer_name, const Uniform::BufferInformation* buffer_info )
+		{
+			if( buffer_info_map.try_emplace( buffer_name, buffer_info ).second ) // .second returns whether the emplace was successfull or not.
+			{
+				buffer_map.emplace( buffer_name, UniformBufferManager::CreateOrRequest( buffer_name, *buffer_info ) );
+
+				blob_map.emplace( buffer_name, buffer_info->size );
+			}
+		}
+
+		void UnregisterBuffer( const std::string& buffer_name )
+		{
+			if( const auto& iterator = buffer_info_map.find( buffer_name );
+				iterator != buffer_info_map.cend() )
+			{
+				buffer_map.erase( buffer_name );
+				buffer_info_map.erase( buffer_name );
+				blob_map.erase( buffer_name );
+			}
+		}
+
+		void UnregisterAllBuffers()
+		{
+			if( not buffer_info_map.empty() )
+			{
+				buffer_info_map.clear();
+				blob_map.clear();
+			}
+		}
 
 	/* Uniform Set/Get: */
-		const void* Get( const std::string& buffer_name ) const;
-			  void* Get( const std::string& buffer_name );
+		const void* Get( const std::string& buffer_name ) const
+		{
+			return blob_map.at( buffer_name ).Get( 0 );
+		}
+
+		void* Get( const std::string& buffer_name )
+		{
+			return blob_map[ buffer_name ].Get( 0 );
+		}
 
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
 		void Set( const std::string& buffer_name, const StructType& value )
@@ -120,7 +155,31 @@ namespace Engine
 		}
 
 	/* Uniform Upload: */
-		void UploadAll();
+		void UploadAll()
+		{
+			for( auto& [ uniform_buffer_name, uniform_blob ] : blob_map )
+			{
+				const auto& uniform_buffer      = buffer_map[ uniform_buffer_name ];
+				const auto& uniform_buffer_info = buffer_info_map[ uniform_buffer_name ];
+
+				if constexpr( std::is_same_v< BlobType, DirtyBlob > )
+				{
+					if( uniform_blob.IsDirty() )
+					{
+						uniform_blob.MergeConsecutiveDirtySections();
+						const auto& dirty_sections = uniform_blob.DirtySections();
+						for( auto& dirty_section : dirty_sections )
+							uniform_buffer->Update_Partial( uniform_blob.SpanFromSection( dirty_section ), dirty_section.offset );
+
+						uniform_blob.ClearDirtySections();
+					}
+				}
+				else // Regular Blob.
+				{
+					uniform_buffer->Update( uniform_blob.Get( 0 ) );
+				}
+			}
+		}
 
 	private:
 		// TODO: Use hashes instead of strings as keys.
@@ -129,6 +188,6 @@ namespace Engine
 
 		std::unordered_map< std::string, UniformBuffer* > buffer_map;
 
-		std::unordered_map< std::string, DirtyBlob > blob_map;
+		std::unordered_map< std::string, BlobType > blob_map;
 	};
 }

@@ -272,9 +272,6 @@
     <ClCompile Include="Engine\Core\DirtyBlob.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\UniformBufferManagement.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Engine\Graphics\UniformBufferManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
