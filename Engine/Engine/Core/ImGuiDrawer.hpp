@@ -229,8 +229,248 @@ namespace Engine::ImGuiDrawer
 	bool Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 
-	bool Draw(		 UniformBufferManagement& buffer_management, const char* name = "##buffer-management", ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const UniformBufferManagement& buffer_management, const char* name = "##buffer-management", ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	template< typename BlobType > requires( std::is_base_of_v< Blob, BlobType > )
+	bool Draw( UniformBufferManagement< BlobType >& buffer_management, const char* name = "##buffer-management", ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing )
+	{
+		bool is_modified = false;
+
+		if( ImGui::Begin( name, nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			if( ImGui::BeginTable( name, 2, ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
+			{
+				const auto& uniform_buffer_info_map = buffer_management.GetBufferInformationMap();
+
+				ImGui::TableSetupColumn( "Name"	 );
+				ImGui::TableSetupColumn( "Value" );
+
+				ImGui::TableHeadersRow();
+				ImGui::TableNextRow();
+
+				for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+				{
+					ImGui::TableNextColumn();
+
+					if( ImGui::TreeNodeEx( uniform_buffer_name.c_str(), ImGuiTreeNodeFlags_Framed ) )
+					{
+						ImGui::TableNextRow();
+						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+
+						std::byte* memory_blob = ( std::byte* )buffer_management.Get( uniform_buffer_name );
+
+						for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info->members_struct_map )
+						{
+							ImGui::TableNextColumn();
+
+							if( ImGui::TreeNodeEx( uniform_buffer_member_struct_info.editor_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+							{
+								ImGui::TableNextRow();
+
+								for( const auto& uniform_buffer_member_info : uniform_buffer_member_struct_info.members_map )
+								{
+									ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
+
+									ImGui::TableNextColumn();
+
+									ImGui::PushID( ( void* )uniform_buffer_member_info );
+									is_modified |= Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
+									ImGui::PopID();
+								}
+
+								ImGui::TreePop();
+							}
+							else
+								ImGui::TableNextRow();
+						}
+
+						for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info->members_array_map )
+						{
+							ImGui::TableNextColumn();
+
+							if( ImGui::TreeNodeEx( uniform_buffer_member_array_info.editor_name.c_str(), ImGuiTreeNodeFlags_Framed ) )
+							{
+								ImGui::TableNextRow();
+
+								for( auto array_index = 0; array_index < uniform_buffer_member_array_info.element_count; array_index++ )
+								{
+									ImGui::TableNextColumn();
+
+									static char array_member_name_string[ 255 ];
+									std::snprintf( array_member_name_string, 255, "%s[%d]", uniform_buffer_member_array_info.editor_name.c_str(), array_index );
+
+									if( ImGui::TreeNodeEx( array_member_name_string, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+									{
+										ImGui::TableNextRow();
+
+										for( const auto& uniform_buffer_member_info : uniform_buffer_member_array_info.members_map )
+										{
+											ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
+
+											ImGui::TableNextColumn();
+
+											std::byte* effective_offset = memory_blob + uniform_buffer_member_info->offset + array_index * uniform_buffer_member_array_info.stride;
+
+											ImGui::PushID( effective_offset );
+											is_modified |= Draw( uniform_buffer_member_info->type, effective_offset );
+											ImGui::PopID();
+										}
+
+										ImGui::TreePop();
+									}
+									else
+										ImGui::TableNextRow();
+								}
+
+								ImGui::TreePop();
+							}
+							else
+								ImGui::TableNextRow();
+						}
+
+						for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info->members_single_map )
+						{
+							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
+
+							ImGui::TableNextColumn();
+
+							ImGui::PushID( ( void* )uniform_buffer_member_single_info );
+							is_modified |= Draw( uniform_buffer_member_single_info->type, memory_blob + uniform_buffer_member_single_info->offset );
+							ImGui::PopID();
+						}
+
+						ImGui::TreePop();
+					}
+					else
+						ImGui::TableNextRow();
+				}
+
+				ImGui::EndTable();
+			}
+		}
+
+		ImGui::End();
+
+		return is_modified;
+	}
+
+	template< typename BlobType > requires( std::is_base_of_v< Blob, BlobType > )
+	void Draw( const UniformBufferManagement< BlobType >& buffer_management, const char* name = "##buffer-management",
+			   ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing )
+	{
+		if( ImGui::Begin( name, nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		{
+			if( ImGui::BeginTable( name, 2, ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
+			{
+				const auto& uniform_buffer_info_map = buffer_management.GetBufferInformationMap();
+
+				ImGui::TableSetupColumn( "Name"	 );
+				ImGui::TableSetupColumn( "Value" );
+
+				ImGui::TableHeadersRow();
+				ImGui::TableNextRow();
+
+				for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+				{
+					ImGui::TableNextColumn();
+
+					if( ImGui::TreeNodeEx( uniform_buffer_name.c_str(), ImGuiTreeNodeFlags_Framed ) )
+					{
+						ImGui::TableNextRow();
+						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+
+						std::byte* memory_blob = ( std::byte* )buffer_management.Get( uniform_buffer_name );
+
+						for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info->members_struct_map )
+						{
+							ImGui::TableNextColumn();
+
+							if( ImGui::TreeNodeEx( uniform_buffer_member_struct_info.editor_name.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+							{
+								ImGui::TableNextRow();
+
+								for( const auto& uniform_buffer_member_info : uniform_buffer_member_struct_info.members_map )
+								{
+									ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
+
+									ImGui::TableNextColumn();
+
+									ImGui::PushID( ( void* )uniform_buffer_member_info );
+									Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
+									ImGui::PopID();
+								}
+
+								ImGui::TreePop();
+							}
+							else
+								ImGui::TableNextRow();
+						}
+
+						for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info->members_array_map )
+						{
+							ImGui::TableNextColumn();
+
+							if( ImGui::TreeNodeEx( uniform_buffer_member_array_info.editor_name.c_str(), ImGuiTreeNodeFlags_Framed ) )
+							{
+								ImGui::TableNextRow();
+
+								for( auto array_index = 0; array_index < uniform_buffer_member_array_info.element_count; array_index++ )
+								{
+									ImGui::TableNextColumn();
+
+									static char array_member_name_string[ 255 ];
+									std::snprintf( array_member_name_string, 255, "%s[%d]", uniform_buffer_member_array_info.editor_name.c_str(), array_index );
+
+									if( ImGui::TreeNodeEx( array_member_name_string, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+									{
+										ImGui::TableNextRow();
+
+										for( const auto& uniform_buffer_member_info : uniform_buffer_member_array_info.members_map )
+										{
+											ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
+
+											ImGui::TableNextColumn();
+
+											std::byte* effective_offset = memory_blob + uniform_buffer_member_info->offset + array_index * uniform_buffer_member_array_info.stride;
+
+											ImGui::PushID( effective_offset );
+											Draw( uniform_buffer_member_info->type, effective_offset );
+											ImGui::PopID();
+										}
+
+										ImGui::TreePop();
+									}
+									else
+										ImGui::TableNextRow();
+								}
+
+								ImGui::TreePop();
+							}
+							else
+								ImGui::TableNextRow();
+						}
+
+						for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info->members_single_map )
+						{
+							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
+
+							ImGui::TableNextColumn();
+
+							ImGui::PushID( ( void* )uniform_buffer_member_single_info );
+							Draw( uniform_buffer_member_single_info->type, memory_blob + uniform_buffer_member_single_info->offset );
+							ImGui::PopID();
+						}
+
+						ImGui::TreePop();
+					}
+					else
+						ImGui::TableNextRow();
+				}
+
+				ImGui::EndTable();
+			}
+		}
+
+		ImGui::End();
+	}
 
 	void Draw( const Shader& shader,		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 

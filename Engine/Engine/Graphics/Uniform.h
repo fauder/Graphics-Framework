@@ -3,6 +3,7 @@
 // Engine Includes.
 #include "Graphics.h"
 #include "UsageHint.h"
+#include "Core/Blob.hpp"
 
 // std Includes.
 #include <optional>
@@ -18,6 +19,7 @@ namespace Engine
 		friend class UniformBlockBindingPointManager;
 		friend class Renderer;
 		friend class UniformBufferManager;
+		template< typename BlobType > requires( std::is_base_of_v< Blob, BlobType > )
 		friend class UniformBufferManagement;
 
 		using BindingPoint = unsigned int;

@@ -144,7 +144,7 @@ namespace Engine
 		Color4 clear_color;
 		ClearTarget clear_target;
 
-		UniformBufferManagement uniform_buffer_management_global;
-		UniformBufferManagement uniform_buffer_management_intrinsic;
+		UniformBufferManagement< DirtyBlob > uniform_buffer_management_global;
+		UniformBufferManagement< DirtyBlob > uniform_buffer_management_intrinsic;
 	};
 }
