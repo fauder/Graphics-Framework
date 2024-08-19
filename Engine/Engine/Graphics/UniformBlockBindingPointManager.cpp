@@ -104,13 +104,11 @@ namespace Engine
 				return binding_point_to_assign;
 			}
 
-		#ifdef _DEBUG
 			throw std::runtime_error( "UniformBlockBindingPointManager::RegisterUniformBuffer(): Maximum binding point count has been reached. Can not assign new blocks/buffers." );
-		#if defined( _WIN32 )
+#if defined( _WIN32 )
 			if( IsDebuggerPresent() )
 				OutputDebugStringA( "\nUniformBlockBindingPointManager::RegisterUniformBuffer(): Maximum binding point count has been reached. Can not assign new blocks/buffers.\n" );
-		#endif // _WIN32
-		#endif // _DEBUG
+#endif // _WIN32
 		}
 	}
 
