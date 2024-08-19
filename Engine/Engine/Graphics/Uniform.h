@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "UsageHint.h"
 
 // std Includes.
 #include <optional>
@@ -10,7 +11,7 @@
 
 namespace Engine
 {
-	class Uniform // Acts more like a namespace to conceal its inner classes from all but Shader & Material.
+	class Uniform // Acts more like a namespace to conceal its inner classes from all but those listed below.
 	{
 		friend class Shader;
 		friend class Material;
@@ -30,6 +31,7 @@ namespace Engine
 			bool is_buffer_member;
 
 			std::string editor_name;
+			UsageHint usage_hint;
 		};
 
 		enum class BufferCategory

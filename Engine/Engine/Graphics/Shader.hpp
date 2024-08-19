@@ -3,9 +3,9 @@
 // Engine Includes.
 #include "Graphics.h"
 #include "Color.hpp"
-#include "Lighting/Lighting.h"
 #include "Std140StructTag.h"
 #include "Uniform.h"
+#include "Lighting/Lighting.h"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
@@ -279,6 +279,7 @@ namespace Engine
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
 		/*std::string ShaderSource_CommentsStripped( const std::string& shader_source );*/
+		void ParseShaderSource_UniformUsageHints( const std::string& shader_source, const ShaderType shader_type );
 
 /* Shader Introspection: */
 		void GetUniformBookKeepingInfo();
@@ -309,7 +310,7 @@ namespace Engine
 		ID program_id;
 		std::string name;
 
-		std::unordered_map< std::string, Uniform::Information		> uniform_info_map;
+		std::unordered_map< std::string, Uniform::Information > uniform_info_map;
 
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_regular;
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_global;
