@@ -53,9 +53,9 @@ namespace Engine
 		glPopDebugGroup();
 	}
 
-	GLLogger::GLLogGroup GLLogger::TemporaryLogGroup( const char* group_name, const unsigned int id )
+	GLLogger::GLLogGroup GLLogger::TemporaryLogGroup( const char* group_name, const bool omit_empty_group, const unsigned int id )
 	{
-		GLLogGroup group( this, group_name, id );
+		GLLogGroup group( this, group_name, omit_empty_group, id );
 		return group;
 	}
 

@@ -62,7 +62,7 @@ namespace Engine
 		void PushGroup( const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
 		void PopGroup();
 
-		GLLogGroup TemporaryLogGroup( const char* group_name, const unsigned int id = 0 );
+		GLLogGroup TemporaryLogGroup( const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
 
 	/* Labeling: */
 		void SetLabel( const GLenum object_type, const GLuint object_id, const char* label );
