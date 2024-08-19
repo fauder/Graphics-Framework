@@ -33,8 +33,6 @@ namespace Engine
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
 
-		// TODO: Register Instance UBOs (if the Material itself will handle Instance uniforms).
-
 		PopulateTextureMap();
 	}
 
@@ -60,8 +58,6 @@ namespace Engine
 
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
-
-		// TODO: Register Instance UBOs (if the Material itself will handle Instance uniforms).
 
 		PopulateTextureMap();
 	}
@@ -148,8 +144,6 @@ namespace Engine
 				UploadUniform( uniform_info );
 
 		uniform_buffer_management_regular.UploadAll();
-
-		// TODO: Upload Instance Uniforms *somewhere*.
 
 		unsigned int texture_unit_slots_in_use = 0; // This can be controlled via a central manager class if more complex use-cases arise. For now every Material will act as if it is the only one using Texture Unit slots.
 

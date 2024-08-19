@@ -30,7 +30,6 @@ namespace Engine
 
 	private:
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_regular;
-		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_instance;
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_global;
 		std::unordered_map< std::string, UniformBuffer > uniform_buffer_map_intrinsic;
 	};

@@ -93,9 +93,6 @@ namespace Engine
 			QueryUniformData_BlockIndexAndOffsetForBufferMembers();
 			QueryUniformBufferData( uniform_buffer_info_map_regular, Uniform::BufferCategory::Regular );
 			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_regular );
-			// TODO: Uncomment code below when Instance uniforms are implemented.
-			/*QueryUniformBufferData( uniform_buffer_info_map_instance, Uniform::BufferCategory::Instance );
-			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_instance	);*/
 			QueryUniformBufferData( uniform_buffer_info_map_global, Uniform::BufferCategory::Global );
 			QueryUniformBufferData_Aggregates( uniform_buffer_info_map_global );
 			QueryUniformBufferData( uniform_buffer_info_map_intrinsic, Uniform::BufferCategory::Intrinsic );
@@ -106,9 +103,6 @@ namespace Engine
 
 			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_regular )
 				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
-
-			/*for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_instance )
-				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );*/
 
 			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_global )
 				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
@@ -613,8 +607,6 @@ namespace Engine
 		/* Now add buffer block sizes (calculated before): */
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_regular )
 			uniform_book_keeping_info.regular_total_size = uniform_buffer_info.size;
-		/*for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_instance )
-			uniform_book_keeping_info.instance_total_size = uniform_buffer_info.size;*/
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_global )
 			uniform_book_keeping_info.global_total_size = uniform_buffer_info.size;
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_intrinsic )
@@ -626,7 +618,6 @@ namespace Engine
 	void Shader::EnumerateUniformBufferCategories()
 	{
 		uniform_book_keeping_info.regular_block_count   = ( int )uniform_buffer_info_map_regular.size();
-		//uniform_book_keeping_info.instance_block_count  = ( int )uniform_buffer_info_map_instance.size();
 		uniform_book_keeping_info.global_block_count    = ( int )uniform_buffer_info_map_global.size();
 		uniform_book_keeping_info.intrinsic_block_count = ( int )uniform_buffer_info_map_intrinsic.size();
 	}
@@ -698,8 +689,6 @@ namespace Engine
 			editor_name.erase( 0, 7 );
 		else if( editor_name.compare( 0, 8, "_REGULAR", 8 ) == 0 )
 			editor_name.erase( 0, 8 );
-		else if( editor_name.compare( 0, 9, "_INSTANCE", 9 ) == 0 )
-			editor_name.erase( 0, 9 );
 		else if( editor_name.compare( 0, 10, "_INTRINSIC", 10 ) == 0 )
 			editor_name.erase( 0, 10 );
 

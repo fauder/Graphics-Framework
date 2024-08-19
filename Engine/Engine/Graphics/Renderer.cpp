@@ -89,8 +89,6 @@ namespace Engine
 
 							material->Set( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
 
-							// TODO: Upload Instance uniforms.
-
 							Render( *drawable->mesh );
 						}
 					}
@@ -269,7 +267,7 @@ namespace Engine
 	{
 		if( shader.HasUniformBlocks() )
 		{
-			/* Regular & Instance Uniform Buffers are handled by the Material class.
+			/* Regular Uniform Buffers are handled by the Material class.
 			 * Globals & Intrinsics are registered here. */
 
 			if( shader.HasGlobalUniformBlocks() )

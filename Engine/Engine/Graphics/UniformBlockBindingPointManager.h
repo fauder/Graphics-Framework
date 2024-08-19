@@ -50,9 +50,8 @@ namespace Engine
 	private:
 		unsigned int binding_point_max_count;
 
-		Uniform::BindingPointBookKeeping binding_point_book_keeping_regular;
-		Uniform::BindingPointBookKeeping binding_point_book_keeping_instance;
-		Uniform::BindingPointBookKeeping binding_point_book_keeping_global;
 		Uniform::BindingPointBookKeeping binding_point_book_keeping_intrinsic;
+		Uniform::BindingPointBookKeeping binding_point_book_keeping_global;
+		Uniform::BindingPointBookKeeping binding_point_book_keeping_regular;
 	};
 }

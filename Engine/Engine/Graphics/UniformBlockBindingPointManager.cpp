@@ -16,8 +16,6 @@ namespace Engine
 
 		switch( uniform_buffer_info.category )
 		{
-			case Uniform::BufferCategory::Instance:
-				return uniform_buffer_info.binding_point = RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_instance );
 			case Uniform::BufferCategory::Global:
 				return uniform_buffer_info.binding_point = RegisterUniformBlock( shader, block_name, instance.binding_point_book_keeping_global );
 			case Uniform::BufferCategory::Intrinsic:
@@ -38,9 +36,6 @@ namespace Engine
 		{
 			case Uniform::BufferCategory::Regular:
 				binding_point = instance.binding_point_book_keeping_regular.Find( block_name );
-				break;
-			case Uniform::BufferCategory::Instance:
-				binding_point = instance.binding_point_book_keeping_instance.Find( block_name );
 				break;
 			case Uniform::BufferCategory::Global:
 				binding_point = instance.binding_point_book_keeping_global.Find( block_name );
@@ -74,17 +69,16 @@ namespace Engine
 
 	UniformBlockBindingPointManager::UniformBlockBindingPointManager()
 		:
-		/* Divide max. binding points = max. uniform buffers/blocks allowed into 4 categories and determine their starting offsets from 0. */
+		/* Divide max. binding points = max. uniform buffers/blocks allowed into 3 categories and determine their starting offsets from 0. */
 		binding_point_max_count( QueryMaximumUniformBufferBindingCount() ),
 		binding_point_book_keeping_intrinsic( 0, 4 ),
 		binding_point_book_keeping_global( 0 + 4, 4 ),
-		binding_point_book_keeping_instance( 0 + 4 + 4, ( binding_point_max_count - 8 ) / 2 ),
-		binding_point_book_keeping_regular( 0 + 4 + 4 + ( binding_point_max_count - 8 ) / 2, ( binding_point_max_count - 8 ) / 2 )
+		binding_point_book_keeping_regular( 0 + 4 + 4, binding_point_max_count - 8 )
 	{
 	}
 
 	Uniform::BindingPoint UniformBlockBindingPointManager::RegisterUniformBlock( const Shader& shader, const std::string& block_name, 
-																				  Uniform::BindingPointBookKeeping& binding_point_book_keeping )
+																				 Uniform::BindingPointBookKeeping& binding_point_book_keeping )
 	{
 		auto& instance = Instance();
 

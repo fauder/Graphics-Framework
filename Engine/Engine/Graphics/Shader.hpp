@@ -72,7 +72,6 @@ namespace Engine
 		inline const std::unordered_map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
 
 		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Regular()	const { return uniform_buffer_info_map_regular;		}
-		//inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Instance()	const { return uniform_buffer_info_map_instance;	}
 		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Global()		const { return uniform_buffer_info_map_global;		}
 		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Intrinsic()	const { return uniform_buffer_info_map_intrinsic;	}
 
@@ -83,10 +82,9 @@ namespace Engine
 
 		inline bool HasIntrinsicUniformBlocks()	const { return uniform_book_keeping_info.intrinsic_block_count;	}
 		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;	}
-		inline bool HasInstanceUniformBlocks()	const { return uniform_book_keeping_info.instance_block_count;	}
 		inline bool HasRegularUniformBlocks()	const { return uniform_book_keeping_info.regular_block_count;	}
 		
-		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasInstanceUniformBlocks() || HasRegularUniformBlocks(); }
+		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasRegularUniformBlocks(); }
 
 #pragma region Uniform Set< Type > Functions
 		template< typename UniformType >
@@ -250,10 +248,13 @@ namespace Engine
 #pragma endregion
 
 	/*
-	 * "Setting" Uniform Buffers is not the Shader's responsibility (nor can it do it); It's just an OpenGL Buffer Object -> UBO can Update() itself.
+	 * "Setting" Uniform Buffers is not the Shader's responsibility (nor can it do it); It's just an OpenGL Buffer Object.
+	 * UBO can Update() itself.
 	 * Whoever holds the UBO will call Update() on it.
-	 * Global   & Intrinsic Uniform Buffers are kept & updated by the Renderer.
-	 * Instance & Regular   Uniform Buffers are kept & updated by the Material.
+	 * All UBOs are created, connected to shader blocks and kept by the UniformBufferManager internally.
+	 * UniformBufferManagement objects hold references to buffers kept by the UniformBufferManager and manage them (keep CPU-side buffers large enough & update/upload buffers).
+	 * Global & Intrinsic Uniform Buffers are updated by the Renderer (via UniformBufferManagement objects).
+	 * Regular			  Uniform Buffers are updated by the Material (via an UniformBufferManagement object).
 	 */
 
 /* Uniform setters; By name & value: */
@@ -311,7 +312,6 @@ namespace Engine
 		std::unordered_map< std::string, Uniform::Information		> uniform_info_map;
 
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_regular;
-		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_instance;
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_global;
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_intrinsic;
 

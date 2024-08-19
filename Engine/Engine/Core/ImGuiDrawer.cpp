@@ -985,7 +985,6 @@ namespace Engine::ImGuiDrawer
 					};
 
 					DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Regular() );
-					//DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Instance() );
 					DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Global() );
 					DrawUniformBufferInfos( shader.GetUniformBufferInfoMap_Intrinsic() );
 

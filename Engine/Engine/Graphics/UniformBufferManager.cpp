@@ -18,15 +18,6 @@ namespace Engine
 
 				return &buffer;
 			}
-			case Uniform::BufferCategory::Instance:
-			{
-				throw std::runtime_error( "Instance Uniforms not implemented yet!" );
-
-				auto& buffer = instance.uniform_buffer_map_instance.try_emplace( buffer_name, buffer_info.size, buffer_name ).first->second;
-				UniformBlockBindingPointManager::ConnectBufferToBlock( buffer, buffer_name, Uniform::BufferCategory::Instance );
-
-				return &buffer;
-			}
 			case Uniform::BufferCategory::Global:
 			{
 				auto& buffer = instance.uniform_buffer_map_global.try_emplace( buffer_name, buffer_info.size, buffer_name ).first->second;

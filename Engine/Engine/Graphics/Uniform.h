@@ -35,16 +35,13 @@ namespace Engine
 		enum class BufferCategory
 		{
 			Regular,	// Per-material data; Same for every shader of a given material; differs per-material.
-			Instance,	// Per-model data; Differs per-model.
 			Global,		// Global user-defined data. Same for every shader.
 			Intrinsic	// Data known & set by the Renderer such as camera details; view & projection matrices. Same for every shader.
 		};
 
 		inline static BufferCategory DetermineBufferCategory( std::string_view buffer_name )
 		{
-			if( buffer_name.find( "_Instance" ) != std::string_view::npos )
-				return BufferCategory::Instance;
-			else if( buffer_name.find( "_Global" ) != std::string_view::npos )
+			if( buffer_name.find( "_Global" ) != std::string_view::npos )
 				return BufferCategory::Global;
 			else if( buffer_name.find( "_Intrinsic" ) != std::string_view::npos )
 				return BufferCategory::Intrinsic;
@@ -88,7 +85,6 @@ namespace Engine
 			std::unordered_map< std::string, Information*						> members_single_map;	// Key is the uniform name alone. Example: "color_modulation".
 
 			inline bool IsRegular()		const { return category == BufferCategory::Regular;		}
-			inline bool IsInstance()	const { return category == BufferCategory::Instance;	}
 			inline bool IsGlobal()		const { return category == BufferCategory::Global;		}
 			inline bool IsIntrinsic()	const { return category == BufferCategory::Intrinsic;	}
 
@@ -100,7 +96,6 @@ namespace Engine
 				{
 					case BufferCategory::Intrinsic:			return "Intrinsic";
 					case BufferCategory::Global:			return "Global";
-					case BufferCategory::Instance:			return "Instance";
 					default: /* BufferCategory::Regular */	return "Regular";
 				}
 			}
@@ -112,12 +107,12 @@ namespace Engine
 			int count;
 			int name_max_length;
 			std::size_t default_block_size;
-			std::size_t regular_total_size, /*instance_total_size, */global_total_size, intrinsic_total_size;
+			std::size_t regular_total_size, global_total_size, intrinsic_total_size;
 			std::size_t total_size;
-			int intrinsic_block_count, global_block_count, instance_block_count, regular_block_count;
+			int intrinsic_block_count, global_block_count, regular_block_count;
 
 			inline std::size_t TotalSize_ForMaterialBlob() const { return default_block_size + regular_total_size; }
-			inline std::size_t TotalSize_Blocks() const { return regular_total_size + /*instance_total_size + */global_total_size + intrinsic_total_size; }
+			inline std::size_t TotalSize_Blocks() const { return regular_total_size + global_total_size + intrinsic_total_size; }
 		};
 
 		class BindingPointBookKeeping
