@@ -74,23 +74,41 @@ namespace Engine
 
 		/* For PARTIAL setting ARRAY uniforms INSIDE a Uniform Buffer. */
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
-		void Set( const std::string& uniform_buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
+		void SetPartial_Array( const std::string& uniform_buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
 		{
-			uniform_buffer_management_regular.Set( uniform_buffer_name, uniform_member_array_instance_name, array_index, value );
+			uniform_buffer_management_regular.SetPartial_Array( uniform_buffer_name, uniform_member_array_instance_name, array_index, value );
+		}
+
+		/* For PARTIAL setting ARRAY uniforms INSIDE a Uniform Buffer. */
+		void SetPartial_Array( const std::string& uniform_buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const std::byte* value )
+		{
+			uniform_buffer_management_regular.SetPartial_Array( uniform_buffer_name, uniform_member_array_instance_name, array_index, value );
 		}
 
 		/* For PARTIAL setting STRUCT uniforms INSIDE a Uniform Buffer. */
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
-		void Set( const std::string& uniform_buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
+		void SetPartial_Struct( const std::string& uniform_buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
 		{
-			uniform_buffer_management_regular.Set( uniform_buffer_name, uniform_member_struct_instance_name, value );
+			uniform_buffer_management_regular.SetPartial_Struct( uniform_buffer_name, uniform_member_struct_instance_name, value );
+		}
+
+		/* For PARTIAL setting STRUCT uniforms INSIDE a Uniform Buffer. */
+		void SetPartial_Struct( const std::string& uniform_buffer_name, const char* uniform_member_struct_instance_name, const std::byte* value )
+		{
+			uniform_buffer_management_regular.SetPartial_Struct( uniform_buffer_name, uniform_member_struct_instance_name, value );
 		}
 
 		/* For PARTIAL setting NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
-		template< typename UniformType >
-		void Set( const std::string& uniform_buffer_name, const char* uniform_member_name, const UniformType& value )
+		template< typename UniformType > requires( not std::is_pointer_v< UniformType > ) // Don't want to "override" the overload below for actual pointer types.
+		void SetPartial( const std::string& uniform_buffer_name, const char* uniform_member_name, const UniformType& value )
 		{
-			uniform_buffer_management_regular.Set( uniform_buffer_name, value );
+			uniform_buffer_management_regular.SetPartial( uniform_buffer_name, uniform_member_name, value );
+		}
+
+		/* For PARTIAL setting NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
+		void SetPartial( const std::string& uniform_buffer_name, const char* uniform_member_name, const std::byte* value )
+		{
+			uniform_buffer_management_regular.SetPartial( uniform_buffer_name, uniform_member_name, value );
 		}
 
 	/* Textures: */

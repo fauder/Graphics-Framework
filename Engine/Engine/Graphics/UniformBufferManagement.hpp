@@ -48,7 +48,7 @@ namespace Engine
 
 		/* For PARTIAL setting of ARRAY uniforms INSIDE a Uniform Buffer. */
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
-		void Set( const std::string& buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
+		void SetPartial_Array( const std::string& buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
 		{
 			const auto& buffer_info              = *buffer_info_map[ buffer_name ];
 			const auto& buffer_member_array_info = buffer_info.members_array_map.at( uniform_member_array_instance_name );
@@ -60,9 +60,22 @@ namespace Engine
 			blob_map[ buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, buffer_member_array_info.stride );
 		}
 
+		/* For PARTIAL setting of ARRAY uniforms INSIDE a Uniform Buffer. */
+		void SetPartial_Array( const std::string& buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const std::byte* value )
+		{
+			const auto& buffer_info              = *buffer_info_map[ buffer_name ];
+			const auto& buffer_member_array_info = buffer_info.members_array_map.at( uniform_member_array_instance_name );
+
+			const auto effective_offset = buffer_member_array_info.offset + 
+										  array_index * buffer_member_array_info.stride;
+
+			/* Update the value in the internal memory blob: */
+			blob_map[ buffer_name ].Set( value, effective_offset, buffer_member_array_info.stride );
+		}
+
 		/* For PARTIAL setting of STRUCT uniforms INSIDE a Uniform Buffer. */
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
-		void Set( const std::string& buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
+		void SetPartial_Struct( const std::string& buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
 		{
 			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
 			const auto& buffer_member_struct_info = buffer_info.members_struct_map.at( uniform_member_struct_instance_name );
@@ -73,15 +86,37 @@ namespace Engine
 			blob_map[ buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), effective_offset, buffer_member_struct_info.size );
 		}
 
+		/* For PARTIAL setting of STRUCT uniforms INSIDE a Uniform Buffer. */
+		void SetPartial_Struct( const std::string& buffer_name, const char* uniform_member_struct_instance_name, const std::byte* value )
+		{
+			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
+			const auto& buffer_member_struct_info = buffer_info.members_struct_map.at( uniform_member_struct_instance_name );
+
+			const auto effective_offset = buffer_member_struct_info.offset;
+
+			/* Update the value in the internal memory blob: */
+			blob_map[ buffer_name ].Set( value, effective_offset, buffer_member_struct_info.size );
+		}
+
 		/* For PARTIAL setting of NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
-		template< typename UniformType >
-		void Set( const std::string& buffer_name, const char* uniform_member_name, const UniformType& value )
+		template< typename UniformType > requires( not std::is_pointer_v< UniformType > ) // Don't want to "override" the overload below for actual pointer types.
+		void SetPartial( const std::string& buffer_name, const char* uniform_member_name, const UniformType& value )
 		{
 			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
 			const auto& buffer_member_single_info = buffer_info.members_single_map.at( uniform_member_name );
 
 			/* Update the value in the internal memory blob: */
 			blob_map[ buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), buffer_member_single_info->offset, buffer_member_single_info->size );
+		}
+
+		/* For PARTIAL setting of NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
+		void SetPartial( const std::string& buffer_name, const char* uniform_member_name, const std::byte* value )
+		{
+			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
+			const auto& buffer_member_single_info = buffer_info.members_single_map.at( uniform_member_name );
+
+			/* Update the value in the internal memory blob: */
+			blob_map[ buffer_name ].Set( value, buffer_member_single_info->offset, buffer_member_single_info->size );
 		}
 
 	/* Uniform Upload: */
