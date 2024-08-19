@@ -360,7 +360,18 @@ namespace Engine::ImGuiDrawer
 
 						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 						ImGui::PushID( ( void* )&uniform_info );
-						is_modified |= Draw( uniform_info.type, material.Get( uniform_info ) );
+						switch( uniform_info.usage_hint )
+						{
+							case UsageHint::AsColor3:
+								is_modified |= Draw( *reinterpret_cast< Color3* >( material.Get( uniform_info ) ) );
+								break;
+							case UsageHint::AsColor4:
+								is_modified |= Draw( *reinterpret_cast< Color4* >( material.Get( uniform_info ) ) );
+								break;
+							default:
+								is_modified |= Draw( uniform_info.type, material.Get( uniform_info ) );
+								break;
+						}
 						ImGui::PopID();
 					}
 
@@ -524,7 +535,18 @@ namespace Engine::ImGuiDrawer
 						ImGui::TableNextColumn();
 
 						ImGui::PushID( ( void* )&uniform_info );
-						Draw( uniform_info.type, material.Get( uniform_info ) );
+						switch( uniform_info.usage_hint )
+						{
+							case UsageHint::AsColor3:
+								Draw( *reinterpret_cast< const Color3* >( material.Get( uniform_info ) ) );
+								break;
+							case UsageHint::AsColor4:
+								Draw( *reinterpret_cast< const Color4* >( material.Get( uniform_info ) ) );
+								break;
+							default:
+								Draw( uniform_info.type, material.Get( uniform_info ) );
+								break;
+						}
 						ImGui::PopID();
 					}
 
