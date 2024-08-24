@@ -66,6 +66,8 @@ void SandboxApplication::Initialize()
 
 	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
 	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
+	wall_prototype.FromFile( R"(Asset/Texture/kenney_prototype/texture_13.png)", GL_RGB );
+	ground_prototype.FromFile( R"(Asset/Texture/kenney_prototype/texture_07.png)", GL_RGB );
 
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
@@ -420,12 +422,12 @@ void SandboxApplication::ResetMaterialData()
 	}
 
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
-	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &container_texture_diffuse_map );
-	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", &container_texture_specular_map );
+	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &ground_prototype );
+	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", &ground_prototype );
 
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
-	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &container_texture_diffuse_map );
-	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", &container_texture_specular_map );
+	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &wall_prototype );
+	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", &wall_prototype );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
