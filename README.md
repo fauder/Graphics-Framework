@@ -1,8 +1,11 @@
 (This project supersedes the https://github.com/fauder/OpenGL-Framework project, which is no longer maintained.)
 
 # Graphics-Framework
-
 Personal graphics framework I'm developing, to study graphics programming topics.
+
+![](screenshot_1.png)
+
+![](lighting_showcase.gif)
 
 ## Credits
 - To get up to speed with OpenGL, I use:
