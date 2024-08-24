@@ -3,9 +3,9 @@
 # Graphics-Framework
 Personal graphics framework I'm developing, to study graphics programming topics.
 
-![](screenshot_1.png)
+![](Gallery/screenshot_1.png)
 
-![](lighting_showcase.gif)
+![](Gallery/lighting_showcase.gif)
 
 ## Credits
 - To get up to speed with OpenGL, I use:
