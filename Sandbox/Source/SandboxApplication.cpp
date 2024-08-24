@@ -29,6 +29,7 @@ SandboxApplication::SandboxApplication()
 	light_source_shader( "Basic Color" ),
 	container_texture_diffuse_map( "Container (Diffuse) Map" ),
 	container_texture_specular_map( "Container (Specular) Map" ),
+	checker_pattern( "Checkerboard Pattern (09)" ),
 	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
@@ -66,8 +67,7 @@ void SandboxApplication::Initialize()
 
 	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
 	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
-	wall_prototype.FromFile( R"(Asset/Texture/kenney_prototype/texture_13.png)", GL_RGB );
-	ground_prototype.FromFile( R"(Asset/Texture/kenney_prototype/texture_07.png)", GL_RGB );
+	checker_pattern.FromFile( R"(Asset/Texture/kenney_prototype/texture_09.png)", GL_RGB, GL_REPEAT, GL_REPEAT );
 
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
@@ -422,12 +422,12 @@ void SandboxApplication::ResetMaterialData()
 	}
 
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
-	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &ground_prototype );
-	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", &ground_prototype );
+	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &checker_pattern );
+	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", &checker_pattern );
 
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
-	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &wall_prototype );
-	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", &wall_prototype );
+	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &checker_pattern );
+	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", &checker_pattern );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
