@@ -51,7 +51,7 @@ namespace Engine
 		stbi_set_flip_vertically_on_load( true );
 	}
 
-	bool Texture::FromFile( const char* file_path, const int format )
+	bool Texture::FromFile( const char* file_path, const int format, GLenum wrap_u, GLenum wrap_v, GLenum min_filter, GLenum mag_filter )
 	{
 		glGenTextures( 1, &id );
 		Bind();
@@ -61,10 +61,10 @@ namespace Engine
 			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, name );
 #endif // _DEBUG
 
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_u );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_v );
 
 		int number_of_channels = -1;
 		auto image_data = stbi_load( file_path, &width, &height, &number_of_channels, 0 );

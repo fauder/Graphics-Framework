@@ -21,7 +21,9 @@ namespace Engine
 		static void INITIALIZE();
 
 	/* Creation: */
-		bool FromFile( const char* file_path, const int format );
+		bool FromFile( const char* file_path, const int format, 
+					   GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
+					   GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR );
 
 	/* Queries: */
 		inline const std::string&	Name()	const { return name;	}
