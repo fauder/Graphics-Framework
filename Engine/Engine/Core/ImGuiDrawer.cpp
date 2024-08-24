@@ -809,9 +809,9 @@ namespace Engine::ImGuiDrawer
 			is_modified |= Draw( point_light_data.specular_attenuation_quadratic.color,		"Specular" );
 			if( !hide_position )
 				is_modified |= Draw( point_light_data.position_world_space, "Position" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.ambient_and_attenuation_constant.scalar,	0.0f, 5.0f, "%.5g" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.diffuse_and_attenuation_linear.scalar,	0.0f, 1.0f, "%.5g" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.specular_attenuation_quadratic.scalar,	0.0f, 1.0f, "%.5g" );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.ambient_and_attenuation_constant.scalar,	0.0f, 5.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.diffuse_and_attenuation_linear.scalar,	0.0f, 1.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
+			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.specular_attenuation_quadratic.scalar,	0.0f, 1.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
 
 			ImGui::PopID();
 		}
