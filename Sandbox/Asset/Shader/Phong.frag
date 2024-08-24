@@ -36,13 +36,13 @@ vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_di
 	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_surface.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_DIRECTIONAL_LIGHT.specular.rgb * specular_contribution;
 
-	return vec3( ambient + diffuse + specular );
+	return ambient + diffuse + specular;
 }
 
 float CalculateAttenuation( const int point_light_index, float distance )
 {
 	return 1.0f / ( _INTRINSIC_POINT_LIGHTS[ point_light_index ].ambient_and_attenuation_constant.w +
-					_INTRINSIC_POINT_LIGHTS[ point_light_index ].diffuse_and_attenuation_linear.w		* distance + 
+					_INTRINSIC_POINT_LIGHTS[ point_light_index ].diffuse_and_attenuation_linear.w	  * distance + 
 					_INTRINSIC_POINT_LIGHTS[ point_light_index ].specular_and_attenuation_quadratic.w * distance * distance );
 }
 
@@ -109,7 +109,7 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_surface.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_SPOT_LIGHTS[ spot_light_index ].specular.rgb * specular_contribution;
 
-	return vec3( ambient + cut_off_intensity * ( diffuse + specular ) );
+	return ambient + cut_off_intensity * ( diffuse + specular );
 }
 
 void main()
