@@ -20,4 +20,5 @@ Personal graphics framework I'm developing, to study graphics programming topics
 - [GLFW](https://www.glfw.org/) is used for windowing & other platform-specific needs.
 - [GLAD](https://github.com/Dav1dde/glad) is used as the loader for OpenGL functions.
 - [RenderDoc](https://renderdoc.org/) is used to analyze/debug graphics bugs.
+- [kenney](https://kenney.nl/)'s awesome assets are used (currently for prototype textures)
 - [glslang](https://github.com/KhronosGroup/glslang) is used for offline validation of GLSL shaders as a Visual Studio post-build step.
