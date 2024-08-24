@@ -130,4 +130,5 @@ private:
 	const static constexpr Vector3 CUBES_ORIGIN = std::accumulate( CUBE_POSITIONS.cbegin(), CUBE_POSITIONS.cend(), Vector3::Zero() ) / CUBE_COUNT;
 
 	bool ui_interaction_enabled;
+	bool show_imgui_demo_window;
 };

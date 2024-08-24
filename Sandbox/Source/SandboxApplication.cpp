@@ -40,7 +40,8 @@ SandboxApplication::SandboxApplication()
 	camera_is_animated( false ),
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
-	ui_interaction_enabled( false )
+	ui_interaction_enabled( false ),
+	show_imgui_demo_window( false )
 {
 	Initialize();
 }
@@ -236,7 +237,8 @@ void SandboxApplication::RenderImGui()
 
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox ImGui", true /* omit if the group is empty */ ) );
 
-	ImGui::ShowDemoWindow();
+	if( show_imgui_demo_window )
+		ImGui::ShowDemoWindow();
 
 	Engine::ImGuiDrawer::Draw( phong_shader );
 	Engine::ImGuiDrawer::Draw( light_source_shader );
