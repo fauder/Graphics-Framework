@@ -74,6 +74,21 @@ void SandboxApplication::Initialize()
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
+/* Initial transforms: */
+	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
+
+	front_wall_quad_transform
+		.SetScaling( 25.0f, 25.0f, 0.01f )
+		.SetTranslation( Vector3::Forward() * 15.0f );
+
+	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
+	{
+		Degrees angle( 20.0f * cube_index );
+		cube_transform_array[ cube_index ]
+			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
+			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
+	}
+
 /* Lighting: */
 	ResetLightingData();
 
@@ -122,21 +137,6 @@ void SandboxApplication::Initialize()
 
 /* Other: */
 	renderer.EnableDepthTest();
-
-/* Initial transforms: */
-	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
-
-	front_wall_quad_transform
-		.SetScaling( 25.0f, 25.0f, 0.01f )
-		.SetTranslation( Vector3::Forward() * 5.0f );
-
-	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
-	{
-		Degrees angle( 20.0f * cube_index );
-		cube_transform_array[ cube_index ]
-			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
-			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
-	}
 
 	Platform::MaximizeWindow();
 }
@@ -229,6 +229,8 @@ void SandboxApplication::Render()
 
 void SandboxApplication::RenderImGui()
 {
+	// TODO: Make lights togglable.
+
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Application ImGui", true /* omit if the group is empty */ ) );
 
@@ -367,9 +369,9 @@ void SandboxApplication::ResetLightingData()
 		{
 			.data =
 			{
-				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f }, .scalar = 1.0f },
-				.diffuse_and_attenuation_linear = {.color = Engine::Math::Random::Generate< Engine::Color3 >(), .scalar = 0.09f },
-				.specular_attenuation_quadratic = {.color = {  1.0f,   1.0f,   1.0f  }, .scalar = 0.03f },
+				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f },							.scalar = 0.075f	},
+				.diffuse_and_attenuation_linear   = {.color = Engine::Math::Random::Generate< Engine::Color3 >(),	.scalar = 0.0035f	},
+				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f },
 				.position_view_space = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
 			/* End of GLSL equivalence. */
 				.position_world_space = {  0.2f,  -1.0f,   1.0f  }
@@ -421,15 +423,22 @@ void SandboxApplication::ResetMaterialData()
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
 		cube_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", &container_texture_diffuse_map );
 		cube_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", &container_texture_specular_map );
+		cube_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	}
 
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
 	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &checker_pattern );
 	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", &checker_pattern );
+	const auto& ground_quad_scale( ground_quad_transform.GetScaling() );
+	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Z() /* Offset is 0 so no need to set it explicitly. */ );
+	ground_quad_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
 	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &checker_pattern );
 	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", &checker_pattern );
+	const auto& front_wall_quad_scale( front_wall_quad_transform.GetScaling() );
+	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
+	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
