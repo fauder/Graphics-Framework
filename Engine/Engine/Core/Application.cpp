@@ -18,7 +18,8 @@ namespace Engine
 		show_gl_logger( true ),
 		time_previous( 0.0f ),
 		time_previous_since_start( 0.0f ),
-		time_since_start( 0.0f )
+		time_since_start( 0.0f ),
+		frame_count( 1 )
 	{
 		Initialize();
 	}
@@ -148,10 +149,12 @@ namespace Engine
 
 	void Application::RenderImGui_FrameStatistics()
 	{
+		const auto fps = 1.0f / time_delta_real;
+
 		ImGuiUtility::SetNextWindowPos( ImGuiUtility::HorizontalWindowPositioning::RIGHT, ImGuiUtility::VerticalWindowPositioning::TOP );
 		if( ImGui::Begin( "Frame Statistics", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
-			ImGui::Text( "FPS: %.1f fps", 1.0f / time_delta_real );
+			ImGui::Text( "FPS: %.1f fps", fps );
 			ImGui::Text( "Delta time (multiplied): %.3f ms | Delta time (real): %.3f", time_delta * 1000.0f, time_delta_real * 1000.0f );
 			ImGui::Text( "Time since start: %.3f.", time_since_start );
 			ImGui::SliderFloat( "Time Multiplier", &time_multiplier, 0.01f, 5.0f, "x %.2f", ImGuiSliderFlags_Logarithmic ); ImGui::SameLine(); if( ImGui::Button( "Reset##time_multiplier" ) ) time_multiplier = 1.0f;
@@ -170,6 +173,23 @@ namespace Engine
 			ImGui::SliderFloat( "Cos(Time) ", &cos_time, -1.0f, 1.0f, "%.1f", ImGuiSliderFlags_NoInput );
 		}
 
+		if( ImGui::TreeNodeEx( "GP shenanigans" ) )
+		{
+			const Radians in_radians( Constants< float >::Two_Pi() * fps );
+			const Degrees in_degrees( in_radians );
+			ImGui::Text( "afps: %.0f rad/s", ( float )in_radians );
+			ImGui::Text( "dfps: %.0f deg/s", ( float )in_degrees );
+			ImGui::Text( "rfps: %.0f", fps );
+			ImGui::Text( "rpms: %.0f", fps * 60.0f );
+			ImGui::Text( "  ft: %.2f ms", time_delta_real * 1000.0f );
+			ImGui::Text( "   f: %lu", frame_count );
+
+			ImGui::TreePop();
+		}
+
+
 		ImGui::End();
+
+		frame_count++;
 	}
 }

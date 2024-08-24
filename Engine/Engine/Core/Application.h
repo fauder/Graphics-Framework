@@ -52,6 +52,8 @@ namespace Engine
 		float time_mod_1;
 		float time_mod_2_pi;
 
+		long long frame_count;
+
 		bool show_gl_logger;
 		GLLogger gl_logger;
 
