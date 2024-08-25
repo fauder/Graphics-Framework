@@ -85,6 +85,9 @@
     <PostBuildEvent>
       <Command>python $(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.py</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>xcopy $(SolutionDir)DLL\assimp-vc140-mt.dll "$(OutDir)" /Y</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -113,6 +116,9 @@
     <PostBuildEvent>
       <Command>python $(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.py</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>xcopy $(SolutionDir)DLL\assimp-vc140-mt.dll "$(OutDir)" /Y</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
