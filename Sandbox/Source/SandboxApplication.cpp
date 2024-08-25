@@ -13,6 +13,8 @@
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
 
+#include <assimp/version.h> // TODO: Remove this.
+
 using namespace Engine::Math::Literals;
 
 Engine::Application* Engine::CreateApplication()
@@ -44,6 +46,9 @@ SandboxApplication::SandboxApplication()
 	show_imgui_demo_window( false )
 {
 	Initialize();
+
+	// TODO: Remove this.
+	std::cout << "Assimp loaded with version " << aiGetVersionMajor() << "." << aiGetVersionMinor() << " (rev. " << aiGetVersionRevision() << ").\n";
 }
 
 SandboxApplication::~SandboxApplication()	
