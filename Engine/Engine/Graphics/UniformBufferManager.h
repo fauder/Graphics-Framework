@@ -13,8 +13,8 @@ namespace Engine
 	class UniformBufferManager
 	{
 	public:
-		UniformBufferManager( UniformBufferManager const& ) = delete;
-		void operator = ( UniformBufferManager const& )		= delete;
+		UniformBufferManager( UniformBufferManager const& )				 = delete;
+		UniformBufferManager& operator = ( UniformBufferManager const& ) = delete;
 
 		static UniformBuffer* CreateOrRequest( const std::string& buffer_name, const Uniform::BufferInformation& buffer_info );
 
