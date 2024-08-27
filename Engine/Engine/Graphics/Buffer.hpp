@@ -143,12 +143,13 @@ namespace Engine
 			glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() );
 		}
 		
-		ID				Id()		const { return id;		}
-		unsigned int	Size()		const { return size;	}
-		unsigned int	Count()		const { return count;	}
-		bool			IsValid()	const { return size;	} // Use the size to implicitly define validness state.
+		ID				Id()	const { return id;		}
+		unsigned int	Size()	const { return size;	}
+		unsigned int	Count()	const { return count;	}
 
 	private:
+		bool IsValid() const { return size;	} // Use the size to implicitly define validness state.
+
 		void CreateBuffer()
 		{
 			glGenBuffers( 1, &id );

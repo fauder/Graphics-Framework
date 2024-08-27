@@ -14,8 +14,8 @@ namespace Engine::Math
 	class Random
 	{
 	public:
-		Random( Random const& )				= delete;
-		void operator = ( Random const& )	= delete;
+		Random( Random const& )				 = delete;
+		Random& operator = ( Random const& ) = delete;
 
 		static void Seed( const unsigned int seed )
 		{

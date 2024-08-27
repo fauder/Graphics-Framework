@@ -2,6 +2,7 @@
 #include "SandboxApplication.h"
 
 // Engine Includes.
+#include "Engine/Core/AssetDatabase.hpp"
 #include "Engine/Core/ImGuiDrawer.hpp"
 #include "Engine/Core/ImGuiSetup.h"
 #include "Engine/Core/Platform.h"
@@ -12,6 +13,8 @@
 #include "Engine/Math/Math.hpp"
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
+
+#include <assimp/version.h> // TODO: Remove this.
 
 using namespace Engine::Math::Literals;
 
@@ -27,9 +30,6 @@ SandboxApplication::SandboxApplication()
 	cube_drawable_array( CUBE_COUNT ),
 	phong_shader( "Phong" ),
 	light_source_shader( "Basic Color" ),
-	container_texture_diffuse_map( "Container (Diffuse) Map" ),
-	container_texture_specular_map( "Container (Specular) Map" ),
-	checker_pattern( "Checkerboard Pattern (09)" ),
 	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
@@ -44,6 +44,9 @@ SandboxApplication::SandboxApplication()
 	show_imgui_demo_window( false )
 {
 	Initialize();
+
+	// TODO: Remove this.
+	std::cout << "Assimp loaded with version " << aiGetVersionMajor() << "." << aiGetVersionMinor() << " (rev. " << aiGetVersionRevision() << ").\n";
 }
 
 SandboxApplication::~SandboxApplication()	
@@ -64,11 +67,13 @@ void SandboxApplication::Initialize()
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init.", true /* omit if the group is empty */ ) );
 
 /* Textures: */
-	Engine::Texture::INITIALIZE();
-
-	container_texture_diffuse_map.FromFile( R"(Asset/Texture/container2.png)", GL_RGBA );
-	container_texture_specular_map.FromFile( R"(Asset/Texture/container2_specular.png)", GL_RGBA );
-	checker_pattern.FromFile( R"(Asset/Texture/kenney_prototype/texture_09.png)", GL_RGB, GL_REPEAT, GL_REPEAT );
+	Engine::Texture::ImportSettings import_settings( GL_RGBA );
+	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			import_settings );
+	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", import_settings );
+	import_settings.format = GL_RGB;
+	import_settings.wrap_u = GL_REPEAT;
+	import_settings.wrap_v = GL_REPEAT;
+	checker_pattern = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", import_settings );
 
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
@@ -421,21 +426,21 @@ void SandboxApplication::ResetMaterialData()
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
-		cube_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", &container_texture_diffuse_map );
-		cube_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", &container_texture_specular_map );
+		cube_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", container_texture_diffuse_map );
+		cube_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", container_texture_specular_map );
 		cube_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	}
 
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
-	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &checker_pattern );
-	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", &checker_pattern );
+	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
+	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
 	const auto& ground_quad_scale( ground_quad_transform.GetScaling() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Z() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_quad_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
-	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", &checker_pattern );
-	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", &checker_pattern );
+	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
+	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
 	const auto& front_wall_quad_scale( front_wall_quad_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
