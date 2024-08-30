@@ -63,8 +63,9 @@ private:
 	Engine::Material ground_quad_material;
 	Engine::Material front_wall_quad_material;
 
-	Engine::Texture container_texture_diffuse_map, container_texture_specular_map;
-	Engine::Texture checker_pattern;
+	Engine::Texture* container_texture_diffuse_map;
+	Engine::Texture* container_texture_specular_map;
+	Engine::Texture* checker_pattern;
 
 /* Scene: */
 	Engine::Transform camera_transform;

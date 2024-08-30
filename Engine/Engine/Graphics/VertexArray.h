@@ -32,9 +32,9 @@ namespace Engine
 		inline ID			Id()			const { return id;			 }
 		inline unsigned int VertexCount()	const { return vertex_count; }
 		inline unsigned int IndexCount()	const { return index_count;  }
-		inline bool			IsValid()		const { return vertex_count; } // Use the vertex count to implicitly define validness state.
 
 	private:
+		inline bool IsValid() const { return vertex_count; } // Use the vertex count to implicitly define validness state.
 		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout );
 
 	private:
