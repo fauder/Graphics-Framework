@@ -28,5 +28,21 @@
     <ClInclude Include="KHR\khrplatform.h" />
     <ClInclude Include="stb\stb_image.h" />
     <ClInclude Include="stb\stb_include.h" />
+    <ClInclude Include="fastgltf\fastgltf\base64.hpp" />
+    <ClInclude Include="fastgltf\fastgltf\core.hpp" />
+    <ClInclude Include="fastgltf\fastgltf\dxmath_element_traits.hpp" />
+    <ClInclude Include="fastgltf\fastgltf\glm_element_traits.hpp" />
+    <ClInclude Include="fastgltf\fastgltf\math.hpp" />
+    <ClInclude Include="fastgltf\fastgltf\tools.hpp" />
+    <ClInclude Include="fastgltf\fastgltf\types.hpp" />
+    <ClInclude Include="fastgltf\fastgltf\util.hpp" />
+    <ClInclude Include="fastgltf\base64.hpp" />
+    <ClInclude Include="fastgltf\core.hpp" />
+    <ClInclude Include="fastgltf\dxmath_element_traits.hpp" />
+    <ClInclude Include="fastgltf\glm_element_traits.hpp" />
+    <ClInclude Include="fastgltf\math.hpp" />
+    <ClInclude Include="fastgltf\tools.hpp" />
+    <ClInclude Include="fastgltf\types.hpp" />
+    <ClInclude Include="fastgltf\util.hpp" />
   </ItemGroup>
 </Project>
