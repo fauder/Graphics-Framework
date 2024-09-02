@@ -15,7 +15,7 @@ namespace Engine
 		int count;
 		GLenum type;
 
-		inline unsigned int Empty() const { return count == 0; }
+		inline bool Empty() const { return count == 0; }
 	}; 
 	
 	struct VertexAttribute : VertexAttributeCountAndType
@@ -32,10 +32,16 @@ namespace Engine
 		VertexBufferLayout()
 		{}
 
+		/* Prevent copying but allow moving: */
+		VertexBufferLayout( const VertexBufferLayout& )				= delete;
+		VertexBufferLayout& operator =( const VertexBufferLayout& ) = delete;
+		VertexBufferLayout( VertexBufferLayout&& )					= default;
+		VertexBufferLayout& operator =( VertexBufferLayout&& )		= default;
+
 		template< typename Collection > 
 		VertexBufferLayout( Collection&& attribute_counts_and_types )
 		{
-			for( auto& attribute : attribute_counts_and_types )
+			for( const auto& attribute : attribute_counts_and_types )
 				if( !attribute.Empty() )
 					attributes.push_back( { attribute.count, attribute.type, ( unsigned int )attributes.size(), GL_FALSE } );
 		}
@@ -71,7 +77,7 @@ namespace Engine
 
 			for( auto index = 0; index < attributes.size(); index++ )
 			{
-				const auto attribute = attributes[ index ];
+				const auto& attribute = attributes[ index ];
 				glVertexAttribPointer( attribute.location, attribute.count, attribute.type, attribute.normalize, stride, BUFFER_OFFSET( offset ) );
 				glEnableVertexAttribArray( attribute.location );
 				offset += attribute.Size();

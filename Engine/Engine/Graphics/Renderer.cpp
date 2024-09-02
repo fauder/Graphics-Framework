@@ -238,14 +238,14 @@ namespace Engine
 
 	void Renderer::Render( const Mesh& mesh )
 	{
-		mesh.IsIndexed()
+		mesh.HasIndices()
 			? Render_Indexed( mesh )
 			: Render_NonIndexed( mesh );
 	}
 
 	void Renderer::Render_Indexed( const Mesh& mesh )
 	{
-		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, 0 );
+		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), mesh.IndexType(), 0 );
 	}
 
 	void Renderer::Render_NonIndexed( const Mesh& mesh )

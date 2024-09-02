@@ -55,7 +55,7 @@ namespace Engine
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer& index_buffer, const std::string& name )
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U16& index_buffer, const std::string& name )
 		:
 		id( -1 ),
 		name( name ),
@@ -70,18 +70,45 @@ namespace Engine
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::optional< IndexBuffer >& index_buffer, const std::string& name )
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U32& index_buffer, const std::string& name )
 		:
 		id( -1 ),
 		name( name ),
 		vertex_buffer_id( vertex_buffer.Id() ),
-		index_buffer_id( index_buffer ? index_buffer->Id() : -1 ),
+		index_buffer_id( index_buffer.Id() ),
 		vertex_count( vertex_buffer.Count() ),
-		index_count( index_buffer ? index_buffer->Count() : 0 )
+		index_count( index_buffer.Count() )
 	{
 		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
-		if( index_buffer )
-			index_buffer->Bind();
+		index_buffer.Bind();
+
+		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
+	}
+
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout,
+							  const std::optional< IndexBuffer_U16 >& index_buffer_u16, const std::optional< IndexBuffer_U32 >& index_buffer_u32,
+							  const std::string& name )
+		:
+		id( -1 ),
+		name( name ),
+		vertex_buffer_id( vertex_buffer.Id() ),
+		index_buffer_id( index_buffer_u16
+							? index_buffer_u16->Id()
+							: index_buffer_u32
+								? index_buffer_u32->Id()
+								: -1 ),
+		vertex_count( vertex_buffer.Count() ),
+		index_count( index_buffer_u16
+						? index_buffer_u16->Count()
+						: index_buffer_u32
+							? index_buffer_u32->Count()
+							: 0 )
+	{
+		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
+		if( index_buffer_u16 )
+			index_buffer_u16->Bind();
+		else if( index_buffer_u32 )
+			index_buffer_u32->Bind();
 
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}

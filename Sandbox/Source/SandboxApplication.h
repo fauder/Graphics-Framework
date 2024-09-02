@@ -3,7 +3,8 @@
 #include "Engine/Graphics/Lighting/Lighting.h"
 #include "Engine/Graphics/MaterialData/MaterialData.h"
 #include "Engine/Graphics/Material.hpp"
-#include "Engine/Graphics/Mesh.hpp"
+#include "Engine/Graphics/Mesh.h"
+#include "Engine/Graphics/Model.h"
 #include "Engine/Graphics/Renderer.h"
 #include "Engine/Graphics/Texture.h"
 #include "Engine/Scene/Camera.h"
@@ -48,20 +49,26 @@ private:
 
 	std::vector< Engine::Drawable > light_source_drawable_array;
 	std::vector< Engine::Drawable > cube_drawable_array;
+	std::vector< Engine::Drawable > backback_part_drawable_array;
+	std::vector< Engine::Drawable > helmet_part_drawable_array;
 	Engine::Drawable ground_quad_drawable;
 	Engine::Drawable front_wall_quad_drawable;
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh;
+	Engine::Model* backpack_model;
+	Engine::Model* helmet_model;
 
 /* Materials, Shaders & Textures: */
 	Engine::Shader phong_shader;
-	Engine::Shader light_source_shader;
+	Engine::Shader basic_color_shader;
 
 	std::vector< Engine::Material > light_source_material_array;
 	std::vector< Engine::Material > cube_material_array;
 	Engine::Material ground_quad_material;
 	Engine::Material front_wall_quad_material;
+	Engine::Material backpack_material;
+	Engine::Material helmet_material;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
@@ -79,6 +86,8 @@ private:
 	std::vector< Engine::Transform > cube_transform_array;
 	Engine::Transform ground_quad_transform;
 	Engine::Transform front_wall_quad_transform;
+	std::vector< Engine::Transform > backpack_part_transform_array;
+	std::vector< Engine::Transform > helmet_part_transform_array;
 
 /* Camera: */
 	Engine::Camera camera;

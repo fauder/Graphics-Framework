@@ -27,7 +27,7 @@ SandboxApplication::SandboxApplication()
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
 	phong_shader( "Phong" ),
-	light_source_shader( "Basic Color" ),
+	basic_color_shader( "Basic Color" ),
 	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
@@ -51,6 +51,8 @@ SandboxApplication::~SandboxApplication()
 
 void SandboxApplication::Initialize()
 {
+	renderer.SetClearColor( Engine::Color4::Gray() );
+
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
 	Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
@@ -62,17 +64,17 @@ void SandboxApplication::Initialize()
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init.", true /* omit if the group is empty */ ) );
 
 /* Textures: */
-	Engine::Texture::ImportSettings import_settings( GL_RGBA );
-	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			import_settings );
-	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", import_settings );
-	import_settings.format = GL_RGB;
-	import_settings.wrap_u = GL_REPEAT;
-	import_settings.wrap_v = GL_REPEAT;
-	checker_pattern = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", import_settings );
+	Engine::Texture::ImportSettings texture_import_settings( GL_RGBA );
+	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			texture_import_settings );
+	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", texture_import_settings );
+	texture_import_settings.format = GL_RGB;
+	texture_import_settings.wrap_u = GL_REPEAT;
+	texture_import_settings.wrap_v = GL_REPEAT;
+	checker_pattern = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
 
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
-	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
+	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
 /* Initial transforms: */
 	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
@@ -100,6 +102,9 @@ void SandboxApplication::Initialize()
 		cube_material_array[ i ].Set( "SurfaceData", cube_surface_data_array[ i ] );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+	
+	backpack_material.Set( "SurfaceData", ground_quad_surface_data );
+	helmet_material.Set( "uniform_color", Engine::Color3::Yellow() );
 
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
@@ -107,6 +112,11 @@ void SandboxApplication::Initialize()
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
+
+	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
+	//backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack", R"(C:/users/fauder/desktop/survival_guitar_backpack/scene.gltf)", model_import_settings );
+	backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack", R"(C:/users/fauder/desktop/survival_guitar_backpack.glb)", model_import_settings );
+	helmet_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Helmet", R"(C:/users/fauder/desktop/DamagedHelmet.glb)", model_import_settings );
 
 /* Drawables & the Renderer: */
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -119,6 +129,26 @@ void SandboxApplication::Initialize()
 	{
 		cube_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &cube_material_array[ i ], &cube_transform_array[ i ] );
 		renderer.AddDrawable( &cube_drawable_array[ i ] );
+	}
+
+	const auto backpack_part_count = backpack_model->PartCount();
+	const auto& backpack_parts = backpack_model->Parts();
+	backpack_part_transform_array = std::vector< Engine::Transform >( backpack_part_count, Engine::Transform( Vector3::One(), Vector3{ 4.0f, 4.0f, 2.0f } ) );
+	backback_part_drawable_array.resize( backpack_part_count );
+	for( auto i = 0; i < backpack_part_count; i++ )
+	{
+		backback_part_drawable_array[ i ] = Engine::Drawable( &backpack_parts[ i ].sub_meshes[ 0 ], &backpack_material, &backpack_part_transform_array[ i ] );
+		renderer.AddDrawable( &backback_part_drawable_array[ i ] );
+	}
+
+	const auto helmet_part_count = helmet_model->PartCount();
+	const auto& helmet_parts = helmet_model->Parts();
+	helmet_part_transform_array = std::vector< Engine::Transform >( helmet_part_count, Engine::Transform( Vector3::One(), Vector3::Up() * 8.0f ) );
+	helmet_part_drawable_array.resize( helmet_part_count );
+	for( auto i = 0; i < helmet_part_count; i++ )
+	{
+		helmet_part_drawable_array[ i ] = Engine::Drawable( &helmet_parts[ i ].sub_meshes[ 0 ], &helmet_material, &helmet_part_transform_array[ i ] );
+		renderer.AddDrawable( &helmet_part_drawable_array[ i ] );
 	}
 
 	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
@@ -243,7 +273,7 @@ void SandboxApplication::RenderImGui()
 		ImGui::ShowDemoWindow();
 
 	Engine::ImGuiDrawer::Draw( phong_shader );
-	Engine::ImGuiDrawer::Draw( light_source_shader );
+	Engine::ImGuiDrawer::Draw( basic_color_shader );
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ] );
@@ -415,7 +445,7 @@ void SandboxApplication::ResetMaterialData()
 {
 	light_source_material_array.resize( LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &light_source_shader );
+		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &basic_color_shader );
 	
 	cube_material_array.resize( CUBE_COUNT );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
@@ -439,6 +469,13 @@ void SandboxApplication::ResetMaterialData()
 	const auto& front_wall_quad_scale( front_wall_quad_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
+
+	backpack_material = Engine::Material( "Backpack", &phong_shader );
+	backpack_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
+	backpack_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+	backpack_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+
+	helmet_material = Engine::Material( "Helmet", &basic_color_shader );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

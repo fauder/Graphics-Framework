@@ -173,8 +173,9 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Lighting\PointLight.h" />
     <ClInclude Include="Engine\Graphics\Lighting\SpotLight.h" />
     <ClInclude Include="Engine\Graphics\Macros.h" />
-    <ClInclude Include="Engine\Graphics\Mesh.hpp" />
+    <ClInclude Include="Engine\Graphics\Mesh.h" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
+    <ClInclude Include="Engine\Graphics\Model.h" />
     <ClInclude Include="Engine\Graphics\PaddedAndCombinedTypes.h" />
     <ClInclude Include="Engine\Graphics\Renderer.h" />
     <ClInclude Include="Engine\Graphics\UniformBufferManagement.hpp" />
@@ -227,6 +228,9 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Graphics\Drawable.cpp" />
     <ClCompile Include="Engine\Graphics\GLLogger.cpp" />
     <ClCompile Include="Engine\Graphics\Material.cpp" />
+    <ClCompile Include="Engine\Graphics\Mesh.cpp" />
+    <ClCompile Include="Engine\Graphics\Model.cpp" />
+    <ClCompile Include="Engine\Graphics\ModelLoader.cpp" />
     <ClCompile Include="Engine\Graphics\Renderer.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBlockBindingPointManager.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBufferManager.cpp" />

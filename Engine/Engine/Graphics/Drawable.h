@@ -2,7 +2,7 @@
 
 // Engine Includes.
 #include "Material.hpp"
-#include "Mesh.hpp"
+#include "Mesh.h"
 #include "Scene/Transform.h"
 
 namespace Engine
@@ -15,7 +15,7 @@ namespace Engine
 
 	public:
 		Drawable();
-		Drawable( Mesh* mesh, Material* material, Transform* transform );
+		Drawable( const Mesh* mesh, Material* material, Transform* transform );
 
 		Drawable( const Drawable& other )				= default;
 		Drawable& operator = ( const Drawable& other )	= default;
@@ -25,12 +25,12 @@ namespace Engine
 
 		~Drawable();
 
-		void SetMesh( Mesh* mesh );
+		void SetMesh( const Mesh* mesh );
 		void SetMaterial( Material* material );
 
 	private:
 		Transform* transform;
-		Mesh* mesh;
+		const Mesh* mesh;
 		Material* material;
 	};
 }
