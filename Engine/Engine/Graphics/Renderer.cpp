@@ -245,7 +245,7 @@ namespace Engine
 
 	void Renderer::Render_Indexed( const Mesh& mesh )
 	{
-		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, mesh.Indices_Raw() );
+		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, 0 );
 	}
 
 	void Renderer::Render_NonIndexed( const Mesh& mesh )
