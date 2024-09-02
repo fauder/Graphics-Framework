@@ -104,7 +104,7 @@ void SandboxApplication::Initialize()
 		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
 	
 	backpack_material.Set( "SurfaceData", ground_quad_surface_data );
-	helmet_material.Set( "uniform_color", Engine::Color3::Yellow() );
+	helmet_material.Set( "SurfaceData", ground_quad_surface_data );
 
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
@@ -281,13 +281,13 @@ void SandboxApplication::RenderImGui()
 	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
+	Engine::ImGuiDrawer::Draw( backpack_material );
+	Engine::ImGuiDrawer::Draw( helmet_material );
 
 	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
-		{
 			ResetLightingData();
-		}
 
 		Engine::ImGuiDrawer::Draw( light_directional.data, "Directional Light Properties" );
 		ImGui::Separator();
@@ -475,7 +475,10 @@ void SandboxApplication::ResetMaterialData()
 	backpack_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
 	backpack_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
-	helmet_material = Engine::Material( "Helmet", &basic_color_shader );
+	helmet_material = Engine::Material( "Helmet", &phong_shader );
+	helmet_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
+	helmet_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+	helmet_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

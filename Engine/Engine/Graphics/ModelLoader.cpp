@@ -45,7 +45,7 @@ namespace Engine
 		for( auto submesh_iterator = mesh.primitives.begin(); submesh_iterator != mesh.primitives.end(); ++submesh_iterator )
         {
             /*
-             * POSITIONS:
+             * Positions:
              */
 
 			auto* position_iterator = submesh_iterator->findAttribute( "POSITION" );
@@ -67,7 +67,41 @@ namespace Engine
             fastgltf::copyFromAccessor< Vector3 >( asset, position_accessor, positions.data() );
 
             /*
-             * INDICES:
+             * Normals:
+             */
+
+            std::vector< Vector3 > normals;
+
+			if( auto* normal_iterator = submesh_iterator->findAttribute( "NORMAL" ); normal_iterator )
+            {
+                const auto& normal_accessor = asset.accessors[ normal_iterator->accessorIndex ];
+                if( !normal_accessor.bufferViewIndex.has_value() )
+                    continue;
+
+                normals.resize( normal_accessor.count, ZERO_INITIALIZATION );
+
+                fastgltf::copyFromAccessor< Vector3 >( asset, normal_accessor, normals.data() );
+            }
+
+            /*
+             * UVs (0):
+             */
+
+            std::vector< Vector2 > uvs_0;
+
+            if( auto* uvs_0_iterator = submesh_iterator->findAttribute( "TEXCOORD_0" ); uvs_0_iterator )
+            {
+                const auto& uvs_0_accessor = asset.accessors[ uvs_0_iterator->accessorIndex ];
+                if( !uvs_0_accessor.bufferViewIndex.has_value() )
+                    continue;
+
+                uvs_0.resize( uvs_0_accessor.count, ZERO_INITIALIZATION );
+
+                fastgltf::copyFromAccessor< Vector2 >( asset, uvs_0_accessor, uvs_0.data() );
+            }
+
+            /*
+             * Indices:
              */
 
 			ASSERT_DEBUG_ONLY( submesh_iterator->indicesAccessor.has_value() ); // We specify GenerateMeshIndices, so we should always have indices.
@@ -90,9 +124,6 @@ namespace Engine
                 indices_u32.resize( index_count );
                 fastgltf::copyFromAccessor< std::uint32_t >( asset, index_accessor, indices_u32.data() );
             }
-
-            std::vector< Vector3 > normals( position_accessor.count, ZERO_INITIALIZATION );
-            std::vector< Vector2 > uvs_0( position_accessor.count, ZERO_INITIALIZATION );
 
             model_part.sub_meshes.emplace_back( std::move( positions ),
                                                 std::string{},
