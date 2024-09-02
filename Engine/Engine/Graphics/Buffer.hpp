@@ -93,8 +93,8 @@ namespace Engine
 		}
 
 		/* Prohibit copying; It does not make sense two have multiple Buffers with the same Id. */
-		Buffer( const Buffer& other )			   = delete;
-		Buffer& operator = ( const Buffer& other ) = delete;
+		Buffer( const Buffer& other )			  = delete;
+		Buffer& operator =( const Buffer& other ) = delete;
 
 		/* Allow moving. */
 		Buffer( Buffer&& donor )
@@ -106,7 +106,7 @@ namespace Engine
 		{
 		}
 		
-		Buffer& operator = ( Buffer&& donor )
+		Buffer& operator =( Buffer&& donor )
 		{
 			id    = std::exchange( donor.id,	-1 );
 			name  = std::exchange( donor.name,	{} );

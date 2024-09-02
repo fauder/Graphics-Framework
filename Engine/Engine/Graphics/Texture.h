@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Macros.h"
 
 // std Includes.
 #include <string>
@@ -41,25 +42,7 @@ namespace Engine
 	private:
 		friend class AssetDatabase< Texture >;
 		
-		// Singleton.
-		class Loader
-		{
-		public:
-			Loader( const Loader& ) = delete;
-			Loader& operator =( const Loader& ) = delete;
-
-			static std::optional< Texture > FromFile( const std::string_view name, const std::string& file_path, const ImportSettings& import_settings );
-
-		private:
-			Loader()
-			{}
-
-			static Loader& Instance()
-			{
-				static Loader instance;
-				return instance;
-			}
-		};
+		ASSET_LOADER_CLASS_DECLARATION( Texture );
 
 	public:
 		using ID = unsigned int;
@@ -67,7 +50,7 @@ namespace Engine
 	public:
 		Texture();
 
-		/* Prevent copying for now. */
+		/* Prevent copying for now: */
 		Texture( const Texture& )				= delete;
 		Texture& operator =( const Texture& )	= delete;
 
