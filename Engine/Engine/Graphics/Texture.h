@@ -26,7 +26,7 @@ namespace Engine
 			GLenum min_filter;
 			GLenum mag_filter;
 
-			ImportSettings( const int format, const bool flip_vertically = true,
+			ImportSettings( const int format = GL_RGBA, const bool flip_vertically = true,
 							GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
 							GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR )
 				:

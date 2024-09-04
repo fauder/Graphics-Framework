@@ -23,7 +23,7 @@ namespace Engine
 		std::optional< Texture > maybe_texture;
 
 		int number_of_channels = -1;
-		auto image_data = stbi_load( file_path.c_str(), &width, &height, &number_of_channels, 0 );
+		auto image_data = stbi_load( file_path.c_str(), &width, &height, &number_of_channels, 4 );
 		if( image_data )
 			maybe_texture = Texture( name, ( std::byte* )image_data, import_settings.format, width, height,
 									 import_settings.wrap_u, import_settings.wrap_v, import_settings.min_filter, import_settings.mag_filter );
@@ -57,17 +57,18 @@ namespace Engine
 		glGenTextures( 1, &id );
 		Bind();
 
-	#ifdef _DEBUG
+#ifdef _DEBUG
 		if( not name.empty() )
 			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
-	#endif // _DEBUG
+#endif // _DEBUG
 
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_u );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_v );
 
-		glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data );
+		/* NOTE: format parameter is not utilized. Internal format and the format parameters below are hard-coded for now. */
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
 		glGenerateMipmap( GL_TEXTURE_2D );
 	}
 
