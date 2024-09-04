@@ -28,27 +28,15 @@ namespace Engine
 
 		struct Part // i.e., "sub-model".
 		{
-			std::vector< Mesh	 > sub_meshes;
-			std::vector< Texture > textures;
+			std::string name;
+
+			std::vector< Mesh	  > sub_meshes;
+			std::vector< Texture* > textures;
+
 		};
 
 	private:
-		class Loader
-		{
-		public:
-			Loader( const Loader& ) = delete; 
-			Loader& operator =( const Loader& ) = delete; 
-			static std::optional< Model > FromFile( const std::string_view name, const std::string& file_path, const ImportSettings& import_settings ); 
-		private:
-			Loader()
-			{}
-
-			static Loader& Instance()
-			{
-				static Loader instance;
-				return instance;
-			}
-		};
+		ASSET_LOADER_CLASS_DECLARATION_FROM_FILE_ONLY( Model );
 
 		friend class AssetDatabase< Model >;
 		friend class Loader;

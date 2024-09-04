@@ -64,10 +64,10 @@ void SandboxApplication::Initialize()
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init.", true /* omit if the group is empty */ ) );
 
 /* Textures: */
-	Engine::Texture::ImportSettings texture_import_settings( GL_RGBA );
+	Engine::Texture::ImportSettings texture_import_settings;
 	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			texture_import_settings );
 	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", texture_import_settings );
-	texture_import_settings.format = GL_RGB;
+	
 	texture_import_settings.wrap_u = GL_REPEAT;
 	texture_import_settings.wrap_v = GL_REPEAT;
 	checker_pattern = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
@@ -94,6 +94,18 @@ void SandboxApplication::Initialize()
 /* Lighting: */
 	ResetLightingData();
 
+/* Vertex/Index Data: */
+	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
+							  "Cube",
+							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
+							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
+							  { /* No indices. */ } );
+
+	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
+	backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack",	R"(C:/users/fauder/desktop/survival_guitar_backpack/scene.gltf)",	model_import_settings );
+	//backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack",	R"(C:/users/fauder/desktop/survival_guitar_backpack.glb)",			model_import_settings );
+	helmet_model   = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Helmet",		R"(C:/users/fauder/desktop/DamagedHelmet.glb)",						model_import_settings );
+
 /* Materials: */
 	ResetMaterialData();
 	ground_quad_material.Set( "SurfaceData", ground_quad_surface_data );
@@ -103,20 +115,10 @@ void SandboxApplication::Initialize()
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
 	
-	backpack_material.Set( "SurfaceData", ground_quad_surface_data );
-	helmet_material.Set( "SurfaceData", ground_quad_surface_data );
-
-/* Vertex/Index Data: */
-	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
-							  "Cube",
-							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
-							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
-							  { /* No indices. */ } );
-
-	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
-	//backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack", R"(C:/users/fauder/desktop/survival_guitar_backpack/scene.gltf)", model_import_settings );
-	backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack", R"(C:/users/fauder/desktop/survival_guitar_backpack.glb)", model_import_settings );
-	helmet_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Helmet", R"(C:/users/fauder/desktop/DamagedHelmet.glb)", model_import_settings );
+	for( auto& backpack_material : backpack_material_array )
+		backpack_material.Set( "SurfaceData", ground_quad_surface_data );
+	for( auto& helmet_material : helmet_material_array )
+		helmet_material.Set( "SurfaceData", ground_quad_surface_data );
 
 /* Drawables & the Renderer: */
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -131,24 +133,30 @@ void SandboxApplication::Initialize()
 		renderer.AddDrawable( &cube_drawable_array[ i ] );
 	}
 
-	const auto backpack_part_count = backpack_model->PartCount();
-	const auto& backpack_parts = backpack_model->Parts();
-	backpack_part_transform_array = std::vector< Engine::Transform >( backpack_part_count, Engine::Transform( Vector3::One(), Vector3{ 4.0f, 4.0f, 2.0f } ) );
-	backback_part_drawable_array.resize( backpack_part_count );
-	for( auto i = 0; i < backpack_part_count; i++ )
+	if( backpack_model )
 	{
-		backback_part_drawable_array[ i ] = Engine::Drawable( &backpack_parts[ i ].sub_meshes[ 0 ], &backpack_material, &backpack_part_transform_array[ i ] );
-		renderer.AddDrawable( &backback_part_drawable_array[ i ] );
+		const auto backpack_part_count = backpack_model->PartCount();
+		const auto& backpack_parts = backpack_model->Parts();
+		backpack_part_transform_array = std::vector< Engine::Transform >( backpack_part_count, Engine::Transform( Vector3::One(), Vector3{ 4.0f, 4.0f, 2.0f } ) );
+		backback_part_drawable_array.resize( backpack_part_count );
+		for( auto i = 0; i < backpack_part_count; i++ )
+		{
+			backback_part_drawable_array[ i ] = Engine::Drawable( &backpack_parts[ i ].sub_meshes[ 0 ], &backpack_material_array[ i ], &backpack_part_transform_array[ i ] );
+			renderer.AddDrawable( &backback_part_drawable_array[ i ] );
+		}
 	}
 
-	const auto helmet_part_count = helmet_model->PartCount();
-	const auto& helmet_parts = helmet_model->Parts();
-	helmet_part_transform_array = std::vector< Engine::Transform >( helmet_part_count, Engine::Transform( Vector3::One(), Vector3::Up() * 8.0f ) );
-	helmet_part_drawable_array.resize( helmet_part_count );
-	for( auto i = 0; i < helmet_part_count; i++ )
+	if( helmet_model )
 	{
-		helmet_part_drawable_array[ i ] = Engine::Drawable( &helmet_parts[ i ].sub_meshes[ 0 ], &helmet_material, &helmet_part_transform_array[ i ] );
-		renderer.AddDrawable( &helmet_part_drawable_array[ i ] );
+		const auto helmet_part_count = helmet_model->PartCount();
+		const auto& helmet_parts = helmet_model->Parts();
+		helmet_part_transform_array = std::vector< Engine::Transform >( helmet_part_count, Engine::Transform( Vector3::One(), Vector3::Up() * 8.0f ) );
+		helmet_part_drawable_array.resize( helmet_part_count );
+		for( auto i = 0; i < helmet_part_count; i++ )
+		{
+			helmet_part_drawable_array[ i ] = Engine::Drawable( &helmet_parts[ i ].sub_meshes[ 0 ], &helmet_material_array[ i ], &helmet_part_transform_array[ i ] );
+			renderer.AddDrawable( &helmet_part_drawable_array[ i ] );
+		}
 	}
 
 	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
@@ -281,8 +289,10 @@ void SandboxApplication::RenderImGui()
 	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
-	Engine::ImGuiDrawer::Draw( backpack_material );
-	Engine::ImGuiDrawer::Draw( helmet_material );
+	for( auto& backpack_material : backpack_material_array )
+		Engine::ImGuiDrawer::Draw( backpack_material );
+	for( auto& helmet_material : helmet_material_array )
+		Engine::ImGuiDrawer::Draw( helmet_material );
 
 	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
@@ -470,15 +480,45 @@ void SandboxApplication::ResetMaterialData()
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 
-	backpack_material = Engine::Material( "Backpack", &phong_shader );
-	backpack_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
-	backpack_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
-	backpack_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+	if( backpack_model )
+	{
+		const auto part_count = backpack_model->PartCount();
+		const auto& parts     = backpack_model->Parts();
 
-	helmet_material = Engine::Material( "Helmet", &phong_shader );
-	helmet_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
-	helmet_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
-	helmet_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+		backpack_material_array.resize( part_count );
+
+		for( auto i = 0; i < part_count; i++ )
+		{
+			const auto& part = parts[ i ];
+
+			backpack_material_array[ i ] = Engine::Material( "Backpack", &phong_shader );
+			const auto albedo_texture = std::find_if( part.textures.cbegin(), part.textures.cend(), []( Engine::Texture* texture ) { return texture->Name() == "Albedo"; } );
+			if( albedo_texture != part.textures.cend() )
+				backpack_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", *albedo_texture );
+			backpack_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+			backpack_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+		}
+	}
+
+	if( helmet_model )
+	{
+		const auto part_count = helmet_model->PartCount();
+		const auto& parts     = helmet_model->Parts();
+		
+		helmet_material_array.resize( part_count );
+
+		for( auto i = 0; i < part_count; i++ )
+		{
+			const auto& part = parts[ i ];
+
+			helmet_material_array[ i ] = Engine::Material( "Helmet", &phong_shader );
+			const auto albedo_texture_iterator = std::find_if( part.textures.cbegin(), part.textures.cend(), []( Engine::Texture* texture ) { return texture->Name() == "Albedo"; } );
+			if( albedo_texture_iterator != part.textures.cend() )
+				helmet_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", *albedo_texture_iterator );
+			helmet_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+			helmet_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+		}
+	}
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

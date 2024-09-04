@@ -1,5 +1,8 @@
 // Engine Includes.
 #include "Model.h"
+#include "Core/AssetDatabase.hpp"
+#include "Math/Matrix.h"
+#include "Math/Quaternion.hpp"
 
 // Vendor Includes.
 #pragma warning(disable:5223)
@@ -35,15 +38,46 @@ struct fastgltf::ElementTraits< Engine::Vector4I > : fastgltf::ElementTraitsBase
 
 namespace Engine
 {
-	bool LoadMesh( fastgltf::Asset& asset, std::vector< Model::Part >& model_parts, fastgltf::Mesh& mesh )
+	bool LoadMesh( fastgltf::Asset& asset, std::vector< Model::Part >& model_parts, const std::vector< Texture* >& textures, fastgltf::Mesh& mesh )
     {
 		/* Naming variables sub-mesh instead of gltf's "primitive" for better readibility. */
 
         auto& model_part = model_parts.emplace_back();
         model_part.sub_meshes.reserve( mesh.primitives.size() );
+        model_part.name = mesh.name;
 
 		for( auto submesh_iterator = mesh.primitives.begin(); submesh_iterator != mesh.primitives.end(); ++submesh_iterator )
         {
+            std::size_t base_color_uv_index = 0;
+            std::size_t material_index      = -1;
+
+			auto* position_iterator = submesh_iterator->findAttribute( "POSITION" );
+			ASSERT_DEBUG_ONLY( position_iterator != submesh_iterator->attributes.end() ); // A mesh primitive is required to hold the POSITION attribute.
+
+            if( submesh_iterator->materialIndex.has_value() )
+            {
+                material_index = submesh_iterator->materialIndex.value();
+                const auto& material = asset.materials[ submesh_iterator->materialIndex.value() ];
+
+                const auto& base_color_texture_info = material.pbrData.baseColorTexture;
+                if( base_color_texture_info.has_value() )
+                {
+                    const auto& fastgltf_texture = asset.textures[ base_color_texture_info->textureIndex ];
+                    if( !fastgltf_texture.imageIndex.has_value() )
+                        return false;
+
+                    const auto albedo_texture = textures[ fastgltf_texture.imageIndex.value() ];
+                    albedo_texture->SetName( "Albedo" );
+
+                    model_part.textures.push_back( albedo_texture );
+
+                    if( base_color_texture_info->transform && base_color_texture_info->transform->texCoordIndex.has_value() )
+                        base_color_uv_index = base_color_texture_info->transform->texCoordIndex.value();
+                    else
+                        base_color_uv_index = material.pbrData.baseColorTexture->texCoordIndex;
+                }
+            }
+
             /*
              * Positions:
              */
@@ -126,13 +160,72 @@ namespace Engine
             }
 
             model_part.sub_meshes.emplace_back( std::move( positions ),
-                                                std::string{},
+                                                model_part.name + "_" + std::to_string( std::distance( mesh.primitives.begin(), submesh_iterator ) ),
                                                 std::move( normals ),
                                                 std::move( uvs_0 ),
                                                 std::move( indices_u16 ), std::move( indices_u32 ) );
         }
 
         return true;
+    }
+
+    bool LoadTexture( fastgltf::Asset& asset, std::vector< Texture* >& textures, fastgltf::Image& image )
+    {
+        Engine::Texture::ImportSettings texture_import_settings;
+        texture_import_settings.wrap_u = GL_MIRRORED_REPEAT;
+        texture_import_settings.wrap_v = GL_MIRRORED_REPEAT;
+
+        // TODO: Import sampler settings and remove the hard-coded wrapping parameters above.
+
+        Texture* texture;
+        
+        std::visit( fastgltf::visitor
+                    {
+                        []( auto& arg ) {},
+                        [ & ]( fastgltf::sources::URI& file_path )
+                        {
+                            ASSERT_DEBUG_ONLY( file_path.fileByteOffset == 0 ); // Offsets with stbi are not supported.
+                            ASSERT_DEBUG_ONLY( file_path.uri.isLocalPath() );   // Only capable of loading local files.
+
+                            const std::string path( file_path.uri.path().begin(), file_path.uri.path().end() );
+
+                            texture = AssetDatabase< Texture >::CreateAssetFromFile( std::string( image.name ), path, texture_import_settings );
+                        },
+                        [ & ]( fastgltf::sources::Array& vector )
+                        {
+                            texture = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( image.name ), vector.bytes.data(), static_cast< int >( vector.bytes.size() ),
+                                                                                       texture_import_settings );
+                        },
+                        [ & ]( fastgltf::sources::BufferView& view )
+                        {
+                            auto& buffer_view = asset.bufferViews[ view.bufferViewIndex ];
+                            auto& buffer      = asset.buffers[ buffer_view.bufferIndex ];
+
+                            /* Yes, we've already loaded every buffer into some GL buffer. 
+                             * However, with GL it's simpler to just copy the buffer data again for the texture.
+                             * Besides, this is just an example. */
+                            std::visit( fastgltf::visitor
+                                        {
+                                            // We only care about VectorWithMime here, because we specify LoadExternalBuffers, meaning all buffers are already loaded into a vector.
+                                            []( auto& arg ) {},
+                                            [ & ]( fastgltf::sources::Array& vector )
+                                            {
+												texture = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( image.name ),
+                                                                                                           vector.bytes.data() + buffer_view.byteOffset,
+																										   static_cast< int >( buffer_view.byteLength ),
+																										   texture_import_settings );
+                                            }
+                                        }, buffer.data );
+                        },
+                    }, image.data );
+
+        if( texture )
+        {
+            textures.push_back( texture );
+            return true;
+        }
+
+        return false;
     }
 
     std::optional< Model > Model::Loader::FromFile( const std::string_view name, const std::string& file_path, const ImportSettings& import_settings )
@@ -185,10 +278,16 @@ namespace Engine
         model.parts.reserve( asset.meshes.size() ); // LoadMesh() will emplace_back() to avoid having to pass the index.
         auto& model_parts = model.parts;
 
+        std::vector< Texture* > textures;
+
+        for( auto& image : asset.images )
+            if( not LoadTexture( asset, textures, image ) )
+                return std::nullopt;
+
 		/* Weird gltf terminology; A *mesh* is actually just a *group*, whereas the "primitive" is the actual mesh, nested inside a "mesh". A better name for a primitive would be sub-mesh. */
 
         for( auto& mesh : asset.meshes )
-            if( not LoadMesh( asset, model_parts, mesh ) )
+            if( not LoadMesh( asset, model_parts, textures, mesh ) )
                 return std::nullopt;
 
         return model;

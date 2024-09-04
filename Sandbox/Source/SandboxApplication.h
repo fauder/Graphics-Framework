@@ -67,8 +67,8 @@ private:
 	std::vector< Engine::Material > cube_material_array;
 	Engine::Material ground_quad_material;
 	Engine::Material front_wall_quad_material;
-	Engine::Material backpack_material;
-	Engine::Material helmet_material;
+	std::vector< Engine::Material > backpack_material_array;
+	std::vector< Engine::Material > helmet_material_array;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
