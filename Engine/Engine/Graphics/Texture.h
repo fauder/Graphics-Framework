@@ -61,12 +61,12 @@ namespace Engine
 		~Texture();
 
 	/* Queries: */
-		inline const std::string&	Name()	const { return name;	}
-		inline const ID				Id()	const { return id;		}
+		inline const ID				Id()	const { return id;	 }
+		inline const std::string&	Name()	const { return name; }
 		void SetName( const std::string& new_name );
 
 	/* Usage: */
-		void Activate( const int slot );
+		void Activate( const int slot ) const;
 
 	private:
 	/* Private constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with parameters. */

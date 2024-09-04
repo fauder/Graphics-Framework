@@ -100,6 +100,7 @@ namespace Engine
 		name = new_name;
 	}
 
+	void Texture::Activate( const int slot ) const
 	{
 		glActiveTexture( GL_TEXTURE0 + slot );
 		Bind();
