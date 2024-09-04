@@ -63,6 +63,7 @@ namespace Engine
 	/* Queries: */
 		inline const std::string&	Name()	const { return name;	}
 		inline const ID				Id()	const { return id;		}
+		void SetName( const std::string& new_name );
 
 	/* Usage: */
 		void Activate( const int slot );

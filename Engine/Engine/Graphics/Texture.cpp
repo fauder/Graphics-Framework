@@ -95,7 +95,11 @@ namespace Engine
 		glDeleteTextures( 1, &id );
 	}
 
-	void Texture::Activate( const int slot )
+	void Texture::SetName( const std::string& new_name )
+	{
+		name = new_name;
+	}
+
 	{
 		glActiveTexture( GL_TEXTURE0 + slot );
 		Bind();
