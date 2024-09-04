@@ -35,6 +35,32 @@ namespace Engine
 		return maybe_texture;
 	}
 
+	std::optional< Texture > Texture::Loader::FromMemory( const::std::string_view name, const std::byte* data, const int size, const ImportSettings& import_settings )
+	{
+		//auto& instance = Instance();
+
+		// OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
+		stbi_set_flip_vertically_on_load( import_settings.flip_vertically );
+
+		int width, height;
+
+		std::optional< Texture > maybe_texture;
+
+		int number_of_channels = -1;
+		auto image_data = stbi_load_from_memory( ( stbi_uc* )data, size, &width, &height, &number_of_channels, 4 );
+		if( image_data )
+		{
+			maybe_texture = Texture( name, ( std::byte* )image_data, import_settings.format, width, height,
+									 import_settings.wrap_u, import_settings.wrap_v, import_settings.min_filter, import_settings.mag_filter );
+		}
+		else
+			std::cerr << "Could not load image data from memory\n";
+
+		stbi_image_free( image_data );
+		
+		return maybe_texture;
+	}
+
 	Texture::Texture()
 		:
 		id( -1 ),
