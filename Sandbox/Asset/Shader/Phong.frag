@@ -9,12 +9,12 @@ in vec2 varying_tex_coords;
 
 out vec4 out_color;
 
-layout ( std140 ) uniform SurfaceData
+layout ( std140 ) uniform PhongMaterialData
 {
 	float shininess;
-} uniform_surface;
+} uniform_phong_material_data;
 
-uniform sampler2D uniform_surface_diffuse_map_slot, uniform_surface_specular_map_slot;
+uniform sampler2D uniform_diffuse_map_slot, uniform_specular_map_slot;
 
 
 vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_direction_view_space,
@@ -33,7 +33,7 @@ vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_di
 	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
 	vec4 reflected_light_direction_view_space = reflect( -to_light_view_space, normal_view_space );
 
-	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_surface.shininess );
+	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_DIRECTIONAL_LIGHT.specular.rgb * specular_contribution;
 
 	return ambient + diffuse + specular;
@@ -64,7 +64,7 @@ vec3 CalculateColorFromPointLight( const int point_light_index,
 	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
 	vec4 reflected_light_direction_view_space = reflect( -to_light_view_space, normal_view_space );
 
-	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_surface.shininess );
+	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_POINT_LIGHTS[ point_light_index ].specular_and_attenuation_quadratic.rgb * specular_contribution;
 
 /* Attenuation: */
@@ -106,7 +106,7 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
 	vec4 reflected_light_direction_view_space = reflect( from_light_view_space, normal_view_space );
 
-	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_surface.shininess );
+	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_SPOT_LIGHTS[ spot_light_index ].specular.rgb * specular_contribution;
 
 	return ambient + cut_off_intensity * ( diffuse + specular );
@@ -118,8 +118,8 @@ void main()
 	// No need to subtract from the camera position since the camera is positioned at the origin in view space.
 	vec4 viewing_direction_view_space = normalize( -varying_position_view_space ); 
 
-	vec3 diffuse_sample  = vec3( texture( uniform_surface_diffuse_map_slot,  varying_tex_coords ) );
-	vec3 specular_sample = vec3( texture( uniform_surface_specular_map_slot, varying_tex_coords ) );
+	vec3 diffuse_sample  = vec3( texture( uniform_diffuse_map_slot,  varying_tex_coords ) );
+	vec3 specular_sample = vec3( texture( uniform_specular_map_slot, varying_tex_coords ) );
 
 	vec3 from_directional_light = _INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE * 
 									CalculateColorFromDirectionalLight( normal_view_space, viewing_direction_view_space,
