@@ -4,7 +4,7 @@
 #include <array>
 
 // Vendor includes.
-#include "ImGui/imgui.h"
+#include <ImGui/imgui.h>
 
 namespace Engine::ImGuiUtility
 {
@@ -25,4 +25,9 @@ namespace Engine::ImGuiUtility
 	
 	void SetNextWindowPos( const HorizontalWindowPositioning horizontal_positioning, const VerticalWindowPositioning vertical_positioning,
 						   const ImGuiCond condition = ImGuiCond_Always );
+
+	/* https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353 */
+	void BeginGroupPanel( const char* name, const ImVec2& size = ImVec2( 0.0f, 0.0f ) );
+	/* https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353 */
+	void EndGroupPanel();
 }
