@@ -48,14 +48,14 @@
     <OutDir>$(SolutionDir)Bin\$(Platform)-$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)Bin-Int\$(Platform)-$(Configuration)\$(ProjectName)\</IntDir>
     <LibraryPath>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Vendor;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <IncludePath>$(SolutionDir)Vendor\;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)Vendor\;$(SolutionDir)Vendor\ImGui;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)Bin\$(Platform)-$(Configuration)\$(ProjectName)\</OutDir>
     <IntDir>$(SolutionDir)Bin-Int\$(Platform)-$(Configuration)\$(ProjectName)\</IntDir>
     <LibraryPath>$(SolutionDir)Bin\$(Platform)-$(Configuration)\Vendor;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <IncludePath>$(SolutionDir)Vendor\;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
+    <IncludePath>$(SolutionDir)Vendor\;$(SolutionDir)Vendor\ImGui;$(SolutionDir)Engine\Engine;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnabled>false</VcpkgEnabled>

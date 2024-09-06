@@ -4,7 +4,7 @@
 
 // Vendor Includes.
 #include "GLFW/glfw3.h"
-#include "ImGui/imgui_impl_glfw.h"
+#include <ImGui/backends/imgui_impl_glfw.h>
 
 // std Includes.
 #include <iostream>
