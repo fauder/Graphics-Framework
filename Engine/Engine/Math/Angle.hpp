@@ -93,7 +93,7 @@ namespace Engine
 
 		/* String Utility. */
 			template< std::size_t Length >
-			constexpr static const char* Format( const char( &number_format )[ Length ] ) { return Utility::String::ConstexprConcatenate( number_format, " radians" ); }
+			constexpr static auto Format( const char( &number_format )[ Length ] ) { return Utility::String::ConstexprConcatenate( number_format, " radians" ); }
 		};
 
 		namespace Literals
