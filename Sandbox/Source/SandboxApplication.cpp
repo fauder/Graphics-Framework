@@ -39,7 +39,7 @@ SandboxApplication::SandboxApplication()
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
 	ui_interaction_enabled( false ),
-	show_imgui_demo_window( false )
+	show_imgui_demo_window( true )
 {
 	Initialize();
 }
@@ -482,6 +482,10 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 		case Platform::KeyCode::KEY_Y:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
 				light_spot.data.cutoff_angle_inner = Engine::Math::Max( light_spot.data.cutoff_angle_inner - 0.33_deg, 0_deg );
+			break;
+		case Platform::KeyCode::KEY_I:
+			if( key_action == Platform::KeyAction::PRESS )
+				show_imgui_demo_window = !show_imgui_demo_window;
 			break;
 		default:
 			break;
