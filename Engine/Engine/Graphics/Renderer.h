@@ -135,6 +135,8 @@ namespace Engine
 		DirectionalLight*			light_directional;
 		std::vector< PointLight* >	lights_point;
 		std::vector< SpotLight*	 >	lights_spot;
+		int lights_point_active_count;
+		int lights_spot_active_count;
 
 		std::unordered_map< Shader::ID, const Shader* > shaders_registered;
 
