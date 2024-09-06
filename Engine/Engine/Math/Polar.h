@@ -13,30 +13,30 @@ namespace Engine::Math
 	/* Constructors. */
 		Polar2( Initialization::ZeroInitialization )
 			:
-			r(),
+			radius(),
 			theta()
 		{}
 
-		Polar2( const float r, Engine::Radians theta )
+		Polar2( const float radius, Engine::Radians theta )
 			:
-			r( r ),
+			radius( radius ),
 			theta( theta )
 		{}
 
 	/* Getters & Setters. */
-		constexpr float R() const { return r; }
-		float& R() { return r; }
+		constexpr float Radius() const { return radius; }
+		float& Radius() { return radius; }
 		constexpr Engine::Radians Theta() const { return theta; }
 		Engine::Radians& Theta() { return theta; }
 
 	private:
-		float r;
+		float radius;
 		Engine::Radians theta;
 	};
 
 	/* Deviates from classical mathematical notation (r, theta, phi), more in-line with video game conventions/needs.
 	 * In this convention, Y is up, X is right & Z is forward (<0,0,+1>) (left-handed).
-	 * Uses (r, h, p), h = heading, p = pitch.
+	 * Uses (r, h, p), r = radius, h = heading, p = pitch.
 	 * Heading = 0 -> facing forward (<0,0,+1>) (assuming Pitch is also zero). Its value increases -> clockwise rotation.
 	 * Pitch   = 0 -> horizontal (on XZ plane). It's values increases -> clockwise rotation around X (i.e, facing "more downward", therefore also called the Angle of Declination).
 	*/
@@ -46,21 +46,21 @@ namespace Engine::Math
 	/* Constructors. */
 		Polar3_Spherical_Game( Initialization::ZeroInitialization )
 			:
-			r(),
+			radius(),
 			heading(),
 			pitch()
 		{}
 
-		Polar3_Spherical_Game( const float r, const Engine::Radians heading, const Engine::Radians pitch )
+		Polar3_Spherical_Game( const float radius, const Engine::Radians heading, const Engine::Radians pitch )
 			:
-			r( r ),
+			radius( radius ),
 			heading( heading ),
 			pitch( pitch )
 		{}
 
 	/* Getters & Setters. */
-		constexpr float R() const { return r; }
-		float& R() { return r; }
+		constexpr float Radius() const { return radius; }
+		float& Radius() { return radius; }
 		/* Heading = 0 means forward (<0,0,+1>) (assuming Pitch is also zero).
 		 * Increasing Heading means clockwise rotation around the Y axis.
 		 */
@@ -79,7 +79,7 @@ namespace Engine::Math
 		Engine::Radians& Pitch() { return pitch; }
 
 	private:
-		float r;
+		float radius;
 		Engine::Radians heading;
 		Engine::Radians pitch;
 	};

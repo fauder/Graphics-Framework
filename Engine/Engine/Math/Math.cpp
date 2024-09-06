@@ -80,7 +80,7 @@ namespace Engine::Math
 
 	Vector2 ToVector2( const Polar2& polar2 )
 	{
-		const auto r = polar2.R();
+		const auto r = polar2.Radius();
 
 		if( IsZero( r ) )
 			return Vector2( ZERO_INITIALIZATION );
@@ -103,7 +103,7 @@ namespace Engine::Math
 
 	Vector3 ToVector3( const Polar3_Spherical_Game& polar3 )
 	{
-		const auto r = polar3.R();
+		const auto r = polar3.Radius();
 
 		if( IsZero( r ) )
 			return Vector3( ZERO_INITIALIZATION );
