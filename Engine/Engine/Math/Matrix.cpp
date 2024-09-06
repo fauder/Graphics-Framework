@@ -27,7 +27,7 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. Clockwise rotation. */
+	/* In row-major form. Counter-clockwise rotation. */
 	Matrix4x4 RotationAroundX( Radians pitch )
 	{
 		const auto cosine_term = Math::Cos( pitch );
@@ -44,7 +44,7 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. Clockwise rotation. */
+	/* In row-major form. Counter-clockwise rotation. */
 	Matrix4x4 RotationAroundY( Radians heading )
 	{
 		const auto cosine_term = Math::Cos( heading );
@@ -61,7 +61,7 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. Clockwise rotation. */
+	/* In row-major form. Counter-clockwise rotation. */
 	Matrix4x4 RotationAroundZ( Radians bank )
 	{
 		const auto cosine_term = Math::Cos( bank );
@@ -78,7 +78,7 @@ namespace Engine::Matrix
 		);
 	}
 
-	/* In row-major form. Clockwise rotation. */
+	/* In row-major form. Counter-clockwise rotation. */
 	Matrix4x4 RotationAroundAxis( Radians angle, Vector3 vector )
 	{
 		vector.Normalize();
@@ -110,7 +110,7 @@ namespace Engine::Matrix
 	}
 
 	/* In-place modification of the upper-left 3x3 portion. */
-	/* In row-major form. Clockwise rotation. */
+	/* In row-major form. Counter-clockwise rotation. */
 	void Matrix::RotationAroundAxis( Matrix4x4& matrix, Radians angle, Vector3 vector )
 	{
 		vector.Normalize();
