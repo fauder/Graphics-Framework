@@ -7,6 +7,7 @@
 #include "Graphics/MaterialData/MaterialData.h"
 #include "Graphics/Material.hpp"
 #include "Graphics/UniformBufferManagement.hpp"
+#include "Math/Polar.h"
 #include "Math/Quaternion.hpp"
 #include "Scene/Camera.h"
 
@@ -216,6 +217,11 @@ namespace Engine::ImGuiDrawer
 
 		ImGui::PopStyleColor();
 	}
+
+	bool Draw(		 Math::Polar2& polar_coords, const bool show_radius = true, const char* name = "##polar_coords" );
+	void Draw( const Math::Polar2& polar_coords,								const char* name = "##polar_coords" );
+	bool Draw(		 Math::Polar3_Spherical_Game& spherical_coords, const bool show_radius = true, const char* name = "##spherical_coords" );
+	void Draw( const Math::Polar3_Spherical_Game& spherical_coords,								   const char* name = "##spherical_coords" );
 
 	bool Draw(		 Texture* texture, const char* name );
 	void Draw( const Texture* texture, const char* name );

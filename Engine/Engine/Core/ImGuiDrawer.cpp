@@ -240,10 +240,10 @@ namespace Engine::ImGuiDrawer
 			{
 				ImGui::PushID( name );
 
-				Draw( transform.GetTranslation(),	"Position"  );
-				Draw( transform.GetRotation(),		"Rotation"  );
+				Draw( transform.GetTranslation(), "Position" );
+				Draw( transform.GetRotation(),	  "Rotation" );
 				if( not hide_scale )
-					Draw( transform.GetScaling(),	"Scale"	);
+					Draw( transform.GetScaling(), "Scale" );
 
 				ImGui::PopID();
 
@@ -252,6 +252,52 @@ namespace Engine::ImGuiDrawer
 		}
 
 		ImGui::End();
+	}
+
+	bool Draw( Math::Polar2& polar_coords, const bool show_radius, const char* name )
+	{
+		bool is_modified = false;
+
+		ImGui::PushID( name );
+
+		is_modified |= Draw( polar_coords.Theta(),  "Theta"	 );
+		
+		if( show_radius )
+			is_modified |= Draw( polar_coords.Radius(), "Radius" );
+
+		ImGui::PopID();
+
+		return is_modified;
+	}
+	
+	void Draw( const Math::Polar2& polar_coords, const char* name )
+	{
+		Draw( polar_coords.Theta(),	 "Theta"  );
+		Draw( polar_coords.Radius(), "Radius" );
+	}
+
+	bool Draw( Math::Polar3_Spherical_Game& spherical_coords, const bool show_radius, const char* name )
+	{
+		bool is_modified = false;
+
+		ImGui::PushID( name );
+
+		is_modified |= Draw( spherical_coords.Heading(), "Heading" );
+		is_modified |= Draw( spherical_coords.Pitch(),	 "Pitch"   );
+
+		if( show_radius )
+			is_modified |= Draw( spherical_coords.Radius(), "Radius" );
+
+		ImGui::PopID();
+
+		return is_modified;
+	}
+	
+	void Draw( const Math::Polar3_Spherical_Game& spherical_coords, const char* name )
+	{
+		Draw( spherical_coords.Heading(), "Heading" );
+		Draw( spherical_coords.Pitch(),	  "Pitch"	);
+		Draw( spherical_coords.Radius(),  "Radius"  );
 	}
 
 	bool Draw( Texture* texture, const char* name )
