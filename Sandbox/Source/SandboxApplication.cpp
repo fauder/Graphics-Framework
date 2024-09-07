@@ -400,7 +400,7 @@ void SandboxApplication::ResetLightingData()
 
 	light_spot_array_disable = false;
 
-	light_point_array = std::vector< Engine::PointLight >( LIGHT_POINT_COUNT );
+	light_point_array.resize( LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
 		light_point_array[ i ] =
