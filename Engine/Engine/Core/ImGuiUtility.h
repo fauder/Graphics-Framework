@@ -3,7 +3,8 @@
 // std Includes.
 #include <array>
 
-// Vendor includes.
+// Vendor Includes.
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include <ImGui/imgui.h>
 
 namespace Engine::ImGuiUtility
