@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Drawable.h"
+#include "Core/BitFlags.hpp"
 #include "Core/DirtyBlob.h"
 #include "Scene/Camera.h"
 #include "Lighting/DirectionalLight.h"
@@ -18,8 +19,10 @@ namespace Engine
 	class Renderer
 	{
 	public:
-		enum class ClearTarget
+		enum class ClearTarget : unsigned int
 		{
+			None = 0,
+
 			DepthBuffer   = GL_DEPTH_BUFFER_BIT,
 			StencilBuffer = GL_STENCIL_BUFFER_BIT,
 			ColorBuffer   = GL_COLOR_BUFFER_BIT,
@@ -99,12 +102,6 @@ namespace Engine
 		void SetClearColor( const Color3& new_clear_color );
 		void SetClearColor( const Color4& new_clear_color );
 
-		void SetClearTarget( const ClearTarget& target );
-		void SetClearTargets( const ClearTarget& target, std::same_as< ClearTarget > auto&& ... other_targets )
-		{
-			clear_target = ClearTarget( ( int )target | ( ( int )other_targets | ... ) );
-		}
-
 	/* Depth Test: */
 		void EnableDepthTest();
 		void DisableDepthTest();
@@ -144,7 +141,7 @@ namespace Engine
 		std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
 
 		Color4 clear_color;
-		ClearTarget clear_target;
+		BitFlags< ClearTarget > clear_targets;
 
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_global;
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_intrinsic;

@@ -10,7 +10,7 @@ namespace Engine
 		lights_point_active_count( 0 ),
 		lights_spot_active_count( 0 ),
 		clear_color( Color4::Gray( 0.1f ) ),
-		clear_target( ClearTarget( ( int )ClearTarget::ColorBuffer | ( int )ClearTarget::DepthBuffer ) )
+		clear_targets( ClearTarget::ColorBuffer, ClearTarget::DepthBuffer )
 	{
 		SetClearColor();
 	}
@@ -218,11 +218,6 @@ namespace Engine
 		SetClearColor();
 	}
 
-	void Renderer::SetClearTarget( const ClearTarget& target )
-	{
-		clear_target = target;
-	}
-
 /*
  * 
  *	PRIVATE API:
@@ -309,6 +304,6 @@ namespace Engine
 
 	void Renderer::Clear() const
 	{
-		glClear( ( GLbitfield )clear_target );
+		glClear( ( GLbitfield )clear_targets.ToBits() );
 	}
 }
