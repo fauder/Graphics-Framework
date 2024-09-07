@@ -11,6 +11,20 @@ namespace Engine
 	class Transform
 	{
 	public:
+		enum class Mask : std::uint8_t
+		{
+			Scale       = 1,
+			Translation = 2,
+			Rotation    = 4,
+
+			NoRotation    = Scale		| Translation,
+			NoTranslation = Scale		| Rotation,
+			NoScale       = Translation | Rotation,
+
+			All = Scale | Translation | Rotation
+		};
+
+	public:
 		Transform();
 		Transform( const Vector3& scale );
 		Transform( const Vector3& scale, const Vector3& translation );

@@ -69,7 +69,7 @@ namespace Engine::ImGuiUtility
     static ImVector<ImRect> s_GroupPanelLabelStack;
 
     /* https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353 */
-    void BeginGroupPanel( const char* name, const ImVec2& size )
+    void BeginGroupPanel( const char* name, bool* is_enabled, const ImVec2& size )
     {
         ImGui::BeginGroup();
 
@@ -93,7 +93,14 @@ namespace Engine::ImGuiUtility
         ImGui::BeginGroup();
         ImGui::Dummy( ImVec2( frameHeight * 0.5f, 0.0f ) );
         ImGui::SameLine( 0.0f, 0.0f );
-        ImGui::TextUnformatted( name );
+        if( is_enabled != nullptr )
+        {
+            ImGui::Checkbox( name, is_enabled );
+            if( not *is_enabled )
+				ImGui::BeginDisabled();
+        }
+        else
+            ImGui::TextUnformatted( name );
         auto labelMin = ImGui::GetItemRectMin();
         auto labelMax = ImGui::GetItemRectMax();
         ImGui::SameLine( 0.0f, 0.0f );
@@ -120,8 +127,11 @@ namespace Engine::ImGuiUtility
     }
 
     /* https://github.com/ocornut/imgui/issues/1496#issuecomment-655048353 */
-    void EndGroupPanel()
+    void EndGroupPanel( bool* is_enabled )
     {
+        if( is_enabled != nullptr && not *is_enabled )
+            ImGui::EndDisabled();
+
         ImGui::PopItemWidth();
 
         auto itemSpacing = ImGui::GetStyle().ItemSpacing;

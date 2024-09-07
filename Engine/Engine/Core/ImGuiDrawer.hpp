@@ -1,12 +1,16 @@
 #pragma once
 
 // Engine Includes.
+#include "Core/BitFlags.hpp"
 #include "Core/ImGuiSetup.h"
 #include "Graphics/Color.hpp"
-#include "Graphics/Lighting/Lighting.h"
+#include "Graphics/Lighting/DirectionalLight.h"
+#include "Graphics/Lighting/PointLight.h"
+#include "Graphics/Lighting/SpotLight.h"
 #include "Graphics/MaterialData/MaterialData.h"
 #include "Graphics/Material.hpp"
 #include "Graphics/UniformBufferManagement.hpp"
+#include "Math/Polar.h"
 #include "Math/Quaternion.hpp"
 #include "Scene/Camera.h"
 
@@ -217,14 +221,19 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
+	bool Draw(		 Math::Polar2& polar_coords, const bool show_radius = true, const char* name = "##polar_coords" );
+	void Draw( const Math::Polar2& polar_coords,								const char* name = "##polar_coords" );
+	bool Draw(		 Math::Polar3_Spherical_Game& spherical_coords, const bool show_radius = true, const char* name = "##spherical_coords" );
+	void Draw( const Math::Polar3_Spherical_Game& spherical_coords,								   const char* name = "##spherical_coords" );
+
 	bool Draw(		 Texture* texture, const char* name );
 	void Draw( const Texture* texture, const char* name );
 
 	bool Draw(		 Camera& camera, const char* name = "##camera" );
 	void Draw( const Camera& camera, const char* name = "##camera" );
 
-	bool Draw(		 Transform& transform, const char* name = "##transform", const bool hide_scale = false );
-	void Draw( const Transform& transform, const char* name = "##transform", const bool hide_scale = false );
+	bool Draw(		 Transform& transform, const BitFlags< Transform::Mask > = Transform::Mask::All, const char* name = "##transform" );
+	void Draw( const Transform& transform, const BitFlags< Transform::Mask > = Transform::Mask::All, const char* name = "##transform" );
 
 	bool Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
@@ -472,14 +481,15 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
-	void Draw( const Shader& shader,		ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const Shader& shader, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 
-	bool Draw(		 Lighting::DirectionalLightData&	directional_light_data, const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const Lighting::DirectionalLightData&	directional_light_data, const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	bool Draw(		 Lighting::PointLightData&			point_light_data,		const char* light_name,		const bool hide_position = false,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const Lighting::PointLightData&			point_light_data,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	bool Draw(		 Lighting::SpotLightData&			spot_light_data,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const Lighting::SpotLightData&			spot_light_data,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	bool Draw(		 MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name,										ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name,										ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw(		 DirectionalLight&	directional_light,	const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const DirectionalLight&	directional_light,	const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw(		 PointLight&		point_light,		const char* light_name,		const bool hide_position = false,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const PointLight&		point_light,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw(		 SpotLight&			spot_light,			const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const SpotLight&			spot_light,			const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	
+	bool Draw(		 MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	void Draw( const MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 }

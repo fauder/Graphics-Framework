@@ -32,9 +32,9 @@ namespace Engine::Math
 		} // Same as the default constructor.
 
 		constexpr Vector( const Vector& other )						= default;
-		constexpr Vector( Vector && donor )	noexcept				= default;
-		constexpr Vector& operator = ( const Vector & other )		= default;
-		constexpr Vector& operator = ( Vector && donor ) noexcept	= default;
+		constexpr Vector( Vector&& donor ) noexcept					= default;
+		constexpr Vector& operator = ( const Vector& other )		= default;
+		constexpr Vector& operator = ( Vector&& donor ) noexcept	= default;
 
 		constexpr ~Vector() = default;
 
@@ -343,35 +343,35 @@ namespace Engine::Math
 			if constexpr( std::is_integral_v< Component > )
 			{
 				if      constexpr( Size == 2 )
-					return data[ 0 ] != 0 && data[ 1 ] != 0;
+					return data[ 0 ] == 0 && data[ 1 ] == 0;
 				else if constexpr( Size == 3 )
-					return data[ 0 ] != 0 && data[ 1 ] != 0 && data[ 2 ] != 0;
+					return data[ 0 ] == 0 && data[ 1 ] == 0 && data[ 2 ] == 0;
 				else if constexpr( Size == 4 )
-					return data[ 0 ] != 0 && data[ 1 ] != 0 && data[ 2 ] != 0 && data[ 3 ] != 0;
+					return data[ 0 ] == 0 && data[ 1 ] == 0 && data[ 2 ] == 0 && data[ 3 ] == 0;
 				else
 				{
 					bool non_zero_encountered = false;
-					for( auto i = 0; i < Size; i++ )
+					for( auto i = 0; i < Size && !non_zero_encountered; i++ )
 						non_zero_encountered |= data[ i ] != 0;
 
-					return non_zero_encountered;
+					return !non_zero_encountered;
 				}
 			}
 			else // Floating point.
 			{
 				if      constexpr( Size == 2 )
-					return !Math::IsZero( data[ 0 ] ) && !Math::IsZero( data[ 1 ] );
+					return Math::IsZero( data[ 0 ] ) && Math::IsZero( data[ 1 ] );
 				else if constexpr( Size == 3 )
-					return !Math::IsZero( data[ 0 ] ) && !Math::IsZero( data[ 1 ] ) && !Math::IsZero( data[ 2 ] );
+					return Math::IsZero( data[ 0 ] ) && Math::IsZero( data[ 1 ] ) && Math::IsZero( data[ 2 ] );
 				else if constexpr( Size == 4 )
-					return !Math::IsZero( data[ 0 ] ) && !Math::IsZero( data[ 1 ] ) && !Math::IsZero( data[ 2 ] ) && !Math::IsZero( data[ 3 ] );
+					return Math::IsZero( data[ 0 ] ) && Math::IsZero( data[ 1 ] ) && Math::IsZero( data[ 2 ] ) && Math::IsZero( data[ 3 ] );
 				else
 				{
 					bool non_zero_encountered = false;
-					for( auto i = 0; i < Size; i++ )
+					for( auto i = 0; i < Size && !non_zero_encountered; i++ )
 						non_zero_encountered |= !Math::IsZero( data[ i ] );
 
-					return non_zero_encountered;
+					return !non_zero_encountered;
 				}
 			}
 		}
@@ -381,6 +381,7 @@ namespace Engine::Math
 			return Math::IsEqualSquared( SquareMagnitude(), Component( 1 ) );
 		}
 
+		// TODO: Equality operator etc.
 
 	/* Other Arithmetic Operations. */
 		/* With self. */

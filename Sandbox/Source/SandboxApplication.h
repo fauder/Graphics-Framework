@@ -114,8 +114,11 @@ private:
 	std::vector< Engine::PointLight > light_point_array;
 	Engine::SpotLight light_spot;
 
+	bool light_point_array_disable;
+	bool light_point_array_is_animated;
 	float light_point_orbit_radius;
-	bool light_point_is_animated;
+
+	bool light_spot_array_disable;
 
 /* Frame statistics: */
 	Radians current_time_as_angle;

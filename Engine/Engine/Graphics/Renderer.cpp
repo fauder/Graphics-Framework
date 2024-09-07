@@ -7,8 +7,10 @@ namespace Engine
 {
 	Renderer::Renderer()
 		:
+		lights_point_active_count( 0 ),
+		lights_spot_active_count( 0 ),
 		clear_color( Color4::Gray( 0.1f ) ),
-		clear_target( ClearTarget( ( int )ClearTarget::ColorBuffer | ( int )ClearTarget::DepthBuffer ) )
+		clear_targets( ClearTarget::ColorBuffer, ClearTarget::DepthBuffer )
 	{
 		SetClearColor();
 	}
@@ -24,44 +26,46 @@ namespace Engine
 
 		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
 
-		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", light_directional ? 1u : 0u );
-		if( light_directional )
+		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", light_directional && light_directional->is_enabled ? 1u : 0u );
+		if( light_directional && light_directional->is_enabled )
 		{
-			light_directional->data.direction_world_space = light_directional->transform->Forward(); // This is for the cpu-side inspection. Not necessary for the shaders.
-			light_directional->data.direction_view_space  = light_directional->data.direction_world_space * view_matrix_3x3;
+			light_directional->data.direction_view_space = light_directional->transform->Forward() * view_matrix_3x3;
 			uniform_buffer_management_intrinsic.SetPartial_Struct( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
 		}
 
-		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point.size() );
+		lights_point_active_count = 0;
 		for( auto index = 0; index < lights_point.size(); index++ )
 		{
 			auto& point_light = lights_point[ index ];
 
-			point_light->data.position_world_space = point_light->transform->GetTranslation(); // This is for the cpu-side inspection. Not necessary for the shaders.
-
-			/* Shaders expect the lights' position & direction in view space. */
-			point_light->data.position_view_space  = Vector4( point_light->data.position_world_space ).SetW( 1.0f ) * view_matrix;
-			uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", index, point_light->data );
+			if( point_light->is_enabled )
+			{
+				/* Shaders expect the lights' position & direction in view space. */
+				point_light->data.position_view_space  = Vector4( point_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix;
+				uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", lights_point_active_count++, point_light->data );
+			}
 		}
+		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point_active_count );
 
-		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot.size() );
+		lights_spot_active_count = 0;
 		for( auto index = 0; index < lights_spot.size(); index++ )
 		{
 			auto& spot_light = lights_spot[ index ];
 
-			spot_light->data.position_world_space  = spot_light->transform->GetTranslation();	// This is for the cpu-side inspection. Not necessary for the shaders.
-			spot_light->data.direction_world_space = spot_light->transform->Forward();			// This is for the cpu-side inspection. Not necessary for the shaders.
+			if( spot_light->is_enabled )
+			{
+				/* Shaders expect the lights' position & direction in view space. */
 
-			/* Shaders expect the lights' position & direction in view space. */
+				spot_light->data.position_view_space_and_cos_cutoff_angle_inner.vector = ( Vector4( spot_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix ).XYZ();
+				spot_light->data.position_view_space_and_cos_cutoff_angle_inner.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_inner ) );
 
-			spot_light->data.position_view_space_and_cos_cutoff_angle_inner.vector = ( Vector4( spot_light->data.position_world_space ).SetW( 1.0f ) * view_matrix ).XYZ();
-			spot_light->data.position_view_space_and_cos_cutoff_angle_inner.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_inner ) );
+				spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->transform->Forward() * view_matrix_3x3;
+				spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
 
-			spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->data.direction_world_space * view_matrix_3x3;
-			spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
-
-			uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", index, spot_light->data );
+				uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", lights_spot_active_count++, spot_light->data );
+			}
 		}
+		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot_active_count );
 	}
 
 	void Renderer::Render( Camera& camera )
@@ -210,11 +214,6 @@ namespace Engine
 		SetClearColor();
 	}
 
-	void Renderer::SetClearTarget( const ClearTarget& target )
-	{
-		clear_target = target;
-	}
-
 /*
  * 
  *	PRIVATE API:
@@ -301,6 +300,6 @@ namespace Engine
 
 	void Renderer::Clear() const
 	{
-		glClear( ( GLbitfield )clear_target );
+		glClear( ( GLbitfield )clear_targets.ToBits() );
 	}
 }

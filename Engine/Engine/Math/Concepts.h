@@ -10,4 +10,6 @@ namespace Engine::Concepts
 	template< std::size_t value > concept NonZero = ( value != 0 );
 
 	template< typename T, typename ... U > concept IsAnyOf = ( std::same_as< T, U > || ... );
+
+	template< typename T > concept IsEnum = ( std::is_enum_v< T > );
 }

@@ -5,6 +5,7 @@
 #include "Engine/Core/AssetDatabase.hpp"
 #include "Engine/Core/ImGuiDrawer.hpp"
 #include "Engine/Core/ImGuiSetup.h"
+#include "Engine/Core/ImGuiUtility.h"
 #include "Engine/Core/Platform.h"
 #include "Engine/Core/ServiceLocator.h"
 #include "Engine/Graphics/GLLogger.h"
@@ -39,7 +40,7 @@ SandboxApplication::SandboxApplication()
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
 	ui_interaction_enabled( false ),
-	show_imgui_demo_window( false )
+	show_imgui_demo_window( true )
 {
 	Initialize();
 }
@@ -108,17 +109,17 @@ void SandboxApplication::Initialize()
 
 /* Materials: */
 	ResetMaterialData();
-	ground_quad_material.Set( "SurfaceData", ground_quad_surface_data );
-	front_wall_quad_material.Set( "SurfaceData", front_wall_quad_surface_data );
+	ground_quad_material.Set( "PhongMaterialData", ground_quad_surface_data );
+	front_wall_quad_material.Set( "PhongMaterialData", front_wall_quad_surface_data );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
-		cube_material_array[ i ].Set( "SurfaceData", cube_surface_data_array[ i ] );
+		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
-	
+		
 	for( auto& backpack_material : backpack_material_array )
-		backpack_material.Set( "SurfaceData", ground_quad_surface_data );
+		backpack_material.Set( "PhongMaterialData", ground_quad_surface_data );
 	for( auto& helmet_material : helmet_material_array )
-		helmet_material.Set( "SurfaceData", ground_quad_surface_data );
+		helmet_material.Set( "PhongMaterialData", ground_quad_surface_data );
 
 /* Drawables & the Renderer: */
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -202,7 +203,7 @@ void SandboxApplication::Update()
 		/* Light source transform: */
 		Vector3 point_light_position_world_space;
 
-		if( light_point_is_animated )
+		if( light_point_array_is_animated )
 		{
 			const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f + angle_increment * ( float )i );
 
@@ -237,8 +238,8 @@ void SandboxApplication::Update()
 			// Control via mouse:
 			const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
 			camera_controller
-					.OffsetHeading( Radians( +mouse_x_delta_pos ) )
-					.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
+				.OffsetHeading( Radians( +mouse_x_delta_pos ) )
+				.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
 		}
 	}
 
@@ -298,19 +299,57 @@ void SandboxApplication::RenderImGui()
 	{
 		if( ImGui::Button( "Reset" ) )
 			ResetLightingData();
+		
+		ImGui::NewLine();
 
-		Engine::ImGuiDrawer::Draw( light_directional.data, "Directional Light Properties" );
-		ImGui::Separator();
-		ImGui::Checkbox( "Animate (Rotate) Point Light", &light_point_is_animated );
-		if( light_point_is_animated )
-			ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
-		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		if( ImGui::BeginTabBar( "Lights Tab Bar", ImGuiTabBarFlags_DrawSelectedOverline | ImGuiTabBarFlags_NoTabListScrollingButtons ) )
 		{
-			const std::string name( "Point Light # " + std::to_string( i ) + " Properties##");
-			if( Engine::ImGuiDrawer::Draw( light_point_array[ i ].data, name.c_str(), light_point_is_animated /* hide position. */ ) )
-				light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+			if( ImGui::BeginTabItem( "Directional Light" ) )
+			{
+				Engine::ImGuiDrawer::Draw( light_directional, "Directional Light" );
+				ImGui::EndTabItem();
+			}
+
+			if( ImGui::BeginTabItem( "Point Lights" ) )
+			{
+				Engine::ImGuiUtility::BeginGroupPanel( "Options" );
+				if( ImGui::Checkbox( "Disable All", &light_point_array_disable ) )
+					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+						light_point_array[ i ].is_enabled = !light_point_array_disable;
+				ImGui::Checkbox( "Animate (Orbit) Point Lights", &light_point_array_is_animated );
+				if( light_point_array_is_animated )
+					ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
+				Engine::ImGuiUtility::EndGroupPanel();
+
+				if( ImGui::TreeNodeEx( "Point Lights", ImGuiTreeNodeFlags_Framed ) )
+				{
+					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+					{
+						const std::string name( "Point Light # " + std::to_string( i ) );
+						if( Engine::ImGuiDrawer::Draw( light_point_array[ i ], name.c_str(), light_point_array_is_animated /* hide position. */ ) )
+							light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+					}
+
+					ImGui::TreePop();
+				}
+
+				ImGui::EndTabItem();
+			}
+
+			if( ImGui::BeginTabItem( "Spot Lights" ) )
+			{
+				if( ImGui::TreeNodeEx( "Spot Lights", ImGuiTreeNodeFlags_Framed ) )
+				{
+					Engine::ImGuiDrawer::Draw( light_spot, "Spot Light" );
+
+					ImGui::TreePop();
+				}
+			
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
 		}
-		Engine::ImGuiDrawer::Draw( light_spot.data, "Spot Light Properties" );
 
 		for( auto i = 0; i < CUBE_COUNT; i++ )
 		{
@@ -324,8 +363,6 @@ void SandboxApplication::RenderImGui()
 
 	ImGui::End();
 
-	Engine::ImGuiDrawer::Draw( camera_transform, "Main Camera", true /* hide scale. */);
-
 	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
@@ -337,6 +374,7 @@ void SandboxApplication::RenderImGui()
 		}
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
+		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
 	}
 
 	ImGui::End();
@@ -385,36 +423,36 @@ void SandboxApplication::UpdateViewMatrix()
 
 void SandboxApplication::ResetLightingData()
 {
-	light_point_is_animated  = true;
-	light_point_orbit_radius = 13.25f;
-
 	light_directional = 
 	{
+		.is_enabled = true,
 		.data =
 		{
 			.ambient               = Engine::Color3{  0.05f,  0.05f,  0.05f },
 			.diffuse               = Engine::Color3{  0.4f,   0.4f,   0.4f  },
 			.specular              = Engine::Color3{  0.5f,   0.5f,   0.5f  },
-			.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		/* End of GLSL equivalence. */
-			.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
 		},
 		.transform = &light_directional_transform
 	};
 
-	light_point_array = std::vector< Engine::PointLight >( LIGHT_POINT_COUNT );
+	light_point_array_disable      = false;
+	light_point_array_is_animated  = true;
+	light_point_orbit_radius       = 13.25f;
+
+	light_spot_array_disable = false;
+
+	light_point_array.resize( LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
 		light_point_array[ i ] =
 		{
+			.is_enabled = true,
 			.data =
 			{
 				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f },							.scalar = 0.075f	},
 				.diffuse_and_attenuation_linear   = {.color = Engine::Math::Random::Generate< Engine::Color3 >(),	.scalar = 0.0035f	},
 				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f },
 				.position_view_space = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-			/* End of GLSL equivalence. */
-				.position_world_space = {  0.2f,  -1.0f,   1.0f  }
 			},
 			.transform = &light_point_transform_array[ i ]
 		};
@@ -422,6 +460,7 @@ void SandboxApplication::ResetLightingData()
 
 	light_spot =
 	{
+		.is_enabled = true,
 		.data =
 		{
 			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
@@ -432,8 +471,6 @@ void SandboxApplication::ResetLightingData()
 			.position_view_space_and_cos_cutoff_angle_inner  = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 12.5_deg ) ) },
 			.direction_view_space_and_cos_cutoff_angle_outer = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 17.5_deg ) ) },
 		/* End of GLSL equivalence. */
-			.position_world_space   = camera_transform.GetTranslation(),
-			.direction_world_space  = camera_transform.Forward(),
 			.cutoff_angle_inner     = 12.5_deg,
 			.cutoff_angle_outer     = 17.5_deg
 		},
@@ -461,21 +498,21 @@ void SandboxApplication::ResetMaterialData()
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
-		cube_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", container_texture_diffuse_map );
-		cube_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", container_texture_specular_map );
+		cube_material_array[ i ].SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
+		cube_material_array[ i ].SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 		cube_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	}
 
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
-	ground_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
-	ground_quad_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+	ground_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern );
+	ground_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern );
 	const auto& ground_quad_scale( ground_quad_transform.GetScaling() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Z() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_quad_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
-	front_wall_quad_material.SetTexture( "uniform_surface_diffuse_map_slot", checker_pattern );
-	front_wall_quad_material.SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+	front_wall_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern );
+	front_wall_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern );
 	const auto& front_wall_quad_scale( front_wall_quad_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
@@ -494,8 +531,8 @@ void SandboxApplication::ResetMaterialData()
 			backpack_material_array[ i ] = Engine::Material( "Backpack", &phong_shader );
 			const auto albedo_texture = std::find_if( part.textures.cbegin(), part.textures.cend(), []( Engine::Texture* texture ) { return texture->Name() == "Albedo"; } );
 			if( albedo_texture != part.textures.cend() )
-				backpack_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", *albedo_texture );
-			backpack_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+				backpack_material_array[ i ].SetTexture( "uniform_diffuse_map_slot", *albedo_texture );
+			backpack_material_array[ i ].SetTexture( "uniform_specular_map_slot", checker_pattern );
 			backpack_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 		}
 	}
@@ -503,8 +540,8 @@ void SandboxApplication::ResetMaterialData()
 	if( helmet_model )
 	{
 		const auto part_count = helmet_model->PartCount();
-		const auto& parts     = helmet_model->Parts();
-		
+		const auto& parts = helmet_model->Parts();
+
 		helmet_material_array.resize( part_count );
 
 		for( auto i = 0; i < part_count; i++ )
@@ -514,8 +551,8 @@ void SandboxApplication::ResetMaterialData()
 			helmet_material_array[ i ] = Engine::Material( "Helmet", &phong_shader );
 			const auto albedo_texture_iterator = std::find_if( part.textures.cbegin(), part.textures.cend(), []( Engine::Texture* texture ) { return texture->Name() == "Albedo"; } );
 			if( albedo_texture_iterator != part.textures.cend() )
-				helmet_material_array[ i ].SetTexture( "uniform_surface_diffuse_map_slot", *albedo_texture_iterator );
-			helmet_material_array[ i ].SetTexture( "uniform_surface_specular_map_slot", checker_pattern );
+				helmet_material_array[ i ].SetTexture( "uniform_diffuse_map_slot", *albedo_texture_iterator );
+			helmet_material_array[ i ].SetTexture( "uniform_specular_map_slot", checker_pattern );
 			helmet_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 		}
 	}
@@ -562,6 +599,10 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 		case Platform::KeyCode::KEY_Y:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
 				light_spot.data.cutoff_angle_inner = Engine::Math::Max( light_spot.data.cutoff_angle_inner - 0.33_deg, 0_deg );
+			break;
+		case Platform::KeyCode::KEY_I:
+			if( key_action == Platform::KeyAction::PRESS )
+				show_imgui_demo_window = !show_imgui_demo_window;
 			break;
 		default:
 			break;

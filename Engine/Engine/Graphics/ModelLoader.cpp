@@ -82,9 +82,6 @@ namespace Engine
              * Positions:
              */
 
-			auto* position_iterator = submesh_iterator->findAttribute( "POSITION" );
-			ASSERT_DEBUG_ONLY( position_iterator != submesh_iterator->attributes.end() ); // A mesh primitive is required to hold the POSITION attribute.
-
 			const auto& position_accessor = asset.accessors[ position_iterator->accessorIndex ];
 			if( !position_accessor.bufferViewIndex.has_value() )
 				continue;
