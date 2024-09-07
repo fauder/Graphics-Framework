@@ -381,6 +381,7 @@ namespace Engine::Math
 			return Math::IsEqualSquared( SquareMagnitude(), Component( 1 ) );
 		}
 
+		// TODO: Equality operator etc.
 
 	/* Other Arithmetic Operations. */
 		/* With self. */

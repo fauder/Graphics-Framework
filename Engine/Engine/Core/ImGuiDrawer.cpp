@@ -5,6 +5,8 @@
 
 namespace Engine::ImGuiDrawer
 {
+	using namespace Engine::Math::Literals;
+
 	bool Draw( const GLenum type, void* value_pointer, const char* name )
 	{
 		switch( type )
@@ -187,71 +189,67 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
-	bool Draw( Transform& transform, const char* name, const bool hide_scale )
+	bool Draw( Transform& transform, const BitFlags< Transform::Mask > flags, const char* name )
 	{
 		bool is_modified = false;
 
-		if( ImGui::Begin( "Transforms", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+		ImGuiUtility::BeginGroupPanel( name );
+
+		ImGui::PushID( name );
+
+		if( flags.IsSet( Transform::Mask::Translation ) )
 		{
-			if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
+			Vector3 translation = transform.GetTranslation();
+			if( Draw( translation, "Position" ) )
 			{
-				ImGui::PushID( name );
-
-				Vector3 translation = transform.GetTranslation();
-				if( Draw( translation, "Position" ) )
-				{
-					is_modified = true;
-					transform.SetTranslation( translation );
-				}
-
-				Quaternion rotation = transform.GetRotation();
-				if( Draw( rotation, "Rotation" ) )
-				{
-					is_modified = true;
-					transform.SetRotation( rotation );
-				}
-
-				if( not hide_scale )
-				{
-					Vector3 scale = transform.GetScaling();
-					if( Draw( scale, "Scale" ) )
-					{
-						is_modified = true;
-						transform.SetScaling( scale );
-					}
-				}
-
-				ImGui::PopID();
-
-				ImGui::TreePop();
+				is_modified = true;
+				transform.SetTranslation( translation );
 			}
 		}
 
-		ImGui::End();
+		if( flags.IsSet( Transform::Mask::Rotation ) )
+		{
+			Quaternion rotation = transform.GetRotation();
+			if( Draw( rotation, "Rotation" ) )
+			{
+				is_modified = true;
+				transform.SetRotation( rotation );
+			}
+		}
+
+		if( flags.IsSet( Transform::Mask::Scale ) )
+		{
+			Vector3 scale = transform.GetScaling();
+			if( Draw( scale, "Scale" ) )
+			{
+				is_modified = true;
+				transform.SetScaling( scale );
+			}
+		}
+
+		ImGui::PopID();
+
+		ImGuiUtility::EndGroupPanel();
 
 		return is_modified;
 	}
 
-	void Draw( const Engine::Transform& transform, const char* name, const bool hide_scale )
+	void Draw( const Engine::Transform& transform, const BitFlags< Transform::Mask > flags, const char* name )
 	{
-		if( ImGui::Begin( "Transforms", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			if( ImGui::TreeNodeEx( name, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed ) )
-			{
-				ImGui::PushID( name );
+		ImGuiUtility::BeginGroupPanel( name );
 
-				Draw( transform.GetTranslation(), "Position" );
-				Draw( transform.GetRotation(),	  "Rotation" );
-				if( not hide_scale )
-					Draw( transform.GetScaling(), "Scale" );
+		ImGui::PushID( name );
 
-				ImGui::PopID();
+		if( flags.IsSet( Transform::Mask::Translation ) )
+			Draw( transform.GetTranslation(), "Position" );
+		if( flags.IsSet( Transform::Mask::Rotation ) )
+			Draw( transform.GetRotation(), "Rotation" );
+		if( flags.IsSet( Transform::Mask::Scale ) )
+			Draw( transform.GetScaling(), "Scale" );
 
-				ImGui::TreePop();
-			}
-		}
+		ImGui::PopID();
 
-		ImGui::End();
+		ImGuiUtility::EndGroupPanel();
 	}
 
 	bool Draw( Math::Polar2& polar_coords, const bool show_radius, const char* name )
@@ -840,148 +838,139 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
-	bool Draw( Lighting::PointLightData& point_light_data, const char* light_name, const bool hide_position, ImGuiWindowFlags window_flags )
+	bool Draw( DirectionalLight& directional_light, const char* light_name, ImGuiWindowFlags window_flags )
 	{
 		bool is_modified = false;
 
-		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			ImGui::SeparatorText( light_name );
+		ImGuiUtility::BeginGroupPanel( light_name, &directional_light.is_enabled );
 
-			ImGui::PushID( light_name );
+		ImGui::PushID( light_name );
 
-			is_modified |= Draw( point_light_data.ambient_and_attenuation_constant.color,	"Ambient"  );
-			is_modified |= Draw( point_light_data.diffuse_and_attenuation_linear.color,		"Diffuse"  );
-			is_modified |= Draw( point_light_data.specular_attenuation_quadratic.color,		"Specular" );
-			if( !hide_position )
-				is_modified |= Draw( point_light_data.position_world_space, "Position" );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Constant",		&point_light_data.ambient_and_attenuation_constant.scalar,	0.0f, 5.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Linear",		&point_light_data.diffuse_and_attenuation_linear.scalar,	0.0f, 1.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
-			is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic",	&point_light_data.specular_attenuation_quadratic.scalar,	0.0f, 1.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
+		is_modified |= Draw( directional_light.data.ambient,  "Ambient"  );
+		is_modified |= Draw( directional_light.data.diffuse,  "Diffuse"  );
+		is_modified |= Draw( directional_light.data.specular, "Specular" );
 
-			ImGui::PopID();
-		}
+		is_modified |= Draw( *directional_light.transform, Transform::Mask::Rotation, "Transform" );
 
-		ImGui::End();
+		ImGui::PopID();
+
+		ImGuiUtility::EndGroupPanel( &directional_light.is_enabled );
 
 		return is_modified;
 	}
 
-	void Draw( const Lighting::PointLightData& point_light_data, const char* light_name, ImGuiWindowFlags window_flags )
+	void Draw( const DirectionalLight& directional_light, const char* light_name, ImGuiWindowFlags window_flags )
 	{
-		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			ImGui::SeparatorText( light_name );
+		bool dummy_enabled = directional_light.is_enabled;
+		ImGuiUtility::BeginGroupPanel( light_name, &dummy_enabled );
 
-			ImGui::PushID( light_name );
+		ImGui::PushID( light_name );
 
-			Draw( point_light_data.ambient_and_attenuation_constant.color,  "Ambient"  );
-			Draw( point_light_data.diffuse_and_attenuation_linear.color,	"Diffuse"  );
-			Draw( point_light_data.specular_attenuation_quadratic.color,	"Specular" );
-			Draw( point_light_data.position_world_space, "Position" );
-			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
-			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
-			ImGui::InputFloat( "Attenuation: Constant",		const_cast< float* >( &point_light_data.ambient_and_attenuation_constant.scalar ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputFloat( "Attenuation: Linear",		const_cast< float* >( &point_light_data.diffuse_and_attenuation_linear.scalar	), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::InputFloat( "Attenuation: Quadratic",	const_cast< float* >( &point_light_data.specular_attenuation_quadratic.scalar	), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
-			ImGui::PopStyleColor();
+		Draw( directional_light.data.ambient, "Ambient" );
+		Draw( directional_light.data.diffuse, "Diffuse" );
+		Draw( directional_light.data.specular, "Specular" );
 
-			ImGui::PopID();
-		}
+		Draw( *directional_light.transform, Transform::Mask::Rotation, "Transform" );
 
-		ImGui::End();
+		ImGui::PopID();
+
+		ImGuiUtility::EndGroupPanel( &dummy_enabled );
 	}
 
-	bool Draw( Lighting::SpotLightData& spot_light_data, const char* light_name, ImGuiWindowFlags window_flags )
+	bool Draw( PointLight& point_light, const char* light_name, const bool hide_position, ImGuiWindowFlags window_flags )
 	{
 		bool is_modified = false;
 
-		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			ImGui::SeparatorText( light_name );
+		ImGuiUtility::BeginGroupPanel( light_name, &point_light.is_enabled );
 
-			ImGui::PushID( light_name );
+		ImGui::PushID( light_name );
 
-			using namespace Engine::Math::Literals;
+		is_modified |= Draw( point_light.data.ambient_and_attenuation_constant.color, "Ambient"  );
+		is_modified |= Draw( point_light.data.diffuse_and_attenuation_linear.color,	  "Diffuse"  );
+		is_modified |= Draw( point_light.data.specular_attenuation_quadratic.color,	  "Specular" );
 
-			is_modified |= Draw( spot_light_data.ambient,				"Ambient"				);
-			is_modified |= Draw( spot_light_data.diffuse,				"Diffuse"				);
-			is_modified |= Draw( spot_light_data.specular,				"Specular"				);
-			is_modified |= Draw( spot_light_data.position_world_space,	"Position"				);
-			is_modified |= Draw( spot_light_data.direction_world_space, "Direction"				);
-			is_modified |= Draw( spot_light_data.cutoff_angle_inner,	"Cutoff Angle: Inner", 0.0_deg, spot_light_data.cutoff_angle_outer );
-			is_modified |= Draw( spot_light_data.cutoff_angle_outer,	"Cutoff Angle: Outer", spot_light_data.cutoff_angle_inner, 180.0_deg );
+		if( !hide_position )
+			is_modified |= Draw( *point_light.transform, Transform::Mask::Translation, "Transform" );
 
-			ImGui::PopID();
-		}
+		is_modified |= ImGui::SliderFloat( "Attenuation: Constant",	 &point_light.data.ambient_and_attenuation_constant.scalar,	0.0f, 5.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
+		is_modified |= ImGui::SliderFloat( "Attenuation: Linear",	 &point_light.data.diffuse_and_attenuation_linear.scalar,	0.0f, 1.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
+		is_modified |= ImGui::SliderFloat( "Attenuation: Quadratic", &point_light.data.specular_attenuation_quadratic.scalar,	0.0f, 1.0f, "%.5g", ImGuiSliderFlags_Logarithmic );
 
-		ImGui::End();
+		ImGui::PopID();
 
-		return is_modified;
-	}
-
-	void Draw( const Lighting::SpotLightData& spot_light_data, const char* light_name, ImGuiWindowFlags window_flags )
-	{
-		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			ImGui::SeparatorText( light_name );
-
-			ImGui::PushID( light_name );
-
-			Draw( spot_light_data.ambient,					"Ambient"				);
-			Draw( spot_light_data.diffuse,					"Diffuse"				);
-			Draw( spot_light_data.specular,					"Specular"				);
-			Draw( spot_light_data.position_world_space,		"Position"				);
-			Draw( spot_light_data.direction_world_space,	"Direction"				);
-			Draw( spot_light_data.cutoff_angle_inner,		"Cutoff Angle: Inner"   );
-			Draw( spot_light_data.cutoff_angle_outer,		"Cutoff Angle: Outer"	);
-
-			ImGui::PopID();
-		}
-
-		ImGui::End();
-	}
-
-	bool Draw( Lighting::DirectionalLightData& directional_light_data, const char* light_name, ImGuiWindowFlags window_flags )
-	{
-		bool is_modified = false;
-
-		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			ImGui::SeparatorText( light_name );
-
-			ImGui::PushID( light_name );
-
-			is_modified |= Draw( directional_light_data.ambient,				"Ambient" );
-			is_modified |= Draw( directional_light_data.diffuse,				"Diffuse" );
-			is_modified |= Draw( directional_light_data.specular,				"Specular" );
-			is_modified |= Draw( directional_light_data.direction_world_space,	"Direction" );
-
-			ImGui::PopID();
-		}
-
-		ImGui::End();
-
-		return is_modified;
-	}
-
-	void Draw( const Lighting::DirectionalLightData& directional_light_data, const char* light_name, ImGuiWindowFlags window_flags )
-	{
-		if( ImGui::Begin( "Light Data", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
-		{
-			ImGui::SeparatorText( light_name );
-
-			ImGui::PushID( light_name );
-
-			Draw( directional_light_data.ambient,				"Ambient" );
-			Draw( directional_light_data.diffuse,				"Diffuse" );
-			Draw( directional_light_data.specular,				"Specular" );
-			Draw( directional_light_data.direction_world_space, "Position" );
+		ImGuiUtility::EndGroupPanel( &point_light.is_enabled);
 		
-			ImGui::PopID();
-		}
+		return is_modified;
+	}
 
-		ImGui::End();
+	void Draw( const PointLight& point_light, const char* light_name, ImGuiWindowFlags window_flags )
+	{
+		bool dummy_enabled = point_light.is_enabled;
+		ImGuiUtility::BeginGroupPanel( light_name, &dummy_enabled );
+
+		ImGui::PushID( light_name );
+
+		Draw( point_light.data.ambient_and_attenuation_constant.color, "Ambient"  );
+		Draw( point_light.data.diffuse_and_attenuation_linear.color,   "Diffuse"  );
+		Draw( point_light.data.specular_attenuation_quadratic.color,   "Specular" );
+
+		Draw( const_cast< const Transform& >( *point_light.transform ), Transform::Mask::Translation, "Transform" );
+
+		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::InputFloat( "Attenuation: Constant",	 const_cast< float* >( &point_light.data.ambient_and_attenuation_constant.scalar ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+		ImGui::InputFloat( "Attenuation: Linear",	 const_cast< float* >( &point_light.data.diffuse_and_attenuation_linear.scalar	 ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+		ImGui::InputFloat( "Attenuation: Quadratic", const_cast< float* >( &point_light.data.specular_attenuation_quadratic.scalar	 ), 0, 0, "%.3f", ImGuiInputTextFlags_ReadOnly );
+		ImGui::PopStyleColor();
+
+		ImGuiUtility::EndGroupPanel( &dummy_enabled );
+		
+		ImGui::PopID();
+	}
+
+	bool Draw( SpotLight& spot_light, const char* light_name, ImGuiWindowFlags window_flags )
+	{
+		bool is_modified = false;
+
+		ImGuiUtility::BeginGroupPanel( light_name, &spot_light.is_enabled );
+
+		ImGui::PushID( light_name );
+
+		is_modified |= Draw( spot_light.data.ambient,  "Ambient"  );
+		is_modified |= Draw( spot_light.data.diffuse,  "Diffuse"  );
+		is_modified |= Draw( spot_light.data.specular, "Specular" );
+
+		is_modified |= Draw( *spot_light.transform, BitFlags< Transform::Mask >( Transform::Mask::Translation, Transform::Mask::Rotation ), "Transform" );
+
+		is_modified |= Draw( spot_light.data.cutoff_angle_inner, "Cutoff Angle: Inner", 0.0_deg,							spot_light.data.cutoff_angle_outer );
+		is_modified |= Draw( spot_light.data.cutoff_angle_outer, "Cutoff Angle: Outer", spot_light.data.cutoff_angle_inner, 180.0_deg );
+
+		ImGui::PopID();
+
+		ImGuiUtility::EndGroupPanel( &spot_light.is_enabled );
+
+		return is_modified;
+	}
+
+	void Draw( const SpotLight& spot_light, const char* light_name, ImGuiWindowFlags window_flags )
+	{
+		bool dummy_enabled = spot_light.is_enabled;
+		ImGuiUtility::BeginGroupPanel( light_name );
+
+		ImGui::PushID( light_name );
+
+		Draw( spot_light.data.ambient,	"Ambient"  );
+		Draw( spot_light.data.diffuse,	"Diffuse"  );
+		Draw( spot_light.data.specular,	"Specular" );
+
+		Draw( const_cast< const Transform& >( *spot_light.transform ), BitFlags< Transform::Mask >( Transform::Mask::Translation, Transform::Mask::Rotation ), "Transform" );
+
+		Draw( spot_light.data.cutoff_angle_inner, "Cutoff Angle: Inner" );
+		Draw( spot_light.data.cutoff_angle_outer, "Cutoff Angle: Outer"	);
+
+		ImGui::PopID();
+	
+		ImGuiUtility::EndGroupPanel( &dummy_enabled );
 	}
 
 	bool Draw( MaterialData::PhongMaterialData& phong_material_data, const char* surface_name, ImGuiWindowFlags window_flags )

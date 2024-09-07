@@ -5,6 +5,7 @@
 #include "Engine/Core/AssetDatabase.hpp"
 #include "Engine/Core/ImGuiDrawer.hpp"
 #include "Engine/Core/ImGuiSetup.h"
+#include "Engine/Core/ImGuiUtility.h"
 #include "Engine/Core/Platform.h"
 #include "Engine/Core/ServiceLocator.h"
 #include "Engine/Graphics/GLLogger.h"
@@ -164,7 +165,7 @@ void SandboxApplication::Update()
 		/* Light source transform: */
 		Vector3 point_light_position_world_space;
 
-		if( light_point_is_animated )
+		if( light_point_array_is_animated )
 		{
 			const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f + angle_increment * ( float )i );
 
@@ -199,8 +200,8 @@ void SandboxApplication::Update()
 			// Control via mouse:
 			const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
 			camera_controller
-					.OffsetHeading( Radians( +mouse_x_delta_pos ) )
-					.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
+				.OffsetHeading( Radians( +mouse_x_delta_pos ) )
+				.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
 		}
 	}
 
@@ -258,19 +259,56 @@ void SandboxApplication::RenderImGui()
 		{
 			ResetLightingData();
 		}
+		ImGui::NewLine();
 
-		Engine::ImGuiDrawer::Draw( light_directional.data, "Directional Light Properties" );
-		ImGui::Separator();
-		ImGui::Checkbox( "Animate (Rotate) Point Light", &light_point_is_animated );
-		if( light_point_is_animated )
-			ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
-		for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		if( ImGui::BeginTabBar( "Lights Tab Bar", ImGuiTabBarFlags_DrawSelectedOverline | ImGuiTabBarFlags_NoTabListScrollingButtons ) )
 		{
-			const std::string name( "Point Light # " + std::to_string( i ) + " Properties##");
-			if( Engine::ImGuiDrawer::Draw( light_point_array[ i ].data, name.c_str(), light_point_is_animated /* hide position. */ ) )
-				light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+			if( ImGui::BeginTabItem( "Directional Light" ) )
+			{
+				Engine::ImGuiDrawer::Draw( light_directional, "Directional Light" );
+				ImGui::EndTabItem();
+			}
+
+			if( ImGui::BeginTabItem( "Point Lights" ) )
+			{
+				Engine::ImGuiUtility::BeginGroupPanel( "Options" );
+				if( ImGui::Checkbox( "Disable All", &light_point_array_disable ) )
+					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+						light_point_array[ i ].is_enabled = !light_point_array_disable;
+				ImGui::Checkbox( "Animate (Orbit) Point Lights", &light_point_array_is_animated );
+				if( light_point_array_is_animated )
+					ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
+				Engine::ImGuiUtility::EndGroupPanel();
+
+				if( ImGui::TreeNodeEx( "Point Lights", ImGuiTreeNodeFlags_Framed ) )
+				{
+					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+					{
+						const std::string name( "Point Light # " + std::to_string( i ) );
+						if( Engine::ImGuiDrawer::Draw( light_point_array[ i ], name.c_str(), light_point_array_is_animated /* hide position. */ ) )
+							light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+					}
+
+					ImGui::TreePop();
+				}
+
+				ImGui::EndTabItem();
+			}
+
+			if( ImGui::BeginTabItem( "Spot Lights" ) )
+			{
+				if( ImGui::TreeNodeEx( "Spot Lights", ImGuiTreeNodeFlags_Framed ) )
+				{
+					Engine::ImGuiDrawer::Draw( light_spot, "Spot Light" );
+
+					ImGui::TreePop();
+				}
+			
+				ImGui::EndTabItem();
+			}
+
+			ImGui::EndTabBar();
 		}
-		Engine::ImGuiDrawer::Draw( light_spot.data, "Spot Light Properties" );
 
 		for( auto i = 0; i < CUBE_COUNT; i++ )
 		{
@@ -284,8 +322,6 @@ void SandboxApplication::RenderImGui()
 
 	ImGui::End();
 
-	Engine::ImGuiDrawer::Draw( camera_transform, "Main Camera", true /* hide scale. */);
-
 	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
@@ -297,6 +333,7 @@ void SandboxApplication::RenderImGui()
 		}
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
+		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
 	}
 
 	ImGui::End();
@@ -345,36 +382,36 @@ void SandboxApplication::UpdateViewMatrix()
 
 void SandboxApplication::ResetLightingData()
 {
-	light_point_is_animated  = true;
-	light_point_orbit_radius = 13.25f;
-
 	light_directional = 
 	{
+		.is_enabled = true,
 		.data =
 		{
 			.ambient               = Engine::Color3{  0.05f,  0.05f,  0.05f },
 			.diffuse               = Engine::Color3{  0.4f,   0.4f,   0.4f  },
 			.specular              = Engine::Color3{  0.5f,   0.5f,   0.5f  },
-			.direction_view_space  = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-		/* End of GLSL equivalence. */
-			.direction_world_space = {  0.2f,  -1.0f,   1.0f  }
 		},
 		.transform = &light_directional_transform
 	};
+
+	light_point_array_disable      = false;
+	light_point_array_is_animated  = true;
+	light_point_orbit_radius       = 13.25f;
+
+	light_spot_array_disable = false;
 
 	light_point_array = std::vector< Engine::PointLight >( LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
 		light_point_array[ i ] =
 		{
+			.is_enabled = true,
 			.data =
 			{
 				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f },							.scalar = 0.075f	},
 				.diffuse_and_attenuation_linear   = {.color = Engine::Math::Random::Generate< Engine::Color3 >(),	.scalar = 0.0035f	},
 				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f },
 				.position_view_space = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
-			/* End of GLSL equivalence. */
-				.position_world_space = {  0.2f,  -1.0f,   1.0f  }
 			},
 			.transform = &light_point_transform_array[ i ]
 		};
@@ -382,6 +419,7 @@ void SandboxApplication::ResetLightingData()
 
 	light_spot =
 	{
+		.is_enabled = true,
 		.data =
 		{
 			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
@@ -392,8 +430,6 @@ void SandboxApplication::ResetLightingData()
 			.position_view_space_and_cos_cutoff_angle_inner  = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 12.5_deg ) ) },
 			.direction_view_space_and_cos_cutoff_angle_outer = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 17.5_deg ) ) },
 		/* End of GLSL equivalence. */
-			.position_world_space   = camera_transform.GetTranslation(),
-			.direction_world_space  = camera_transform.Forward(),
 			.cutoff_angle_inner     = 12.5_deg,
 			.cutoff_angle_outer     = 17.5_deg
 		},
