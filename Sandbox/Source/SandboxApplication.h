@@ -49,8 +49,9 @@ private:
 
 	std::vector< Engine::Drawable > light_source_drawable_array;
 	std::vector< Engine::Drawable > cube_drawable_array;
-	std::vector< Engine::Drawable > backback_part_drawable_array;
-	std::vector< Engine::Drawable > helmet_part_drawable_array;
+	std::vector< Engine::Drawable > backpack_drawable_array;
+	std::vector< Engine::Drawable > helmet_drawable_array;
+	std::vector< Engine::Drawable > test_drawable_array;
 	Engine::Drawable ground_quad_drawable;
 	Engine::Drawable front_wall_quad_drawable;
 
@@ -58,6 +59,7 @@ private:
 	Engine::Mesh cube_mesh;
 	Engine::Model* backpack_model;
 	Engine::Model* helmet_model;
+	Engine::Model* test_model;
 
 /* Materials, Shaders & Textures: */
 	Engine::Shader phong_shader;
@@ -69,6 +71,7 @@ private:
 	Engine::Material front_wall_quad_material;
 	std::vector< Engine::Material > backpack_material_array;
 	std::vector< Engine::Material > helmet_material_array;
+	std::vector< Engine::Material > test_material_array;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
@@ -86,8 +89,9 @@ private:
 	std::vector< Engine::Transform > cube_transform_array;
 	Engine::Transform ground_quad_transform;
 	Engine::Transform front_wall_quad_transform;
-	std::vector< Engine::Transform > backpack_part_transform_array;
-	std::vector< Engine::Transform > helmet_part_transform_array;
+	std::vector< Engine::Transform > backpack_sub_mesh_transform_array;
+	std::vector< Engine::Transform > helmet_sub_mesh_transform_array;
+	std::vector< Engine::Transform > test_sub_mesh_transform_array;
 
 /* Camera: */
 	Engine::Camera camera;
