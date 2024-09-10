@@ -15,6 +15,7 @@ namespace Engine
 		display_frame_statistics( true ),
 		time_current( 0.0f ),
 		time_multiplier( 1.0f ),
+		show_imgui( true ),
 		show_gl_logger( true ),
 		time_previous( 0.0f ),
 		time_previous_since_start( 0.0f ),
@@ -74,9 +75,12 @@ namespace Engine
 
 			Render();
 
-			ImGuiSetup::BeginFrame();
-			RenderImGui();
-			ImGuiSetup::EndFrame();
+			if( show_imgui )
+			{
+				ImGuiSetup::BeginFrame();
+				RenderImGui();
+				ImGuiSetup::EndFrame();
+			}
 
 			Platform::SwapBuffers();
 		}
