@@ -244,9 +244,9 @@ namespace Engine
 		return rotation_and_translation_matrix.GetRow< 3 >( 2 );
 	}
 
-	void Transform::LookAt( const Vector3& direction, const Vector3& up )
+	Transform& Transform::LookAt( const Vector3& direction, const Vector3& up )
 	{
-		SetRotation( Quaternion::LookRotation( direction, up ) );
+		return SetRotation( Quaternion::LookRotation( direction, up ) );
 	}
 
 	void Transform::UpdateScalingMatrixIfDirty()

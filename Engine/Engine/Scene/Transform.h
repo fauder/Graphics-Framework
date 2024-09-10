@@ -52,7 +52,7 @@ namespace Engine
 		Transform& MultiplyTranslation( const Vector3& multiplier );
 		Transform& MultiplyTranslation( const float multiplier );
 
-		void LookAt( const Vector3& direction, const Vector3& up = Vector3::Up() );
+		Transform& LookAt( const Vector3& direction, const Vector3& up = Vector3::Up() );
 
 		/* For cases where a custom matrix needs to be used. */
 		inline void SetFinalMatrix( const Matrix4x4& matrix )
