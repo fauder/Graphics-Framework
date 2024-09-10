@@ -40,6 +40,10 @@ namespace Engine
 		Transform& MultiplyScaling( const float multiplier );
 
 		Transform& SetRotation( const Quaternion& new_rotation );
+		Transform& MultiplyRotation( const Quaternion& multiplier );
+		Transform& MultiplyRotation_X( const Radians& angle );
+		Transform& MultiplyRotation_Y( const Radians& angle );
+		Transform& MultiplyRotation_Z( const Radians& angle );
 
 		Transform& SetTranslation( const Vector3& new_translation );
 		Transform& SetTranslation( const float new_x, const float new_y, const float new_z );

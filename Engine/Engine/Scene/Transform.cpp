@@ -108,6 +108,26 @@ namespace Engine
 		return *this;
 	}
 
+	Transform& Transform::MultiplyRotation( const Quaternion& multiplier )
+	{
+		return SetRotation( ( rotation * multiplier ).Normalized() );
+	}
+
+	Transform& Transform::MultiplyRotation_X( const Radians& angle )
+	{
+		return SetRotation( ( rotation * Quaternion( angle, Vector3::Right() ) ).Normalized() );
+	}
+
+	Transform& Transform::MultiplyRotation_Y( const Radians& angle )
+	{
+		return SetRotation( ( rotation * Quaternion( angle, Vector3::Up() ) ).Normalized() );
+	}
+
+	Transform& Transform::MultiplyRotation_Z( const Radians& angle )
+	{
+		return SetRotation( ( rotation * Quaternion( angle, Vector3::Forward() ) ).Normalized() );
+	}
+
 	Transform& Transform::SetTranslation( const Vector3& new_translation )
 	{
 		this->translation = new_translation;
