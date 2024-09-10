@@ -207,6 +207,11 @@ namespace Engine::Math
 							   w * other.w - Math::Dot( xyz, other.xyz ) );
 		}
 
+		constexpr Quaternion operator*= ( const Quaternion& other )
+		{
+			return *this = Quaternion( *this ) * other;
+		}
+
 		/* Do not use this as it is slow.
 		 * Use Transform(), as it is faster. */
 		constexpr Vector3 Transform_Naive( const Vector3& vector_to_rotate ) const
