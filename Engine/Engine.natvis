@@ -113,19 +113,18 @@
     <DisplayString ExcludeView="simple" Condition="IsNormalized()">[x]: {xyz.data[0],h} [y]: {xyz.data[1],h} [z]: {xyz.data[2],h} [w]: {w,h} (normalized)</DisplayString>
     <DisplayString ExcludeView="simple" Condition="!IsNormalized()">[x]: {xyz.data[0],h} [y]: {xyz.data[1],h} [z]: {xyz.data[2],h} [w]: {w,h}</DisplayString>
   </Type>
-  
-  <!-- TODO: Display both the rows & columns. Check out glm's code for this. Of course this would mean we must "specialize" for sizes 2,3 & 4. Although maybe not, check out .natvis docs' matrix (or was it magnum's, just below?)-->
-  
+
   <!-- Matrix -->
-  <Type Name="Engine::MatrixBase&lt;*&gt;">
-    <DisplayString>{($T1 *)data,[$T2*$T3]nag}</DisplayString>
+  <Type Name="Engine::Math::Matrix&lt;*&gt;">
+    <DisplayString>{($T1 *)data,[$T2*$T3]naf}</DisplayString>
     <Expand>
-      <ArrayItems>
-        <Direction>Forward</Direction>
-        <Rank>2</Rank>
-        <Size>$i == 0 ? $T2 : $T3</Size>
-        <ValuePointer>($T1 *)data</ValuePointer>
-      </ArrayItems>
+      <CustomListItems>
+        <Variable Name="i" InitialValue="0"/>
+        <Loop Condition="i &lt; $T2">
+          <Item Name="Row {i}">($T1 *)&amp;data[i],[$T3]nag</Item>
+          <Exec>++i</Exec>
+        </Loop>
+      </CustomListItems>
     </Expand>
   </Type>
 </AutoVisualizer>
