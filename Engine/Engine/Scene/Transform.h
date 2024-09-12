@@ -54,12 +54,8 @@ namespace Engine
 
 		Transform& LookAt( const Vector3& direction, const Vector3& up = Vector3::Up() );
 
-		/* For cases where a custom matrix needs to be used. */
-		inline void SetFinalMatrix( const Matrix4x4& matrix )
-		{
-			final_matrix = matrix;
-			final_matrix_needsUpdate = scaling_needsUpdate = rotation_needsUpdate = translation_needsUpdate = false;
-		}
+		/* SRT = Scale * Rotate * Translate. */
+		Transform& SetFromSRTMatrix( const Matrix4x4& srt_matrix );
 
 	/* Queries: */
 		const Vector3& GetScaling() const;

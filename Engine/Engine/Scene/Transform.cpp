@@ -164,6 +164,19 @@ namespace Engine
 		return SetTranslation( translation * multiplier );
 	}
 
+	/* SRT = Scale * Rotate * Translate. */
+	Transform& Transform::SetFromSRTMatrix( const Matrix4x4& srt_matrix )
+	{
+		Matrix::DecomposeSRT( srt_matrix, scale, rotation, translation );
+
+		/* Test if the reconstructed matrix matches the input matrix: */
+		ASSERT_DEBUG_ONLY( Matrix::SRT( scale, rotation, translation ) == srt_matrix )
+
+		final_matrix_needsUpdate = scaling_needsUpdate = rotation_needsUpdate = translation_needsUpdate = is_dirty = true;
+
+		return *this;
+	}
+
 	const Vector3& Transform::GetScaling() const
 	{
 		return scale;
