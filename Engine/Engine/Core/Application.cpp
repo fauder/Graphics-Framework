@@ -5,6 +5,9 @@
 #include "ImGuiUtility.h"
 #include "Math/Math.hpp"
 
+/* To enable some .natvis functionality: */
+#include "Natvis/Natvis.h"
+
 // std Includes.
 #include <iostream>
 
@@ -22,6 +25,8 @@ namespace Engine
 		time_since_start( 0.0f ),
 		frame_count( 1 )
 	{
+		NatVis::ForceIncludeInBuild();
+
 		Initialize();
 	}
 
