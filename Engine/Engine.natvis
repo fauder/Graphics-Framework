@@ -72,25 +72,25 @@
     <DisplayString ExcludeView="simple">[x]: {data[0],d} [y]: {data[1],d} [z]: {data[2],d} [w]: {data[3],d}</DisplayString>
   </Type>
     
-  <!-- Degrees< Float > -->
+  <!-- Degrees< float > -->
   <Type Name="Engine::Math::Degrees&lt;float&gt;">
     <DisplayString IncludeView="simple">{value,g}° ({value * 3.14159274f / 180.0f,g} radians)</DisplayString>
     <DisplayString ExcludeView="simple">{value,g}° ({value * 3.14159274f / 180.0f,g} radians)</DisplayString>
   </Type>
   
-  <!-- Degrees< Double > -->
+  <!-- Degrees< double > -->
   <Type Name="Engine::Math::Degrees&lt;double&gt;">
     <DisplayString IncludeView="simple">{value,h}° ({value * 3.1415926535897931 / 180.0,h} radians)</DisplayString>
     <DisplayString ExcludeView="simple">{value,h}° ({value * 3.1415926535897931 / 180.0,h} radians)</DisplayString>
   </Type>
   
-  <!--Radians< Float > -->
+  <!--Radians< float > -->
   <Type Name="Engine::Math::Radians&lt;float&gt;">
     <DisplayString IncludeView="simple">{value,g} radians ({180.0f * value / 3.14159274f,g}°)</DisplayString>
     <DisplayString ExcludeView="simple">{value,g} radians ({180.0f * value / 3.14159274f,g}°)</DisplayString>
   </Type>
   
-  <!--Radians< Double > -->
+  <!--Radians< double > -->
   <Type Name="Engine::Math::Radians&lt;double&gt;">
     <DisplayString IncludeView="simple">{value,h} radians ({180.0 * value / 3.1415926535897931,h}°)</DisplayString>
     <DisplayString ExcludeView="simple">{value,h} radians ({180.0 * value / 3.1415926535897931,h}°)</DisplayString>
@@ -98,20 +98,34 @@
   
   <!-- Quaternion< float > -->
   <Type Name="Engine::Math::Quaternion&lt;float&gt;">
-    <Intrinsic Name="Dot" Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
-    <Intrinsic Name="IsNormalized" Expression="Dot()&gt;0.99980000000500002&amp;Dot()&lt;1.0001999999950000"></Intrinsic>
-    <DisplayString IncludeView="simple">&lt;{w,g} {xyz}&gt;</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="IsNormalized()">[x]: {xyz.data[0],g} [y]: {xyz.data[1],g} [z]: {xyz.data[2],g} [w]: {w,g} (normalized)</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="!IsNormalized()">[x]: {xyz.data[0],g} [y]: {xyz.data[1],g} [z]: {xyz.data[2],g} [w]: {w,g}</DisplayString>
+    <Intrinsic Name="Dot"           Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
+    <Intrinsic Name="IsNormalized"  Expression="Dot()&gt;0.99980000000500002&amp;Dot()&lt;1.0001999999950000"></Intrinsic>
+    <Intrinsic Name="Is0"           Expression="val&gt;-0.0001999999950000&amp;val&lt;0.0001999999950000">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="Is1" Expression="val&gt;0.99980000000500002&amp;val&lt;1.0001999999950000">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="IsIdentity" Expression="IsNormalized()&amp;(Is0(x)&amp;Is0(y)&amp;Is0(z))||Is1(w)"></Intrinsic>
+    <DisplayString Condition="IsNormalized()&amp;!IsIdentity() ">Rotation Angle: {(Sandbox.exe!NatVis::Acos(w)*2),g}° | Axis: &lt;{(x/Sandbox.exe!NatVis::SinFromCos(w)),g},{(y/Sandbox.exe!NatVis::SinFromCos(w)),g},{(z/Sandbox.exe!NatVis::SinFromCos(w)),g}&gt;</DisplayString>
+    <DisplayString Condition="IsIdentity()                     ">Identity Rotation</DisplayString>
+    <DisplayString Condition="!IsNormalized()                  ">UNNORMALIZED->NOT A ROTATION x: {xyz.data[0],g} y: {xyz.data[1],g} z: {xyz.data[2],g} w: {w,g}</DisplayString>
   </Type>
 
   <!-- Quaternion< double > -->
   <Type Name="Engine::Math::Quaternion&lt;double&gt;">
-    <Intrinsic Name="Dot" Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
-    <Intrinsic Name="IsNormalized" Expression="Dot()&gt;0.99999999999998002&amp;Dot()&lt;1.0000000000000200"></Intrinsic>
-    <DisplayString IncludeView="simple">&lt;{w,h} {xyz}&gt;</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="IsNormalized()">[x]: {xyz.data[0],h} [y]: {xyz.data[1],h} [z]: {xyz.data[2],h} [w]: {w,h} (normalized)</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="!IsNormalized()">[x]: {xyz.data[0],h} [y]: {xyz.data[1],h} [z]: {xyz.data[2],h} [w]: {w,h}</DisplayString>
+    <Intrinsic Name="Dot"           Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
+    <Intrinsic Name="IsNormalized"  Expression="Dot()&gt;0.99999999999998002&amp;Dot()&lt;1.0000000000000200"></Intrinsic>
+    <Intrinsic Name="Is0"           Expression="val&gt;-0.0000000000000200&amp;val&lt;0.0000000000000200">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="Is1" Expression="val&gt;0.99999999999998002&amp;val&lt;1.0000000000000200">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="IsIdentity" Expression="IsNormalized()&amp;(Is0(x)&amp;Is0(y)&amp;Is0(z))||Is1(w)"></Intrinsic>
+    <DisplayString Condition="IsNormalized()&amp;!IsIdentity() ">Rotation Angle: {(Sandbox.exe!NatVis::Acos(w)*2),g}° | Axis: &lt;{(x/Sandbox.exe!NatVis::SinFromCos(w)),g},{(y/Sandbox.exe!NatVis::SinFromCos(w)),g},{(z/Sandbox.exe!NatVis::SinFromCos(w)),g}&gt;</DisplayString>
+    <DisplayString Condition="IsIdentity()                     ">Identity Rotation</DisplayString>
+    <DisplayString Condition="!IsNormalized()                  ">UNNORMALIZED->NOT A ROTATION x: {xyz.data[0],g} y: {xyz.data[1],g} z: {xyz.data[2],g} w: {w,g}</DisplayString>
   </Type>
 
   <!-- Matrix -->
