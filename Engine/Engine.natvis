@@ -72,25 +72,25 @@
     <DisplayString ExcludeView="simple">[x]: {data[0],d} [y]: {data[1],d} [z]: {data[2],d} [w]: {data[3],d}</DisplayString>
   </Type>
     
-  <!-- Degrees< Float > -->
+  <!-- Degrees< float > -->
   <Type Name="Engine::Math::Degrees&lt;float&gt;">
     <DisplayString IncludeView="simple">{value,g}° ({value * 3.14159274f / 180.0f,g} radians)</DisplayString>
     <DisplayString ExcludeView="simple">{value,g}° ({value * 3.14159274f / 180.0f,g} radians)</DisplayString>
   </Type>
   
-  <!-- Degrees< Double > -->
+  <!-- Degrees< double > -->
   <Type Name="Engine::Math::Degrees&lt;double&gt;">
     <DisplayString IncludeView="simple">{value,h}° ({value * 3.1415926535897931 / 180.0,h} radians)</DisplayString>
     <DisplayString ExcludeView="simple">{value,h}° ({value * 3.1415926535897931 / 180.0,h} radians)</DisplayString>
   </Type>
   
-  <!--Radians< Float > -->
+  <!--Radians< float > -->
   <Type Name="Engine::Math::Radians&lt;float&gt;">
     <DisplayString IncludeView="simple">{value,g} radians ({180.0f * value / 3.14159274f,g}°)</DisplayString>
     <DisplayString ExcludeView="simple">{value,g} radians ({180.0f * value / 3.14159274f,g}°)</DisplayString>
   </Type>
   
-  <!--Radians< Double > -->
+  <!--Radians< double > -->
   <Type Name="Engine::Math::Radians&lt;double&gt;">
     <DisplayString IncludeView="simple">{value,h} radians ({180.0 * value / 3.1415926535897931,h}°)</DisplayString>
     <DisplayString ExcludeView="simple">{value,h} radians ({180.0 * value / 3.1415926535897931,h}°)</DisplayString>
@@ -98,34 +98,220 @@
   
   <!-- Quaternion< float > -->
   <Type Name="Engine::Math::Quaternion&lt;float&gt;">
-    <Intrinsic Name="Dot" Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
-    <Intrinsic Name="IsNormalized" Expression="Dot()&gt;0.99980000000500002&amp;Dot()&lt;1.0001999999950000"></Intrinsic>
-    <DisplayString IncludeView="simple">&lt;{w,g} {xyz}&gt;</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="IsNormalized()">[x]: {xyz.data[0],g} [y]: {xyz.data[1],g} [z]: {xyz.data[2],g} [w]: {w,g} (normalized)</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="!IsNormalized()">[x]: {xyz.data[0],g} [y]: {xyz.data[1],g} [z]: {xyz.data[2],g} [w]: {w,g}</DisplayString>
+    <Intrinsic Name="Dot"           Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
+    <Intrinsic Name="IsNormalized"  Expression="Dot()&gt;0.99980000000500002&amp;Dot()&lt;1.0001999999950000"></Intrinsic>
+    <Intrinsic Name="Is0"           Expression="val&gt;-0.0001999999950000&amp;val&lt;0.0001999999950000">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="Is1" Expression="val&gt;0.99980000000500002&amp;val&lt;1.0001999999950000">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="IsIdentity" Expression="IsNormalized()&amp;(Is0(x)&amp;Is0(y)&amp;Is0(z))||Is1(w)"></Intrinsic>
+    <DisplayString Condition="IsNormalized()&amp;!IsIdentity() ">Rotation Angle: {(Sandbox.exe!NatVis::Acos(w)*2),g}° | Axis: &lt;{(x/Sandbox.exe!NatVis::SinFromCos(w)),g},{(y/Sandbox.exe!NatVis::SinFromCos(w)),g},{(z/Sandbox.exe!NatVis::SinFromCos(w)),g}&gt;</DisplayString>
+    <DisplayString Condition="IsIdentity()                     ">Identity Rotation</DisplayString>
+    <DisplayString Condition="!IsNormalized()                  ">UNNORMALIZED->NOT A ROTATION x: {xyz.data[0],g} y: {xyz.data[1],g} z: {xyz.data[2],g} w: {w,g}</DisplayString>
   </Type>
 
   <!-- Quaternion< double > -->
   <Type Name="Engine::Math::Quaternion&lt;double&gt;">
-    <Intrinsic Name="Dot" Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
-    <Intrinsic Name="IsNormalized" Expression="Dot()&gt;0.99999999999998002&amp;Dot()&lt;1.0000000000000200"></Intrinsic>
-    <DisplayString IncludeView="simple">&lt;{w,h} {xyz}&gt;</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="IsNormalized()">[x]: {xyz.data[0],h} [y]: {xyz.data[1],h} [z]: {xyz.data[2],h} [w]: {w,h} (normalized)</DisplayString>
-    <DisplayString ExcludeView="simple" Condition="!IsNormalized()">[x]: {xyz.data[0],h} [y]: {xyz.data[1],h} [z]: {xyz.data[2],h} [w]: {w,h}</DisplayString>
+    <Intrinsic Name="Dot"           Expression="w*w+xyz.data[0]*xyz.data[0]+xyz.data[1]*xyz.data[1]+xyz.data[2]*xyz.data[2]"></Intrinsic>
+    <Intrinsic Name="IsNormalized"  Expression="Dot()&gt;0.99999999999998002&amp;Dot()&lt;1.0000000000000200"></Intrinsic>
+    <Intrinsic Name="Is0"           Expression="val&gt;-0.0000000000000200&amp;val&lt;0.0000000000000200">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="Is1" Expression="val&gt;0.99999999999998002&amp;val&lt;1.0000000000000200">
+      <Parameter Name="val" Type="float"/>
+    </Intrinsic>
+    <Intrinsic Name="IsIdentity" Expression="IsNormalized()&amp;(Is0(x)&amp;Is0(y)&amp;Is0(z))||Is1(w)"></Intrinsic>
+    <DisplayString Condition="IsNormalized()&amp;!IsIdentity() ">Rotation Angle: {(Sandbox.exe!NatVis::Acos(w)*2),g}° | Axis: &lt;{(x/Sandbox.exe!NatVis::SinFromCos(w)),g},{(y/Sandbox.exe!NatVis::SinFromCos(w)),g},{(z/Sandbox.exe!NatVis::SinFromCos(w)),g}&gt;</DisplayString>
+    <DisplayString Condition="IsIdentity()                     ">Identity Rotation</DisplayString>
+    <DisplayString Condition="!IsNormalized()                  ">UNNORMALIZED->NOT A ROTATION x: {xyz.data[0],g} y: {xyz.data[1],g} z: {xyz.data[2],g} w: {w,g}</DisplayString>
+  </Type>
+
+  <!-- Matrix<float,3,3>-->
+  <Type Name="Engine::Math::Matrix&lt;float,3,3&gt;">
+    <Intrinsic Name="Is0" Expression="data[i][j]&gt;-0.0001999999950000&amp;data[i][j]&lt;0.0001999999950000">
+      <Parameter Name="i" Type="int"/>
+      <Parameter Name="j" Type="int"/>
+    </Intrinsic>
+    <Intrinsic Name="Is1" Expression="data[i][j]&gt;0.99980000000500002&amp;data[i][j]&lt;1.0001999999950000">
+      <Parameter Name="i" Type="int"/>
+      <Parameter Name="j" Type="int"/>
+    </Intrinsic>
+    <Intrinsic Name="IsEqual" Expression="
+      (data[i][i]-data[j][j]&gt;0&amp;data[i][i]-data[j][j]&lt;0.0001999999950000)|
+      (data[i][i]-data[j][j]&lt;0&amp;data[j][j]-data[i][i]&lt;0.0001999999950000)|
+      (data[i][i]-data[j][j]==0)">
+      <Parameter Name="i" Type="int"/>
+      <Parameter Name="j" Type="int"/>
+    </Intrinsic>
+    <Intrinsic Name="IsDiagonal" Expression="
+                   Is0(0,1)&amp;Is0(0,2)&amp;
+      Is0(1,0)&amp;             Is0(1,2)&amp;
+      Is0(2,0)&amp;Is0(2,1)">
+    </Intrinsic>
+    <Intrinsic Name="IsIdentity" Expression="
+      IsDiagonal()&amp;
+      Is1(0,0)&amp;
+                   Is1(1,1)&amp;
+                                Is1(2,2)">
+    </Intrinsic>
+    <Intrinsic Name="IsScale" Expression="
+      IsDiagonal()&amp;
+      !IsIdentity()&amp;
+      Is1(2,2)">
+    </Intrinsic>
+    <Intrinsic Name="IsUniformScale" Expression="
+      IsScale()&amp;
+      IsEqual(0,1)">
+    </Intrinsic>
+    <Intrinsic Name="IsNonUniformScale" Expression="
+      IsScale()&amp;
+      !IsUniformScale()">
+    </Intrinsic>
+    <Intrinsic Name="IsDiagonalOnly" Expression="
+      IsDiagonal()&amp;
+      !IsScale()&amp;
+      !IsUniformScale()&amp;
+      !IsIdentity()">
+    </Intrinsic>
+    <Intrinsic Name="IsTranslationOnly" Expression="
+       Is1(0,0)&amp; Is0(0,1)&amp; Is0(0,2)&amp;
+       Is0(1,0)&amp; Is1(1,1)&amp; Is0(1,2)&amp;
+      !Is0(2,0)  |  !Is0(2,1)&amp; Is1(2,2)">
+    </Intrinsic>
+    <Intrinsic Name="IsRotation" Expression="
+                                   Is0(0,2)&amp;
+                                   Is0(1,2)&amp;
+       Is0(2,0)&amp; Is0(2,1)&amp; Is1(2,2)&amp;
+      IsEqual(0,1)">
+    </Intrinsic>
+    <DisplayString Condition="IsIdentity()                      ">Identity | Matrix3x3</DisplayString>
+    <DisplayString Condition="IsTranslationOnly()               ">Translates by x: {data[2][0],g} | y: {data[2][1],g} | Matrix3x3</DisplayString>
+    <DisplayString Condition="IsRotation()&amp;IsUniformScale() ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[0][1],data[0][0])),g}° OR Scales by {data[0][0],g} | Matrix3x3</DisplayString>
+    <DisplayString Condition="IsRotation()                      ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[0][1],data[0][0])),g}° | Matrix3x3</DisplayString>
+    <DisplayString Condition="IsUniformScale()                  ">Scales by {data[0][0],g} | Matrix3x3</DisplayString>
+    <DisplayString Condition="IsNonUniformScale()               ">Scales by x: {data[0][0],g} | y: {data[1][1],g} | Matrix3x3</DisplayString>
+    <DisplayString Condition="IsDiagonalOnly()                  ">Diagonal ({data[0][0],g},{data[1][1],g},{data[2][2],g}) | Matrix3x3</DisplayString>
+    <Expand>
+      <CustomListItems>
+        <Variable Name="i" InitialValue="0"/>
+        <Loop Condition="i &lt; 3">
+          <Item Name="Row {i}">(float *)&amp;data[i],[3]nag</Item>
+          <Exec>++i</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
   </Type>
   
-  <!-- TODO: Display both the rows & columns. Check out glm's code for this. Of course this would mean we must "specialize" for sizes 2,3 & 4. Although maybe not, check out .natvis docs' matrix (or was it magnum's, just below?)-->
-  
-  <!-- Matrix -->
-  <Type Name="Engine::MatrixBase&lt;*&gt;">
-    <DisplayString>{($T1 *)data,[$T2*$T3]nag}</DisplayString>
+  <!-- Matrix<float,4,4>-->
+  <Type Name="Engine::Math::Matrix&lt;float,4,4&gt;">
+    <Intrinsic Name="Is0" Expression="data[i][j]&gt;-0.0001999999950000&amp;data[i][j]&lt;0.0001999999950000">
+      <Parameter Name="i" Type="int"/>
+      <Parameter Name="j" Type="int"/>
+    </Intrinsic>
+    <Intrinsic Name="Is1" Expression="data[i][j]&gt;0.99980000000500002&amp;data[i][j]&lt;1.0001999999950000">
+      <Parameter Name="i" Type="int"/>
+      <Parameter Name="j" Type="int"/>
+    </Intrinsic>
+    <Intrinsic Name="IsEqual" Expression="
+      (data[i][i]-data[j][j]&gt;0&amp;data[i][i]-data[j][j]&lt;0.0001999999950000)|
+      (data[i][i]-data[j][j]&lt;0&amp;data[j][j]-data[i][i]&lt;0.0001999999950000)|
+      (data[i][i]-data[j][j]==0)">
+      <Parameter Name="i" Type="int"/>
+      <Parameter Name="j" Type="int"/>
+    </Intrinsic>
+    <Intrinsic Name="IsDiagonal" Expression="
+                   Is0(0,1)&amp;Is0(0,2)&amp;Is0(0,3)&amp;
+      Is0(1,0)&amp;             Is0(1,2)&amp;Is0(1,3)&amp;
+      Is0(2,0)&amp;Is0(2,1)&amp;             Is0(2,3)&amp;
+      Is0(3,0)&amp;Is0(3,1)&amp;Is0(3,2)">
+    </Intrinsic>
+    <Intrinsic Name="IsIdentity" Expression="
+      IsDiagonal()&amp;
+      Is1(0,0)&amp;
+                   Is1(1,1)&amp;
+                                Is1(2,2)&amp;
+                                             Is1(3,3)">
+    </Intrinsic>
+    <Intrinsic Name="IsScale" Expression="
+      IsDiagonal()&amp;
+      !IsIdentity()&amp;
+      Is1(3,3)">
+    </Intrinsic>
+    <Intrinsic Name="IsUniformScale" Expression="
+      IsScale()&amp;
+      IsEqual(0,1)&amp;IsEqual(1,2)">
+    </Intrinsic>
+    <Intrinsic Name="IsNonUniformScale" Expression="
+      IsScale()&amp;
+      !IsUniformScale()">
+    </Intrinsic>
+    <Intrinsic Name="IsDiagonalOnly" Expression="
+      IsDiagonal()&amp;
+      !IsScale()&amp;
+      !IsUniformScale()&amp;
+      !IsIdentity()">
+    </Intrinsic>
+    <Intrinsic Name="IsTranslationOnly" Expression="
+       Is1(0,0)&amp; Is0(0,1)&amp; Is0(0,2)&amp; Is0(0,3)&amp;
+       Is0(1,0)&amp; Is1(1,1)&amp; Is0(1,2)&amp; Is0(1,3)&amp;
+       Is0(2,0)&amp; Is0(2,1)&amp; Is1(2,2)&amp; Is0(2,3)&amp;
+      !Is0(3,0)  |  !Is0(3,1)  |  !Is0(3,2)&amp; Is1(3,3)">
+    </Intrinsic>
+    <Intrinsic Name="IsXRotationOnly" Expression="
+       Is1(0,0)&amp; Is0(0,1)&amp; Is0(0,2)&amp; Is0(0,3)&amp;
+       Is0(1,0)&amp;                             Is0(1,3)&amp;
+       Is0(2,0)&amp;                             Is0(2,3)&amp;
+       Is0(3,0)&amp; Is0(3,1)&amp; Is0(3,2)&amp; Is1(3,3)&amp;
+      IsEqual(1,2)">
+    </Intrinsic>
+    <Intrinsic Name="IsYRotationOnly" Expression="
+                     Is0(0,1)&amp;               Is0(0,3)&amp;
+       Is0(1,0)&amp; Is1(1,1)&amp; Is0(1,2)&amp; Is0(1,3)&amp;
+                     Is0(2,1)&amp;               Is0(2,3)&amp;
+       Is0(3,0)&amp; Is0(3,1)&amp; Is0(3,2)&amp; Is1(3,3)&amp;
+      IsEqual(0,2)">
+    </Intrinsic>
+    <Intrinsic Name="IsZRotationOnly" Expression="
+                                   Is0(0,2)&amp; Is0(0,3)&amp;
+                                   Is0(1,2)&amp; Is0(1,3)&amp;
+       Is0(2,0)&amp; Is0(2,1)&amp; Is1(2,2)&amp; Is0(2,3)&amp;
+       Is0(3,0)&amp; Is0(3,1)&amp; Is0(3,2)&amp; Is1(3,3)&amp;
+      IsEqual(0,1)">
+    </Intrinsic>
+    <DisplayString Condition="IsIdentity()                              ">Identity | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsTranslationOnly()                       ">Translates by x: {data[3][0],g} | y: {data[3][1],g} | z: {data[3][2],g} | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsXRotationOnly()&amp;IsNonUniformScale() ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[1][2],data[1][1])),g}° around X OR Scales by y: {data[1][1],g} | z: {data[2][2],g} | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsXRotationOnly()                         ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[1][2],data[1][1])),g}° around X | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsYRotationOnly()&amp;IsNonUniformScale() ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[2][0],data[0][0])),g}° around Y OR Scales by x: {data[0][0],g} | z: {data[2][2],g} | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsYRotationOnly()                         ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[2][0],data[0][0])),g}° around Y | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsZRotationOnly()&amp;IsNonUniformScale() ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[0][1],data[0][0])),g}° around Z OR Scales by x: {data[0][0],g} | y: {data[1][1],g} | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsZRotationOnly()                         ">Rotates by {(Sandbox.exe!NatVis::Atan2(data[0][1],data[0][0])),g}° around Z | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsUniformScale()                          ">Scales by {data[0][0],g} | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsNonUniformScale()                       ">Scales by x: {data[0][0],g} | y: {data[1][1],g} | z: {data[2][2],g} | Matrix4x4</DisplayString>
+    <DisplayString Condition="IsDiagonalOnly()                          ">Diagonal ({data[0][0],g},{data[1][1],g},{data[2][2],g},{data[3][3],g}) | Matrix4x4</DisplayString>
     <Expand>
-      <ArrayItems>
-        <Direction>Forward</Direction>
-        <Rank>2</Rank>
-        <Size>$i == 0 ? $T2 : $T3</Size>
-        <ValuePointer>($T1 *)data</ValuePointer>
-      </ArrayItems>
+      <CustomListItems>
+        <Variable Name="i" InitialValue="0"/>
+        <Loop Condition="i &lt; 4">
+          <Item Name="Row {i}">(float *)&amp;data[i],[4]nag</Item>
+          <Exec>++i</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
+  </Type>
+
+  <!-- Matrix<Type,RowSize,ColumnSize> -->
+  <Type Name="Engine::Math::Matrix&lt;*&gt;">
+    <Expand>
+      <CustomListItems>
+        <Variable Name="i" InitialValue="0"/>
+        <Loop Condition="i &lt; $T2">
+          <Item Name="Row {i}">($T1 *)&amp;data[i],[$T3]nag</Item>
+          <Exec>++i</Exec>
+        </Loop>
+      </CustomListItems>
     </Expand>
   </Type>
 </AutoVisualizer>

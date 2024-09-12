@@ -40,6 +40,10 @@ namespace Engine
 		Transform& MultiplyScaling( const float multiplier );
 
 		Transform& SetRotation( const Quaternion& new_rotation );
+		Transform& MultiplyRotation( const Quaternion& multiplier );
+		Transform& MultiplyRotation_X( const Radians& angle );
+		Transform& MultiplyRotation_Y( const Radians& angle );
+		Transform& MultiplyRotation_Z( const Radians& angle );
 
 		Transform& SetTranslation( const Vector3& new_translation );
 		Transform& SetTranslation( const float new_x, const float new_y, const float new_z );
@@ -48,14 +52,10 @@ namespace Engine
 		Transform& MultiplyTranslation( const Vector3& multiplier );
 		Transform& MultiplyTranslation( const float multiplier );
 
-		void LookAt( const Vector3& direction, const Vector3& up = Vector3::Up() );
+		Transform& LookAt( const Vector3& direction, const Vector3& up = Vector3::Up() );
 
-		/* For cases where a custom matrix needs to be used. */
-		inline void SetFinalMatrix( const Matrix4x4& matrix )
-		{
-			final_matrix = matrix;
-			final_matrix_needsUpdate = scaling_needsUpdate = rotation_needsUpdate = translation_needsUpdate = false;
-		}
+		/* SRT = Scale * Rotate * Translate. */
+		Transform& SetFromSRTMatrix( const Matrix4x4& srt_matrix );
 
 	/* Queries: */
 		const Vector3& GetScaling() const;

@@ -108,6 +108,26 @@ namespace Engine
 		return *this;
 	}
 
+	Transform& Transform::MultiplyRotation( const Quaternion& multiplier )
+	{
+		return SetRotation( ( rotation * multiplier ).Normalized() );
+	}
+
+	Transform& Transform::MultiplyRotation_X( const Radians& angle )
+	{
+		return SetRotation( ( rotation * Quaternion( angle, Vector3::Right() ) ).Normalized() );
+	}
+
+	Transform& Transform::MultiplyRotation_Y( const Radians& angle )
+	{
+		return SetRotation( ( rotation * Quaternion( angle, Vector3::Up() ) ).Normalized() );
+	}
+
+	Transform& Transform::MultiplyRotation_Z( const Radians& angle )
+	{
+		return SetRotation( ( rotation * Quaternion( angle, Vector3::Forward() ) ).Normalized() );
+	}
+
 	Transform& Transform::SetTranslation( const Vector3& new_translation )
 	{
 		this->translation = new_translation;
@@ -142,6 +162,19 @@ namespace Engine
 	Transform& Transform::MultiplyTranslation( const float multiplier )
 	{
 		return SetTranslation( translation * multiplier );
+	}
+
+	/* SRT = Scale * Rotate * Translate. */
+	Transform& Transform::SetFromSRTMatrix( const Matrix4x4& srt_matrix )
+	{
+		Matrix::DecomposeSRT( srt_matrix, scale, rotation, translation );
+
+		/* Test if the reconstructed matrix matches the input matrix: */
+		ASSERT_DEBUG_ONLY( Matrix::SRT( scale, rotation, translation ) == srt_matrix )
+
+		final_matrix_needsUpdate = scaling_needsUpdate = rotation_needsUpdate = translation_needsUpdate = is_dirty = true;
+
+		return *this;
 	}
 
 	const Vector3& Transform::GetScaling() const
@@ -224,9 +257,9 @@ namespace Engine
 		return rotation_and_translation_matrix.GetRow< 3 >( 2 );
 	}
 
-	void Transform::LookAt( const Vector3& direction, const Vector3& up )
+	Transform& Transform::LookAt( const Vector3& direction, const Vector3& up )
 	{
-		SetRotation( Quaternion::LookRotation( direction, up ) );
+		return SetRotation( Quaternion::LookRotation( direction, up ) );
 	}
 
 	void Transform::UpdateScalingMatrixIfDirty()

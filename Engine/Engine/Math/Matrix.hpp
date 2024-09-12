@@ -263,11 +263,13 @@ namespace Engine::Math
 		}
 
 	/* Other Queries. */
+		constexpr bool IsIdentity() { return *this == Identity(); }
+
 		static consteval std::size_t RowCount()     { return RowSize; }
 		static consteval std::size_t ColumnCount()  { return ColumnSize; }
 		static consteval std::size_t ElementCount() { return RowSize * ColumnSize; }
 
-		static consteval Matrix Identity()			{ return Matrix(); }
+		static consteval Matrix Identity() { return Matrix(); }
 
 	/* Arithmetic Operations. */
 
@@ -282,6 +284,11 @@ namespace Engine::Math
 						result.data[ i ][ j ] += data[ i ][ k ] * other.data[ k ][ j ];
 
 			return result;
+		}
+
+		constexpr Matrix& operator*= ( const Matrix& other )
+		{
+			return *this = Matrix( *this ) * other;
 		}
 
 		/* Vector-matrix multiplication. */

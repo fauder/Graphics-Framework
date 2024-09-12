@@ -54,6 +54,8 @@ namespace Engine
 
 		long long frame_count;
 
+		bool show_imgui;
+
 		bool show_gl_logger;
 		GLLogger gl_logger;
 

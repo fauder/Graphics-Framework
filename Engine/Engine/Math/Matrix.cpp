@@ -134,4 +134,42 @@ namespace Engine::Matrix
 		matrix[ 1 ][ 0 ] = nx * ny_times_one_minus_cos_theta - nz_sin_theta;	matrix[ 1 ][ 1 ] = ny * ny_times_one_minus_cos_theta + cos_theta;		matrix[ 1 ][ 2 ] = nz * ny_times_one_minus_cos_theta + nx_sin_theta;
 		matrix[ 2 ][ 0 ] = nx * nz_times_one_minus_cos_theta + ny_sin_theta;	matrix[ 2 ][ 1 ] = ny * nz_times_one_minus_cos_theta - nx_sin_theta;	matrix[ 2 ][ 2 ] = nz * nz_times_one_minus_cos_theta + cos_theta;	
 	}
+
+	/* SRT = Scale * Rotate * Translate. */
+	Matrix4x4 SRT( const Vector3& scale, const Quaternion& rotation, const Vector3& translation )
+	{
+#ifdef _DEBUG
+		Matrix4x4 result( Matrix::Scaling( scale ) * Math::QuaternionToMatrix( rotation ) );
+		result.SetRow< 3 >( translation, 3 );
+
+		ASSERT( result == ( Matrix::Scaling( scale ) * Math::QuaternionToMatrix( rotation ) * Matrix::Translation( translation ) ) );
+		
+		return result;
+#else
+		return ( Matrix::Scaling( scale ) * Math::QuaternionToMatrix( rotation ) ).SetRow< 3 >( translation, 3 );
+#endif // _DEBUG
+	}
+
+	/* SRT = Scale * Rotate * Translate. */
+	void SRT( Matrix4x4& srt_matrix, const Vector3& scale, const Quaternion& rotation, const Vector3& translation )
+	{
+		srt_matrix = ( Matrix::Scaling( scale ) * Math::QuaternionToMatrix( rotation ) ).SetRow< 3 >( translation, 3 );
+
+		ASSERT_DEBUG_ONLY( srt_matrix == ( Matrix::Scaling( scale ) * Math::QuaternionToMatrix( rotation ) * Matrix::Translation( translation ) ) );
+	}
+
+	/* SRT = Scale * Rotate * Translate. */
+	void DecomposeSRT( const Matrix4x4& srt_matrix, Vector3& scale, Quaternion& rotation, Vector3& translation )
+	{
+		translation = srt_matrix.GetRow< 3 >( 3, 0 );
+
+		const Vector3& row_0 = srt_matrix.GetRow< 3 >( 0 );
+		const Vector3& row_1 = srt_matrix.GetRow< 3 >( 1 );
+		const Vector3& row_2 = srt_matrix.GetRow< 3 >( 2 );
+
+		scale = Vector3( row_0.Magnitude(), row_1.Magnitude(), row_2.Magnitude() );
+
+		Matrix3x3 rotation_matrix( ( row_0 / scale.X() ).Normalized(), ( row_1 / scale.Y() ).Normalized(), ( row_2 / scale.Z() ).Normalized() );
+		rotation = Math::MatrixToQuaternion( rotation_matrix ).Normalized();
+	}
 }
