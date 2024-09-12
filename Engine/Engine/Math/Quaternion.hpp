@@ -388,7 +388,7 @@ namespace Engine::Math
 		union
 		{
 			struct { VectorType xyz; };
-			struct { float x, y, z; };
+			struct { ComponentType x, y, z; };
 		};
 		ComponentType w;
 	};
@@ -527,13 +527,13 @@ namespace Engine::Math
 		ComponentType w, x, y, z;
 
 		// Determine which of w, x, y, or z has the largest absolute value.
-		float four_w_squared_minus_1 = matrix[ 0 ][ 0 ] + matrix[ 1 ][ 1 ] + matrix[ 2 ][ 2 ];
-		float four_x_squared_minus_1 = matrix[ 0 ][ 0 ] - matrix[ 1 ][ 1 ] - matrix[ 2 ][ 2 ];
-		float four_y_squared_minus_1 = matrix[ 1 ][ 1 ] - matrix[ 0 ][ 0 ] - matrix[ 2 ][ 2 ];
-		float four_z_squared_minus_1 = matrix[ 2 ][ 2 ] - matrix[ 0 ][ 0 ] - matrix[ 1 ][ 1 ];
+		ComponentType four_w_squared_minus_1 = matrix[ 0 ][ 0 ] + matrix[ 1 ][ 1 ] + matrix[ 2 ][ 2 ];
+		ComponentType four_x_squared_minus_1 = matrix[ 0 ][ 0 ] - matrix[ 1 ][ 1 ] - matrix[ 2 ][ 2 ];
+		ComponentType four_y_squared_minus_1 = matrix[ 1 ][ 1 ] - matrix[ 0 ][ 0 ] - matrix[ 2 ][ 2 ];
+		ComponentType four_z_squared_minus_1 = matrix[ 2 ][ 2 ] - matrix[ 0 ][ 0 ] - matrix[ 1 ][ 1 ];
 
 		std::size_t biggest_index = 0;
-		float four_biggest_squared_minus1 = four_w_squared_minus_1;
+		ComponentType four_biggest_squared_minus1 = four_w_squared_minus_1;
 
 		if( four_x_squared_minus_1 > four_biggest_squared_minus1 )
 		{
@@ -552,8 +552,8 @@ namespace Engine::Math
 		}
 
 		// Perform square root and division.
-		float biggestVal = Sqrt( four_biggest_squared_minus1 + ComponentType( 1 ) ) * ComponentType( 0.5 );
-		float mult = ComponentType( 0.25 ) / biggestVal;
+		ComponentType biggestVal = Sqrt( four_biggest_squared_minus1 + ComponentType( 1 ) ) * ComponentType( 0.5 );
+		ComponentType mult = ComponentType( 0.25 ) / biggestVal;
 
 		// Apply table to compute quaternion values
 		switch( biggest_index )
