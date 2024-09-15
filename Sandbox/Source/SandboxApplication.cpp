@@ -99,8 +99,18 @@ void SandboxApplication::Initialize()
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
 
-	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
-	test_model     = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Deccer Cubes",	R"(C:/users/fauder/desktop/SM_Deccer_Cubes_Textured_Complex.gltf)", model_import_settings );
+	{
+		Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
+		test_model_instance = ModelInstance( Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Deccer Cubes",
+																										  R"(C:/users/fauder/desktop/SM_Deccer_Cubes_Textured_Complex.gltf)",
+																										  model_import_settings ),
+											 &phong_shader,
+											 Vector3::One(),
+											 Quaternion(),
+											 Vector3::Left() * 2 + Vector3::Up() * 8.0f,
+											 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
+											 /* Specular texture: */ checker_pattern );
+	}
 
 /* Lighting: */
 	ResetLightingData();
@@ -121,9 +131,6 @@ void SandboxApplication::Initialize()
 		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
-		
-	for( auto i = 0; i < test_material_array.size(); i++ )
-		test_material_array[ i ].Set( "PhongMaterialData", test_sub_mesh_surface_data_array[ i ] );
 
 /* Drawables & the Renderer: */
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -138,69 +145,16 @@ void SandboxApplication::Initialize()
 		renderer.AddDrawable( &cube_drawable_array[ i ] );
 	}
 
-	auto InitializeModelData = [ & ]( const Engine::Model* model,
-									  std::vector< Engine::Transform >& sub_mesh_transform_array, std::vector< Engine::Drawable >& drawable_array, std::vector< Engine::Material >& material_array,
-									  const Vector3 scale, const Quaternion& rotation, const Vector3& translation )
-	{
-		if( model )
-		{
-			const auto mesh_instance_count = model->MeshInstanceCount();
-			const auto& meshes             = model->Meshes();
-			const auto& nodes              = model->Nodes();
-
-			sub_mesh_transform_array.resize( mesh_instance_count );
-			drawable_array.resize( mesh_instance_count );
-
-			for( auto i = 0; i < mesh_instance_count; i++ )
-			{
-				drawable_array[ i ] = Engine::Drawable( &meshes[ i ], &material_array[ i ], &sub_mesh_transform_array[ i ] );
-				renderer.AddDrawable( &drawable_array[ i ] );
-			}
-
-			/* Apply scene-graph transformations: */
-
-			int mesh_index = 0;
-			std::function< void( const std::size_t, const Matrix4x4& ) > ProcessNode = [ & ]( const std::size_t node_index, const Matrix4x4& parent_transform )
-			{
-				const auto& node = nodes[ node_index ];
-
-				auto transform_so_far = node.transform_local * parent_transform;
-
-				for( auto& child_index : node.children )
-					ProcessNode( child_index, transform_so_far );
-
-				if( node.mesh_group )
-					for( auto& sub_mesh : node.mesh_group->sub_meshes )
-						sub_mesh_transform_array[ mesh_index++ ].SetFromSRTMatrix( transform_so_far );
-			};
-
-			for( auto top_level_node_index : model->TopLevelNodeIndices() )
-				ProcessNode( top_level_node_index, Engine::Matrix::Scaling( scale ) * Engine::Math::QuaternionToMatrix( rotation ) * Engine::Matrix::Translation( translation ) );
-		}
-	};
-
-	InitializeModelData( test_model, test_sub_mesh_transform_array, test_drawable_array, test_material_array,
-						 Vector3::One(), Quaternion(), Vector3::Left() * 2 + Vector3::Up() * 8.0f );
-
 	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
 	renderer.AddDrawable( &ground_quad_drawable );
 
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
-	renderer.AddDrawable( &front_wall_quad_drawable );	
+	renderer.AddDrawable( &front_wall_quad_drawable );
+
+	for( auto& drawable : test_model_instance.Drawables() )
+		renderer.AddDrawable( &drawable );
 
 /* Other: */
-	// Also add a spot-light to the "led" node/mesh of the spotlight model:
-	if( auto led_node_iterator = std::find_if( test_model->Nodes().cbegin(), test_model->Nodes().cend(), []( const Engine::Model::Node& node ) { return node.name.find( "led" ) != std::string::npos; } );
-		led_node_iterator != test_model->Nodes().cend() )
-	{
-		const std::size_t index = std::distance( test_model->Nodes().cbegin(), led_node_iterator );
-		auto& led_sub_mesh_transform = test_sub_mesh_transform_array[ index ];
-
-		light_spot_transform = led_sub_mesh_transform;
-		light_spot_transform.MultiplyRotation_X( 90.0_deg );
-		renderer.AddSpotLight( &light_spot );
-	}
-
 	renderer.EnableDepthTest();
 
 	Platform::MaximizeWindow();
@@ -314,7 +268,7 @@ void SandboxApplication::RenderImGui()
 	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
-	for( auto& test_material : test_material_array )
+	for( auto& test_material : test_model_instance.Materials() )
 		Engine::ImGuiDrawer::Draw( test_material );
 
 	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
@@ -533,70 +487,6 @@ void SandboxApplication::ResetMaterialData()
 	};
 
 	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, ground_quad_surface_data );
-
-	auto ResetModelMaterialData = []( const Engine::Model* model, const std::string& model_name,
-									  std::vector< Engine::Material >& material_array, std::vector< Engine::MaterialData::PhongMaterialData >& surface_data_array, Engine::Shader* shader,
-									  Engine::Texture* diffuse_texture, Engine::Texture* specular_texture,
-									  const Vector4& texture_scale_and_offset )
-	{
-		if( model )
-		{
-			int material_index = 0;
-
-			material_array.resize( model->MeshInstanceCount() );
-			surface_data_array.resize( model->MeshInstanceCount() );
-
-			const auto node_count = model->NodeCount();
-			const auto& nodes     = model->Nodes();
-
-			const auto& model_textures = model->Textures();
-
-			for( auto& node : nodes )
-			{
-				if( node.mesh_group ) // Only process Nodes having a Mesh.
-				{
-					for( auto& sub_mesh : node.mesh_group->sub_meshes )
-					{
-						auto& material = material_array[ material_index ] = Engine::Material( model_name + "_" + sub_mesh.name, shader);
-
-						if( diffuse_texture || sub_mesh.texture_albedo )
-						{
-							surface_data_array[ material_index ] = 
-							{
-								.color_diffuse       = {},
-								.has_texture_diffuse = 1,
-								.shininess           = 32.0f
-							};
-
-							material.SetTexture( "uniform_diffuse_map_slot", diffuse_texture ? diffuse_texture : sub_mesh.texture_albedo );
-						}
-						else if( sub_mesh.color_albedo )
-						{
-							surface_data_array[ material_index ] =
-							{
-								.color_diffuse       = *sub_mesh.color_albedo,
-								.has_texture_diffuse = 0,
-								.shininess           = 32.0f
-							};
-						}
-
-						if( specular_texture )
-							material.SetTexture( "uniform_specular_map_slot", specular_texture );
-
-						material.Set( "uniform_texture_scale_and_offset", texture_scale_and_offset );
-
-						material_index++;
-					}
-				}
-			}
-		}
-	};
-
-	const Vector4 identity_texture_scale_and_offset( 1.0f, 1.0f, 0.0f, 0.0f );
-
-	ResetModelMaterialData( test_model, "Test (minigun_m-134)",
-							test_material_array, test_sub_mesh_surface_data_array, &phong_shader, nullptr /* Use Albedo colors in-model. */, checker_pattern,
-							identity_texture_scale_and_offset );
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

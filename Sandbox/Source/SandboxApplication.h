@@ -12,6 +12,9 @@
 
 #include "Engine/DefineMathTypes.h"
 
+// Project Includes.
+#include "ModelInstance.h"
+
 // std Includes.
 #include <numeric> // std::accumulate().
 
@@ -49,13 +52,14 @@ private:
 
 	std::vector< Engine::Drawable > light_source_drawable_array;
 	std::vector< Engine::Drawable > cube_drawable_array;
-	std::vector< Engine::Drawable > test_drawable_array;
 	Engine::Drawable ground_quad_drawable;
 	Engine::Drawable front_wall_quad_drawable;
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh;
-	Engine::Model* test_model;
+
+/* Models: */
+	ModelInstance test_model_instance;
 
 /* Materials, Shaders & Textures: */
 	Engine::Shader phong_shader;
@@ -65,7 +69,6 @@ private:
 	std::vector< Engine::Material > cube_material_array;
 	Engine::Material ground_quad_material;
 	Engine::Material front_wall_quad_material;
-	std::vector< Engine::Material > test_material_array;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
@@ -83,7 +86,6 @@ private:
 	std::vector< Engine::Transform > cube_transform_array;
 	Engine::Transform ground_quad_transform;
 	Engine::Transform front_wall_quad_transform;
-	std::vector< Engine::Transform > test_sub_mesh_transform_array;
 
 /* Camera: */
 	Engine::Camera camera;
@@ -105,7 +107,7 @@ private:
 	std::vector< Engine::MaterialData::PhongMaterialData > cube_surface_data_array;
 	Engine::MaterialData::PhongMaterialData ground_quad_surface_data;
 	Engine::MaterialData::PhongMaterialData front_wall_quad_surface_data;
-	std::vector< Engine::MaterialData::PhongMaterialData > test_sub_mesh_surface_data_array;
+	std::vector< Engine::MaterialData::PhongMaterialData > test_model_node_surface_data_array;
 
 	Engine::DirectionalLight light_directional;
 	std::vector< Engine::PointLight > light_point_array;

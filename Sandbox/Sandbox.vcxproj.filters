@@ -3,9 +3,11 @@
   <ItemGroup>
     <ClInclude Include="Source\SandboxApplication.h" />
     <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
+    <ClInclude Include="Source\ModelInstance.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\SandboxApplication.cpp" />
+    <ClCompile Include="Source\ModelInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Asset\Shader\BasicTextured.vert" />
