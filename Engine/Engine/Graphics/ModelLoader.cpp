@@ -123,7 +123,11 @@ namespace Engine
 
                 normals.resize( normal_accessor.count, ZERO_INITIALIZATION );
 
-                fastgltf::copyFromAccessor< Vector3 >( gltf_asset, normal_accessor, normals.data() );
+                fastgltf::iterateAccessorWithIndex< Vector3 >( gltf_asset, normal_accessor,
+														   [ & ]( Vector3 normal, std::size_t index )
+														   {
+                                                    	   	   normals[ index ] = normal * coordinate_system_transform;
+														   } );
             }
 
             /*
