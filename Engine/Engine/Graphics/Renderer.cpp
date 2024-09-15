@@ -112,7 +112,7 @@ namespace Engine
 		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );
 	}
 
-	void Renderer::AddDrawable( Drawable* drawable_to_add )
+	void Renderer::AddDrawable( const Drawable* drawable_to_add )
 	{
 		drawable_list.push_back( drawable_to_add );
 

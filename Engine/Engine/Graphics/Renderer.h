@@ -48,7 +48,7 @@ namespace Engine
 		void OnProjectionParametersChange( Camera& camera );
 
 	/* Drawables: */
-		void AddDrawable( Drawable* drawable_to_add );
+		void AddDrawable( const Drawable* drawable_to_add );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
 		// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
 		void RemoveDrawable( const Drawable* drawable_to_remove );
@@ -127,7 +127,7 @@ namespace Engine
 		void Clear() const;
 
 	private:
-		std::vector< Drawable* > drawable_list;
+		std::vector< const Drawable* > drawable_list;
 
 		DirectionalLight*			light_directional;
 		std::vector< PointLight* >	lights_point;
