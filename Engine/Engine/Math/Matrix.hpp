@@ -330,6 +330,17 @@ namespace Engine::Math
 			return result;
 		}
 
+		constexpr Type Determinant() const requires( RowSize == ColumnSize )
+		{
+			if constexpr( RowSize == 2 && ColumnSize == 2 )
+				return data[ 0 ][ 0 ] * data[ 1 ][ 1 ] - data[ 1 ][ 0 ] * data[ 0 ][ 1 ];
+			if constexpr( RowSize == 3 && ColumnSize == 3 )
+				return
+					data[ 0 ][ 0 ] * ( ( data[ 1 ][ 1 ] * data[ 2 ][ 2 ] ) - ( data[ 2 ][ 1 ] * data[ 1 ][ 2 ] ) ) -
+					data[ 0 ][ 1 ] * ( data[ 1 ][ 0 ] * data[ 2 ][ 2 ] - data[ 2 ][ 0 ] * data[ 1 ][ 2 ] ) +
+					data[ 0 ][ 2 ] * ( data[ 1 ][ 0 ] * data[ 2 ][ 1 ] - data[ 2 ][ 0 ] * data[ 1 ][ 1 ] );
+		}
+
 	protected:
 		/* Row-major. */
 		Type data[ RowSize ][ ColumnSize ];

@@ -170,6 +170,18 @@ namespace Engine::Matrix
 		scale = Vector3( row_0.Magnitude(), row_1.Magnitude(), row_2.Magnitude() );
 
 		Matrix3x3 rotation_matrix( ( row_0 / scale.X() ).Normalized(), ( row_1 / scale.Y() ).Normalized(), ( row_2 / scale.Z() ).Normalized() );
+
+		/*if( not Math::IsEqual( scale.X(), scale.Y() ) || not Math::IsEqual( scale.Y(), scale.Z() ) )
+		{
+			// TODO: How to handle non-uniform scale here?
+		}*/
+
+		if( rotation_matrix.Determinant() < 0.0f ) // "Weed out" the reflection.
+		{
+			scale[ 0 ]                *= -1.0f;
+			rotation_matrix[ 0 ][ 0 ] *= -1.0f;
+		}
+
 		rotation = Math::MatrixToQuaternion( rotation_matrix ).Normalized();
 	}
 }
