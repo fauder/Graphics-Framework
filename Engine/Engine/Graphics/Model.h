@@ -87,6 +87,8 @@ namespace Engine
 		~Model();
 
 	/* Queries: */
+		inline const std::string& Name() const { return name; }
+
 		inline int NodeCount()			const { return ( int )nodes.size(); }
 		inline int MeshCount()			const { return ( int )meshes.size(); }
 		inline int MeshInstanceCount()	const { return mesh_istance_count; }
