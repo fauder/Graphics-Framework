@@ -40,7 +40,7 @@ SandboxApplication::SandboxApplication()
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
 	ui_interaction_enabled( false ),
-	show_imgui_demo_window( true )
+	show_imgui_demo_window( false )
 {
 	Initialize();
 }
@@ -92,9 +92,6 @@ void SandboxApplication::Initialize()
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 	}
 
-/* Lighting: */
-	ResetLightingData();
-
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
 							  "Cube",
@@ -103,14 +100,21 @@ void SandboxApplication::Initialize()
 							  { /* No indices. */ } );
 
 	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
-	//backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack",	R"(C:/users/fauder/desktop/survival_guitar_backpack/scene.gltf)",	model_import_settings );
-	//backpack_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Backpack",	R"(C:/users/fauder/desktop/survival_guitar_backpack.glb)",			model_import_settings );
-	helmet_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Helmet",		R"(C:/users/fauder/desktop/DamagedHelmet.glb)",		model_import_settings );
-	test_model   = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Spotlight",	R"(C:/users/fauder/desktop/spotlight.glb)",			model_import_settings );
-	
+	test_model     = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Deccer Cubes",	R"(C:/users/fauder/desktop/SM_Deccer_Cubes_Textured_Complex.gltf)", model_import_settings );
+
+/* Lighting: */
+	ResetLightingData();
+
+	renderer.AddDirectionalLight( &light_directional );
+
+	for( auto index = 0; index < LIGHT_POINT_COUNT; index++ )
+		renderer.AddPointLight( &light_point_array[ index ] );
+
+	renderer.AddSpotLight( &light_spot );
 
 /* Materials: */
 	ResetMaterialData();
+
 	ground_quad_material.Set( "PhongMaterialData", ground_quad_surface_data );
 	front_wall_quad_material.Set( "PhongMaterialData", front_wall_quad_surface_data );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
@@ -118,12 +122,8 @@ void SandboxApplication::Initialize()
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
 		
-	for( auto& backpack_material : backpack_material_array )
-		backpack_material.Set( "PhongMaterialData", ground_quad_surface_data );
-	for( auto& helmet_material : helmet_material_array )
-		helmet_material.Set( "PhongMaterialData", ground_quad_surface_data );
-	for( auto& test_material : test_material_array )
-		test_material.Set( "PhongMaterialData", ground_quad_surface_data );
+	for( auto i = 0; i < test_material_array.size(); i++ )
+		test_material_array[ i ].Set( "PhongMaterialData", test_sub_mesh_surface_data_array[ i ] );
 
 /* Drawables & the Renderer: */
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -144,25 +144,40 @@ void SandboxApplication::Initialize()
 	{
 		if( model )
 		{
-			const auto mesh_count = model->MeshCount();
-			const auto& meshes    = model->Meshes();
+			const auto mesh_instance_count = model->MeshInstanceCount();
+			const auto& meshes             = model->Meshes();
+			const auto& nodes              = model->Nodes();
 
-			sub_mesh_transform_array = std::vector< Engine::Transform >( mesh_count, Engine::Transform( scale, rotation, translation ) );
-			drawable_array.resize( mesh_count );
+			sub_mesh_transform_array.resize( mesh_instance_count );
+			drawable_array.resize( mesh_instance_count );
 
-			for( auto i = 0; i < mesh_count; i++ )
+			for( auto i = 0; i < mesh_instance_count; i++ )
 			{
 				drawable_array[ i ] = Engine::Drawable( &meshes[ i ], &material_array[ i ], &sub_mesh_transform_array[ i ] );
 				renderer.AddDrawable( &drawable_array[ i ] );
 			}
+
+			/* Apply scene-graph transformations: */
+
+			int mesh_index = 0;
+			std::function< void( const std::size_t, const Matrix4x4& ) > ProcessNode = [ & ]( const std::size_t node_index, const Matrix4x4& parent_transform )
+			{
+				const auto& node = nodes[ node_index ];
+
+				auto transform_so_far = node.transform_local * parent_transform;
+
+				for( auto& child_index : node.children )
+					ProcessNode( child_index, transform_so_far );
+
+				if( node.mesh_group )
+					for( auto& sub_mesh : node.mesh_group->sub_meshes )
+						sub_mesh_transform_array[ mesh_index++ ].SetFromSRTMatrix( transform_so_far );
+			};
+
+			for( auto top_level_node_index : model->TopLevelNodeIndices() )
+				ProcessNode( top_level_node_index, Engine::Matrix::Scaling( scale ) * Engine::Math::QuaternionToMatrix( rotation ) * Engine::Matrix::Translation( translation ) );
 		}
 	};
-
-	InitializeModelData( backpack_model, backpack_sub_mesh_transform_array, backpack_drawable_array, backpack_material_array,
-						 Vector3::One(), Quaternion(), Vector3{ 4.0f, 4.0f, 2.0f } );
-
-	InitializeModelData( helmet_model, helmet_sub_mesh_transform_array, helmet_drawable_array, helmet_material_array,
-						 Vector3::One(), Quaternion(), Vector3::Up() * 8.0f );
 
 	InitializeModelData( test_model, test_sub_mesh_transform_array, test_drawable_array, test_material_array,
 						 Vector3::One(), Quaternion(), Vector3::Left() * 2 + Vector3::Up() * 8.0f );
@@ -171,17 +186,21 @@ void SandboxApplication::Initialize()
 	renderer.AddDrawable( &ground_quad_drawable );
 
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
-	renderer.AddDrawable( &front_wall_quad_drawable );
-
-/* Lights: */
-	renderer.AddDirectionalLight( &light_directional );
-
-	for( auto index = 0; index < LIGHT_POINT_COUNT; index++ )
-		renderer.AddPointLight( &light_point_array[ index ] );
-
-	renderer.AddSpotLight( &light_spot );
+	renderer.AddDrawable( &front_wall_quad_drawable );	
 
 /* Other: */
+	// Also add a spot-light to the "led" node/mesh of the spotlight model:
+	if( auto led_node_iterator = std::find_if( test_model->Nodes().cbegin(), test_model->Nodes().cend(), []( const Engine::Model::Node& node ) { return node.name.find( "led" ) != std::string::npos; } );
+		led_node_iterator != test_model->Nodes().cend() )
+	{
+		const std::size_t index = std::distance( test_model->Nodes().cbegin(), led_node_iterator );
+		auto& led_sub_mesh_transform = test_sub_mesh_transform_array[ index ];
+
+		light_spot_transform = led_sub_mesh_transform;
+		light_spot_transform.MultiplyRotation_X( 90.0_deg );
+		renderer.AddSpotLight( &light_spot );
+	}
+
 	renderer.EnableDepthTest();
 
 	Platform::MaximizeWindow();
@@ -246,7 +265,7 @@ void SandboxApplication::Update()
 			const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
 			camera_controller
 				.OffsetHeading( Radians( +mouse_x_delta_pos ) )
-				.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
+				.OffsetPitch( Radians( +mouse_y_delta_pos ), -60.0_deg, +60.0_deg );
 		}
 	}
 
@@ -275,8 +294,6 @@ void SandboxApplication::Render()
 
 void SandboxApplication::RenderImGui()
 {
-	// TODO: Make lights togglable.
-
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Application ImGui", true /* omit if the group is empty */ ) );
 
@@ -297,10 +314,6 @@ void SandboxApplication::RenderImGui()
 	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
-	for( auto& backpack_material : backpack_material_array )
-		Engine::ImGuiDrawer::Draw( backpack_material );
-	for( auto& helmet_material : helmet_material_array )
-		Engine::ImGuiDrawer::Draw( helmet_material );
 	for( auto& test_material : test_material_array )
 		Engine::ImGuiDrawer::Draw( test_material );
 
@@ -461,7 +474,6 @@ void SandboxApplication::ResetLightingData()
 				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f },							.scalar = 0.075f	},
 				.diffuse_and_attenuation_linear   = {.color = Engine::Math::Random::Generate< Engine::Color3 >(),	.scalar = 0.0035f	},
 				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f },
-				.position_view_space = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
 			},
 			.transform = &light_point_transform_array[ i ]
 		};
@@ -472,28 +484,15 @@ void SandboxApplication::ResetLightingData()
 		.is_enabled = true,
 		.data =
 		{
-			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
-			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
-			.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.03f },
+			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.27f  },
+			.specular = Engine::Color3{  0.5f,   0.5f,   0.33f  },
 
-			// These two's values do not matter, will be updated with the correct view space value every frame.
-			.position_view_space_and_cos_cutoff_angle_inner  = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 12.5_deg ) ) },
-			.direction_view_space_and_cos_cutoff_angle_outer = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 17.5_deg ) ) },
 		/* End of GLSL equivalence. */
 			.cutoff_angle_inner     = 12.5_deg,
 			.cutoff_angle_outer     = 17.5_deg
 		},
 		.transform = &light_spot_transform
-	};
-
-	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, 
-	{
-		.shininess = 32.0f
-	} );
-
-	ground_quad_surface_data = front_wall_quad_surface_data =
-	{
-		.shininess = 32.0f
 	};
 }
 
@@ -526,52 +525,77 @@ void SandboxApplication::ResetMaterialData()
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 
+	ground_quad_surface_data = front_wall_quad_surface_data =
+	{
+		.color_diffuse       = {},
+		.has_texture_diffuse = 1,
+		.shininess           = 32.0f
+	};
+
+	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, ground_quad_surface_data );
+
 	auto ResetModelMaterialData = []( const Engine::Model* model, const std::string& model_name,
-									  std::vector< Engine::Material >& material_array, Engine::Shader* shader,
+									  std::vector< Engine::Material >& material_array, std::vector< Engine::MaterialData::PhongMaterialData >& surface_data_array, Engine::Shader* shader,
 									  Engine::Texture* diffuse_texture, Engine::Texture* specular_texture,
 									  const Vector4& texture_scale_and_offset )
 	{
 		if( model )
 		{
-			const auto mesh_count = model->MeshCount();
-			const auto& meshes    = model->Meshes();
+			int material_index = 0;
 
-			material_array.resize( mesh_count );
+			material_array.resize( model->MeshInstanceCount() );
+			surface_data_array.resize( model->MeshInstanceCount() );
 
-			for( auto i = 0; i < mesh_count; i++ )
+			const auto node_count = model->NodeCount();
+			const auto& nodes     = model->Nodes();
+
+			const auto& model_textures = model->Textures();
+
+			for( auto& node : nodes )
 			{
-				const auto& mesh = meshes[ i ];
-
-				material_array[ i ] = Engine::Material( model_name, shader );
-
-				if( diffuse_texture )
-					material_array[ i ].SetTexture( "uniform_diffuse_map_slot", diffuse_texture );
-				else
+				if( node.mesh_group ) // Only process Nodes having a Mesh.
 				{
-					/*const auto albedo_texture = std::find_if( mesh.textures.cbegin(), mesh.textures.cend(), []( Engine::Texture* texture ) { return texture->Name() == "Albedo"; } );
-					if( albedo_texture != mesh.textures.cend() )
-						material_array[ i ].SetTexture( "uniform_diffuse_map_slot", *albedo_texture );*/
-				}
+					for( auto& sub_mesh : node.mesh_group->sub_meshes )
+					{
+						auto& material = material_array[ material_index ] = Engine::Material( model_name + "_" + sub_mesh.name, shader);
 
-				material_array[ i ].SetTexture( "uniform_specular_map_slot", specular_texture );
-				material_array[ i ].Set( "uniform_texture_scale_and_offset", texture_scale_and_offset );
+						if( diffuse_texture || sub_mesh.texture_albedo )
+						{
+							surface_data_array[ material_index ] = 
+							{
+								.color_diffuse       = {},
+								.has_texture_diffuse = 1,
+								.shininess           = 32.0f
+							};
+
+							material.SetTexture( "uniform_diffuse_map_slot", diffuse_texture ? diffuse_texture : sub_mesh.texture_albedo );
+						}
+						else if( sub_mesh.color_albedo )
+						{
+							surface_data_array[ material_index ] =
+							{
+								.color_diffuse       = *sub_mesh.color_albedo,
+								.has_texture_diffuse = 0,
+								.shininess           = 32.0f
+							};
+						}
+
+						if( specular_texture )
+							material.SetTexture( "uniform_specular_map_slot", specular_texture );
+
+						material.Set( "uniform_texture_scale_and_offset", texture_scale_and_offset );
+
+						material_index++;
+					}
+				}
 			}
 		}
-
 	};
 
 	const Vector4 identity_texture_scale_and_offset( 1.0f, 1.0f, 0.0f, 0.0f );
 
-	ResetModelMaterialData( backpack_model, "Backpack",
-							backpack_material_array, &phong_shader, checker_pattern, checker_pattern,
-							identity_texture_scale_and_offset );
-
-	ResetModelMaterialData( helmet_model, "Helmet",
-							helmet_material_array, &phong_shader, checker_pattern, checker_pattern,
-							identity_texture_scale_and_offset );
-
-	ResetModelMaterialData( test_model, "Test (Spotlight)",
-							test_material_array, &phong_shader, checker_pattern, checker_pattern,
+	ResetModelMaterialData( test_model, "Test (minigun_m-134)",
+							test_material_array, test_sub_mesh_surface_data_array, &phong_shader, nullptr /* Use Albedo colors in-model. */, checker_pattern,
 							identity_texture_scale_and_offset );
 }
 
@@ -618,6 +642,10 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 				light_spot.data.cutoff_angle_inner = Engine::Math::Max( light_spot.data.cutoff_angle_inner - 0.33_deg, 0_deg );
 			break;
 		case Platform::KeyCode::KEY_I:
+			if( key_action == Platform::KeyAction::PRESS )
+				show_imgui = !show_imgui;
+			break;
+		case Platform::KeyCode::KEY_O:
 			if( key_action == Platform::KeyAction::PRESS )
 				show_imgui_demo_window = !show_imgui_demo_window;
 			break;

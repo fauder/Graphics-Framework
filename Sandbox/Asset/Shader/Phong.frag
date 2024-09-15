@@ -11,7 +11,13 @@ out vec4 out_color;
 
 layout ( std140 ) uniform PhongMaterialData
 {
+/* These 2 are combined into a vec4 on cpu side. */
+	vec3 color_diffuse;
+	bool has_texture_diffuse;
+
 	float shininess;
+
+	vec3 padding;
 } uniform_phong_material_data;
 
 uniform sampler2D uniform_diffuse_map_slot, uniform_specular_map_slot;
@@ -118,7 +124,9 @@ void main()
 	// No need to subtract from the camera position since the camera is positioned at the origin in view space.
 	vec4 viewing_direction_view_space = normalize( -varying_position_view_space ); 
 
-	vec3 diffuse_sample  = vec3( texture( uniform_diffuse_map_slot,  varying_tex_coords ) );
+	vec3 diffuse_sample  = uniform_phong_material_data.has_texture_diffuse
+							? vec3( texture( uniform_diffuse_map_slot,  varying_tex_coords ) )
+							: uniform_phong_material_data.color_diffuse;
 	vec3 specular_sample = vec3( texture( uniform_specular_map_slot, varying_tex_coords ) );
 
 	vec3 from_directional_light = _INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE * 

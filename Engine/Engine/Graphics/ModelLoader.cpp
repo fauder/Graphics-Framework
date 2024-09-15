@@ -41,8 +41,8 @@ struct fastgltf::ElementTraits< Engine::Vector4I > : fastgltf::ElementTraitsBase
 
 namespace Engine
 {
-	bool LoadMesh( fastgltf::Asset& gltf_asset, fastgltf::Mesh& gltf_mesh,
-                   const Matrix4x4& local_transform, Model::MeshGroup& mesh_group_to_load, std::vector< Mesh >& meshes, const std::vector< Texture* >& textures )
+	bool LoadMesh( const fastgltf::Asset& gltf_asset, const fastgltf::Mesh& gltf_mesh,
+                   Model::MeshGroup& mesh_group_to_load, std::vector< Mesh >& meshes, const std::vector< Texture* >& textures )
     {
 		/* Naming variables sub-mesh instead of gltf's "primitive" for better readibility. */
 
@@ -54,7 +54,8 @@ namespace Engine
             std::size_t base_color_uv_index = 0;
             std::size_t material_index      = -1;
 
-            std::span< Texture* const > sub_mesh_textures;
+            Texture* sub_mesh_albedo_texture = nullptr;
+            std::optional< Color3 > sub_mesh_albedo_color;
 
 			auto* position_iterator = submesh_iterator->findAttribute( "POSITION" );
 			ASSERT_DEBUG_ONLY( position_iterator != submesh_iterator->attributes.end() ); // A gltf mesh primitive is required to hold the POSITION attribute.
@@ -71,15 +72,18 @@ namespace Engine
                     if( !fastgltf_texture.imageIndex.has_value() )
                         return false;
 
-                    const auto albedo_texture = textures[ fastgltf_texture.imageIndex.value() ];
-                    albedo_texture->SetName( "Albedo" );
-
-                    sub_mesh_textures = std::span< Texture* const >( textures.data() + fastgltf_texture.imageIndex.value(), 1 );
+                    sub_mesh_albedo_texture = textures[ fastgltf_texture.imageIndex.value() ];
+                    sub_mesh_albedo_texture->SetName( "Albedo" );
 
                     if( base_color_texture_info->transform && base_color_texture_info->transform->texCoordIndex.has_value() )
                         base_color_uv_index = base_color_texture_info->transform->texCoordIndex.value();
                     else
                         base_color_uv_index = material.pbrData.baseColorTexture->texCoordIndex;
+                }
+                else
+                {
+                    // Use Albedo color.
+                    sub_mesh_albedo_color = reinterpret_cast< const Color3& /* Omit alpha */ >( material.pbrData.baseColorFactor );
                 }
             }
 
@@ -99,12 +103,10 @@ namespace Engine
 
             std::vector< Vector3 > positions( position_accessor.count, ZERO_INITIALIZATION );
 
-            // TODO: Implement node hierarchy by chaining local transforms of nodes to get the global transform.
-
 			fastgltf::iterateAccessorWithIndex< Vector3 >( gltf_asset, position_accessor,
-														   [ & ]( Vector3 pos, std::size_t idx )
+														   [ & ]( Vector3 position, std::size_t index )
 														   {
-                                                    	   	   positions[ idx ] = ( Vector4( pos ).SetW( 1 ) * local_transform ).XYZ() * coordinate_system_transform;
+                                                    	   	   positions[ index ] = position * coordinate_system_transform;
 														   } );
 
             /*
@@ -175,13 +177,14 @@ namespace Engine
 																				   std::move( normals ),
 																				   std::move( uvs_0 ),
 																				   std::move( indices_u16 ), std::move( indices_u32 ) ) ),
-														std::move( sub_mesh_textures ) );
+														sub_mesh_albedo_texture,
+                                                        std::move( sub_mesh_albedo_color ) );
 		}
 
         return true;
     }
 
-    bool LoadTexture( fastgltf::Asset& gltf_asset, fastgltf::Image& gltf_image,
+    bool LoadTexture( const fastgltf::Asset& gltf_asset, const fastgltf::Image& gltf_image,
                       Texture*& texture_to_load )
     {
         Engine::Texture::ImportSettings texture_import_settings;
@@ -192,8 +195,8 @@ namespace Engine
 
         std::visit( fastgltf::visitor
                     {
-                        []( auto& arg ) {},
-                        [ & ]( fastgltf::sources::URI& file_path )
+                        []( const auto& arg ) {},
+                        [ & ]( const fastgltf::sources::URI& file_path )
                         {
                             ASSERT_DEBUG_ONLY( file_path.fileByteOffset == 0 ); // Offsets with stbi are not supported.
                             ASSERT_DEBUG_ONLY( file_path.uri.isLocalPath() );   // Only capable of loading local files.
@@ -202,12 +205,12 @@ namespace Engine
 
                             texture_to_load = AssetDatabase< Texture >::CreateAssetFromFile( std::string( gltf_image.name ), path, texture_import_settings );
                         },
-                        [ & ]( fastgltf::sources::Array& vector )
+                        [ & ]( const fastgltf::sources::Array& vector )
                         {
                             texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ), vector.bytes.data(), static_cast< int >( vector.bytes.size() ),
-                                                                                       texture_import_settings );
+																					   texture_import_settings );
                         },
-                        [ & ]( fastgltf::sources::BufferView& view )
+                        [ & ]( const fastgltf::sources::BufferView& view )
                         {
                             auto& buffer_view = gltf_asset.bufferViews[ view.bufferViewIndex ];
                             auto& buffer      = gltf_asset.buffers[ buffer_view.bufferIndex ];
@@ -218,13 +221,13 @@ namespace Engine
                             std::visit( fastgltf::visitor
                                         {
                                             // We only care about VectorWithMime here, because we specify LoadExternalBuffers, meaning all buffers are already loaded into a vector.
-                                            []( auto& arg ) {},
-                                            [ & ]( fastgltf::sources::Array& vector )
+                                            []( const auto& arg ) {},
+                                            [ & ]( const fastgltf::sources::Array& vector )
                                             {
-                                                texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ),
-                                                                                                           vector.bytes.data() + buffer_view.byteOffset,
-																										   static_cast< int >( buffer_view.byteLength ),
-																										   texture_import_settings );
+												texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ),
+																										           vector.bytes.data() + buffer_view.byteOffset,
+																										           static_cast< int >( buffer_view.byteLength ),
+																										           texture_import_settings );
                                             }
                                         }, buffer.data );
                         },
@@ -233,25 +236,37 @@ namespace Engine
         return texture_to_load;
     }
 
-    bool LoadNode( fastgltf::Asset& gltf_asset, fastgltf::Node& gltf_node,
+    bool LoadNode( const fastgltf::Node& gltf_node,
                    std::vector< Model::MeshGroup >& mesh_groups, Model::Node& node_to_load )
     {
+        /* glTF uses a right-handed coordinate system where x points to right, y points to up & z points from the screen to the user.
+         * Compared to the coordinate system used in this engine, only the Z component is the inverse, x & y are the same. 
+         
+         * To transform matrices, not vectors, we need the inverse of this transform, which happens to be the same exact matrix.
+         * So, to transform transformation matrices to our coordinate system, we need to "sandwich" the transformation matrix between 2 of this same matrix. */
+		static Matrix4x4 coordinate_system_transform( Vector4::Right(),
+													  Vector4::Up(),
+													  Vector4::Backward(),
+													  Vector4( 0.0f, 0.0f, 0.0f, 1.0f ) );
+
         const Matrix4x4 node_transform = std::visit( fastgltf::visitor
                                                      {
-                                                         []( fastgltf::TRS& trs ) -> Matrix4x4
+                                                         []( const fastgltf::TRS& trs ) -> Matrix4x4
                                                          {
                                                              return
-                                                                          Matrix::Scaling( reinterpret_cast< Vector3& >( trs.scale ) ) *
-                                                                 Math::QuaternionToMatrix( reinterpret_cast< Quaternion& >( trs.rotation ) ) *
-                                                                      Matrix::Translation( reinterpret_cast< Vector3& >( trs.translation ) );
+                                                                 coordinate_system_transform *
+                                                                          Matrix::Scaling( reinterpret_cast< const Vector3&     >( trs.scale ) ) *
+                                                                 Math::QuaternionToMatrix( reinterpret_cast< const Quaternion&  >( trs.rotation ) ) *
+                                                                      Matrix::Translation( reinterpret_cast< const Vector3&     >( trs.translation ) ) *
+                                                                 coordinate_system_transform;
                                                          },
-                                                         []( fastgltf::math::fmat4x4& matrix ) -> Matrix4x4
+                                                         []( const fastgltf::math::fmat4x4& matrix ) -> Matrix4x4
                                                          {
                                                              // Need to transpose because fastgltf has column-major matrices.
-                                                             return reinterpret_cast< Matrix4x4& >( matrix ).Transposed();
+                                                             return coordinate_system_transform * reinterpret_cast< const Matrix4x4& >( matrix ).Transposed() * coordinate_system_transform;
                                                          }
                                                      }, gltf_node.transform );
-
+        
         node_to_load = Model::Node( std::string( gltf_node.name ), node_transform, gltf_node.meshIndex ? &mesh_groups[ *gltf_node.meshIndex ] : nullptr );
 
         return true;
@@ -336,24 +351,28 @@ namespace Engine
 
         model.meshes.reserve( sub_mesh_count );
 
-        {
-            int mesh_group_index = 0;
+        std::copy( gltf_asset.scenes.front().nodeIndices.cbegin(), gltf_asset.scenes.front().nodeIndices.cend(), std::back_inserter( model.node_indices_top_level ) );
 
-            for( auto& gltf_node : gltf_asset.nodes )
+        for( auto index = 0; index < gltf_asset.nodes.size(); index++ )
+        {
+            const auto& gltf_node = gltf_asset.nodes[ index ];
+            auto& node            = model.nodes.emplace_back();
+
+            if( not LoadNode( gltf_node,
+							  model.mesh_groups, node ) )
+                return std::nullopt;
+
+            node.children.reserve( gltf_node.children.size() );
+            for( auto& child_index : gltf_node.children )
+                node.children.push_back( ( int )child_index );
+
+            if( node.mesh_group )
             {
-                auto& node = model.nodes.emplace_back();
-                if( not LoadNode( gltf_asset, gltf_node,
-                                  model.mesh_groups, node ) )
+                if( not LoadMesh( gltf_asset, gltf_asset.meshes[ *gltf_node.meshIndex ],
+								  *node.mesh_group, model.meshes, model.textures ) )
                     return std::nullopt;
 
-                if( node.mesh_group )
-                {
-                    if( not LoadMesh( gltf_asset, gltf_asset.meshes[ mesh_group_index ],
-							          node.transform_local, *node.mesh_group, model.meshes, model.textures ) )
-                        return std::nullopt;
-
-                    mesh_group_index++;
-                }
+                model.mesh_istance_count += ( int )node.mesh_group->sub_meshes.size();
             }
         }
 

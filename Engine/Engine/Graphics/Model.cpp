@@ -13,6 +13,7 @@ namespace Engine
 
 	Model::Node::Node( Node&& donor )
 		:
+		children( std::move( donor.children ) ),
 		name( std::move( donor.name ) ),
 		transform_local( std::move( donor.transform_local ) ),
 		mesh_group( std::exchange( donor.mesh_group, nullptr ) )
@@ -21,9 +22,10 @@ namespace Engine
 
 	Model::Node& Model::Node::operator=( Node&& donor )
 	{
-		name = std::move( donor.name );
+		children        = std::move( donor.children );
+		name            = std::move( donor.name );
 		transform_local = std::move( donor.transform_local );
-		mesh_group = std::exchange( donor.mesh_group, nullptr );
+		mesh_group      = std::exchange( donor.mesh_group, nullptr );
 
 		return *this;
 	}

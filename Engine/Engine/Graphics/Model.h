@@ -33,7 +33,9 @@ namespace Engine
 		{
 			std::string name;
 			Mesh& mesh; // Actual mesh storage is kept in the Model class.
-			std::span< Texture* const > textures;
+			
+			Texture* texture_albedo;
+			std::optional< Color3 > color_albedo;
 		};
 
 		/* Maps to a glTF "mesh". 
@@ -56,6 +58,8 @@ namespace Engine
 			Node& operator =( const Node& ) = delete;
 			Node( Node&& );
 			Node& operator =( Node&& );
+
+			std::vector< int > children;
 
 			std::string name;
 			Matrix4x4 transform_local;
@@ -83,12 +87,16 @@ namespace Engine
 		~Model();
 
 	/* Queries: */
-		inline int NodeCount()		const { return ( int )nodes.size(); }
-		inline int MeshCount()		const { return ( int )meshes.size(); }
-		inline int MeshGroupCount() const { return ( int )mesh_groups.size(); }
+		inline int NodeCount()			const { return ( int )nodes.size(); }
+		inline int MeshCount()			const { return ( int )meshes.size(); }
+		inline int MeshInstanceCount()	const { return mesh_istance_count; }
+		inline int MeshGroupCount()		const { return ( int )mesh_groups.size(); }
+		
+		inline const std::vector< std::size_t >& TopLevelNodeIndices() const { return node_indices_top_level; }
 
-		inline const std::vector< Node >& Nodes() const { return nodes; }
-		inline const std::vector< Mesh >& Meshes() const { return meshes; }
+		inline const std::vector< Node		>& Nodes()		const { return nodes; }
+		inline const std::vector< Mesh		>& Meshes()		const { return meshes; }
+		inline const std::vector< Texture*	>& Textures()	const { return textures; }
 
 	private:
 		std::string name;
@@ -97,5 +105,9 @@ namespace Engine
 		std::vector< MeshGroup	> mesh_groups;
 		std::vector< Mesh		> meshes;
 		std::vector< Texture*	> textures; // Storage of textures is kept by the AssetDatabase< Texture >.
+
+		std::vector< std::size_t > node_indices_top_level;
+
+		int mesh_istance_count;
 	};
 }
