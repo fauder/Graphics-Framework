@@ -51,7 +51,7 @@ namespace Engine
 		inline const std::unordered_map< std::string, Uniform::Information				>& GetUniformInfoMap()			const { return *uniform_info_map; }
 		inline const std::unordered_map< std::string, const Uniform::BufferInformation*	>& GetUniformBufferInfoMap()	const { return uniform_buffer_management_regular
 																																			.GetBufferInformationMap();	}
-		inline const std::unordered_map< std::string, Texture*							>& GetTextureMap()				const { return texture_map; }
+		inline const std::unordered_map< std::string, const Texture*					>& GetTextureMap()				const { return texture_map; }
 
 		const void* Get( const Uniform::Information& uniform_info ) const;
 			  void* Get( const Uniform::Information& uniform_info );
@@ -112,7 +112,7 @@ namespace Engine
 		}
 
 	/* Textures: */
-		void SetTexture( const char* sampler_name_of_new_texture, Texture* texture_to_be_set );
+		void SetTexture( const char* sampler_name_of_new_texture, const Texture* texture_to_be_set );
 		const Texture* GetTexture( const char* sampler_name_of_new_texture ) const;
 
 	private:
@@ -141,6 +141,6 @@ namespace Engine
 
 		UniformBufferManagement< Blob > uniform_buffer_management_regular; 
 
-		std::unordered_map< std::string, Texture* > texture_map;
+		std::unordered_map< std::string, const Texture* > texture_map;
 	};
 }

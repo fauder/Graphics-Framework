@@ -538,7 +538,7 @@ namespace Engine::ImGuiDrawer
 
 						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
 						ImGui::PushID( ( void* )&texture_pointer );
-						is_modified |= Draw( texture_pointer, uniform_sampler_name.c_str() );
+						Draw( texture_pointer, uniform_sampler_name.c_str() );
 						ImGui::PopID();
 					}
 

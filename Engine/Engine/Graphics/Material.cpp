@@ -96,7 +96,7 @@ namespace Engine
  *
  */
 
-	void Material::SetTexture( const char* sampler_name_of_new_texture, Texture* texture_to_be_set )
+	void Material::SetTexture( const char* sampler_name_of_new_texture, const Texture* texture_to_be_set )
 	{
 		if( const auto found = texture_map.find( sampler_name_of_new_texture ); 
 			found != texture_map.cend() )
