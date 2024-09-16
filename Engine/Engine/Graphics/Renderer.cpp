@@ -87,7 +87,7 @@ namespace Engine
 
 					for( auto& drawable : drawable_list )
 					{
-						if( drawable->material->Name() == material_name )
+						if( drawable->is_enabled && drawable->material->Name() == material_name )
 						{
 							drawable->mesh->Bind();
 

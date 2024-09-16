@@ -881,6 +881,8 @@ namespace Engine::ImGuiDrawer
 	{
 		bool is_modified = false;
 
+		bool was_enabled = point_light.is_enabled;
+
 		ImGuiUtility::BeginGroupPanel( light_name, &point_light.is_enabled );
 
 		ImGui::PushID( light_name );
@@ -900,7 +902,7 @@ namespace Engine::ImGuiDrawer
 
 		ImGuiUtility::EndGroupPanel( &point_light.is_enabled);
 		
-		return is_modified;
+		return is_modified || was_enabled != point_light.is_enabled;
 	}
 
 	void Draw( const PointLight& point_light, const char* light_name, ImGuiWindowFlags window_flags )

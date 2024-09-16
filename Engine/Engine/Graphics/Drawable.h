@@ -28,9 +28,16 @@ namespace Engine
 		void SetMesh( const Mesh* mesh );
 		void SetMaterial( Material* material );
 
+		void ToggleOn();
+		void ToggleOff();
+		void ToggleOnOrOff();
+		void ToggleOnOrOff( const bool enable );
+
 	private:
 		Transform* transform;
 		const Mesh* mesh;
 		Material* material;
+
+		bool is_enabled;
 	};
 }

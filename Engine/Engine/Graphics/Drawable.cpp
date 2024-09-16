@@ -7,7 +7,8 @@ namespace Engine
 		:
 		transform( nullptr ),
 		mesh( nullptr ),
-		material( nullptr )
+		material( nullptr ),
+		is_enabled( false )
 	{
 	}
 
@@ -15,7 +16,8 @@ namespace Engine
 		:
 		transform( transform ),
 		mesh( mesh ),
-		material( material )
+		material( material ),
+		is_enabled( true )
 	{
 	}
 
@@ -31,5 +33,25 @@ namespace Engine
 	void Drawable::SetMaterial( Material* material )
 	{
 		this->material = material;
+	}
+
+	void Drawable::ToggleOn()
+	{
+		is_enabled = true;
+	}
+
+	void Drawable::ToggleOff()
+	{
+		is_enabled = false;
+	}
+
+	void Drawable::ToggleOnOrOff()
+	{
+		is_enabled = !is_enabled;
+	}
+
+	void Drawable::ToggleOnOrOff( const bool enable )
+	{
+		is_enabled = enable;
 	}
 }
