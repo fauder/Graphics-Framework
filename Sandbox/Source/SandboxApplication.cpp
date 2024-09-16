@@ -178,6 +178,7 @@ void SandboxApplication::Update()
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Update", true /* omit if the group is empty */ ) );
 
 	current_time_as_angle = Radians( time_current );
+	const Radians current_time_mod_two_pi( std::fmod( time_current, Engine::Constants< float >::Two_Pi() ) );
 
 	/* Light sources' transform: */
 	constexpr Radians angle_increment( Engine::Constants< Radians >::Two_Pi() / LIGHT_POINT_COUNT );
@@ -188,11 +189,21 @@ void SandboxApplication::Update()
 
 		if( light_point_array_is_animated )
 		{
-			const auto point_light_rotation = Engine::Matrix::RotationAroundY( current_time_as_angle * 0.33f + angle_increment * ( float )i );
+			const auto old_rotation( light_point_transform_array[ i ].GetRotation() );
+			Radians old_heading, old_pitch, bank;
+			Engine::Math::QuaternionToEuler( old_rotation, old_heading, old_pitch, bank );
 
-			point_light_position_world_space = ( ( Vector4::Forward() * light_point_orbit_radius ) *
+			Radians new_angle( current_time_mod_two_pi + ( float )angle_increment * ( float )i );
+			const Radians new_angle_mod_two_pi( std::fmod( new_angle.Value(), Engine::Constants< float >::Two_Pi() ) );
+
+			const bool heading_instead_of_pitching = new_angle_mod_two_pi <= Engine::Constants< Radians >::Pi();
+
+			const auto point_light_rotation( Engine::Math::EulerToMatrix( float(  heading_instead_of_pitching ) * new_angle_mod_two_pi,
+																		  float( !heading_instead_of_pitching ) * ( new_angle_mod_two_pi - 3.0f * Engine::Constants< Radians >::Pi_Over_Two() ), bank ) );
+
+			point_light_position_world_space = ( ( ( heading_instead_of_pitching ? Vector4::Forward() : Vector4::Up() ) * light_point_orbit_radius ) *
 												 ( point_light_rotation * Engine::Matrix::Translation( CUBES_ORIGIN ) ) ).XYZ();
-			point_light_position_world_space.SetY( 2.0f );
+			point_light_position_world_space.SetY( point_light_position_world_space.Y() + 2.0f );
 
 			light_point_transform_array[ i ].SetRotation( Engine::Math::MatrixToQuaternion( point_light_rotation ) );
 		}
