@@ -330,7 +330,7 @@ void SandboxApplication::RenderImGui()
 				Engine::ImGuiUtility::BeginGroupPanel( "Options" );
 				if( ImGui::Checkbox( "Disable All", &light_point_array_disable ) )
 					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-						light_point_array[ i ].is_enabled = !light_point_array_disable;
+						light_source_drawable_array[ i ].ToggleOnOrOff( light_point_array[ i ].is_enabled = !light_point_array_disable );
 				ImGui::Checkbox( "Animate (Orbit) Point Lights", &light_point_array_is_animated );
 				if( light_point_array_is_animated )
 					ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
@@ -341,8 +341,13 @@ void SandboxApplication::RenderImGui()
 					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 					{
 						const std::string name( "Point Light # " + std::to_string( i ) );
+						const bool was_enabled = light_point_array[ i ].is_enabled;
 						if( Engine::ImGuiDrawer::Draw( light_point_array[ i ], name.c_str(), light_point_array_is_animated /* hide position. */ ) )
+						{
 							light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+							if( was_enabled != light_point_array[ i ].is_enabled )
+								light_source_drawable_array[ i ].ToggleOnOrOff();
+						}
 					}
 
 					ImGui::TreePop();
