@@ -152,9 +152,6 @@ void SandboxApplication::Initialize()
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable );
 
-	for( auto& drawable : test_model_instance.Drawables() )
-		renderer.AddDrawable( &drawable );
-
 /* Other: */
 	renderer.EnableDepthTest();
 
