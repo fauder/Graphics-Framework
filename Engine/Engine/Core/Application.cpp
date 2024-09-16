@@ -131,7 +131,7 @@ namespace Engine
 
 	void Application::CalculateTimeInformation()
 	{
-		time_since_start = Platform::GetCurrentTime();
+		time_since_start = Platform::CurrentTime();
 
 		time_delta_real = time_since_start - time_previous_since_start;
 

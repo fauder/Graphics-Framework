@@ -112,7 +112,7 @@ namespace Engine
 		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix() );
 	}
 
-	void Renderer::AddDrawable( Drawable* drawable_to_add )
+	void Renderer::AddDrawable( const Drawable* drawable_to_add )
 	{
 		drawable_list.push_back( drawable_to_add );
 
@@ -237,14 +237,14 @@ namespace Engine
 
 	void Renderer::Render( const Mesh& mesh )
 	{
-		mesh.IsIndexed()
+		mesh.HasIndices()
 			? Render_Indexed( mesh )
 			: Render_NonIndexed( mesh );
 	}
 
 	void Renderer::Render_Indexed( const Mesh& mesh )
 	{
-		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), GL_UNSIGNED_INT, mesh.Indices_Raw() );
+		glDrawElements( ( GLint )mesh.Primitive(), mesh.IndexCount(), mesh.IndexType(), 0 );
 	}
 
 	void Renderer::Render_NonIndexed( const Mesh& mesh )

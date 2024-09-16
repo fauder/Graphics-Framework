@@ -56,6 +56,19 @@ namespace Engine::Matrix
 		);
 	}
 
+	/* In row-major form. */ constexpr Matrix4x4 Scaling( const Vector3& scale_vector )
+	{
+		return Matrix4x4
+		(
+			{
+				scale_vector.X(),	0.0f,				0.0f,				0.0f,
+				0.0f,				scale_vector.Y(),	0.0f,				0.0f,
+				0.0f,				0.0f,				scale_vector.Z(),	0.0f,
+				0.0f,				0.0f,				0.0f,				1.0f
+			}
+		);
+	}
+
 	/* In row-major form. */ constexpr Matrix4x4 ScalingOnX( const float new_scale )
 	{
 		return Matrix4x4

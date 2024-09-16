@@ -96,7 +96,7 @@ namespace Engine
  *
  */
 
-	void Material::SetTexture( const char* sampler_name_of_new_texture, Texture* texture_to_be_set )
+	void Material::SetTexture( const char* sampler_name_of_new_texture, const Texture* texture_to_be_set )
 	{
 		if( const auto found = texture_map.find( sampler_name_of_new_texture ); 
 			found != texture_map.cend() )
@@ -150,14 +150,17 @@ namespace Engine
 		/* Copy texture slot to blob, activate the slot & upload the slot uniform to GPU. */
 		for( auto& [ sampler_name, texture ] : texture_map )
 		{
-			const auto& sampler_uniform_info = uniform_info_map->at( sampler_name );
-			const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
+			if( texture )
+			{
+				const auto& sampler_uniform_info = uniform_info_map->at( sampler_name );
+				const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
 
-			uniform_blob_default_block.Set( ( const std::byte* )&texture_unit_slot, sampler_uniform_info.offset, sampler_uniform_info.size );
+				uniform_blob_default_block.Set( ( const std::byte* )&texture_unit_slot, sampler_uniform_info.offset, sampler_uniform_info.size );
 
-			texture->Activate( texture_unit_slot );
+				texture->Activate( texture_unit_slot );
 
-			UploadUniform( sampler_uniform_info );
+				UploadUniform( sampler_uniform_info );
+			}
 		}
 	}
 

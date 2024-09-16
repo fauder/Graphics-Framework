@@ -34,6 +34,11 @@ namespace Engine
 
 			/* Returns either the multiple splitted string views or the source string in case delimiter was never found. */
 			std::vector< std::string_view > Split( std::string_view source, const char delimiter );
+
+#ifdef _WIN32
+			std::wstring ToWideString( const std::string& string );
+			std::string ToNarrowString( const std::wstring& wstring );
+#endif // _WIN32
 		}
 	};
 }

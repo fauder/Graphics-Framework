@@ -1,6 +1,15 @@
+#ifdef _WIN32
+// Windows Includes.
+#include <ShlObj.h>
+#include <ShlObj_core.h>
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#endif // _WIN32
+
 // Engine Includes.
 #include "Graphics/Graphics.h"
 #include "Platform.h"
+#include "Utility.hpp"
 
 // Vendor Includes.
 #include "GLFW/glfw3.h"
@@ -303,7 +312,108 @@ namespace Platform
 		return { MOUSE_SCROLL_X_OFFSET, MOUSE_SCROLL_Y_OFFSET };
 	}
 
-	float GetCurrentTime()
+	std::optional< std::string > BrowseFileName( const std::vector< std::string >& filters, const std::string& prompt )
+	{
+#ifdef _WIN32
+		OPENFILENAMEA dialog;
+		char file_name_buffer[ 260 ];
+
+		/* Initialize OPENFILENAMEA: */
+		ZeroMemory( &dialog, sizeof( dialog ) );
+		dialog.lStructSize = sizeof( dialog );
+		dialog.hwndOwner = NULL;
+		dialog.lpstrFile = file_name_buffer;
+		if( !prompt.empty() )
+			dialog.lpstrTitle = prompt.c_str();
+
+		/* Convert vector of strings to vector of chars, with null characters inserted between the strings.
+			we need a contiguous array of chars to present to lpstrFilter. */
+		std::vector< char > filters_char_array_contiguous;
+		for( auto& filter_string : filters )
+		{
+			filters_char_array_contiguous.insert( filters_char_array_contiguous.begin() + filters_char_array_contiguous.size(),
+												  filter_string.cbegin(), filter_string.cend() );
+			filters_char_array_contiguous.push_back( '\0' );
+		}
+
+		filters_char_array_contiguous.push_back( '\0' ); // This null character is used to _actually_ mark the end of the sequence.
+
+		/* Set lpstrFile[ 0 ] to '\0' so that GetOpenFileNameA does not use the contents of file_name_buffer to initialize itself: */
+		dialog.lpstrFile[ 0 ] = '\0';
+		dialog.nMaxFile = sizeof( file_name_buffer );
+
+		dialog.lpstrFilter     = filters_char_array_contiguous.data();
+		dialog.nFilterIndex    = 1;
+		dialog.lpstrFileTitle  = NULL;
+		dialog.nMaxFileTitle   = 0;
+		dialog.lpstrInitialDir = NULL;
+		dialog.Flags           = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST |
+								 OFN_NOCHANGEDIR /* this is crucial, otherwise working dir. changes. We use non-windows APIs for that. */;
+
+		/* Display the Open dialog box: */
+		if( GetOpenFileNameA( &dialog ) == TRUE )
+			return std::optional< std::string >( dialog.lpstrFile );
+
+		return std::nullopt;
+#endif // _WIN32
+
+		throw std::logic_error( "Platform::BrowseFileName() not implemented for current platform." );
+	}
+
+	std::optional< std::string > BrowseDirectory( const std::string& title, const std::string& directory_path )
+	{
+#ifdef _WIN32
+		static auto co_initialized = SUCCEEDED( CoInitializeEx( NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE ) );
+
+		IFileOpenDialog* file_open_dialog;
+
+		// Create the FileOpenDialog object.
+		if( SUCCEEDED( CoCreateInstance( CLSID_FileOpenDialog, NULL, CLSCTX_ALL, IID_IFileOpenDialog, reinterpret_cast< void** >( &file_open_dialog ) ) ) )
+		{
+			file_open_dialog->SetTitle( Engine::Utility::String::ToWideString( title ).c_str() );
+
+			/* Set default directory. */
+			const std::wstring directory_path_wide( directory_path.begin(), directory_path.end() );
+			if( !directory_path_wide.empty() )
+			{
+				IShellItem* default_directory_item;
+				if( SUCCEEDED( SHCreateItemFromParsingName( directory_path_wide.c_str(), NULL, IID_PPV_ARGS( &default_directory_item ) ) ) )
+					file_open_dialog->SetFolder( default_directory_item );
+				default_directory_item->Release();
+			}
+
+			file_open_dialog->SetOptions( FOS_PICKFOLDERS );
+
+			// Show the Open dialog box.
+			if( SUCCEEDED( file_open_dialog->Show( NULL ) ) )
+			{
+				// Get the file name from the dialog box.
+				IShellItem* pItem;
+				if( SUCCEEDED( file_open_dialog->GetResult( &pItem ) ) )
+				{
+					PWSTR pszFilePath;
+
+					// Display the file name to the user.
+					if( SUCCEEDED( pItem->GetDisplayName( SIGDN_FILESYSPATH, &pszFilePath ) ) )
+					{
+						std::wstring selected_directory_path_wide( pszFilePath );
+						CoTaskMemFree( pszFilePath );
+						return Engine::Utility::String::ToNarrowString( selected_directory_path_wide );
+					}
+					pItem->Release();
+				}
+			}
+
+			file_open_dialog->Release();
+		}
+
+		return std::nullopt;
+#endif // _WIN32
+
+		throw std::logic_error( "Platform::BrowseDirectory() not implemented for current platform." );
+	}
+
+	float CurrentTime()
 	{
 		return static_cast< float >( glfwGetTime() );
 	}

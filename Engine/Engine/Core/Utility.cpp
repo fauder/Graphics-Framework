@@ -1,3 +1,10 @@
+#ifdef _WIN32
+// Windows Includes.
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#include <Windows.h>
+#endif // _WIN32
+
+
 // Engine Includes.
 #include "Utility.hpp"
 
@@ -94,6 +101,30 @@ namespace Engine
 
 				return source; // Contains only white-space.
 			}
+
+#ifdef _WIN32
+			std::wstring ToWideString( const std::string& string )
+			{
+				if( string.empty() )
+					return std::wstring();
+
+				int size_needed = MultiByteToWideChar( CP_UTF8, 0, &string[ 0 ], ( int )string.size(), NULL, 0 );
+				std::wstring result( size_needed, 0 );
+				MultiByteToWideChar( CP_UTF8, 0, &string[ 0 ], ( int )string.size(), &result[ 0 ], size_needed );
+				return result;
+			}
+
+			std::string ToNarrowString( const std::wstring& wstring )
+			{
+				if( wstring.empty() )
+					return std::string();
+
+				const int size_needed = WideCharToMultiByte( CP_UTF8, 0, &wstring[ 0 ], ( int )wstring.size(), NULL, 0, NULL, NULL );
+				std::string result( size_needed, 0 );
+				WideCharToMultiByte( CP_UTF8, 0, &wstring[ 0 ], ( int )wstring.size(), &result[ 0 ], size_needed, NULL, NULL );
+				return result;
+			}
+#endif // _WIN32
 		}
 	}
 }

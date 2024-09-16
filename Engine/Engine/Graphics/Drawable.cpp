@@ -11,7 +11,7 @@ namespace Engine
 	{
 	}
 
-	Drawable::Drawable( Mesh* mesh, Material* material, Transform* transform )
+	Drawable::Drawable( const Mesh* mesh, Material* material, Transform* transform )
 		:
 		transform( transform ),
 		mesh( mesh ),
@@ -23,7 +23,7 @@ namespace Engine
 	{
 	}
 
-	void Drawable::SetMesh( Mesh* mesh )
+	void Drawable::SetMesh( const Mesh* mesh )
 	{
 		this->mesh = mesh;
 	}

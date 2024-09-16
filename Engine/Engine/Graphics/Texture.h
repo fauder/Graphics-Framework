@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Graphics.h"
+#include "Macros.h"
 
 // std Includes.
 #include <string>
@@ -25,7 +26,7 @@ namespace Engine
 			GLenum min_filter;
 			GLenum mag_filter;
 
-			ImportSettings( const int format, const bool flip_vertically = true,
+			ImportSettings( const int format = GL_RGBA, const bool flip_vertically = true,
 							GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
 							GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR )
 				:
@@ -41,25 +42,7 @@ namespace Engine
 	private:
 		friend class AssetDatabase< Texture >;
 		
-		// Singleton.
-		class Loader
-		{
-		public:
-			Loader( const Loader& ) = delete;
-			Loader& operator =( const Loader& ) = delete;
-
-			static std::optional< Texture > FromFile( const std::string_view name, const std::string& file_path, const ImportSettings& import_settings );
-
-		private:
-			Loader()
-			{}
-
-			static Loader& Instance()
-			{
-				static Loader instance;
-				return instance;
-			}
-		};
+		ASSET_LOADER_CLASS_DECLARATION( Texture );
 
 	public:
 		using ID = unsigned int;
@@ -67,7 +50,7 @@ namespace Engine
 	public:
 		Texture();
 
-		/* Prevent copying for now. */
+		/* Prevent copying for now: */
 		Texture( const Texture& )				= delete;
 		Texture& operator =( const Texture& )	= delete;
 
@@ -78,11 +61,12 @@ namespace Engine
 		~Texture();
 
 	/* Queries: */
-		inline const std::string&	Name()	const { return name;	}
-		inline const ID				Id()	const { return id;		}
+		inline const ID				Id()	const { return id;	 }
+		inline const std::string&	Name()	const { return name; }
+		void SetName( const std::string& new_name );
 
 	/* Usage: */
-		void Activate( const int slot );
+		void Activate( const int slot ) const;
 
 	private:
 	/* Private constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with parameters. */

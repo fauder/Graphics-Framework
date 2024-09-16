@@ -3,13 +3,17 @@
 #include "Engine/Graphics/Lighting/Lighting.h"
 #include "Engine/Graphics/MaterialData/MaterialData.h"
 #include "Engine/Graphics/Material.hpp"
-#include "Engine/Graphics/Mesh.hpp"
+#include "Engine/Graphics/Mesh.h"
+#include "Engine/Graphics/Model.h"
 #include "Engine/Graphics/Renderer.h"
 #include "Engine/Graphics/Texture.h"
 #include "Engine/Scene/Camera.h"
 #include "Engine/Scene/CameraController_Flight.h"
 
 #include "Engine/DefineMathTypes.h"
+
+// Project Includes.
+#include "ModelInstance.h"
 
 // std Includes.
 #include <numeric> // std::accumulate().
@@ -40,7 +44,10 @@ private:
 
 	void ResetLightingData();
 	void ResetMaterialData();
+	void ResetCamera();
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
+
+	void ReloadModel( const std::string& file_path );
 
 private:
 /* Renderer: */
@@ -54,9 +61,12 @@ private:
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh;
 
+/* Models: */
+	ModelInstance test_model_instance;
+
 /* Materials, Shaders & Textures: */
 	Engine::Shader phong_shader;
-	Engine::Shader light_source_shader;
+	Engine::Shader basic_color_shader;
 
 	std::vector< Engine::Material > light_source_material_array;
 	std::vector< Engine::Material > cube_material_array;
@@ -100,6 +110,7 @@ private:
 	std::vector< Engine::MaterialData::PhongMaterialData > cube_surface_data_array;
 	Engine::MaterialData::PhongMaterialData ground_quad_surface_data;
 	Engine::MaterialData::PhongMaterialData front_wall_quad_surface_data;
+	std::vector< Engine::MaterialData::PhongMaterialData > test_model_node_surface_data_array;
 
 	Engine::DirectionalLight light_directional;
 	std::vector< Engine::PointLight > light_point_array;
@@ -135,4 +146,6 @@ private:
 
 	bool ui_interaction_enabled;
 	bool show_imgui_demo_window;
+
+	std::string test_model_file_path;
 };

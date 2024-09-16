@@ -15,6 +15,9 @@
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
 
+// std Includes.
+#include <fstream>
+
 using namespace Engine::Math::Literals;
 
 Engine::Application* Engine::CreateApplication()
@@ -28,19 +31,17 @@ SandboxApplication::SandboxApplication()
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
 	phong_shader( "Phong" ),
-	light_source_shader( "Basic Color" ),
-	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
+	basic_color_shader( "Basic Color" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
 	camera_rotation_speed( 5.0f ),
 	camera_move_speed( 5.0f ),
 	camera_controller( &camera, camera_rotation_speed ),
-	camera_is_animated( false ),
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
 	ui_interaction_enabled( false ),
-	show_imgui_demo_window( true )
+	show_imgui_demo_window( false )
 {
 	Initialize();
 }
@@ -52,6 +53,8 @@ SandboxApplication::~SandboxApplication()
 
 void SandboxApplication::Initialize()
 {
+	renderer.SetClearColor( Engine::Color4::Gray() );
+
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
 	Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
@@ -63,17 +66,17 @@ void SandboxApplication::Initialize()
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init.", true /* omit if the group is empty */ ) );
 
 /* Textures: */
-	Engine::Texture::ImportSettings import_settings( GL_RGBA );
-	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			import_settings );
-	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", import_settings );
-	import_settings.format = GL_RGB;
-	import_settings.wrap_u = GL_REPEAT;
-	import_settings.wrap_v = GL_REPEAT;
-	checker_pattern = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", import_settings );
+	Engine::Texture::ImportSettings texture_import_settings;
+	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			texture_import_settings );
+	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", texture_import_settings );
+	
+	texture_import_settings.wrap_u = GL_REPEAT;
+	texture_import_settings.wrap_v = GL_REPEAT;
+	checker_pattern = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
 
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
-	light_source_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
+	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
 /* Initial transforms: */
 	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
@@ -90,24 +93,45 @@ void SandboxApplication::Initialize()
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 	}
 
-/* Lighting: */
-	ResetLightingData();
-
-/* Materials: */
-	ResetMaterialData();
-	ground_quad_material.Set( "PhongMaterialData", ground_quad_surface_data );
-	front_wall_quad_material.Set( "PhongMaterialData", front_wall_quad_surface_data );
-	for( auto i = 0; i < CUBE_COUNT; i++ )
-		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
-	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
-	
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
 							  "Cube",
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
+
+	if( auto config_file = std::ifstream( "config.ini" ) )
+	{
+		std::string ignore;
+		config_file >> ignore;
+		if( ignore == "test_model_path" )
+		{
+			config_file >> ignore /* '=' */ >> test_model_file_path;
+
+			if( !test_model_file_path.empty() )
+				ReloadModel( test_model_file_path );
+		} 
+	}
+
+/* Lighting: */
+	ResetLightingData();
+
+	renderer.AddDirectionalLight( &light_directional );
+
+	for( auto index = 0; index < LIGHT_POINT_COUNT; index++ )
+		renderer.AddPointLight( &light_point_array[ index ] );
+
+	renderer.AddSpotLight( &light_spot );
+
+/* Materials: */
+	ResetMaterialData();
+
+	ground_quad_material.Set( "PhongMaterialData", ground_quad_surface_data );
+	front_wall_quad_material.Set( "PhongMaterialData", front_wall_quad_surface_data );
+	for( auto i = 0; i < CUBE_COUNT; i++ )
+		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
 
 /* Drawables & the Renderer: */
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -128,23 +152,23 @@ void SandboxApplication::Initialize()
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable );
 
-/* Lights: */
-	renderer.AddDirectionalLight( &light_directional );
-
-	for( auto index = 0; index < LIGHT_POINT_COUNT; index++ )
-		renderer.AddPointLight( &light_point_array[ index ] );
-
-	renderer.AddSpotLight( &light_spot );
+	for( auto& drawable : test_model_instance.Drawables() )
+		renderer.AddDrawable( &drawable );
 
 /* Other: */
 	renderer.EnableDepthTest();
+
+	ResetCamera();
 
 	Platform::MaximizeWindow();
 }
 
 void SandboxApplication::Shutdown()
 {
-	/* Insert application-specific shutdown code here. */
+	if( auto config_file = std::ofstream( "config.ini" ) )
+	{
+		config_file << "test_model_path = " << test_model_file_path;
+	}
 }
 
 //void SandboxApplication::Run()
@@ -201,7 +225,7 @@ void SandboxApplication::Update()
 			const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
 			camera_controller
 				.OffsetHeading( Radians( +mouse_x_delta_pos ) )
-				.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Six(), +Engine::Constants< Radians >::Pi_Over_Six() );
+				.OffsetPitch( Radians( +mouse_y_delta_pos ), -60.0_deg, +60.0_deg );
 		}
 	}
 
@@ -230,8 +254,6 @@ void SandboxApplication::Render()
 
 void SandboxApplication::RenderImGui()
 {
-	// TODO: Make lights togglable.
-
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Application ImGui", true /* omit if the group is empty */ ) );
 
@@ -243,8 +265,33 @@ void SandboxApplication::RenderImGui()
 	if( show_imgui_demo_window )
 		ImGui::ShowDemoWindow();
 
+	if( ImGui::Begin( "Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		static char buf[ 260 ];
+		if( test_model_file_path.empty() )
+			test_model_file_path = "<None>";
+		strncpy_s( buf, test_model_file_path.c_str(), test_model_file_path.size() );
+		ImGui::BeginDisabled();
+		ImGui::InputText( "Loaded Model Path", const_cast< char* >( test_model_file_path.c_str() ), ( int )test_model_file_path.size(), ImGuiInputTextFlags_ReadOnly );
+		ImGui::EndDisabled();
+
+		if( ImGui::Button( "Reload" ) )
+		{
+			if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
+																	"Standard glTF (*.gltf)",	"*.gltf",
+																	"Binary glTF (*.glb)",		"*.glb" },
+																 "Choose a Model to Load" );
+				maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
+			{
+				ReloadModel( *maybe_file_name );
+			}
+		}
+	}
+
+	ImGui::End();
+
 	Engine::ImGuiDrawer::Draw( phong_shader );
-	Engine::ImGuiDrawer::Draw( light_source_shader );
+	Engine::ImGuiDrawer::Draw( basic_color_shader );
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ] );
@@ -252,13 +299,14 @@ void SandboxApplication::RenderImGui()
 	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
+	for( auto& test_material : test_model_instance.Materials() )
+		Engine::ImGuiDrawer::Draw( test_material );
 
 	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
-		{
 			ResetLightingData();
-		}
+		
 		ImGui::NewLine();
 
 		if( ImGui::BeginTabBar( "Lights Tab Bar", ImGuiTabBarFlags_DrawSelectedOverline | ImGuiTabBarFlags_NoTabListScrollingButtons ) )
@@ -325,12 +373,7 @@ void SandboxApplication::RenderImGui()
 	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
-		{
-			camera_transform.SetTranslation( 0.0f, 10.0f, -20.0f );
-			camera_transform.LookAt( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() );
-			
-			camera_is_animated = false;
-		}
+			ResetCamera();
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
@@ -411,7 +454,6 @@ void SandboxApplication::ResetLightingData()
 				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f },							.scalar = 0.075f	},
 				.diffuse_and_attenuation_linear   = {.color = Engine::Math::Random::Generate< Engine::Color3 >(),	.scalar = 0.0035f	},
 				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f },
-				.position_view_space = {  0.2f,  -1.0f,   1.0f  }, // Does not matter, will be updated with the correct view space value every frame.
 			},
 			.transform = &light_point_transform_array[ i ]
 		};
@@ -422,28 +464,15 @@ void SandboxApplication::ResetLightingData()
 		.is_enabled = true,
 		.data =
 		{
-			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
-			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
-			.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.03f },
+			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.27f  },
+			.specular = Engine::Color3{  0.5f,   0.5f,   0.33f  },
 
-			// These two's values do not matter, will be updated with the correct view space value every frame.
-			.position_view_space_and_cos_cutoff_angle_inner  = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 12.5_deg ) ) },
-			.direction_view_space_and_cos_cutoff_angle_outer = { .vector = {  0.2f,  -1.0f,   1.0f  }, .scalar = Engine::Math::Cos( Radians( 17.5_deg ) ) },
 		/* End of GLSL equivalence. */
 			.cutoff_angle_inner     = 12.5_deg,
 			.cutoff_angle_outer     = 17.5_deg
 		},
 		.transform = &light_spot_transform
-	};
-
-	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, 
-	{
-		.shininess = 32.0f
-	} );
-
-	ground_quad_surface_data = front_wall_quad_surface_data =
-	{
-		.shininess = 32.0f
 	};
 }
 
@@ -451,7 +480,7 @@ void SandboxApplication::ResetMaterialData()
 {
 	light_source_material_array.resize( LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &light_source_shader );
+		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &basic_color_shader );
 	
 	cube_material_array.resize( CUBE_COUNT );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
@@ -475,11 +504,57 @@ void SandboxApplication::ResetMaterialData()
 	const auto& front_wall_quad_scale( front_wall_quad_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
+
+	ground_quad_surface_data = front_wall_quad_surface_data =
+	{
+		.color_diffuse       = {},
+		.has_texture_diffuse = 1,
+		.shininess           = 32.0f
+	};
+
+	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, ground_quad_surface_data );
+}
+
+void SandboxApplication::ResetCamera()
+{
+	camera_transform.SetTranslation( 0.0f, 10.0f, -20.0f );
+	camera_transform.LookAt( Vector3::Forward() );
+
+	camera_is_animated = false;
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
 {
 	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), camera.GetAspectRatio() );
+}
+
+void SandboxApplication::ReloadModel( const std::string& file_path )
+{
+	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
+	auto new_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Test Model",
+																				  file_path,
+																				  model_import_settings );
+
+	if( new_model )
+	{
+		test_model_file_path = file_path;
+
+		for( auto& drawable_to_remove : test_model_instance.Drawables() )
+			renderer.RemoveDrawable( &drawable_to_remove );
+
+		test_model_instance = ModelInstance( new_model,
+											 &phong_shader,
+											 Vector3::One(),
+											 Quaternion(),
+											 Vector3::Up() * 8.0f,
+											 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
+											 /* Specular texture: */ checker_pattern );
+
+		for( auto& drawable_to_add : test_model_instance.Drawables() )
+			renderer.AddDrawable( &drawable_to_add );
+
+		ResetCamera();
+	}
 }
 
 void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
@@ -520,6 +595,10 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 				light_spot.data.cutoff_angle_inner = Engine::Math::Max( light_spot.data.cutoff_angle_inner - 0.33_deg, 0_deg );
 			break;
 		case Platform::KeyCode::KEY_I:
+			if( key_action == Platform::KeyAction::PRESS )
+				show_imgui = !show_imgui;
+			break;
+		case Platform::KeyCode::KEY_O:
 			if( key_action == Platform::KeyAction::PRESS )
 				show_imgui_demo_window = !show_imgui_demo_window;
 			break;

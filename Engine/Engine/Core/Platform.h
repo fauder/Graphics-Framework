@@ -2,6 +2,7 @@
 
 // std Includes.
 #include <functional>
+#include <optional>
 #include <utility>
 
 /* Contains & abstracts away platform-specific services. */
@@ -195,8 +196,12 @@ namespace Platform
 	std::pair< float, float > GetMouseCursorPositions();
 	std::pair< float, float > GetMouseScrollOffsets();
 
+	/* File IO. */
+	std::optional< std::string > BrowseFileName( const std::vector< std::string >& filters, const std::string& prompt = "" );
+	std::optional< std::string > BrowseDirectory( const std::string& title, const std::string& folder_path = "" );
+
 	/* Time-Keeping Facilities. */
-	float GetCurrentTime();
+	float CurrentTime();
 
 	/* Shutdown. */
 	void CleanUp();

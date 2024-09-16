@@ -22,8 +22,11 @@ namespace Engine
 		VertexArray( VertexArray&& donor );
 		VertexArray& operator =( VertexArray&& donor );
 		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::string& name = {} );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer& index_buffer, const std::string& name = {} );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::optional< IndexBuffer >& index_buffer, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U32& index_buffer, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U16& index_buffer, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, 
+					 const std::optional< IndexBuffer_U16 >& index_buffer_u16, const std::optional< IndexBuffer_U32 >& index_buffer_u32,
+					 const std::string& name = {} );
 		~VertexArray();
 
 		void Bind() const;

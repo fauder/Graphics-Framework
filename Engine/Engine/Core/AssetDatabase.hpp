@@ -36,6 +36,42 @@ namespace Engine
 			return &instance.asset_map[ name ];
 		}
 
+		static AssetType* CreateAssetFromMemory( const std::string& name, const std::byte* data, const int size, const typename AssetType::ImportSettings& import_settings )
+		{
+			auto& instance = Instance();
+
+			if( name.empty() )
+			{
+				std::string new_name( "<unnamed>_" + std::to_string( ( int )instance.asset_map.size() ) );
+
+				if( auto maybe_asset = AssetType::Loader::FromMemory( new_name, data, size, import_settings );
+					maybe_asset )
+				{
+					instance.asset_map[ new_name ] = std::move( *maybe_asset );
+					return &instance.asset_map[ new_name ];
+				}
+
+				// Failed to load asset:
+				return nullptr;
+			}
+			else 
+			{
+				if( not instance.asset_map.contains( name ) ) // Can not compare file_paths as the asset does not & will not have a path.
+				{
+					if( auto maybe_asset = AssetType::Loader::FromMemory( name, data, size, import_settings );
+						maybe_asset )
+					{
+						instance.asset_map[ name ] = std::move( *maybe_asset );
+					}
+					else // Failed to load asset:
+						return nullptr;
+				}
+
+				/* Asset is already loaded, return the existing one. */
+				return &instance.asset_map[ name ];
+			}
+		}
+
 	private:
 		AssetDatabase()
 		{}
