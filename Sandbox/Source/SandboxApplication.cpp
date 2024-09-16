@@ -297,7 +297,7 @@ void SandboxApplication::RenderImGui()
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
 	for( auto& test_material : test_model_instance.Materials() )
-		Engine::ImGuiDrawer::Draw( test_material );
+		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ) );
 
 	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
