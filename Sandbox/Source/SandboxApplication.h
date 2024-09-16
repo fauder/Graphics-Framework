@@ -44,7 +44,10 @@ private:
 
 	void ResetLightingData();
 	void ResetMaterialData();
+	void ResetCamera();
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
+
+	void ReloadModel( const std::string& file_path );
 
 private:
 /* Renderer: */
@@ -143,4 +146,6 @@ private:
 
 	bool ui_interaction_enabled;
 	bool show_imgui_demo_window;
+
+	std::string test_model_file_path;
 };

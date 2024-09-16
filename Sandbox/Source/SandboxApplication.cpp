@@ -15,6 +15,9 @@
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
 
+// std Includes.
+#include <fstream>
+
 using namespace Engine::Math::Literals;
 
 Engine::Application* Engine::CreateApplication()
@@ -29,14 +32,12 @@ SandboxApplication::SandboxApplication()
 	cube_drawable_array( CUBE_COUNT ),
 	phong_shader( "Phong" ),
 	basic_color_shader( "Basic Color" ),
-	camera_transform( Vector3::One(), Quaternion::LookRotation( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() ), Vector3{ 0.0f, 10.0f, -20.0f } ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
 	camera_rotation_speed( 5.0f ),
 	camera_move_speed( 5.0f ),
 	camera_controller( &camera, camera_rotation_speed ),
-	camera_is_animated( false ),
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
 	ui_interaction_enabled( false ),
@@ -99,17 +100,17 @@ void SandboxApplication::Initialize()
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
 
+	if( auto config_file = std::ifstream( "config.ini" ) )
 	{
-		Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
-		test_model_instance = ModelInstance( Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Deccer Cubes",
-																										  R"(C:/users/fauder/desktop/SM_Deccer_Cubes_Textured_Complex.gltf)",
-																										  model_import_settings ),
-											 &phong_shader,
-											 Vector3::One(),
-											 Quaternion(),
-											 Vector3::Left() * 2 + Vector3::Up() * 8.0f,
-											 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
-											 /* Specular texture: */ checker_pattern );
+		std::string ignore;
+		config_file >> ignore;
+		if( ignore == "test_model_path" )
+		{
+			config_file >> ignore /* '=' */ >> test_model_file_path;
+
+			if( !test_model_file_path.empty() )
+				ReloadModel( test_model_file_path );
+		} 
 	}
 
 /* Lighting: */
@@ -157,12 +158,17 @@ void SandboxApplication::Initialize()
 /* Other: */
 	renderer.EnableDepthTest();
 
+	ResetCamera();
+
 	Platform::MaximizeWindow();
 }
 
 void SandboxApplication::Shutdown()
 {
-	/* Insert application-specific shutdown code here. */
+	if( auto config_file = std::ofstream( "config.ini" ) )
+	{
+		config_file << "test_model_path = " << test_model_file_path;
+	}
 }
 
 //void SandboxApplication::Run()
@@ -259,6 +265,31 @@ void SandboxApplication::RenderImGui()
 	if( show_imgui_demo_window )
 		ImGui::ShowDemoWindow();
 
+	if( ImGui::Begin( "Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		static char buf[ 260 ];
+		if( test_model_file_path.empty() )
+			test_model_file_path = "<None>";
+		strncpy_s( buf, test_model_file_path.c_str(), test_model_file_path.size() );
+		ImGui::BeginDisabled();
+		ImGui::InputText( "Loaded Model Path", const_cast< char* >( test_model_file_path.c_str() ), ( int )test_model_file_path.size(), ImGuiInputTextFlags_ReadOnly );
+		ImGui::EndDisabled();
+
+		if( ImGui::Button( "Reload" ) )
+		{
+			if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
+																	"Standard glTF (*.gltf)",	"*.gltf",
+																	"Binary glTF (*.glb)",		"*.glb" },
+																 "Choose a Model to Load" );
+				maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
+			{
+				ReloadModel( *maybe_file_name );
+			}
+		}
+	}
+
+	ImGui::End();
+
 	Engine::ImGuiDrawer::Draw( phong_shader );
 	Engine::ImGuiDrawer::Draw( basic_color_shader );
 
@@ -342,12 +373,7 @@ void SandboxApplication::RenderImGui()
 	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		if( ImGui::Button( "Reset" ) )
-		{
-			camera_transform.SetTranslation( 0.0f, 10.0f, -20.0f );
-			camera_transform.LookAt( Vector3{ 0.0f, -0.5f, 1.0f }.Normalized() );
-			
-			camera_is_animated = false;
-		}
+			ResetCamera();
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
@@ -489,9 +515,46 @@ void SandboxApplication::ResetMaterialData()
 	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, ground_quad_surface_data );
 }
 
+void SandboxApplication::ResetCamera()
+{
+	camera_transform.SetTranslation( 0.0f, 10.0f, -20.0f );
+	camera_transform.LookAt( Vector3::Forward() );
+
+	camera_is_animated = false;
+}
+
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
 {
 	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), camera.GetAspectRatio() );
+}
+
+void SandboxApplication::ReloadModel( const std::string& file_path )
+{
+	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
+	auto new_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Test Model",
+																				  file_path,
+																				  model_import_settings );
+
+	if( new_model )
+	{
+		test_model_file_path = file_path;
+
+		for( auto& drawable_to_remove : test_model_instance.Drawables() )
+			renderer.RemoveDrawable( &drawable_to_remove );
+
+		test_model_instance = ModelInstance( new_model,
+											 &phong_shader,
+											 Vector3::One(),
+											 Quaternion(),
+											 Vector3::Up() * 8.0f,
+											 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
+											 /* Specular texture: */ checker_pattern );
+
+		for( auto& drawable_to_add : test_model_instance.Drawables() )
+			renderer.AddDrawable( &drawable_to_add );
+
+		ResetCamera();
+	}
 }
 
 void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
