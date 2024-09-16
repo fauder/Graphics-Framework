@@ -99,7 +99,7 @@ namespace Engine::ImGuiUtility
             if( not *is_enabled )
 				ImGui::BeginDisabled();
         }
-        else
+        else if( name != nullptr )
             ImGui::TextUnformatted( name );
         auto labelMin = ImGui::GetItemRectMin();
         auto labelMax = ImGui::GetItemRectMax();
