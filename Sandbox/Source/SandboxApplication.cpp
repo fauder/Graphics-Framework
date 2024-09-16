@@ -374,39 +374,43 @@ void SandboxApplication::RenderImGui()
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
-	}
-
-	ImGui::End();
-
-	if( ImGui::Begin( "Projection", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
-	{
-		if( ImGui::Button( "Reset" ) )
+		
+		if( ImGui::CollapsingHeader( "Projection" ) )
 		{
-			auto_calculate_aspect_ratio          = true;
-			auto_calculate_vfov_based_on_90_hfov = true;
+			Engine::ImGuiUtility::BeginGroupPanel();
+			{
+				if( ImGui::Button( "Reset" ) )
+				{
+					auto_calculate_aspect_ratio = true;
+					auto_calculate_vfov_based_on_90_hfov = true;
 
-			camera.SetAspectRatio( Platform::GetAspectRatio() ); // If we don't do this, CalculateVerticalFieldOfView() below will work with possibly the old aspect ratio and produce incorrect results.
-			camera = Engine::Camera( &camera_transform, camera.GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
-		}
+					camera.SetAspectRatio( Platform::GetAspectRatio() ); // If we don't do this, CalculateVerticalFieldOfView() below will work with possibly the old aspect ratio and produce incorrect results.
+					camera = Engine::Camera( &camera_transform, camera.GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
+				}
 
-		Engine::ImGuiDrawer::Draw( camera, "Main Camera" );
+				bool modified = false;
 
-		float v_fov_radians = ( float )camera.GetVerticalFieldOfView();
+				modified |= Engine::ImGuiDrawer::Draw( camera, "Main Camera" );
 
-		bool modified = false;
+				float v_fov_radians = ( float )camera.GetVerticalFieldOfView();
 
-		modified |= ImGui::Checkbox( "Auto-calculate Aspect Ratio",										&auto_calculate_aspect_ratio );
-		modified |= ImGui::Checkbox( "Auto-calculate Vertical FoV to match 90 degrees Horizontal FoV",	&auto_calculate_vfov_based_on_90_hfov );
+				modified |= ImGui::Checkbox( "Auto-calculate Aspect Ratio", &auto_calculate_aspect_ratio );
+				modified |= ImGui::Checkbox( "Auto-calculate Vertical FoV to match 90 degrees Horizontal FoV", &auto_calculate_vfov_based_on_90_hfov );
 
-		if( modified )
-		{
-			if( auto_calculate_aspect_ratio )
-				camera.SetAspectRatio( Platform::GetAspectRatio() );
-			
-			if( auto_calculate_vfov_based_on_90_hfov )
-				camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
-			else
-				camera.SetVerticalFieldOfView( Radians( v_fov_radians ) );
+				if( modified )
+				{
+					if( auto_calculate_aspect_ratio )
+						camera.SetAspectRatio( Platform::GetAspectRatio() );
+
+					if( auto_calculate_vfov_based_on_90_hfov )
+						camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
+					else
+						camera.SetVerticalFieldOfView( Radians( v_fov_radians ) );
+
+					renderer.OnProjectionParametersChange( camera );
+				}
+			}
+			Engine::ImGuiUtility::EndGroupPanel();
 		}
 	}
 
