@@ -12,6 +12,7 @@
 
 // std Includes.
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Engine
@@ -140,10 +141,16 @@ namespace Engine
 		std::unordered_map< Shader::ID,  Shader* > shaders_in_flight;
 		std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
 
+		std::unordered_set< const Shader* > shaders_using_intrinsics_lighting;
+		std::unordered_set< const Shader* > shaders_using_intrinsics_other;
+
 		Color4 clear_color;
 		BitFlags< ClearTarget > clear_targets;
 
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_global;
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_intrinsic;
+
+		bool update_uniform_buffer_lighting;
+		bool update_uniform_buffer_other;
 	};
 }
