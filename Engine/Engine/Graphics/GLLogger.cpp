@@ -1,6 +1,9 @@
 // Engine Includes.
 #include "GLLogger.h"
 
+// Vendor Includes.
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
+
 namespace Engine
 {
 	GLLogger::GLLogger()
@@ -95,7 +98,7 @@ namespace Engine
 
 	void GLLogger::Draw( bool* show )
 	{
-		logger.Draw( "GL Logs", show );
+		logger.Draw( ICON_FA_BOOK " GL Logs", show );
 	}
 
 	GLLogger::CallbackType GLLogger::GetCallback()

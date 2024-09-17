@@ -5,6 +5,9 @@
 #include "ImGuiUtility.h"
 #include "Math/Math.hpp"
 
+// Vendor Includes.
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
+
 /* To enable some .natvis functionality: */
 #include "Natvis/Natvis.h"
 
@@ -161,7 +164,7 @@ namespace Engine
 		const auto fps = 1.0f / time_delta_real;
 
 		ImGuiUtility::SetNextWindowPos( ImGuiUtility::HorizontalWindowPositioning::RIGHT, ImGuiUtility::VerticalWindowPositioning::TOP );
-		if( ImGui::Begin( "Frame Statistics", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+		if( ImGui::Begin( ICON_FA_CHART_LINE " Frame Statistics", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			ImGui::Text( "FPS: %.1f fps", fps );
 			ImGui::Text( "Delta time (multiplied): %.3f ms | Delta time (real): %.3f", time_delta * 1000.0f, time_delta_real * 1000.0f );

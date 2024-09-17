@@ -2,6 +2,9 @@
 #include "ImGuiSetup.h"
 #include "Platform.h"
 
+// Vendor Includes.
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
+
 namespace ImGuiSetup
 {
 	void Initialize()
@@ -45,8 +48,23 @@ namespace ImGuiSetup
     {
         ImGuiIO& io = ImGui::GetIO();
 
+        float base_font_size = 18.0f;
+        float icon_font_size = base_font_size /** 2.0f / 3.0f*/;
+
+        // The ranges array is not copied by the AddFont* functions and is used lazily so it NEEDS TO BE available at the time of building or calling GetTexDataAsRGBA32().
+
+        static const ImWchar icons_ranges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 }; // Will not be copied by AddFont* so keep in scope.
+        ImFontConfig icons_config;
+        icons_config.MergeMode            = true;
+        icons_config.PixelSnapH           = true;
+        icons_config.GlyphMinAdvanceX     = icon_font_size;
+        icons_config.FontDataOwnedByAtlas = false;
+
         io.Fonts->Clear();
         io.Fonts->AddFontFromFileTTF( "Asset/Font/JetBrainsMono-Regular.ttf", 18 );
+        /* Merge in icons from icon font(s): */
+        io.Fonts->AddFontFromFileTTF( "Asset/Font/Font-Awesome/fontawesome-webfont.ttf", icon_font_size, &icons_config, icons_ranges ); // Merge into JetBrainsMono-Regular (18).
+
         io.Fonts->Build();
     }
 

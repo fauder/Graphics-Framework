@@ -3,6 +3,9 @@
 #include "ImGuiUtility.h"
 #include "Graphics/ShaderTypeInformation.h"
 
+// Vendor Includes.
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
+
 namespace Engine::ImGuiDrawer
 {
 	using namespace Engine::Math::Literals;
@@ -200,7 +203,7 @@ namespace Engine::ImGuiDrawer
 		if( flags.IsSet( Transform::Mask::Translation ) )
 		{
 			Vector3 translation = transform.GetTranslation();
-			if( Draw( translation, "Position" ) )
+			if( Draw( translation, ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT " Position" ) )
 			{
 				is_modified = true;
 				transform.SetTranslation( translation );
@@ -210,7 +213,7 @@ namespace Engine::ImGuiDrawer
 		if( flags.IsSet( Transform::Mask::Rotation ) )
 		{
 			Quaternion rotation = transform.GetRotation();
-			if( Draw( rotation, "Rotation" ) )
+			if( Draw( rotation, ICON_FA_ARROW_ROTATE_RIGHT " Rotation" ) )
 			{
 				is_modified = true;
 				transform.SetRotation( rotation );
@@ -220,7 +223,7 @@ namespace Engine::ImGuiDrawer
 		if( flags.IsSet( Transform::Mask::Scale ) )
 		{
 			Vector3 scale = transform.GetScaling();
-			if( Draw( scale, "Scale" ) )
+			if( Draw( scale, ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER " Scale" ) )
 			{
 				is_modified = true;
 				transform.SetScaling( scale );
@@ -241,11 +244,11 @@ namespace Engine::ImGuiDrawer
 		ImGui::PushID( name );
 
 		if( flags.IsSet( Transform::Mask::Translation ) )
-			Draw( transform.GetTranslation(), "Position" );
+			Draw( transform.GetTranslation(), ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT " Position" );
 		if( flags.IsSet( Transform::Mask::Rotation ) )
-			Draw( transform.GetRotation(), "Rotation" );
+			Draw( transform.GetRotation(), ICON_FA_ARROW_ROTATE_RIGHT " Rotation" );
 		if( flags.IsSet( Transform::Mask::Scale ) )
-			Draw( transform.GetScaling(), "Scale" );
+			Draw( transform.GetScaling(), ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER " Scale" );
 
 		ImGui::PopID();
 
@@ -258,7 +261,7 @@ namespace Engine::ImGuiDrawer
 
 		ImGui::PushID( name );
 
-		is_modified |= Draw( polar_coords.Theta(),  "Theta"	 );
+		is_modified |= Draw( polar_coords.Theta(), "Theta" );
 		
 		if( show_radius )
 			is_modified |= Draw( polar_coords.Radius(), "Radius" );
@@ -303,9 +306,9 @@ namespace Engine::ImGuiDrawer
 		// TODO: Implement texture selection.
 
 		if( texture )
-			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), R"~("%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), ICON_FA_IMAGE R"~(" %s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
 		else
-			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), ICON_FA_IMAGE "    <unassigned>" );
 
 		return false;
 	}
@@ -313,9 +316,9 @@ namespace Engine::ImGuiDrawer
 	void Draw( const Texture* texture, const char* name )
 	{
 		if( texture )
-			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), R"~("%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), ICON_FA_IMAGE R"~( "%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
 		else
-			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), ICON_FA_IMAGE "    <unassigned>" );
 	}
 
 	bool Draw( Camera& camera, const char* name )
@@ -367,7 +370,7 @@ namespace Engine::ImGuiDrawer
 	{
 		bool is_modified = false;
 
-		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			if( ImGui::TreeNodeEx( material.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 			{
@@ -375,10 +378,10 @@ namespace Engine::ImGuiDrawer
 				if( material.HasShaderAssigned() )
 				{
 					const auto& shader_name( material.GetShaderName() );
-					ImGui::TextColored( ImVec4( 0.38f, 0.12f, 0.68f, 1.0f ), "Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
+					ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
 				}
 				else
-					ImGui::TextUnformatted( "Shader: <unassigned>" );
+					ImGui::TextUnformatted( ICON_FA_CODE " Shader: <unassigned>" );
 
 				if( ImGui::BeginTable( material.Name().c_str(), 2, ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
 				{
@@ -556,17 +559,17 @@ namespace Engine::ImGuiDrawer
 
 	void Draw( const Material& material, ImGuiWindowFlags window_flags )
 	{
-		if( ImGui::Begin( "Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			if( ImGui::TreeNodeEx( material.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 			{
 				if( material.HasShaderAssigned() )
 				{
 					const auto& shader_name( material.GetShaderName() );
-					ImGui::TextColored( ImVec4( 0.38f, 0.12f, 0.68f, 1.0f ), "Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
+					ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
 				}
 				else
-					ImGui::TextUnformatted( "Shader: <unassigned>" );
+					ImGui::TextUnformatted( ICON_FA_CODE " Shader: <unassigned>" );
 
 				if( ImGui::BeginTable( material.Name().c_str(), 2, ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
 				{
@@ -728,7 +731,7 @@ namespace Engine::ImGuiDrawer
 
 	void Draw( const Shader& shader, ImGuiWindowFlags window_flags )
 	{
-		if( ImGui::Begin( "Shaders", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		if( ImGui::Begin( ICON_FA_CODE " Shaders", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			const auto& uniform_info_map = shader.GetUniformInfoMap();
 
@@ -866,8 +869,8 @@ namespace Engine::ImGuiDrawer
 
 		ImGui::PushID( light_name );
 
-		Draw( directional_light.data.ambient, "Ambient" );
-		Draw( directional_light.data.diffuse, "Diffuse" );
+		Draw( directional_light.data.ambient,  "Ambient" );
+		Draw( directional_light.data.diffuse,  "Diffuse" );
 		Draw( directional_light.data.specular, "Specular" );
 
 		Draw( *directional_light.transform, Transform::Mask::Rotation, "Transform" );

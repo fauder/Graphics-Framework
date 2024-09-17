@@ -15,6 +15,9 @@
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
 
+// Vendor Includes.
+#include <IconFontCppHeaders/IconsFontAwesome6.h>
+
 // std Includes.
 #include <fstream>
 
@@ -273,17 +276,16 @@ void SandboxApplication::RenderImGui()
 	if( show_imgui_demo_window )
 		ImGui::ShowDemoWindow();
 
-	if( ImGui::Begin( "Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	if( ImGui::Begin( ICON_FA_CUBES " Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
 		static char buf[ 260 ];
-		if( test_model_file_path.empty() )
-			test_model_file_path = "<None>";
-		strncpy_s( buf, test_model_file_path.c_str(), test_model_file_path.size() );
+		strncpy_s( buf, test_model_file_path.empty() ? "<None>" : test_model_file_path.c_str(), test_model_file_path.size());
 		ImGui::BeginDisabled();
-		ImGui::InputText( "Loaded Model Path", const_cast< char* >( test_model_file_path.c_str() ), ( int )test_model_file_path.size(), ImGuiInputTextFlags_ReadOnly );
+		static char temp[ 260 ];
+		ImGui::InputText( "Loaded Model Path", buf, ( int )test_model_file_path.size(), ImGuiInputTextFlags_ReadOnly);
 		ImGui::EndDisabled();
 
-		if( ImGui::Button( "Reload" ) )
+		if( test_model_file_path.empty() ? ImGui::Button( ICON_FA_FOLDER_OPEN " Load" ) : ImGui::Button( ICON_FA_FOLDER_OPEN " Reload" ) )
 		{
 			if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
 																	"Standard glTF (*.gltf)",	"*.gltf",
@@ -295,7 +297,7 @@ void SandboxApplication::RenderImGui()
 			}
 		}
 		ImGui::SameLine();
-		if( ImGui::Button( "Unload" ) )
+		if( ImGui::Button( ICON_FA_XMARK " Unload" ) )
 			UnloadModel();
 	}
 
@@ -313,11 +315,11 @@ void SandboxApplication::RenderImGui()
 	for( auto& test_material : test_model_instance.Materials() )
 		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ) );
 
-	if( ImGui::Begin( "Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	if( ImGui::Begin( ICON_FA_LIGHTBULB " Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		if( ImGui::Button( "Reset" ) )
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset" ) )
 			ResetLightingData();
-		
+
 		ImGui::NewLine();
 
 		if( ImGui::BeginTabBar( "Lights Tab Bar", ImGuiTabBarFlags_DrawSelectedOverline | ImGuiTabBarFlags_NoTabListScrollingButtons ) )
@@ -367,7 +369,7 @@ void SandboxApplication::RenderImGui()
 
 					ImGui::TreePop();
 				}
-			
+
 				ImGui::EndTabItem();
 			}
 
@@ -380,25 +382,25 @@ void SandboxApplication::RenderImGui()
 			Engine::ImGuiDrawer::Draw( surface_data, ( "Cube #" + std::to_string( i + 1 ) + " Surface Properties" ).c_str() );
 		}
 
-		Engine::ImGuiDrawer::Draw( ground_quad_surface_data,	 "Ground Quad Surface Properties" );
-		Engine::ImGuiDrawer::Draw( front_wall_quad_surface_data, "Front Wall Surface Properties"  );
+		Engine::ImGuiDrawer::Draw( ground_quad_surface_data, "Ground Quad Surface Properties" );
+		Engine::ImGuiDrawer::Draw( front_wall_quad_surface_data, "Front Wall Surface Properties" );
 	}
 
 	ImGui::End();
 
-	if( ImGui::Begin( "Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	if( ImGui::Begin( ICON_FA_VIDEO " Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		if( ImGui::Button( "Reset" ) )
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset" ) )
 			ResetCamera();
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
-		
+
 		if( ImGui::CollapsingHeader( "Projection" ) )
 		{
 			Engine::ImGuiUtility::BeginGroupPanel();
 			{
-				if( ImGui::Button( "Reset" ) )
+				if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset" ) )
 				{
 					auto_calculate_aspect_ratio = true;
 					auto_calculate_vfov_based_on_90_hfov = true;
@@ -579,7 +581,7 @@ void SandboxApplication::ReloadModel( const std::string& file_path )
 
 void SandboxApplication::UnloadModel()
 {
-	test_model_file_path = "<None>";
+	test_model_file_path = "";
 
 	for( auto& drawable_to_remove : test_model_instance.Drawables() )
 		renderer.RemoveDrawable( &drawable_to_remove );
