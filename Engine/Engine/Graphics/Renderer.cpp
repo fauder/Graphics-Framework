@@ -117,7 +117,11 @@ namespace Engine
 	{
 		if( update_uniform_buffer_other )
 		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera.GetProjectionMatrix()	);
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION",				camera.GetProjectionMatrix()	);
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_NEAR",					camera.GetNearPlaneOffset()		);
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_FAR",					camera.GetFarPlaneOffset()		);
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_ASPECT_RATIO",			camera.GetAspectRatio()			);
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_VERTICAL_FIELD_OF_VIEW", camera.GetVerticalFieldOfView() );
 		}
 	}
 
