@@ -24,3 +24,5 @@ Personal graphics framework I'm developing, to study graphics programming topics
 - [kenney](https://kenney.nl/)'s awesome assets are used (currently for prototype textures)
 - [glslang](https://github.com/KhronosGroup/glslang) is used for offline validation of GLSL shaders as a Visual Studio post-build step.
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is used as the font for ImGui.
+- [Font Awesome](https://github.com/FortAwesome/Font-Awesome) is used as the icon font for ImGui.
+- [IconFontCppHeaders](https://github.com/juliettef/IconFontCppHeaders) is used for accessing icons in icon fonts via simple C++ headers.
