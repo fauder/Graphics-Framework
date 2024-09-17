@@ -12,4 +12,6 @@ namespace ImGuiSetup
 
     void BeginFrame();
     void EndFrame();
+
+    void SetStyle();
 }
