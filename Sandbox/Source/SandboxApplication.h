@@ -48,6 +48,7 @@ private:
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
 
 	void ReloadModel( const std::string& file_path );
+	void UnloadModel();
 
 private:
 /* Renderer: */

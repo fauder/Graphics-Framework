@@ -294,6 +294,9 @@ void SandboxApplication::RenderImGui()
 				ReloadModel( *maybe_file_name );
 			}
 		}
+		ImGui::SameLine();
+		if( ImGui::Button( "Unload" ) )
+			UnloadModel();
 	}
 
 	ImGui::End();
@@ -572,6 +575,16 @@ void SandboxApplication::ReloadModel( const std::string& file_path )
 
 		ResetCamera();
 	}
+}
+
+void SandboxApplication::UnloadModel()
+{
+	test_model_file_path = "<None>";
+
+	for( auto& drawable_to_remove : test_model_instance.Drawables() )
+		renderer.RemoveDrawable( &drawable_to_remove );
+
+	test_model_instance = {};
 }
 
 void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
