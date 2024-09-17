@@ -241,6 +241,9 @@ namespace Engine::ImGuiDrawer
 	template< typename BlobType > requires( std::is_base_of_v< Blob, BlobType > )
 	bool Draw( UniformBufferManagement< BlobType >& buffer_management, const char* name = "##buffer-management", ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing )
 	{
+		if( buffer_management.GetBufferInformationMap().empty() )
+			return false;
+
 		bool is_modified = false;
 
 		if( ImGui::Begin( name, nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
