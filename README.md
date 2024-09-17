@@ -23,3 +23,4 @@ Personal graphics framework I'm developing, to study graphics programming topics
 - [RenderDoc](https://renderdoc.org/) is used to analyze/debug graphics bugs.
 - [kenney](https://kenney.nl/)'s awesome assets are used (currently for prototype textures)
 - [glslang](https://github.com/KhronosGroup/glslang) is used for offline validation of GLSL shaders as a Visual Studio post-build step.
+- [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is used as the font for ImGui.
