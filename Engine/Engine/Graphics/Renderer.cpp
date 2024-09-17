@@ -81,7 +81,7 @@ namespace Engine
 		UploadIntrinsics();
 		UploadGlobals();
 		
-		for( const auto& [ shader_id, shader ] : shaders_in_flight )
+		for( const auto& [ shader, dont_care ] : shaders_in_flight_ref_count )
 		{
 			shader->Bind();
 
@@ -131,31 +131,35 @@ namespace Engine
 
 		const auto& shader = drawable_to_add->material->shader;
 
-		shaders_in_flight.try_emplace( shader->Id(), shader );
-		materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
+		if( ++shaders_in_flight_ref_count[ shader ] == 1 )
+		{
+			if( not shaders_registered.contains( shader ) )
+				RegisterShader( *shader );
+		}
 
-		if( not shaders_registered.contains( shader->Id() ) )
-			RegisterShader( *shader );
+		materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
 	}
 
 	void Renderer::RemoveDrawable( const Drawable* drawable_to_remove )
 	{
 		std::erase( drawable_list, drawable_to_remove );
 
-		const auto& shader = *drawable_to_remove->material->shader;
+		const auto& shader = drawable_to_remove->material->shader;
 
-		shaders_in_flight.erase( shader.Id() );
+		if( --shaders_in_flight_ref_count[ shader ] == 0 )
+		{
+			shaders_in_flight_ref_count.erase( shader );
+			if( shaders_registered.contains( shader ) )
+				UnregisterShader( *shader );
+		}
+
 		materials_in_flight.erase( drawable_to_remove->material->Name() );
-
-		if( const auto& iterator = shaders_registered.find( shader.Id() );
-			iterator != shaders_registered.cend() )
-			shaders_registered.erase( iterator );
 	}
 
 	void Renderer::RemoveAllDrawables()
 	{
 		drawable_list.clear();
-		shaders_in_flight.clear();
+		shaders_in_flight_ref_count.clear();
 		materials_in_flight.clear();
 	}
 
@@ -309,7 +313,6 @@ namespace Engine
 			}
 		}
 
-
 		if( shader.GetUniformBufferInfoMap_Intrinsic().contains( "_Intrinsic_Lighting" ) )
 		{
 			shaders_using_intrinsics_lighting.insert( &shader );
@@ -319,10 +322,10 @@ namespace Engine
 		if( shader.GetUniformBufferInfoMap_Intrinsic().contains( "_Intrinsic_Other" ) )
 		{
 			shaders_using_intrinsics_other.insert( &shader );
-			update_uniform_buffer_other= true;
+			update_uniform_buffer_other = true;
 		}
 
-		shaders_registered[ shader.Id() ] = &shader;
+		shaders_registered.insert( &shader );
 	}
 
 	void Renderer::UnregisterShader( const Shader& shader )
@@ -340,6 +343,8 @@ namespace Engine
 			shaders_using_intrinsics_other.erase( iterator );
 			update_uniform_buffer_other = not shaders_using_intrinsics_other.empty();
 		}
+
+		shaders_registered.erase( &shader );
 	}
 
 	void Renderer::SetClearColor()

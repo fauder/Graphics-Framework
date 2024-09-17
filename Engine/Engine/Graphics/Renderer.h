@@ -150,9 +150,9 @@ namespace Engine
 		int lights_point_active_count;
 		int lights_spot_active_count;
 
-		std::unordered_map< Shader::ID, const Shader* > shaders_registered;
+		std::unordered_set< const Shader* > shaders_registered;
 
-		std::unordered_map< Shader::ID,  Shader* > shaders_in_flight;
+		std::unordered_map< Shader*, int > shaders_in_flight_ref_count;
 		std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
 
 		std::unordered_set< const Shader* > shaders_using_intrinsics_lighting;
