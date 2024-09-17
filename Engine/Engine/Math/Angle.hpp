@@ -39,15 +39,32 @@ namespace Engine
 			
 		/* Trigonometric Functions. */
 			/* Wraps a given angle between (-180, +180] range. */
-			Degrees Wrapped180( Degrees angle ) const
+			static Degrees Wrapped180( const Degrees angle )
 			{
-				return Degrees( angle - FloatType( 360 ) * std::floor( ( angle + FloatType( 180 ) ) / FloatType( 360 ) ) );
+				if( std::abs( ( FloatType )angle ) > ( FloatType )180.0 )
+				{
+					constexpr FloatType pi     = FloatType( 180.0 );
+					constexpr FloatType two_pi = FloatType( 360.0 );
+
+					FloatType float_angle = angle.Value();
+
+					return Degrees( float_angle - two_pi * std::floor( ( float_angle + pi ) / two_pi ) );
+				}
+
+				return angle;
 			}
 
 			/* Wraps a given angle between (-180, +180] range. Returns self for daisy-chaining. */
-			Degrees& Wrap180( Degrees angle )
+			constexpr Degrees& Wrap180()
 			{
-				Base::value = angle - FloatType( 360 ) * std::floor( ( angle + FloatType( 180 ) ) / FloatType( 360 ) );
+				if( std::abs( Base::value ) > ( FloatType )180.0 )
+				{
+					constexpr FloatType pi     = FloatType( 180.0 );
+					constexpr FloatType two_pi = FloatType( 360.0 );
+
+					Base::value -= two_pi * std::floor( ( Base::value + pi ) / two_pi );
+				}
+
 				return *this;
 			}
 
@@ -79,15 +96,34 @@ namespace Engine
 		
 		/* Trigonometric Functions. */
 			/* Wraps a given angle between (-PI, +PI] range. */
-			Radians Wrapped180( Radians angle ) const
+			static Radians WrappedPi( const Radians angle )
 			{
-				return Radians( angle - FloatType( Constants< FloatType >::Two_Pi() ) * std::floor( ( angle + FloatType( Constants< FloatType >::Pi() ) ) / FloatType( Constants< FloatType >::Two_Pi() ) ) );
+				constexpr FloatType pi = Constants< FloatType >::Pi();
+
+				if( std::abs( ( FloatType )angle ) > pi )
+				{
+					constexpr FloatType two_pi = Constants< FloatType >::Two_Pi();
+					
+					FloatType float_angle = angle.Value();
+
+					return Radians( float_angle - two_pi * std::floor( ( float_angle + pi ) / two_pi ) );
+				}
+
+				return angle;
 			}
 
 			/* Wraps a given angle between (-PI, +PI] range. Returns self for daisy-chaining. */
-			Radians& Wrap180( Radians angle )
+			constexpr Radians& WrapPi()
 			{
-				Base::value = angle - FloatType( Constants< FloatType >::Two_Pi() ) * std::floor( ( angle + FloatType( Constants< FloatType >::Pi() ) ) / FloatType( Constants< FloatType >::Two_Pi() ) );
+				constexpr FloatType pi = Constants< FloatType >::Pi();
+
+				if( std::abs( Base::value ) > pi )
+				{
+					constexpr FloatType two_pi = Constants< FloatType >::Two_Pi();
+
+					Base::value -= two_pi * std::floor( ( Base::value + pi ) / two_pi );
+				}
+
 				return *this;
 			}
 
