@@ -18,5 +18,7 @@
     <None Include="Asset\Shader\_Intrinsic_Lighting.glsl" />
     <None Include="Asset\Shader\_Intrinsic_Other.glsl" />
     <None Include="Asset\Shader\_Global.glsl" />
+    <None Include="Asset\Shader\DepthBufferVisualization.frag" />
+    <None Include="Asset\Shader\_Depth.glsl" />
   </ItemGroup>
 </Project>
