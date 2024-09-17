@@ -13,5 +13,6 @@ namespace ImGuiSetup
     void BeginFrame();
     void EndFrame();
 
+    void AddFonts();
     void SetStyle();
 }
