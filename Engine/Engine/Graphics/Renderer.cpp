@@ -239,6 +239,16 @@ namespace Engine
 		glDisable( GL_DEPTH_TEST );
 	}
 
+	void Renderer::ToggleDepthWrite( const bool enable )
+	{
+		glDepthMask( ( GLint )enable );
+	}
+
+	void Renderer::SetDepthComparisonFunction( const DepthComparisonFunction comparison_function )
+	{
+		glDepthFunc( ( GLenum )comparison_function );
+	}
+
 	void Renderer::SetPolygonMode( const PolygonMode mode )
 	{
 		glPolygonMode( GL_FRONT_AND_BACK, ( GLenum )mode );

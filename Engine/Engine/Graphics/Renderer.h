@@ -38,6 +38,18 @@ namespace Engine
 			Wireframe = Line
 		};
 
+		enum class DepthComparisonFunction
+		{
+			Always	       = GL_ALWAYS,
+			Never 	       = GL_NEVER,
+			Equal 	       = GL_EQUAL,
+			NotEqual       = GL_NOTEQUAL,
+			Less 	       = GL_LESS,
+			LessOrEqual    = GL_LEQUAL,
+			Greater        = GL_GREATER,
+			GreaterOrEqual = GL_GEQUAL
+		};
+
 	public:
 		Renderer();
 		~Renderer();
@@ -106,6 +118,8 @@ namespace Engine
 	/* Depth Test: */
 		void EnableDepthTest();
 		void DisableDepthTest();
+		void ToggleDepthWrite( const bool enable );
+		void SetDepthComparisonFunction( const DepthComparisonFunction comparison_function );
 
 	/* Other: */
 		void SetPolygonMode( const PolygonMode mode );
