@@ -10,6 +10,11 @@ namespace Engine::ImGuiDrawer
 {
 	using namespace Engine::Math::Literals;
 
+	void Update()
+	{
+		IMGUI_STYLE = &ImGui::GetStyle();
+	}
+
 	bool Draw( const GLenum type, void* value_pointer, const char* name )
 	{
 		switch( type )

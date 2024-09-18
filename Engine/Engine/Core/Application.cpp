@@ -3,6 +3,7 @@
 // Engine Includes.
 #include "Application.h"
 #include "Graphics/Graphics.h"
+#include "ImGuiDrawer.hpp"
 #include "ImGuiSetup.h"
 #include "ImGuiUtility.h"
 #include "Math/Math.hpp"
@@ -155,6 +156,8 @@ namespace Engine
 
 	void Application::RenderImGui()
 	{
+		ImGuiDrawer::Update();
+
 		RenderImGui_FrameStatistics();
 
 		if( show_gl_logger )

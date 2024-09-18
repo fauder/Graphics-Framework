@@ -17,8 +17,16 @@
 // Vendor Includes.
 #include "ImGui/imgui.h"
 
+namespace
+{
+	ImGuiStyle* IMGUI_STYLE;
+}
+
 namespace Engine::ImGuiDrawer
 {
+
+	void Update();
+
 	template< typename Type >
 	constexpr ImGuiDataType_ GetImGuiDataType()
 	{
