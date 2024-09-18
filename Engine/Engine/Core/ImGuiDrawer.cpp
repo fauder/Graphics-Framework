@@ -135,24 +135,24 @@ namespace Engine::ImGuiDrawer
 		ImGui::PopStyleColor();
 	}
 
-	bool Draw( float& scalar, const char* name )
+	bool Draw( float& scalar, const char* name, const char* format )
 	{
-		return ImGui::DragFloat( name, &scalar );
+		return ImGui::DragFloat( name, &scalar, 1.0f, 0.0f, 0.0f, format );
 	}
 
-	void Draw( const float& scalar, const char* name )
+	void Draw( const float& scalar, const char* name, const char* format )
 	{
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		ImGui::InputFloat( name, const_cast< float* >( &scalar ), 0.0f, 0.0f, GetFormat< float >(), ImGuiInputTextFlags_ReadOnly );
 		ImGui::PopStyleColor();
 	}
 
-	bool Draw( double& scalar, const char* name )
+	bool Draw( double& scalar, const char* name, const char* format )
 	{
-		return ImGui::DragScalar( name, GetImGuiDataType< double >(), &scalar );
+		return ImGui::DragScalar( name, GetImGuiDataType< double >(), &scalar, 1.0f, nullptr, nullptr, format );
 	}
 
-	void Draw( const double& scalar, const char* name )
+	void Draw( const double& scalar, const char* name, const char* format )
 	{
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		ImGui::InputScalar( name, GetImGuiDataType< double >(), const_cast< double* >( &scalar ), 0, 0, GetFormat< double >(), ImGuiInputTextFlags_ReadOnly );

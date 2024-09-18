@@ -48,9 +48,9 @@ namespace Engine::ImGuiDrawer
 		if constexpr( std::is_same_v< Type, unsigned int > )
 			return "%u";
 		if constexpr( std::is_same_v< Type, float > )
-			return "%.3f";
+			return "%.2f";
 		if constexpr( std::is_same_v< Type, double > )
-			return "%.3lf";
+			return "%.2lf";
 	}
 
 	bool Draw( const GLenum type,	    void* value_pointer, const char* name = "##hidden" );
@@ -62,10 +62,10 @@ namespace Engine::ImGuiDrawer
 	bool Draw( unsigned int& scalar,		const char* name = "##scalar_uint"	 );
 	bool Draw( unsigned int& scalar,		const unsigned int min, const unsigned int max, const char* name = "##scalar_uint" );
 	void Draw( const unsigned int& scalar,	const char* name = "##scalar_uint"	 );
-	bool Draw( float& scalar,				const char* name = "##scalar_float"  );
-	void Draw( const float& scalar,			const char* name = "##scalar_float"  );
-	bool Draw( double& scalar,				const char* name = "##scalar_double" );
-	void Draw( const double& scalar,		const char* name = "##scalar_double" );
+	bool Draw( float& scalar,				const char* name = "##scalar_float",  const char* format = GetFormat< float  >() );
+	void Draw( const float& scalar,			const char* name = "##scalar_float",  const char* format = GetFormat< float  >() );
+	bool Draw( double& scalar,				const char* name = "##scalar_double", const char* format = GetFormat< double >() );
+	void Draw( const double& scalar,		const char* name = "##scalar_double", const char* format = GetFormat< double >() );
 	bool Draw( bool& value,					const char* name = "##bool" );
 	void Draw( const bool& value,			const char* name = "##bool" );
 
