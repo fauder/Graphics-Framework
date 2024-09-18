@@ -15,6 +15,13 @@ namespace Engine::ImGuiDrawer
 	void Update()
 	{
 		IMGUI_STYLE = &ImGui::GetStyle();
+
+		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr ) )
+		{
+			ImGui::Checkbox( "Hide padding parameters", &WINDOW_MATERIAL_PADDING_HIDE );
+			ImGui::Separator();
+		}
+		ImGui::End();
 	}
 
 	bool Draw( const GLenum type, void* value_pointer, const char* name )
@@ -385,7 +392,7 @@ namespace Engine::ImGuiDrawer
 	{
 		bool is_modified = false;
 
-		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr, window_flags /*| ImGuiWindowFlags_AlwaysAutoResize*/ ) )
+		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr ) )
 		{
 			if( ImGui::TreeNodeEx( material.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 			{
@@ -529,14 +536,21 @@ namespace Engine::ImGuiDrawer
 
 							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info->members_single_map )
 							{
-								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
+								const bool is_padding = uniform_buffer_member_info->editor_name.compare( 0, 8, "Padding", 8 ) == 0;
 
+								if( is_padding && WINDOW_MATERIAL_PADDING_HIDE )
+									continue;
+
+								ImGui::BeginDisabled( is_padding );
+
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_info->editor_name.c_str() );
 								ImGui::TableNextColumn();
 
 								std::byte* effective_offset = memory_blob + uniform_buffer_member_info->offset;
 
 								ImGui::PushID( ( void* )uniform_buffer_member_info );
 								is_modified |= Draw( uniform_buffer_member_info->type, effective_offset );
+								ImGui::EndDisabled();
 								/* Draw() call above modifies the memory provided but an explicit material.SetPartial() call is necessary for proper registration of the modification. */
 								if( is_modified )
 									material.SetPartial( uniform_buffer_name, uniform_buffer_member_name.c_str(), effective_offset );

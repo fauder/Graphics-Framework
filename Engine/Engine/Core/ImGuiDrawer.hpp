@@ -20,11 +20,11 @@
 namespace
 {
 	ImGuiStyle* IMGUI_STYLE;
+	bool WINDOW_MATERIAL_PADDING_HIDE = true;
 }
 
 namespace Engine::ImGuiDrawer
 {
-
 	void Update();
 
 	template< typename Type >
