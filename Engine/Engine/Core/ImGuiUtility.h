@@ -23,6 +23,9 @@ namespace Engine::ImGuiUtility
 
 	/* Helper to display a little (?) mark which shows a tooltip when hovered. */
 	void HelpMarker( const char* desc, const int wrap = 35.0f );
+
+	/* Only works with same width items. */
+	void SetNextItemRightAligned( const int item_no_starting_from_right, const float item_width );
 	
 	void SetNextWindowPos( const HorizontalWindowPositioning horizontal_positioning, const VerticalWindowPositioning vertical_positioning,
 						   const ImGuiCond condition = ImGuiCond_Always );

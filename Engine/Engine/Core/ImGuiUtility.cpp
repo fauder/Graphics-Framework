@@ -47,6 +47,12 @@ namespace Engine::ImGuiUtility
 		}
 	}
 
+    /* Only works with same width items. */
+    void SetNextItemRightAligned( const int item_no_starting_from_right, const float item_width )
+    {
+        ImGui::SetCursorPosX( ImGui::GetWindowWidth() - item_no_starting_from_right * ( ImGui::GetStyle().ItemSpacing.x + item_width ) );
+    }
+
 	void SetNextWindowPos( const HorizontalWindowPositioning horizontal_positioning, const VerticalWindowPositioning vertical_positioning, const ImGuiCond condition )
 	{
 		const auto& io = ImGui::GetIO();
