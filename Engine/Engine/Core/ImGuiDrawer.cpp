@@ -1,3 +1,5 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 // Engine Includes.
 #include "ImGuiDrawer.hpp"
 #include "ImGuiUtility.h"
@@ -173,28 +175,36 @@ namespace Engine::ImGuiDrawer
 
 	bool Draw( Color3& color, const char* name )
 	{
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
 		return ImGui::ColorEdit3( name, color.Data() );
+		ImGui::PopItemWidth();
 	}
 
 	void Draw( const Color3& color, const char* name )
 	{
-		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::ColorEdit3( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
 		ImGui::PopStyleColor();
+		ImGui::PopItemWidth();
 	}
 
 	bool Draw( Color4& color, const char* name )
 	{
+		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
 		return ImGui::ColorEdit4( name, color.Data() );
+		ImGui::PopItemWidth();
 	}
 
 	void Draw( const Color4& color, const char* name )
 	{
-		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
+		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::ColorEdit4( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
 		ImGui::PopStyleColor();
+		ImGui::PopItemWidth();
 	}
 
 	bool Draw( Transform& transform, const BitFlags< Transform::Mask > flags, const char* name )
