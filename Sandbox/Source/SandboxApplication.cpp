@@ -1,3 +1,5 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 // Sandbox Includes.
 #include "SandboxApplication.h"
 
@@ -276,29 +278,50 @@ void SandboxApplication::RenderImGui()
 	if( show_imgui_demo_window )
 		ImGui::ShowDemoWindow();
 
+	const auto& style = ImGui::GetStyle();
+
 	if( ImGui::Begin( ICON_FA_CUBES " Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		static char buf[ 260 ];
-		strncpy_s( buf, test_model_file_path.empty() ? "<None>" : test_model_file_path.c_str(), test_model_file_path.size());
-		ImGui::BeginDisabled();
-		static char temp[ 260 ];
-		ImGui::InputText( "Loaded Model Path", buf, ( int )test_model_file_path.size(), ImGuiInputTextFlags_ReadOnly);
-		ImGui::EndDisabled();
+		bool load_button_is_clicked = false;
 
-		if( test_model_file_path.empty() ? ImGui::Button( ICON_FA_FOLDER_OPEN " Load" ) : ImGui::Button( ICON_FA_FOLDER_OPEN " Reload" ) )
+		if( not test_model_file_path.empty() )
 		{
-			if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
-																	"Standard glTF (*.gltf)",	"*.gltf",
-																	"Binary glTF (*.glb)",		"*.glb" },
-																 "Choose a Model to Load" );
-				maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
+			static char buffer[ 260 ];
+			strncpy_s( buffer, test_model_file_path.c_str(), test_model_file_path.size());
+			ImGui::BeginDisabled();
+			ImGui::InputText( "Loaded Model Path", buffer, ( int )test_model_file_path.size(), ImGuiInputTextFlags_ReadOnly);
+			ImGui::EndDisabled();
+
+			if( ImGui::Button( ICON_FA_FOLDER_OPEN " Reload" ) )
 			{
-				ReloadModel( *maybe_file_name );
+				if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
+																		"Standard glTF (*.gltf)",	"*.gltf",
+																		"Binary glTF (*.glb)",		"*.glb" },
+																		"Choose a Model to Load" );
+					maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
+				{
+					ReloadModel( *maybe_file_name );
+				}
+			}
+			ImGui::SameLine();
+			if( ImGui::Button( ICON_FA_XMARK " Unload" ) )
+				UnloadModel();
+		}
+		else
+		{
+			const auto button_size( ImGui::CalcTextSize( ICON_FA_CUBES " Models   " ) + style.ItemInnerSpacing );
+			if( ImGui::Button( ICON_FA_FOLDER_OPEN " Load", button_size ) )
+			{
+				if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
+																		"Standard glTF (*.gltf)",	"*.gltf",
+																		"Binary glTF (*.glb)",		"*.glb" },
+																	 "Choose a Model to Load" );
+					maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
+				{
+					ReloadModel( *maybe_file_name );
+				}
 			}
 		}
-		ImGui::SameLine();
-		if( ImGui::Button( ICON_FA_XMARK " Unload" ) )
-			UnloadModel();
 	}
 
 	ImGui::End();
