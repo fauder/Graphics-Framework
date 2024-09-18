@@ -398,15 +398,6 @@ void SandboxApplication::RenderImGui()
 
 			ImGui::EndTabBar();
 		}
-
-		for( auto i = 0; i < CUBE_COUNT; i++ )
-		{
-			auto& surface_data = cube_surface_data_array[ i ];
-			Engine::ImGuiDrawer::Draw( surface_data, ( "Cube #" + std::to_string( i + 1 ) + " Surface Properties" ).c_str() );
-		}
-
-		Engine::ImGuiDrawer::Draw( ground_quad_surface_data, "Ground Quad Surface Properties" );
-		Engine::ImGuiDrawer::Draw( front_wall_quad_surface_data, "Front Wall Surface Properties" );
 	}
 
 	ImGui::End();

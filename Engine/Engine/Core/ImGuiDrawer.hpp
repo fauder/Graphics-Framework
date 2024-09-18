@@ -243,8 +243,8 @@ namespace Engine::ImGuiDrawer
 	bool Draw(		 Transform& transform, const BitFlags< Transform::Mask > = Transform::Mask::All, const char* name = "##transform" );
 	void Draw( const Transform& transform, const BitFlags< Transform::Mask > = Transform::Mask::All, const char* name = "##transform" );
 
-	bool Draw(		 Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const Material& material,	ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw( Material& material, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	/* const version of Material is nearly the same as the non-const and it was getting annoying having to update a huge and mostly unused function, so it is removed. */
 
 	template< typename BlobType > requires( std::is_base_of_v< Blob, BlobType > )
 	bool Draw( UniformBufferManagement< BlobType >& buffer_management, const char* name = "##buffer-management", ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing )
@@ -500,7 +500,4 @@ namespace Engine::ImGuiDrawer
 	void Draw( const PointLight&		point_light,		const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	bool Draw(		 SpotLight&			spot_light,			const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	void Draw( const SpotLight&			spot_light,			const char* light_name,											ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	
-	bool Draw(		 MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
-	void Draw( const MaterialData::PhongMaterialData&	phong_material_data,	const char* surface_name, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 }
