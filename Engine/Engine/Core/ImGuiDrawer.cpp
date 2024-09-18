@@ -375,10 +375,12 @@ namespace Engine::ImGuiDrawer
 	{
 		bool is_modified = false;
 
-		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr, window_flags | ImGuiWindowFlags_AlwaysAutoResize ) )
+		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr, window_flags /*| ImGuiWindowFlags_AlwaysAutoResize*/ ) )
 		{
 			if( ImGui::TreeNodeEx( material.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 			{
+				ImGuiUtility::BeginGroupPanel();
+
 				// TODO: Implement shader selection.
 				if( material.HasShaderAssigned() )
 				{
@@ -388,16 +390,15 @@ namespace Engine::ImGuiDrawer
 				else
 					ImGui::TextUnformatted( ICON_FA_CODE " Shader: <unassigned>" );
 
-				if( ImGui::BeginTable( material.Name().c_str(), 2, ImGuiTableFlags_NoBordersInBody | ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths ) )
+				ImGui::SeparatorText( "Parameters" );
+
+				const auto table_flags = ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp;
+				if( ImGui::BeginTable( material.Name().c_str(), 2, table_flags ) )
 				{
 					const auto& uniform_info_map        = material.GetUniformInfoMap();
 					const auto& uniform_buffer_info_map = material.GetUniformBufferInfoMap();
 					const auto& texture_map             = material.GetTextureMap();
 
-					ImGui::TableSetupColumn( "Name"	 );
-					ImGui::TableSetupColumn( "Value" );
-
-					ImGui::TableHeadersRow();
 					ImGui::TableNextRow();
 
 					for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
@@ -538,20 +539,32 @@ namespace Engine::ImGuiDrawer
 							ImGui::TableNextRow();
 					}
 
-					for( const auto& [ uniform_sampler_name, texture_pointer ] : texture_map )
-					{
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_info_map.at( uniform_sampler_name ).editor_name.c_str() );
-
-						ImGui::TableNextColumn();
-
-						/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
-						ImGui::PushID( ( void* )&texture_pointer );
-						Draw( texture_pointer, uniform_sampler_name.c_str() );
-						ImGui::PopID();
-					}
-
 					ImGui::EndTable();
+
+					if( not texture_map.empty() )
+					{
+						ImGui::SeparatorText( "Textures" );
+
+						if( ImGui::BeginTable( material.Name().c_str(), 2, table_flags ) )
+						{
+							for( const auto& [ uniform_sampler_name, texture_pointer ] : texture_map )
+							{
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( ( "Texture: " + uniform_info_map.at( uniform_sampler_name ).editor_name ).c_str() );
+
+								ImGui::TableNextColumn();
+
+								/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
+								ImGui::PushID( ( void* )&texture_pointer );
+								Draw( texture_pointer, uniform_sampler_name.c_str() );
+								ImGui::PopID();
+							}
+
+							ImGui::EndTable();
+						}
+					}
 				}
+
+				ImGuiUtility::EndGroupPanel();
 
 				ImGui::TreePop();
 			}
