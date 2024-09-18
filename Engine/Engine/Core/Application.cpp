@@ -1,3 +1,5 @@
+#define IMGUI_DEFINE_MATH_OPERATORS
+
 // Engine Includes.
 #include "Application.h"
 #include "Graphics/Graphics.h"
@@ -163,42 +165,61 @@ namespace Engine
 	{
 		const auto fps = 1.0f / time_delta_real;
 
+		const auto& style = ImGui::GetStyle();
+
+		const ImVec2 max_size( ImGui::CalcTextSize( "FPS: 999.9 fps  |  # Frames: 99999999" ) + style.ItemInnerSpacing );
+		const ImVec2 max_size_half_width( max_size.x / 2.0f, max_size.y );
+		const float  max_width = max_size.x;
+
 		ImGuiUtility::SetNextWindowPos( ImGuiUtility::HorizontalWindowPositioning::RIGHT, ImGuiUtility::VerticalWindowPositioning::TOP );
 		if( ImGui::Begin( ICON_FA_CHART_LINE " Frame Statistics", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
-			ImGui::Text( "FPS: %.1f fps", fps );
-			ImGui::Text( "Delta time (multiplied): %.3f ms | Delta time (real): %.3f", time_delta * 1000.0f, time_delta_real * 1000.0f );
-			ImGui::Text( "Time since start: %.3f.", time_since_start );
-			ImGui::SliderFloat( "Time Multiplier", &time_multiplier, 0.01f, 5.0f, "x %.2f", ImGuiSliderFlags_Logarithmic ); ImGui::SameLine(); if( ImGui::Button( "Reset##time_multiplier" ) ) time_multiplier = 1.0f;
-			if( !TimeIsFrozen() && ImGui::Button( "Pause" ) )
+			ImGui::Text( "FPS: %.1f fps  |  # Frames: %8lu", fps, frame_count );
+			ImGui::Text( "Time since start: %.1f.", time_since_start );
+			ImGui::Text( "Delta time (real): %.1f", time_delta_real * 1000.0f );
+			if( Math::IsEqual( time_multiplier, 1.0f ) )
+				ImGui::Text( "Delta time (multiplied): %.1f ms", time_delta * 1000.0f );
+			else
+				ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_HeaderActive ), "Delta time (multiplied): %.3f ms", time_delta * 1000.0f );
+
+			ImGui::SetNextItemWidth( max_width - ImGui::CalcTextSize( "Time Multiplier" ).x );
+			ImGui::SliderFloat( "Time Multiplier", &time_multiplier, 0.01f, 5.0f, "x %.2f", ImGuiSliderFlags_Logarithmic );
+
+			if( !TimeIsFrozen() && ImGui::Button( ICON_FA_PAUSE " Pause", max_size_half_width ) )
 				FreezeTime();
-			else if( TimeIsFrozen() && ImGui::Button( "Resume" ) )
+			else if( TimeIsFrozen() && ImGui::Button( ICON_FA_PLAY " Resume", max_size_half_width ) )
 				UnfreezeTime();
+			ImGui::SameLine();
+			if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset##time_multiplier", max_size_half_width ) )
+				time_multiplier = 1.0f;
 
-			auto sin_time = time_sin;
-			auto cos_time = time_cos;
-			auto time_mod_1 = std::fmod( time_current, 1.0f );
+			if( ImGui::TreeNodeEx( "Misc." ) )
+			{
+				auto sin_time = time_sin;
+				auto cos_time = time_cos;
+				auto time_mod_1 = std::fmod( time_current, 1.0f );
 
-			ImGui::ProgressBar( time_mod_1, ImVec2( 0.0f, 0.0f ) ); ImGui::SameLine(); ImGui::TextUnformatted( "Time % 1" );
-			ImGui::ProgressBar( time_mod_2_pi / Constants< float >::Two_Pi(), ImVec2( 0.0f, 0.0f ) ); ImGui::SameLine(); ImGui::TextUnformatted( "Time % (2 * Pi)" );
-			ImGui::SliderFloat( "Sin(Time) ", &sin_time, -1.0f, 1.0f, "%.1f", ImGuiSliderFlags_NoInput );
-			ImGui::SliderFloat( "Cos(Time) ", &cos_time, -1.0f, 1.0f, "%.1f", ImGuiSliderFlags_NoInput );
+				ImGui::ProgressBar( time_mod_1, ImVec2( 0.0f, 0.0f ) ); ImGui::SameLine(); ImGui::TextUnformatted( "Time % 1" );
+				ImGui::ProgressBar( time_mod_2_pi / Constants< float >::Two_Pi(), ImVec2( 0.0f, 0.0f ) ); ImGui::SameLine(); ImGui::TextUnformatted( "Time % (2 * Pi)" );
+				ImGui::SliderFloat( "Sin(Time) ", &sin_time, -1.0f, 1.0f, "%.1f", ImGuiSliderFlags_NoInput );
+				ImGui::SliderFloat( "Cos(Time) ", &cos_time, -1.0f, 1.0f, "%.1f", ImGuiSliderFlags_NoInput );
+
+				if( ImGui::TreeNodeEx( "GP shenanigans" ) )
+				{
+					const Radians in_radians( Constants< float >::Two_Pi() * fps );
+					const Degrees in_degrees( in_radians );
+					ImGui::Text( "afps: %.0f rad/s", ( float )in_radians );
+					ImGui::Text( "dfps: %.0f deg/s", ( float )in_degrees );
+					ImGui::Text( "rfps: %.0f", fps );
+					ImGui::Text( "rpms: %.0f", fps * 60.0f );
+					ImGui::Text( "  ft: %.2f ms", time_delta_real * 1000.0f );
+
+					ImGui::TreePop();
+				}
+
+				ImGui::TreePop();
+			}
 		}
-
-		if( ImGui::TreeNodeEx( "GP shenanigans" ) )
-		{
-			const Radians in_radians( Constants< float >::Two_Pi() * fps );
-			const Degrees in_degrees( in_radians );
-			ImGui::Text( "afps: %.0f rad/s", ( float )in_radians );
-			ImGui::Text( "dfps: %.0f deg/s", ( float )in_degrees );
-			ImGui::Text( "rfps: %.0f", fps );
-			ImGui::Text( "rpms: %.0f", fps * 60.0f );
-			ImGui::Text( "  ft: %.2f ms", time_delta_real * 1000.0f );
-			ImGui::Text( "   f: %lu", frame_count );
-
-			ImGui::TreePop();
-		}
-
 
 		ImGui::End();
 
