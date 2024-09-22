@@ -152,6 +152,8 @@ namespace Engine
 		time_cos = Math::Cos( Radians( time_current ) );
 		time_mod_1 = std::fmod( time_current, 1.0f );
 		time_mod_2_pi = std::fmod( time_current, Constants< float >::Two_Pi() );
+
+		frame_count++;
 	}
 
 	void Application::RenderImGui()
@@ -225,7 +227,5 @@ namespace Engine
 		}
 
 		ImGui::End();
-
-		frame_count++;
 	}
 }
