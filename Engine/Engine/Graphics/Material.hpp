@@ -124,6 +124,17 @@ namespace Engine
 
 		void UploadUniform( const Uniform::Information& uniform_info );
 		void UploadUniforms(); // Renderer calls this, it has private access through friend declaration.
+		
+		template< typename UniformType >
+		void SetAndUploadUniform( const std::string& uniform_name, const UniformType& value ) // Renderer calls this, it has private access through friend declaration.
+		{
+			Set( uniform_name, value );
+			const auto& uniform_info = GetUniformInformation( uniform_name );
+
+			uniform_blob_default_block.Set( value, uniform_info.offset );
+
+			UploadUniform( uniform_info );
+		}
 
 	/* Texture: */
 		void PopulateTextureMap();
