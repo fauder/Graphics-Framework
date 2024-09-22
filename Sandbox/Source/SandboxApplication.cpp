@@ -35,8 +35,10 @@ SandboxApplication::SandboxApplication()
 	Engine::Application(),
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
+	cube_drawable_outline_array( CUBE_COUNT ),
 	phong_shader( "Phong" ),
 	basic_color_shader( "Basic Color" ),
+	outline_shader( "Outline" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
@@ -59,6 +61,7 @@ SandboxApplication::~SandboxApplication()
 void SandboxApplication::Initialize()
 {
 	renderer.SetClearColor( Engine::Color4::Gray() );
+	renderer.SetClearTargets( Engine::Renderer::ClearTarget::All );
 
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 
@@ -82,6 +85,7 @@ void SandboxApplication::Initialize()
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
+	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
 /* Initial transforms: */
 	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
@@ -105,19 +109,6 @@ void SandboxApplication::Initialize()
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
 
-	if( auto config_file = std::ifstream( "config.ini" ) )
-	{
-		std::string ignore;
-		config_file >> ignore;
-		if( ignore == "test_model_path" )
-		{
-			config_file >> ignore /* '=' */ >> test_model_file_path;
-
-			if( !test_model_file_path.empty() )
-				ReloadModel( test_model_file_path );
-		} 
-	}
-
 /* Lighting: */
 	ResetLightingData();
 
@@ -131,35 +122,74 @@ void SandboxApplication::Initialize()
 /* Materials: */
 	ResetMaterialData();
 
-	ground_quad_material.Set( "PhongMaterialData", ground_quad_surface_data );
-	front_wall_quad_material.Set( "PhongMaterialData", front_wall_quad_surface_data );
-	for( auto i = 0; i < CUBE_COUNT; i++ )
-		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
-	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+/* Renderer (Drawables, RenderStates etc.): */
+	auto& render_state_regular_meshes = renderer.GetRenderState( 0 ); // Keep default settings.
+	
+	{
+		/* This pass draws the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is drawn at. */
+		auto& render_state_outline_meshes = renderer.GetRenderState( 1 );
 
-/* Drawables & the Renderer: */
+		/* Omitted settings are left to defaults. */
+
+		render_state_outline_meshes.stencil_test_enable                           = true;
+		render_state_outline_meshes.stencil_write_mask                            = 0xFF;
+		render_state_outline_meshes.stencil_comparison_function                   = Engine::Renderer::ComparisonFunction::Always;
+		render_state_outline_meshes.stencil_ref                                   = 0x01;
+		render_state_outline_meshes.stencil_test_response_stencil_fail            = Engine::Renderer::StencilTestResponse::Keep;
+		render_state_outline_meshes.stencil_test_response_stencil_pass_depth_fail = Engine::Renderer::StencilTestResponse::Keep;
+		render_state_outline_meshes.stencil_test_response_both_pass               = Engine::Renderer::StencilTestResponse::Replace;
+	}
+
+	{
+		/* This pass draws the outlines only; It does this by rendering the mesh at everywhere the stencil buffer is NOT 1. */
+		auto& render_state_outlines = renderer.GetRenderState( 2 );
+
+		/* Omitted settings are left to defaults. */
+
+		render_state_outlines.depth_test_enable = false;
+
+		render_state_outlines.stencil_test_enable         = true;
+		render_state_outlines.stencil_write_mask          = 0x00; // Disable writes; This pass only needs to READ the stencil buffer, to figure out where NOT to render.
+		render_state_outlines.stencil_comparison_function = Engine::Renderer::ComparisonFunction::NotEqual; // Render everywhere that's not the actual mesh, i.e., the border.
+		render_state_outlines.stencil_ref                 = 0x01;
+	}
+
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
 		light_source_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &light_source_material_array[ i ], &light_point_transform_array[ i ] );
-		renderer.AddDrawable( &light_source_drawable_array[ i ] );
+		renderer.AddDrawable( &light_source_drawable_array[ i ], Engine::Renderer::RenderGroupID( 0 ) );
 	}
 
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
 		cube_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &cube_material_array[ i ], &cube_transform_array[ i ] );
-		renderer.AddDrawable( &cube_drawable_array[ i ] );
+		renderer.AddDrawable( &cube_drawable_array[ i ], Engine::Renderer::RenderGroupID( 1 ) );
+
+		cube_drawable_outline_array[ i ] = Engine::Drawable( &cube_mesh, &outline_material, &cube_transform_array[ i ] );
+		renderer.AddDrawable( &cube_drawable_outline_array[ i ], Engine::Renderer::RenderGroupID( 2 ) );
 	}
 
 	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
-	renderer.AddDrawable( &ground_quad_drawable );
+	renderer.AddDrawable( &ground_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
 
 	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
-	renderer.AddDrawable( &front_wall_quad_drawable );
+	renderer.AddDrawable( &front_wall_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
+
+/* Models: */
+	if( auto config_file = std::ifstream( "config.ini" ) )
+	{
+		std::string ignore;
+		config_file >> ignore;
+		if( ignore == "test_model_path" )
+		{
+			config_file >> ignore /* '=' */ >> test_model_file_path;
+
+			if( !test_model_file_path.empty() )
+				ReloadModel( test_model_file_path );
+		}
+	}
 
 /* Other: */
-	renderer.EnableDepthTest();
-
 	ResetCamera();
 
 	Platform::MaximizeWindow();
@@ -326,8 +356,12 @@ void SandboxApplication::RenderImGui()
 
 	ImGui::End();
 
-	Engine::ImGuiDrawer::Draw( phong_shader );
-	Engine::ImGuiDrawer::Draw( basic_color_shader );
+	/* Shaders: */
+	{
+		Engine::ImGuiDrawer::Draw( phong_shader );
+		Engine::ImGuiDrawer::Draw( basic_color_shader );
+		Engine::ImGuiDrawer::Draw( outline_shader );
+	}
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ] );
@@ -337,6 +371,7 @@ void SandboxApplication::RenderImGui()
 		Engine::ImGuiDrawer::Draw( cube_material );
 	for( auto& test_material : test_model_instance.Materials() )
 		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ) );
+	Engine::ImGuiDrawer::Draw( outline_material );
 
 	if( ImGui::Begin( ICON_FA_LIGHTBULB " Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
@@ -406,6 +441,9 @@ void SandboxApplication::RenderImGui()
 	{
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset" ) )
 			ResetCamera();
+
+		ImGui::SameLine(); if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset to 2nd View" ) )
+			ResetCamera_2ndView();
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
@@ -541,6 +579,8 @@ void SandboxApplication::ResetMaterialData()
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 
+	outline_material = Engine::Material( "Outline", &outline_shader );
+
 	ground_quad_surface_data = front_wall_quad_surface_data =
 	{
 		.color_diffuse       = {},
@@ -549,12 +589,30 @@ void SandboxApplication::ResetMaterialData()
 	};
 
 	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, ground_quad_surface_data );
+
+	ground_quad_material.Set( "PhongMaterialData", ground_quad_surface_data );
+	front_wall_quad_material.Set( "PhongMaterialData", front_wall_quad_surface_data );
+	for( auto i = 0; i < CUBE_COUNT; i++ )
+		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
+	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+
+	outline_material.Set( "uniform_color", Engine::Color4::Orange() );
+	outline_material.Set( "uniform_outline_thickness", 0.1f );
 }
 
 void SandboxApplication::ResetCamera()
 {
 	camera_transform.SetTranslation( 0.0f, 10.0f, -20.0f );
 	camera_transform.LookAt( Vector3::Forward() );
+
+	camera_is_animated = false;
+}
+
+void SandboxApplication::ResetCamera_2ndView()
+{
+	camera_transform.SetTranslation( 12.0f, 10.0f, -14.0f );
+	camera_transform.SetRotation( -35_deg, 0_deg, 0_deg );
 
 	camera_is_animated = false;
 }
@@ -575,8 +633,9 @@ void SandboxApplication::ReloadModel( const std::string& file_path )
 	{
 		test_model_file_path = file_path;
 
-		for( auto& drawable_to_remove : test_model_instance.Drawables() )
-			renderer.RemoveDrawable( &drawable_to_remove );
+		for( const auto& [ render_group_id, drawables_array ] : test_model_instance.DrawablesMap() )
+			for( const auto& drawable_to_remove : drawables_array )
+				renderer.RemoveDrawable( &drawable_to_remove );
 
 		test_model_instance = ModelInstance( new_model,
 											 &phong_shader,
@@ -584,10 +643,16 @@ void SandboxApplication::ReloadModel( const std::string& file_path )
 											 Quaternion(),
 											 Vector3::Up() * 8.0f,
 											 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
-											 /* Specular texture: */ checker_pattern );
+											 /* Specular texture: */ checker_pattern,
+											 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f },
+											 {
+												{ Engine::Renderer::RenderGroupID( 1 ), nullptr },
+												{ Engine::Renderer::RenderGroupID( 2 ), &outline_material }
+											 } );
 
-		for( auto& drawable_to_add : test_model_instance.Drawables() )
-			renderer.AddDrawable( &drawable_to_add );
+		for( const auto& [ render_group_id, drawables_array ] : test_model_instance.DrawablesMap() )
+			for( auto& drawable_to_add : test_model_instance.Drawables( render_group_id ) )
+				renderer.AddDrawable( &drawable_to_add, render_group_id );
 
 		ResetCamera();
 	}
@@ -597,8 +662,9 @@ void SandboxApplication::UnloadModel()
 {
 	test_model_file_path = "";
 
-	for( auto& drawable_to_remove : test_model_instance.Drawables() )
-		renderer.RemoveDrawable( &drawable_to_remove );
+	for( const auto& [ id, drawables_array ] : test_model_instance.DrawablesMap() )
+		for( const auto& drawable_to_remove : drawables_array )
+			renderer.RemoveDrawable( &drawable_to_remove );
 
 	test_model_instance = {};
 }

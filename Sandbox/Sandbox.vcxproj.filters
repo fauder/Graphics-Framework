@@ -20,5 +20,6 @@
     <None Include="Asset\Shader\_Global.glsl" />
     <None Include="Asset\Shader\DepthBufferVisualization.frag" />
     <None Include="Asset\Shader\_Depth.glsl" />
+    <None Include="Asset\Shader\Outline.vert" />
   </ItemGroup>
 </Project>

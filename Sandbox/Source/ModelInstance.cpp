@@ -10,7 +10,8 @@ ModelInstance::ModelInstance()
 ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const shader,
 							  const Vector3 scale, const Quaternion& rotation, const Vector3& translation,
 							  const Engine::Texture* diffuse_texture, const Engine::Texture* specular_texture,
-							  const Vector4 texture_scale_and_offset )
+							  const Vector4 texture_scale_and_offset,
+							  const std::initializer_list< std::pair< Engine::Renderer::RenderGroupID, Engine::Material* > > render_group_material_info_list )
 	:
 	model( model )
 {
@@ -25,10 +26,21 @@ ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const 
 	const auto& nodes              = model->Nodes();
 
 	node_transform_array.resize( mesh_instance_count );
-	node_drawable_array.resize( mesh_instance_count );
 
-	for( auto i = 0; i < mesh_instance_count; i++ )
-		node_drawable_array[ i ] = Engine::Drawable( &meshes[ i ], &node_material_array[ i ], &node_transform_array[ i ] );
+	ASSERT_DEBUG_ONLY( render_group_material_info_list.size() >= 1 );
+
+	for( auto render_group_index = 0; render_group_index < render_group_material_info_list.size(); render_group_index++ )
+	{
+		const auto& [ render_group_id, render_group_material ] = *( render_group_material_info_list.begin() + render_group_index );
+
+		node_drawable_array_map[ render_group_id ].resize( mesh_instance_count );
+		auto& drawable_array = node_drawable_array_map[ render_group_id ];
+
+		for( auto i = 0; i < mesh_instance_count; i++ )
+		{
+			drawable_array[ i ] = Engine::Drawable( &meshes[ i ], ( render_group_material ? render_group_material : &node_material_array[ i ] ), &node_transform_array[ i ] );
+		}
+	}
 
 	/* Apply scene-graph transformations: */
 

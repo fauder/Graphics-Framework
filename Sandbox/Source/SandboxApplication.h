@@ -45,6 +45,7 @@ private:
 	void ResetLightingData();
 	void ResetMaterialData();
 	void ResetCamera();
+	void ResetCamera_2ndView();
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
 
 	void ReloadModel( const std::string& file_path );
@@ -56,6 +57,7 @@ private:
 
 	std::vector< Engine::Drawable > light_source_drawable_array;
 	std::vector< Engine::Drawable > cube_drawable_array;
+	std::vector< Engine::Drawable > cube_drawable_outline_array;
 	Engine::Drawable ground_quad_drawable;
 	Engine::Drawable front_wall_quad_drawable;
 
@@ -68,11 +70,14 @@ private:
 /* Materials, Shaders & Textures: */
 	Engine::Shader phong_shader;
 	Engine::Shader basic_color_shader;
+	Engine::Shader outline_shader;
 
 	std::vector< Engine::Material > light_source_material_array;
 	std::vector< Engine::Material > cube_material_array;
 	Engine::Material ground_quad_material;
 	Engine::Material front_wall_quad_material;
+
+	Engine::Material outline_material;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
