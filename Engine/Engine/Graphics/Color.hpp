@@ -36,16 +36,17 @@ namespace Engine
 		constexpr float G() const { return data[ 1 ]; };
 		constexpr float B() const { return data[ 2 ]; };
 
-		static constexpr Color3 White()								{ return Color3( 1.0f, 1.0f, 1.0f ); }
-		static constexpr Color3 Black()								{ return Color3( 0.0f, 0.0f, 0.0f ); }
 		static constexpr Color3 Gray( float intensity = 0.55f )		{ return Color3( intensity, intensity, intensity ); }
-		static constexpr Color3 Red()								{ return Color3( 1.0f, 0.0f, 0.0f ); }
-		static constexpr Color3 Green()								{ return Color3( 0.0f, 1.0f, 0.0f ); }
-		static constexpr Color3 Blue()								{ return Color3( 0.0f, 0.0f, 1.0f ); }
-		static constexpr Color3 Teal()								{ return Color3( 0.0f, 0.5f, 0.5f ); }
-		static constexpr Color3 Cyan()								{ return Color3( 0.0f, 1.0f, 1.0f ); }
-		static constexpr Color3 Magenta()							{ return Color3( 1.0f, 0.0f, 1.0f ); }
-		static constexpr Color3 Yellow()							{ return Color3( 1.0f, 1.0f, 0.0f ); }
+		static constexpr Color3 White()								{ return Color3(  1.0f,  1.0f,  1.0f ); }
+		static constexpr Color3 Black()								{ return Color3(  0.0f,  0.0f,  0.0f ); }
+		static constexpr Color3 Red()								{ return Color3(  1.0f,  0.0f,  0.0f ); }
+		static constexpr Color3 Green()								{ return Color3(  0.0f,  1.0f,  0.0f ); }
+		static constexpr Color3 Blue()								{ return Color3(  0.0f,  0.0f,  1.0f ); }
+		static constexpr Color3 Orange()							{ return Color3(  1.0f,  0.65f, 0.0f ); }
+		static constexpr Color3 Teal()								{ return Color3(  0.0f,  0.5f,  0.5f ); }
+		static constexpr Color3 Cyan()								{ return Color3(  0.0f,  1.0f,  1.0f ); }
+		static constexpr Color3 Magenta()							{ return Color3(  1.0f,  0.0f,  1.0f ); }
+		static constexpr Color3 Yellow()							{ return Color3(  1.0f,  1.0f,  0.0f ); }
 		static constexpr Color3 Clear_Default()						{ return Gray(); }
 
 		static constexpr Color3 Zero()								{ return Black(); }
@@ -88,16 +89,17 @@ namespace Engine
 		/* Because Microsoft is a JOKE company, Function name below has to be surrounded by parentheses to instruct preprocessor to not expand it, i.e., treat it as a macro. */
 		const Color3& ( RGB )() const { return reinterpret_cast< const Color3& >( *this ); };
 
-		static constexpr Color4 White( float alpha = 1.0f )							{ return Color4( 1.0f, 1.0f, 1.0f, alpha ); }
-		static constexpr Color4 Black( float alpha = 1.0f )							{ return Color4( 0.0f, 0.0f, 0.0f, alpha ); }
 		static constexpr Color4 Gray( float intensity = 0.55f, float alpha = 1.0f ) { return Color4( intensity, intensity, intensity, alpha ); }
-		static constexpr Color4 Red( float alpha = 1.0f )							{ return Color4( 1.0f, 0.0f, 0.0f, alpha ); }
-		static constexpr Color4 Green( float alpha = 1.0f )							{ return Color4( 0.0f, 1.0f, 0.0f, alpha ); }
-		static constexpr Color4 Blue( float alpha = 1.0f )							{ return Color4( 0.0f, 0.0f, 1.0f, alpha ); }
-		static constexpr Color4 Teal( float alpha = 1.0f )							{ return Color4( 0.0f, 0.5f, 0.5f, alpha ); }
-		static constexpr Color4 Cyan( float alpha = 1.0f )							{ return Color4( 0.0f, 1.0f, 1.0f, alpha ); }
-		static constexpr Color4 Magenta( float alpha = 1.0f )						{ return Color4( 1.0f, 0.0f, 1.0f, alpha ); }
-		static constexpr Color4 Yellow( float alpha = 1.0f )						{ return Color4( 1.0f, 1.0f, 0.0f, alpha ); }
+		static constexpr Color4 White( float alpha = 1.0f )							{ return Color4(  1.0f,  1.0f,  1.0f, alpha ); }
+		static constexpr Color4 Black( float alpha = 1.0f )							{ return Color4(  0.0f,  0.0f,  0.0f, alpha ); }
+		static constexpr Color4 Red( float alpha = 1.0f )							{ return Color4(  1.0f,  0.0f,  0.0f, alpha ); }
+		static constexpr Color4 Green( float alpha = 1.0f )							{ return Color4(  0.0f,  1.0f,  0.0f, alpha ); }
+		static constexpr Color4 Blue( float alpha = 1.0f )							{ return Color4(  0.0f,  0.0f,  1.0f, alpha ); }
+		static constexpr Color4 Orange( float alpha = 1.0f )						{ return Color4(  1.0f,  0.65f, 0.0f, alpha ); }
+		static constexpr Color4 Teal( float alpha = 1.0f )							{ return Color4(  0.0f,  0.5f,  0.5f, alpha ); }
+		static constexpr Color4 Cyan( float alpha = 1.0f )							{ return Color4(  0.0f,  1.0f,  1.0f, alpha ); }
+		static constexpr Color4 Magenta( float alpha = 1.0f )						{ return Color4(  1.0f,  0.0f,  1.0f, alpha ); }
+		static constexpr Color4 Yellow( float alpha = 1.0f )						{ return Color4(  1.0f,  1.0f,  0.0f, alpha ); }
 		static constexpr Color4 Clear_Default()										{ return Gray(); }
 
 		static constexpr Color4 Zero()												{ return Black( 0.0f ); }
