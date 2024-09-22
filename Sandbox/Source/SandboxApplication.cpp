@@ -585,7 +585,6 @@ void SandboxApplication::ResetMaterialData()
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
 		cube_material_array[ i ].SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 		cube_material_array[ i ].SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
-		cube_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	}
 
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
