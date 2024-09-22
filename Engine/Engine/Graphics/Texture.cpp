@@ -23,10 +23,23 @@ namespace Engine
 		std::optional< Texture > maybe_texture;
 
 		int number_of_channels = -1;
-		auto image_data = stbi_load( file_path.c_str(), &width, &height, &number_of_channels, 4 );
+		auto image_data = stbi_load( file_path.c_str(), &width, &height, &number_of_channels, 0 );
 		if( image_data )
-			maybe_texture = Texture( name, ( std::byte* )image_data, import_settings.format, width, height,
+		{
+			GLenum format = 0;
+
+			switch( number_of_channels )
+			{
+				case 1: format = GL_RED;	break;
+				case 2: format = GL_RG;		break;
+				case 3: format = GL_RGB;	break;
+				case 4: format = GL_RGBA;	break;
+			}
+
+			/* Format from import_settings is not used at the moment. */
+			maybe_texture = Texture( name, ( std::byte* )image_data, format, width, height,
 									 import_settings.wrap_u, import_settings.wrap_v, import_settings.min_filter, import_settings.mag_filter );
+		}
 		else
 			std::cerr << "Could not load image data from file: \"" << file_path << "\"\n";
 
@@ -47,10 +60,21 @@ namespace Engine
 		std::optional< Texture > maybe_texture;
 
 		int number_of_channels = -1;
-		auto image_data = stbi_load_from_memory( ( stbi_uc* )data, size, &width, &height, &number_of_channels, 4 );
+		auto image_data = stbi_load_from_memory( ( stbi_uc* )data, size, &width, &height, &number_of_channels, 0 );
 		if( image_data )
 		{
-			maybe_texture = Texture( name, ( std::byte* )image_data, import_settings.format, width, height,
+			GLenum format = 0;
+
+			switch( number_of_channels )
+			{
+				case 1: format = GL_RED;	break;
+				case 2: format = GL_RG;		break;
+				case 3: format = GL_RGB;	break;
+				case 4: format = GL_RGBA;	break;
+			}
+
+			/* Format from import_settings is not used at the moment. */
+			maybe_texture = Texture( name, ( std::byte* )image_data, format, width, height,
 									 import_settings.wrap_u, import_settings.wrap_v, import_settings.min_filter, import_settings.mag_filter );
 		}
 		else
@@ -93,8 +117,7 @@ namespace Engine
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_u );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_v );
 
-		/* NOTE: format parameter is not utilized. Internal format and the format parameters below are hard-coded for now. */
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+		glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data );
 		glGenerateMipmap( GL_TEXTURE_2D );
 	}
 
