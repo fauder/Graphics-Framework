@@ -656,8 +656,8 @@ void SandboxApplication::ReloadModel( const std::string& file_path )
 	{
 		test_model_file_path = file_path;
 
-		for( const auto& [ render_group_id, drawables_array ] : test_model_instance.DrawablesMap() )
-			for( const auto& drawable_to_remove : drawables_array )
+		for( auto& [ render_group_id, drawables_array ] : test_model_instance.DrawablesMap() )
+			for( auto& drawable_to_remove : drawables_array )
 				renderer.RemoveDrawable( &drawable_to_remove );
 
 		test_model_instance = ModelInstance( new_model,
@@ -685,8 +685,8 @@ void SandboxApplication::UnloadModel()
 {
 	test_model_file_path = "";
 
-	for( const auto& [ id, drawables_array ] : test_model_instance.DrawablesMap() )
-		for( const auto& drawable_to_remove : drawables_array )
+	for( auto& [ id, drawables_array ] : test_model_instance.DrawablesMap() )
+		for( auto& drawable_to_remove : drawables_array )
 			renderer.RemoveDrawable( &drawable_to_remove );
 
 	test_model_instance = {};

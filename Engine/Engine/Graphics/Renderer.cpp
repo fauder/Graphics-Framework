@@ -139,7 +139,7 @@ namespace Engine
 		}
 	}
 
-	void Renderer::AddDrawable( const Drawable* drawable_to_add, const RenderGroupID render_group_id )
+	void Renderer::AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id )
 	{
 		auto& render_group = render_group_map[ render_group_id ];
 
@@ -156,7 +156,7 @@ namespace Engine
 		render_group.materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
 	}
 
-	void Renderer::RemoveDrawable( const Drawable* drawable_to_remove )
+	void Renderer::RemoveDrawable( Drawable* drawable_to_remove )
 	{
 		if( auto render_group_found = GetRenderGroup( drawable_to_remove ) )
 		{

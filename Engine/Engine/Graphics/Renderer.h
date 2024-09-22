@@ -91,7 +91,7 @@ namespace Engine
 
 			RenderState render_state;
 
-			std::vector< const Drawable* > drawable_list;
+			std::vector< Drawable* > drawable_list;
 
 			std::unordered_map< Shader*, ReferenceCount > shaders_in_flight;
 			std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
@@ -116,9 +116,9 @@ namespace Engine
 
 		RenderState& GetRenderState( const RenderGroupID group_id_to_fetch );
 
-		void AddDrawable( const Drawable* drawable_to_add, const RenderGroupID render_group_id = 0 );
+		void AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id = 0 );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
-		void RemoveDrawable( const Drawable* drawable_to_remove );
+		void RemoveDrawable( Drawable* drawable_to_remove );
 		void RemoveAllDrawables();
 
 		/* 
