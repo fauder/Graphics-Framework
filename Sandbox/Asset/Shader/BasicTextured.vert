@@ -12,6 +12,6 @@ uniform mat4x4 uniform_transform_world;
 
 void main()
 {
-    gl_Position = vec4( position, 1.0 ) * uniform_transform_world * _INTRINSIC_TRANSFORM_VIEW * _INTRINSIC_TRANSFORM_PROJECTION;
     varying_uv  = uv;
+    gl_Position = vec4( position, 1.0 ) * uniform_transform_world * _INTRINSIC_TRANSFORM_VIEW_PROJECTION;
 }
