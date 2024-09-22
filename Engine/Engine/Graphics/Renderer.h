@@ -89,6 +89,8 @@ namespace Engine
 		{
 			using ReferenceCount = unsigned int;
 
+			bool is_enabled = true;
+
 			std::string name = "<unnamed>";
 
 			RenderState render_state;
@@ -118,6 +120,7 @@ namespace Engine
 
 		RenderState& GetRenderState( const RenderGroupID group_id_to_fetch );
 		void SetRenderGroupName( const RenderGroupID group_id_to_rename, const std::string_view new_name );
+		void ToggleRenderGroup( const RenderGroupID group_id_to_toggle, const bool enable );
 
 		void AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id = 0 );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.

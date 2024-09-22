@@ -86,27 +86,30 @@ namespace Engine
 
 		for( auto& [ render_group_id, render_group ] : render_group_map )
 		{
-			SetRenderState( render_group.render_state );
-
-			for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
+			if( render_group.is_enabled )
 			{
-				shader->Bind();
+				SetRenderState( render_group.render_state );
 
-				for( auto& [ material_name, material ] : render_group.materials_in_flight )
+				for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
 				{
-					if( material->shader->Id() == shader->Id() )
+					shader->Bind();
+
+					for( auto& [ material_name, material ] : render_group.materials_in_flight )
 					{
-						material->UploadUniforms();
-
-						for( auto& drawable : render_group.drawable_list )
+						if( material->shader->Id() == shader->Id() )
 						{
-							if( drawable->is_enabled && drawable->material->Name() == material_name )
+							material->UploadUniforms();
+
+							for( auto& drawable : render_group.drawable_list )
 							{
-								drawable->mesh->Bind();
+								if( drawable->is_enabled && drawable->material->Name() == material_name )
+								{
+									drawable->mesh->Bind();
 
-								material->SetAndUploadUniform( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
+									material->SetAndUploadUniform( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
 
-								Render( *drawable->mesh );
+									Render( *drawable->mesh );
+								}
 							}
 						}
 					}
@@ -196,6 +199,11 @@ namespace Engine
 	void Renderer::SetRenderGroupName( const RenderGroupID group_id_to_rename, const std::string_view new_name )
 	{
 		render_group_map[ group_id_to_rename ].name = new_name;
+	}
+
+	void Renderer::ToggleRenderGroup( const RenderGroupID group_id_to_toggle, const bool enable )
+	{
+		render_group_map[ group_id_to_toggle ].is_enabled = enable;
 	}
 
 	void Renderer::AddDirectionalLight( DirectionalLight* light_to_add )
