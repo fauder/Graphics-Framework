@@ -607,6 +607,31 @@ namespace Engine::ImGuiDrawer
 
 			if( ImGui::TreeNodeEx( shader.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 			{
+				ImGuiUtility::BeginGroupPanel();
+
+				ImGui::SeparatorText( "Source Files" );
+
+				if( ImGui::BeginTable( "Source Files", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+				{
+					ImGui::TableSetupColumn( "Type"	);
+					ImGui::TableSetupColumn( "Path" );
+
+					ImGui::TableHeadersRow();
+					ImGui::TableNextRow();
+
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( "Vertex" );
+						ImGui::TableNextColumn(); ImGui::Text( shader.VertexShaderSourcePath().c_str() );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( "Fragment" );
+						ImGui::TableNextColumn(); ImGui::Text( shader.FragmentShaderSourcePath().c_str() );
+
+					ImGui::PopStyleColor();
+
+					ImGui::EndTable();
+				}
+
+				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniforms" );
 
 				if( ImGui::BeginTable( "Uniforms", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )

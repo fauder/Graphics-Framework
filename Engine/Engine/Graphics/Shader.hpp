@@ -69,6 +69,8 @@ namespace Engine
 
 		inline		 ID				Id()						const { return program_id;			 }
 		inline const std::string&	Name()						const { return name;				 }
+		inline const std::string&	VertexShaderSourcePath()	const { return vertex_source_path;	 }
+		inline const std::string&	FragmentShaderSourcePath()	const { return fragment_source_path; }
 
 		inline const std::vector< std::string >& Features() const { return feature_array; }
 
@@ -315,6 +317,9 @@ namespace Engine
 	private:
 		ID program_id;
 		std::string name;
+
+		std::string vertex_source_path;
+		std::string fragment_source_path;
 
 		std::vector< std::string > feature_array;
 

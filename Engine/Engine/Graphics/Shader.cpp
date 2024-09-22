@@ -32,6 +32,8 @@ namespace Engine
 	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array )
 		:
 		name( name ),
+		vertex_source_path( vertex_shader_source_file_path ),
+		fragment_source_path( fragment_shader_source_file_path ),
 		feature_array( feature_array )
 	{
 		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path );
@@ -44,6 +46,8 @@ namespace Engine
 
 	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array )
 	{
+		this->vertex_source_path   = vertex_shader_source_file_path;
+		this->fragment_source_path = fragment_shader_source_file_path ;
 		this->feature_array        = feature_array;
 
 		unsigned int vertex_shader_id = 0, fragment_shader_id = 0;
