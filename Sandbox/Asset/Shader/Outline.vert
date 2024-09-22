@@ -12,7 +12,7 @@ out vec4 varying_normal_view_space;
 out vec2 varying_tex_coords;
 
 uniform mat4x4 uniform_transform_world;
-uniform vec4 uniform_texture_scale_and_offset = vec4( 1, 1, 0, 0 );
+uniform vec4 uniform_texture_scale_and_offset;
 
 uniform float uniform_outline_thickness;
 
