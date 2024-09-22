@@ -13,6 +13,7 @@
 #include "Engine/Graphics/GLLogger.h"
 #include "Engine/Graphics/MeshUtility.hpp"
 #include "Engine/Graphics/Primitive/Primitive_Cube.h"
+#include "Engine/Graphics/Primitive/Primitive_Quad.h"
 #include "Engine/Math/Math.hpp"
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
@@ -88,10 +89,12 @@ void SandboxApplication::Initialize()
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
 /* Initial transforms: */
-	ground_quad_transform.SetScaling( 25.0f, 0.01f, 125.0f );
+	ground_quad_transform
+		.SetScaling( 25.0f, 75.0f, 1.0f )
+		.SetRotation( 0.0_deg, 90.0_deg, 0.0_deg );
 
 	front_wall_quad_transform
-		.SetScaling( 25.0f, 25.0f, 0.01f )
+		.SetScaling( 25.0f, 25.0f, 1.0f )
 		.SetTranslation( Vector3::Forward() * 15.0f );
 
 	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
@@ -107,6 +110,12 @@ void SandboxApplication::Initialize()
 							  "Cube",
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
+							  { /* No indices. */ } );
+
+	quad_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
+							  "Quad",
+							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Normals.cbegin(), Engine::Primitive::NonIndexed::Quad::Normals.cend() ),
+							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
 							  { /* No indices. */ } );
 
 /* Lighting: */
@@ -169,10 +178,10 @@ void SandboxApplication::Initialize()
 		renderer.AddDrawable( &cube_drawable_outline_array[ i ], Engine::Renderer::RenderGroupID( 2 ) );
 	}
 
-	ground_quad_drawable = Engine::Drawable( &cube_mesh, &ground_quad_material, &ground_quad_transform );
+	ground_quad_drawable = Engine::Drawable( &quad_mesh, &ground_quad_material, &ground_quad_transform );
 	renderer.AddDrawable( &ground_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
 
-	front_wall_quad_drawable = Engine::Drawable( &cube_mesh, &front_wall_quad_material, &front_wall_quad_transform );
+	front_wall_quad_drawable = Engine::Drawable( &quad_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
 
 /* Models: */
@@ -569,7 +578,7 @@ void SandboxApplication::ResetMaterialData()
 	ground_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern );
 	ground_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern );
 	const auto& ground_quad_scale( ground_quad_transform.GetScaling() );
-	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Z() /* Offset is 0 so no need to set it explicitly. */ );
+	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_quad_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );

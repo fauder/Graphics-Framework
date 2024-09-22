@@ -62,7 +62,7 @@ private:
 	Engine::Drawable front_wall_quad_drawable;
 
 /* Vertex Info.: */
-	Engine::Mesh cube_mesh;
+	Engine::Mesh cube_mesh, quad_mesh;
 
 /* Models: */
 	ModelInstance test_model_instance;
