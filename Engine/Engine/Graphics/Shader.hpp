@@ -58,15 +58,19 @@ namespace Engine
 	public:
 		/* Will be initialized later with FromFile(). */
 		Shader( const char* name );
-		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path );
+		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array = {} );
 		~Shader();
 
-		bool FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path );
+		bool FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array = {} );
 
 		void Bind() const;
 
-		inline const std::string&	Name()	const { return name;		}
-		inline		 ID				Id()	const { return program_id;	}
+/* Queries: */
+
+		inline		 ID				Id()						const { return program_id;			 }
+		inline const std::string&	Name()						const { return name;				 }
+
+		inline const std::vector< std::string >& Features() const { return feature_array; }
 
 /* Uniform APIs: */
 		inline const std::unordered_map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
@@ -271,9 +275,11 @@ namespace Engine
 		void SetUniform( const Uniform::Information& uniform_info, const void* value_pointer );
 
 	private:
+
 /* Compilation & Linkage: */
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		std::vector< std::string > PreprocessShaderStage_GetIncludeFilePaths( const std::string& source ) const;
+		void PreProcessShaderStage_DefineDirectives( std::string& shader_source, const std::vector< std::string >& feature_array );
 		bool PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
@@ -309,6 +315,8 @@ namespace Engine
 	private:
 		ID program_id;
 		std::string name;
+
+		std::vector< std::string > feature_array;
 
 		std::unordered_map< std::string, Uniform::Information > uniform_info_map;
 

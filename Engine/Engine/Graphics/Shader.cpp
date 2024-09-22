@@ -29,9 +29,10 @@ namespace Engine
 	{
 	}
 
-	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
+	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array )
 		:
-		name( name )
+		name( name ),
+		feature_array( feature_array )
 	{
 		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path );
 	}
@@ -41,8 +42,10 @@ namespace Engine
 		glDeleteProgram( program_id );
 	}
 
-	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path )
+	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array )
 	{
+		this->feature_array        = feature_array;
+
 		unsigned int vertex_shader_id = 0, fragment_shader_id = 0;
 
 		std::optional< std::string > vertex_shader_source;
@@ -53,6 +56,7 @@ namespace Engine
 		{
 			auto& shader_source = *vertex_shader_source;
 
+			PreProcessShaderStage_DefineDirectives( shader_source, feature_array );
 			PreProcessShaderStage_IncludeDirectives( vertex_shader_source_file_path, shader_source, ShaderType::VERTEX );
 
 			if( !CompileShader( shader_source.c_str(), vertex_shader_id, ShaderType::VERTEX ) )
@@ -66,6 +70,7 @@ namespace Engine
 		{
 			auto& shader_source = *fragment_shader_source;
 
+			PreProcessShaderStage_DefineDirectives( shader_source, feature_array );
 			PreProcessShaderStage_IncludeDirectives( fragment_shader_source_file_path, shader_source, ShaderType::FRAGMENT );
 
 			if( !CompileShader( shader_source.c_str(), fragment_shader_id, ShaderType::FRAGMENT ) )
@@ -198,6 +203,17 @@ namespace Engine
 		}
 
 		return includes;
+	}
+
+	void Shader::PreProcessShaderStage_DefineDirectives( std::string& shader_source, const std::vector< std::string >& feature_array )
+	{
+		auto first_new_line = shader_source.find( "\n" );
+
+		std::string define_directives_combined;
+		for( const auto& define_directive : feature_array )
+			define_directives_combined += "#define " + define_directive + "\n";
+
+		shader_source = shader_source.substr( 0, first_new_line + 1 ) + define_directives_combined + shader_source.substr( first_new_line + 1 );
 	}
 
 	bool Shader::PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source, const ShaderType shader_type )

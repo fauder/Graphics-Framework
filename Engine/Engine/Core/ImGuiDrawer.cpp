@@ -704,6 +704,28 @@ namespace Engine::ImGuiDrawer
 					ImGui::EndTable();
 				}
 
+				ImGui::NewLine();
+				ImGui::SeparatorText( "Features" );
+				{
+					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
+					if( const auto& features = shader.Features();
+						features.empty() )
+						ImGui::TextUnformatted( "(N/A)" );
+					else
+					{
+						for( const auto& feature : shader.Features() )
+						{
+							ImGui::Bullet(); ImGui::SameLine();
+							ImGui::TextUnformatted( feature.c_str() );
+						}
+					}
+
+					ImGui::PopStyleColor();
+				}
+
+				ImGuiUtility::EndGroupPanel();
+
 				ImGui::TreePop();
 			}
 		}
