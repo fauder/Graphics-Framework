@@ -193,6 +193,11 @@ namespace Engine
 		return render_group_map[ group_id_to_fetch ].render_state;
 	}
 
+	void Renderer::SetRenderGroupName( const RenderGroupID group_id_to_rename, const std::string_view new_name )
+	{
+		render_group_map[ group_id_to_rename ].name = new_name;
+	}
+
 	void Renderer::AddDirectionalLight( DirectionalLight* light_to_add )
 	{
 		if( light_directional )

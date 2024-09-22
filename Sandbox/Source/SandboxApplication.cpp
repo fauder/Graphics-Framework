@@ -132,10 +132,12 @@ void SandboxApplication::Initialize()
 	ResetMaterialData();
 
 /* Renderer (Drawables, RenderStates etc.): */
+	renderer.SetRenderGroupName( 0, "Default" );
 	auto& render_state_regular_meshes = renderer.GetRenderState( 0 ); // Keep default settings.
 	
 	{
 		/* This pass draws the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is drawn at. */
+		renderer.SetRenderGroupName( 1, "Outlined Meshes" );
 		auto& render_state_outline_meshes = renderer.GetRenderState( 1 );
 
 		/* Omitted settings are left to defaults. */
@@ -151,6 +153,7 @@ void SandboxApplication::Initialize()
 
 	{
 		/* This pass draws the outlines only; It does this by rendering the mesh at everywhere the stencil buffer is NOT 1. */
+		renderer.SetRenderGroupName( 2, "Outlines" );
 		auto& render_state_outlines = renderer.GetRenderState( 2 );
 
 		/* Omitted settings are left to defaults. */
