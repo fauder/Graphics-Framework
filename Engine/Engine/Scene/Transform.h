@@ -40,6 +40,8 @@ namespace Engine
 		Transform& MultiplyScaling( const float multiplier );
 
 		Transform& SetRotation( const Quaternion& new_rotation );
+		Transform& SetRotation( const Radians heading_around_y, const Radians pitch_around_x, const Radians bank_around_z );
+		Transform& SetRotation( const Degrees heading_around_y, const Degrees pitch_around_x, const Degrees bank_around_z );
 		Transform& MultiplyRotation( const Quaternion& multiplier );
 		Transform& MultiplyRotation_X( const Radians& angle );
 		Transform& MultiplyRotation_Y( const Radians& angle );

@@ -108,6 +108,16 @@ namespace Engine
 		return *this;
 	}
 
+	Transform& Transform::SetRotation( const Radians heading_around_y, const Radians pitch_around_x, const Radians bank_around_z )
+	{
+		return SetRotation( Math::EulerToQuaternion( heading_around_y, pitch_around_x, bank_around_z ) );
+	}
+
+	Transform& Transform::SetRotation( const Degrees heading_around_y, const Degrees pitch_around_x, const Degrees bank_around_z )
+	{
+		return SetRotation( Math::EulerToQuaternion( heading_around_y, pitch_around_x, bank_around_z ) );
+	}
+
 	Transform& Transform::MultiplyRotation( const Quaternion& multiplier )
 	{
 		return SetRotation( ( rotation * multiplier ).Normalized() );
