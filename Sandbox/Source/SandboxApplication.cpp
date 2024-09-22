@@ -384,7 +384,19 @@ void SandboxApplication::RenderImGui()
 
 	if( ImGui::Begin( ICON_FA_LIGHTBULB " Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset" ) )
+		if( ImGui::Checkbox( "Enabled##AllLights", &light_is_enabled ) )
+		{
+			light_directional.is_enabled = light_is_enabled;
+
+			for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
+				light_source_drawable_array[ i ].ToggleOnOrOff( light_point_array[ i ].is_enabled = light_is_enabled && not light_point_array_disable );
+
+			light_spot.is_enabled = light_is_enabled;
+		}
+
+		ImGui::SameLine( 0.0f, 20.0f );
+
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset##Lights" ) )
 			ResetLightingData();
 
 		ImGui::NewLine();
@@ -402,7 +414,7 @@ void SandboxApplication::RenderImGui()
 				Engine::ImGuiUtility::BeginGroupPanel( "Options" );
 				if( ImGui::Checkbox( "Disable All", &light_point_array_disable ) )
 					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-						light_source_drawable_array[ i ].ToggleOnOrOff( light_point_array[ i ].is_enabled = !light_point_array_disable );
+						light_source_drawable_array[ i ].ToggleOnOrOff( light_point_array[ i ].is_enabled = light_is_enabled && not light_point_array_disable );
 				ImGui::Checkbox( "Animate (Orbit) Point Lights", &light_point_array_is_animated );
 				if( light_point_array_is_animated )
 					ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
@@ -448,7 +460,7 @@ void SandboxApplication::RenderImGui()
 
 	if( ImGui::Begin( ICON_FA_VIDEO " Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset" ) )
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset##Camera" ) )
 			ResetCamera();
 
 		ImGui::SameLine(); if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset to 2nd View" ) )
@@ -519,6 +531,8 @@ void SandboxApplication::ResetLightingData()
 		},
 		.transform = &light_directional_transform
 	};
+
+	light_is_enabled = true;
 
 	light_point_array_disable      = false;
 	light_point_array_is_animated  = true;

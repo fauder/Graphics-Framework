@@ -122,6 +122,7 @@ private:
 	std::vector< Engine::PointLight > light_point_array;
 	Engine::SpotLight light_spot;
 
+	bool light_is_enabled;
 	bool light_point_array_disable;
 	bool light_point_array_is_animated;
 	float light_point_orbit_radius;
