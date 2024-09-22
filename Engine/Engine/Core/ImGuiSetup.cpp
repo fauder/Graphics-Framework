@@ -63,7 +63,7 @@ namespace ImGuiSetup
         io.Fonts->Clear();
         io.Fonts->AddFontFromFileTTF( "Asset/Font/JetBrainsMono-Regular.ttf", 18 );
         /* Merge in icons from icon font(s): */
-        io.Fonts->AddFontFromFileTTF( "Asset/Font/Font-Awesome/fontawesome-webfont.ttf", icon_font_size, &icons_config, icons_ranges ); // Merge into JetBrainsMono-Regular (18).
+        io.Fonts->AddFontFromFileTTF( "Asset/Font/Font-Awesome/" FONT_ICON_FILE_NAME_FAS, icon_font_size, &icons_config, icons_ranges ); // Merge into JetBrainsMono-Regular (18).
 
         io.Fonts->Build();
     }
