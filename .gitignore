@@ -401,3 +401,4 @@ FodyWeavers.xsd
 **/imgui.ini
 *.cap
 Sandbox/config.ini
+*.trace
