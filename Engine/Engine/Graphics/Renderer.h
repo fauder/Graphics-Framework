@@ -11,6 +11,7 @@
 #include "UniformBufferManagement.hpp"
 
 // std Includes.
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -27,6 +28,8 @@ namespace Engine
 			DepthBuffer   = GL_DEPTH_BUFFER_BIT,
 			StencilBuffer = GL_STENCIL_BUFFER_BIT,
 			ColorBuffer   = GL_COLOR_BUFFER_BIT,
+
+			All = DepthBuffer | StencilBuffer | ColorBuffer
 		};
 
 		enum class PolygonMode
@@ -38,7 +41,7 @@ namespace Engine
 			Wireframe = Line
 		};
 
-		enum class DepthComparisonFunction
+		enum class ComparisonFunction
 		{
 			Always	       = GL_ALWAYS,
 			Never 	       = GL_NEVER,
@@ -50,24 +53,78 @@ namespace Engine
 			GreaterOrEqual = GL_GEQUAL
 		};
 
+		enum class StencilTestResponse
+		{
+			Keep          = GL_KEEP,
+			Zero          = GL_ZERO,
+			Replace       = GL_REPLACE,
+			Increment     = GL_INCR,
+			IncrementWrap = GL_INCR_WRAP,
+			Decrement     = GL_DECR,
+			DecrementWrap = GL_DECR_WRAP,
+			Invert        = GL_INVERT
+		};
+
+		struct RenderState
+		{
+			bool depth_test_enable                       = true;
+			bool depth_write_enable                      = true;
+			ComparisonFunction depth_comparison_function = ComparisonFunction::Less;
+
+			bool stencil_test_enable                       = false;
+			unsigned int stencil_write_mask                = true;
+			ComparisonFunction stencil_comparison_function = ComparisonFunction::Always;
+			unsigned int stencil_ref                       = 0;
+			unsigned int stencil_mask                      = 0xFF;
+
+			StencilTestResponse stencil_test_response_stencil_fail            = StencilTestResponse::Keep;
+			StencilTestResponse stencil_test_response_stencil_pass_depth_fail = StencilTestResponse::Keep;
+			StencilTestResponse stencil_test_response_both_pass               = StencilTestResponse::Keep;
+		};
+
+		using RenderGroupID = unsigned int;
+
+	private:
+		struct RenderGroup
+		{
+			using ReferenceCount = unsigned int;
+
+			RenderState render_state;
+
+			std::vector< const Drawable* > drawable_list;
+
+			std::unordered_map< Shader*, ReferenceCount > shaders_in_flight;
+			std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
+		};
+
 	public:
 		Renderer();
 		~Renderer();
 
-	/* Main: */
+		/* 
+		 * Main:
+		 */
+
 		void Update( Camera& camera );
 		void Render( Camera& camera );
 		void RenderImGui();
 		void OnProjectionParametersChange( Camera& camera );
 
-	/* Drawables: */
-		void AddDrawable( const Drawable* drawable_to_add );
+		/* 
+		 * RenderGroup & Drawable:
+		 */
+
+		RenderState& GetRenderState( const RenderGroupID group_id_to_fetch );
+
+		void AddDrawable( const Drawable* drawable_to_add, const RenderGroupID render_group_id = 0 );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
-		// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
 		void RemoveDrawable( const Drawable* drawable_to_remove );
 		void RemoveAllDrawables();
 
-	/* Lights: */
+		/* 
+		 * Lights:
+		 */
+
 		void AddDirectionalLight( DirectionalLight* light_to_add );
 		void RemoveDirectionalLight();
 		/* Only 1 Directional Light can be active at a time! */
@@ -80,7 +137,10 @@ namespace Engine
 		void RemoveSpotLight( SpotLight* light_to_remove );
 		void RemoveAllSpotLights();
 
-	/* Shaders: */
+		/*
+		 * Shaders:
+		 */
+
 		const void* GetShaderGlobal( const std::string& buffer_name ) const;
 			  void* GetShaderGlobal( const std::string& buffer_name );
 
@@ -111,21 +171,45 @@ namespace Engine
 			uniform_buffer_management_global.Set( buffer_name, uniform_member_name, value );
 		}
 
-	/* Clearing: */
+		/*
+		 * Clearing:
+		 */
+
 		void SetClearColor( const Color3& new_clear_color );
 		void SetClearColor( const Color4& new_clear_color );
+		void SetClearTargets( const BitFlags< ClearTarget > targets );
 
-	/* Depth Test: */
+		/*
+		 * Stencil Test:
+		 */
+
+		void EnableStencilTest();
+		void DisableStencilTest();
+		void SetStencilWriteMask( const unsigned int mask );
+		void SetStencilTestResponses( const StencilTestResponse stencil_fail, const StencilTestResponse stencil_pass_depth_fail, const StencilTestResponse both_pass );
+		void SetStencilComparisonFunction( const ComparisonFunction comparison_function, const int reference_value, const unsigned int mask );
+
+		/*
+		 * Depth Test:
+		 */
+
 		void EnableDepthTest();
 		void DisableDepthTest();
 		void ToggleDepthWrite( const bool enable );
-		void SetDepthComparisonFunction( const DepthComparisonFunction comparison_function );
+		void SetDepthComparisonFunction( const ComparisonFunction comparison_function );
 
-	/* Other: */
+		/*
+		 * Other:
+		 */
+
 		void SetPolygonMode( const PolygonMode mode );
 
 	private:
-	/* Main: */
+
+		/*
+		 * Main:
+		 */
+
 		void Render( const Mesh& mesh );
 		void Render_Indexed( const Mesh& mesh );
 		void Render_NonIndexed( const Mesh& mesh );
@@ -133,16 +217,39 @@ namespace Engine
 		void UploadIntrinsics();
 		void UploadGlobals();
 
-	/* Shaders: */
+		/*
+		 * RenderGroup & Drawable:
+		 */
+
+		RenderGroup* GetRenderGroup( const Drawable* drawable_of_interest );
+		void SetRenderState( const RenderState& render_state_to_set );
+
+		/*
+		 * Shaders:
+		 */
+
 		void RegisterShader( const Shader& shader );
 		void UnregisterShader( const Shader& shader );
 
-	/* Clearing: */
+		/*
+		 * Clearing:
+		 */
+
 		void SetClearColor();
 		void Clear() const;
 
 	private:
-		std::vector< const Drawable* > drawable_list;
+
+		/*
+		 * Clearing:
+		 */
+
+		Color4 clear_color;
+		BitFlags< ClearTarget > clear_targets;
+
+		/*
+		 * Lighting:
+		 */
 
 		DirectionalLight*			light_directional;
 		std::vector< PointLight* >	lights_point;
@@ -150,16 +257,20 @@ namespace Engine
 		int lights_point_active_count;
 		int lights_spot_active_count;
 
-		std::unordered_set< const Shader* > shaders_registered;
+		/*
+		 * Rendering:
+		 */
 
-		std::unordered_map< Shader*, int > shaders_in_flight_ref_count;
-		std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
+		std::map< RenderGroupID, RenderGroup > render_group_map;
+
+		std::unordered_set< const Shader* > shaders_registered; // TODO: Revise; This is not utilized at all. Also it may pose problems when dynamic shader re-compile is implemented.
+
+		/*
+		 * Uniform Management:
+		 */
 
 		std::unordered_set< const Shader* > shaders_using_intrinsics_lighting;
 		std::unordered_set< const Shader* > shaders_using_intrinsics_other;
-
-		Color4 clear_color;
-		BitFlags< ClearTarget > clear_targets;
 
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_global;
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_intrinsic;

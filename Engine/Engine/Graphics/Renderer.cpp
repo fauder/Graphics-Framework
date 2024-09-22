@@ -80,31 +80,42 @@ namespace Engine
 
 		UploadIntrinsics();
 		UploadGlobals();
-		
-		for( const auto& [ shader, dont_care ] : shaders_in_flight_ref_count )
+
+		for( auto& [ render_group_id, render_group ] : render_group_map )
 		{
-			shader->Bind();
+			SetRenderState( render_group.render_state );
 
-			for( auto& [ material_name, material ] : materials_in_flight )
+			for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
 			{
-				if( material->shader->Id() == shader->Id() )
+				shader->Bind();
+
+				for( auto& [ material_name, material ] : render_group.materials_in_flight )
 				{
-					material->UploadUniforms();
-
-					for( auto& drawable : drawable_list )
+					if( material->shader->Id() == shader->Id() )
 					{
-						if( drawable->is_enabled && drawable->material->Name() == material_name )
+						material->UploadUniforms();
+
+						for( auto& drawable : render_group.drawable_list )
 						{
-							drawable->mesh->Bind();
+							if( drawable->is_enabled && drawable->material->Name() == material_name )
+							{
+								drawable->mesh->Bind();
 
-							material->Set( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
+								material->SetAndUploadUniform( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
 
-							Render( *drawable->mesh );
+								Render( *drawable->mesh );
+							}
 						}
 					}
 				}
 			}
 		}
+
+		// TODO: Figure out how to correctly model this behaviour: What if the user wants to explicitly NOT clear a specific buffer?
+		/* Reset write masks or clearing will not modify the buffers: */
+		ToggleDepthWrite( true );
+		SetStencilWriteMask( 0xFF );
+
 	}
 
 	void Renderer::RenderImGui()
@@ -125,42 +136,58 @@ namespace Engine
 		}
 	}
 
-	void Renderer::AddDrawable( const Drawable* drawable_to_add )
+	void Renderer::AddDrawable( const Drawable* drawable_to_add, const RenderGroupID render_group_id )
 	{
-		drawable_list.push_back( drawable_to_add );
+		auto& render_group = render_group_map[ render_group_id ];
+
+		render_group.drawable_list.push_back( drawable_to_add );
 
 		const auto& shader = drawable_to_add->material->shader;
 
-		if( ++shaders_in_flight_ref_count[ shader ] == 1 )
+		if( ++render_group.shaders_in_flight[ shader ] == 1 )
 		{
 			if( not shaders_registered.contains( shader ) )
 				RegisterShader( *shader );
 		}
 
-		materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
+		render_group.materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
 	}
 
 	void Renderer::RemoveDrawable( const Drawable* drawable_to_remove )
 	{
-		std::erase( drawable_list, drawable_to_remove );
-
-		const auto& shader = drawable_to_remove->material->shader;
-
-		if( --shaders_in_flight_ref_count[ shader ] == 0 )
+		if( auto render_group_found = GetRenderGroup( drawable_to_remove ) )
 		{
-			shaders_in_flight_ref_count.erase( shader );
-			if( shaders_registered.contains( shader ) )
-				UnregisterShader( *shader );
-		}
+			auto& render_group_to_remove_from = *render_group_found;
 
-		materials_in_flight.erase( drawable_to_remove->material->Name() );
+			// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
+			std::erase( render_group_to_remove_from.drawable_list, drawable_to_remove );
+
+			const auto& shader = drawable_to_remove->material->shader;
+
+			if( --render_group_to_remove_from.shaders_in_flight[ shader ] == 0 )
+			{
+				render_group_to_remove_from.shaders_in_flight.erase( shader );
+				if( shaders_registered.contains( shader ) )
+					UnregisterShader( *shader );
+			}
+
+			render_group_to_remove_from.materials_in_flight.erase( drawable_to_remove->material->Name() );
+		}
 	}
 
 	void Renderer::RemoveAllDrawables()
 	{
-		drawable_list.clear();
-		shaders_in_flight_ref_count.clear();
-		materials_in_flight.clear();
+		for( auto& [ render_group_id, render_group ] : render_group_map )
+		{
+			render_group.drawable_list.clear();
+			render_group.shaders_in_flight.clear();
+			render_group.materials_in_flight.clear();
+		}
+	}
+
+	Renderer::RenderState& Renderer::GetRenderState( const RenderGroupID group_id_to_fetch )
+	{
+		return render_group_map[ group_id_to_fetch ].render_state;
 	}
 
 	void Renderer::AddDirectionalLight( DirectionalLight* light_to_add )
@@ -231,11 +258,41 @@ namespace Engine
 		SetClearColor();
 	}
 
+	void Renderer::SetClearTargets( const BitFlags< ClearTarget > targets )
+	{
+		clear_targets = targets;
+	}
+
 /*
  * 
  *	PRIVATE API:
  * 
  */
+
+	void Renderer::EnableStencilTest()
+	{
+		glEnable( GL_STENCIL_TEST );
+	}
+
+	void Renderer::DisableStencilTest()
+	{
+		glDisable( GL_STENCIL_TEST );
+	}
+
+	void Renderer::SetStencilWriteMask( const unsigned int mask )
+	{
+		glStencilMask( mask );
+	}
+
+	void Renderer::SetStencilTestResponses( const StencilTestResponse stencil_fail, const StencilTestResponse stencil_pass_depth_fail, const StencilTestResponse both_pass )
+	{
+		glStencilOp( ( GLenum )stencil_fail, ( GLenum )stencil_pass_depth_fail, ( GLenum )both_pass );
+	}
+
+	void Renderer::SetStencilComparisonFunction( const ComparisonFunction comparison_function, const int reference_value, const unsigned int mask )
+	{
+		glStencilFunc( ( GLenum )comparison_function, reference_value, mask );
+	}
 
 	void Renderer::EnableDepthTest()
 	{
@@ -252,7 +309,7 @@ namespace Engine
 		glDepthMask( ( GLint )enable );
 	}
 
-	void Renderer::SetDepthComparisonFunction( const DepthComparisonFunction comparison_function )
+	void Renderer::SetDepthComparisonFunction( const ComparisonFunction comparison_function )
 	{
 		glDepthFunc( ( GLenum )comparison_function );
 	}
@@ -287,6 +344,37 @@ namespace Engine
 	void Renderer::UploadGlobals()
 	{
 		uniform_buffer_management_global.UploadAll();
+	}
+
+	Renderer::RenderGroup* Renderer::GetRenderGroup( const Drawable* drawable_of_interest )
+	{
+		for( auto& [ render_group_id, render_group ] : render_group_map )
+			if( std::find( render_group.drawable_list.cbegin(), render_group.drawable_list.cend(), drawable_of_interest ) != render_group.drawable_list.cend() )
+				return &render_group;
+
+		return nullptr;
+	}
+
+	void Renderer::SetRenderState( const RenderState& render_state_to_set )
+	{
+		if( render_state_to_set.depth_test_enable )
+			EnableDepthTest();
+		else
+			DisableDepthTest();
+
+		ToggleDepthWrite( render_state_to_set.depth_write_enable );
+		SetDepthComparisonFunction( render_state_to_set.depth_comparison_function );
+
+		if( render_state_to_set.stencil_test_enable )
+			EnableStencilTest();
+		else
+			DisableStencilTest();
+
+		SetStencilWriteMask( render_state_to_set.stencil_write_mask );
+		SetStencilComparisonFunction( render_state_to_set.stencil_comparison_function, render_state_to_set.stencil_ref, render_state_to_set.stencil_mask );
+		SetStencilTestResponses( render_state_to_set.stencil_test_response_stencil_fail, 
+								 render_state_to_set.stencil_test_response_stencil_pass_depth_fail, 
+								 render_state_to_set.stencil_test_response_both_pass );
 	}
 
 	void Renderer::RegisterShader( const Shader& shader )
