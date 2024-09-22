@@ -56,32 +56,46 @@ private:
 	Engine::Renderer renderer;
 
 	std::vector< Engine::Drawable > light_source_drawable_array;
+
+	const static constexpr int CUBE_COUNT = 10;
 	std::vector< Engine::Drawable > cube_drawable_array;
 	std::vector< Engine::Drawable > cube_drawable_outline_array;
+
 	Engine::Drawable ground_quad_drawable;
 	Engine::Drawable front_wall_quad_drawable;
 
+	const static constexpr int GRASS_QUAD_COUNT = 5;
+	std::array< Engine::Drawable, GRASS_QUAD_COUNT > grass_quad_drawable_array;
+
 /* Vertex Info.: */
-	Engine::Mesh cube_mesh, quad_mesh;
+	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only;
 
 /* Models: */
 	ModelInstance test_model_instance;
 
-/* Materials, Shaders & Textures: */
+/* Shaders: */
 	Engine::Shader phong_shader;
 	Engine::Shader basic_color_shader;
+	Engine::Shader basic_textured_shader;
 	Engine::Shader outline_shader;
 
+/* Materials: */
 	std::vector< Engine::Material > light_source_material_array;
+
 	std::vector< Engine::Material > cube_material_array;
+
 	Engine::Material ground_quad_material;
 	Engine::Material front_wall_quad_material;
 
+	Engine::Material grass_quad_material;
+
 	Engine::Material outline_material;
 
+/* Textures: */
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
-	Engine::Texture* checker_pattern;
+	Engine::Texture* checker_pattern_texture;
+	Engine::Texture* grass_texture;
 
 /* Scene: */
 	Engine::Transform camera_transform;
@@ -93,8 +107,11 @@ private:
 
 	/* GameObjects: */
 	std::vector< Engine::Transform > cube_transform_array;
+
 	Engine::Transform ground_quad_transform;
 	Engine::Transform front_wall_quad_transform;
+
+	std::array< Engine::Transform, GRASS_QUAD_COUNT > grass_quad_transform_array;
 
 /* Camera: */
 	Engine::Camera camera;
@@ -133,8 +150,6 @@ private:
 	Radians current_time_as_angle;
 
 /* Other: */
-	const static constexpr int CUBE_COUNT = 10;
-
 	const static constexpr std::array< Vector3, CUBE_COUNT > CUBE_POSITIONS =
 	{ {
 		{  0.0f,  0.0f,  0.0f	},

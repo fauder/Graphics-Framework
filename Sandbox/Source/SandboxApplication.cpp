@@ -39,6 +39,7 @@ SandboxApplication::SandboxApplication()
 	cube_drawable_outline_array( CUBE_COUNT ),
 	phong_shader( "Phong" ),
 	basic_color_shader( "Basic Color" ),
+	basic_textured_shader( "Basic Textured" ),
 	outline_shader( "Outline" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
@@ -78,14 +79,17 @@ void SandboxApplication::Initialize()
 	Engine::Texture::ImportSettings texture_import_settings;
 	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			texture_import_settings );
 	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", texture_import_settings );
+	grass_texture                  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Grass",					R"(Asset/Texture/grass.png)",				texture_import_settings );
 	
 	texture_import_settings.wrap_u = GL_REPEAT;
 	texture_import_settings.wrap_v = GL_REPEAT;
-	checker_pattern = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
+
+	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
 
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
+	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
 /* Initial transforms: */
@@ -105,12 +109,24 @@ void SandboxApplication::Initialize()
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 	}
 
+	grass_quad_transform_array[ 0 ].SetTranslation( Vector3( -1.5f,	5.0f, -0.48f ) );
+	grass_quad_transform_array[ 1 ].SetTranslation( Vector3(  1.5f,	5.0f,  0.51f ) );
+	grass_quad_transform_array[ 2 ].SetTranslation( Vector3(  0.0f,	5.0f,  0.7f  ) );
+	grass_quad_transform_array[ 3 ].SetTranslation( Vector3( -0.3f,	5.0f, -2.3f  ) );
+	grass_quad_transform_array[ 4 ].SetTranslation( Vector3(  0.5f,	5.0f, -0.6f  ) );
+
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
 							  "Cube",
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
+
+	quad_mesh_uvs_only = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
+									   "Quad (UVs Only)",
+									   { /* No normals. */ },
+									   std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
+									   { /* No indices. */ } );
 
 	quad_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
 							  "Quad",
@@ -186,6 +202,12 @@ void SandboxApplication::Initialize()
 
 	front_wall_quad_drawable = Engine::Drawable( &quad_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
+
+	for( auto i = 0; i < GRASS_QUAD_COUNT; i++ )
+	{
+		grass_quad_drawable_array[ i ] = Engine::Drawable( &quad_mesh_uvs_only, &grass_quad_material, &grass_quad_transform_array[ i ] );
+		renderer.AddDrawable( &grass_quad_drawable_array[ i ], Engine::Renderer::RenderGroupID( 0 ) );
+	}
 
 /* Models: */
 	if( auto config_file = std::ifstream( "config.ini" ) )
@@ -372,6 +394,7 @@ void SandboxApplication::RenderImGui()
 	{
 		Engine::ImGuiDrawer::Draw( phong_shader );
 		Engine::ImGuiDrawer::Draw( basic_color_shader );
+		Engine::ImGuiDrawer::Draw( basic_textured_shader );
 		Engine::ImGuiDrawer::Draw( outline_shader );
 	}
 
@@ -379,6 +402,7 @@ void SandboxApplication::RenderImGui()
 		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ] );
 	Engine::ImGuiDrawer::Draw( ground_quad_material );
 	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
+	Engine::ImGuiDrawer::Draw( grass_quad_material );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
 	for( auto& test_material : test_model_instance.Materials() )
@@ -592,18 +616,22 @@ void SandboxApplication::ResetMaterialData()
 	}
 
 	ground_quad_material = Engine::Material( "Ground", &phong_shader );
-	ground_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern );
-	ground_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern );
+	ground_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
+	ground_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& ground_quad_scale( ground_quad_transform.GetScaling() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_quad_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
 	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
-	front_wall_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern );
-	front_wall_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern );
+	front_wall_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
+	front_wall_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& front_wall_quad_scale( front_wall_quad_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
+
+	grass_quad_material = Engine::Material( "Grass Quad", &basic_textured_shader );
+	grass_quad_material.SetTexture( "uniform_texture_slot", grass_texture );
+	grass_quad_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	outline_material = Engine::Material( "Outline", &outline_shader );
 
@@ -669,7 +697,7 @@ void SandboxApplication::ReloadModel( const std::string& file_path )
 											 Quaternion(),
 											 Vector3::Up() * 8.0f,
 											 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
-											 /* Specular texture: */ checker_pattern,
+											 /* Specular texture: */ checker_pattern_texture,
 											 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f },
 											 {
 												{ Engine::Renderer::RenderGroupID( 1 ), nullptr },
