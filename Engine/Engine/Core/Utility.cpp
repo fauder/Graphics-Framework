@@ -78,6 +78,8 @@ namespace Engine
 
 				if( splitted.empty() )
 					splitted.push_back( source );
+				else if( start < source.size() ) // Add the last word.
+					splitted.push_back( { source.cbegin() + start, source.cend() } );
 
 				return splitted;
 			}
