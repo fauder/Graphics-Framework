@@ -61,6 +61,7 @@ namespace Engine
 			auto& shader_source = *vertex_shader_source;
 
 			PreProcessShaderStage_DefineDirectives( shader_source, feature_array );
+			vertex_source_include_path_array = PreprocessShaderStage_GetIncludeFilePaths( shader_source );
 			PreProcessShaderStage_IncludeDirectives( vertex_shader_source_file_path, shader_source, ShaderType::VERTEX );
 
 			if( !CompileShader( shader_source.c_str(), vertex_shader_id, ShaderType::VERTEX ) )
@@ -75,6 +76,7 @@ namespace Engine
 			auto& shader_source = *fragment_shader_source;
 
 			PreProcessShaderStage_DefineDirectives( shader_source, feature_array );
+			fragment_source_include_path_array = PreprocessShaderStage_GetIncludeFilePaths( shader_source );
 			PreProcessShaderStage_IncludeDirectives( fragment_shader_source_file_path, shader_source, ShaderType::FRAGMENT );
 
 			if( !CompileShader( shader_source.c_str(), fragment_shader_id, ShaderType::FRAGMENT ) )
@@ -191,19 +193,24 @@ namespace Engine
 		return std::nullopt;
 	}
 
-	std::vector< std::string > Shader::PreprocessShaderStage_GetIncludeFilePaths( const std::string& source ) const
+	std::vector< std::string > Shader::PreprocessShaderStage_GetIncludeFilePaths( std::string shader_source ) const
 	{
-		std::regex pattern( R"(#include\s*"\s*(\S+)\s*")" );
+		std::regex pattern( R"(#include\s+"\s*(\S+)\s*")" );
 		std::smatch matches;
-		std::regex_search( source, matches, pattern );
 
 		std::vector< std::string > includes;
-		
-		for( auto match_index = 1 /* First match is the pattern itself. */; match_index < matches.size(); match_index++ )
+
+		if( std::regex_search( shader_source, matches, pattern ) )
 		{
-			const auto& match = matches[ match_index ];
-			if( match.length() != 0 && match.matched )
-				includes.push_back( match );
+			do
+			{
+				const auto& match = matches[ 1 ]; /* First match is the pattern itself. */
+				if( match.length() != 0 && match.matched )
+					includes.push_back( match );
+
+				shader_source = matches.suffix();
+			}
+			while( std::regex_search( shader_source, matches, pattern ) );
 		}
 
 		return includes;

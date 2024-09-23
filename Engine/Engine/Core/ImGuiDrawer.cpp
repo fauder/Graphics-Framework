@@ -610,26 +610,39 @@ namespace Engine::ImGuiDrawer
 				ImGuiUtility::BeginGroupPanel();
 
 				ImGui::SeparatorText( "Source Files" );
-
-				if( ImGui::BeginTable( "Source Files", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+				auto DrawSourceFiles = [&]( const std::string& tree_node_name, const std::string& source_path, const std::vector< std::string >& include_paths )
 				{
-					ImGui::TableSetupColumn( "Type"	);
-					ImGui::TableSetupColumn( "Path" );
+					if( ImGui::TreeNodeEx( tree_node_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+					{
+						if( ImGui::BeginTable( "Source Files", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+						{
+							ImGui::TableSetupColumn( "Type" );
+							ImGui::TableSetupColumn( "Path" );
 
-					ImGui::TableHeadersRow();
-					ImGui::TableNextRow();
+							ImGui::TableHeadersRow();
+							ImGui::TableNextRow();
 
-					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+							ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( "Vertex" );
-						ImGui::TableNextColumn(); ImGui::Text( shader.VertexShaderSourcePath().c_str() );
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( "Fragment" );
-						ImGui::TableNextColumn(); ImGui::Text( shader.FragmentShaderSourcePath().c_str() );
+							ImGui::TableNextColumn(); ImGui::TextUnformatted( "Source" );
+							ImGui::TableNextColumn(); ImGui::Text( source_path.c_str() );
+							for( auto& include_path : include_paths )
+							{
+								ImGui::TableNextColumn(); ImGui::TextUnformatted( "Include" );
+								ImGui::TableNextColumn(); ImGui::Text( include_path.c_str() );
+							}
 
-					ImGui::PopStyleColor();
+							ImGui::PopStyleColor();
 
-					ImGui::EndTable();
-				}
+							ImGui::EndTable();
+						}
+
+						ImGui::TreePop();
+					}
+				};
+
+				DrawSourceFiles( "Vertex Shader##" + shader.Name(), shader.VertexShaderSourcePath(), shader.VertexShaderSourceIncludePaths() );
+				DrawSourceFiles( "Fragment Shader##" + shader.Name(), shader.FragmentShaderSourcePath(), shader.FragmentShaderSourceIncludePaths() );
 
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniforms" );
@@ -665,6 +678,7 @@ namespace Engine::ImGuiDrawer
 					ImGui::EndTable();
 				}
 
+				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniform Buffers" );
 
 				if( ImGui::BeginTable( "Uniform Buffers", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )

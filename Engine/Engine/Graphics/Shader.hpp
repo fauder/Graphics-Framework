@@ -71,6 +71,8 @@ namespace Engine
 		inline const std::string&	Name()						const { return name;				 }
 		inline const std::string&	VertexShaderSourcePath()	const { return vertex_source_path;	 }
 		inline const std::string&	FragmentShaderSourcePath()	const { return fragment_source_path; }
+		inline const std::vector< std::string >&	VertexShaderSourceIncludePaths()	const { return vertex_source_include_path_array;	}
+		inline const std::vector< std::string >&	FragmentShaderSourceIncludePaths()	const { return fragment_source_include_path_array;	}
 
 		inline const std::vector< std::string >& Features() const { return feature_array; }
 
@@ -280,9 +282,9 @@ namespace Engine
 
 /* Compilation & Linkage: */
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
-		std::vector< std::string > PreprocessShaderStage_GetIncludeFilePaths( const std::string& source ) const;
 		void PreProcessShaderStage_DefineDirectives( std::string& shader_source, const std::vector< std::string >& feature_array );
-		bool PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source, const ShaderType shader_type );
+		std::vector< std::string > PreprocessShaderStage_GetIncludeFilePaths( std::string shader_source ) const;
+		bool PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source_to_modify, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
 
@@ -322,6 +324,8 @@ namespace Engine
 		std::string fragment_source_path;
 
 		std::vector< std::string > feature_array;
+		std::vector< std::string > vertex_source_include_path_array;
+		std::vector< std::string > fragment_source_include_path_array;
 
 		std::unordered_map< std::string, Uniform::Information > uniform_info_map;
 
