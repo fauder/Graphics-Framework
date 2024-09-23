@@ -65,11 +65,35 @@ namespace Engine
 			Invert        = GL_INVERT
 		};
 
+		enum class BlendingFactor
+		{
+			Zero                       = GL_ZERO,
+			One                        = GL_ONE,
+			SourceColor                = GL_SRC_COLOR,
+			OneMinusSourceColor        = GL_ONE_MINUS_SRC_COLOR,
+			SourceAlpha                = GL_SRC_ALPHA,
+			OneMinusSourceAlpha        = GL_ONE_MINUS_SRC_ALPHA,
+			DestinationAlpha           = GL_DST_ALPHA,
+			OneMinusDestinationAlpha   = GL_ONE_MINUS_DST_ALPHA,
+			DestinationColor           = GL_DST_COLOR,
+			OneMinusDestinationColor   = GL_ONE_MINUS_DST_COLOR,
+			SourceAlphaSaturate        = GL_SRC_ALPHA_SATURATE
+		};
+
+		enum class BlendingFunction
+		{
+			Add             = GL_FUNC_ADD,
+			ReverseSubtract = GL_FUNC_REVERSE_SUBTRACT,
+			Subtract        = GL_FUNC_SUBTRACT,
+			Minimum         = GL_MIN,
+			Maximum         = GL_MAX
+		};
+
 		enum class SortingMode
 		{
 			None,
 			DepthNearestToFarthest,
-			DepthFurthestToNearest
+			DepthFarthestToNearest
 		};
 
 		struct RenderState
@@ -91,6 +115,16 @@ namespace Engine
 			StencilTestResponse stencil_test_response_stencil_fail            = StencilTestResponse::Keep;
 			StencilTestResponse stencil_test_response_stencil_pass_depth_fail = StencilTestResponse::Keep;
 			StencilTestResponse stencil_test_response_both_pass               = StencilTestResponse::Keep;
+
+		/* Blending: */
+			bool blending_enable = false;
+
+			BlendingFactor blending_source_color_factor      = BlendingFactor::One;
+			BlendingFactor blending_destination_color_factor = BlendingFactor::Zero;
+			BlendingFactor blending_source_alpha_factor      = BlendingFactor::One;
+			BlendingFactor blending_destination_alpha_factor = BlendingFactor::Zero;
+
+			BlendingFunction blending_function = BlendingFunction::Add;
 
 		/* Other: */
 			SortingMode sorting_mode = SortingMode::None;
@@ -217,6 +251,16 @@ namespace Engine
 		void DisableDepthTest();
 		void ToggleDepthWrite( const bool enable );
 		void SetDepthComparisonFunction( const ComparisonFunction comparison_function );
+
+		/*
+		 * Blending:
+		 */
+
+		void EnableBlending();
+		void DisableBlending();
+		void SetBlendingFactors( const BlendingFactor source_color_factor, const BlendingFactor destination_color_factor,
+								 const BlendingFactor source_alpha_factor, const BlendingFactor destination_alpha_factor );
+		void SetBlendingFunction( const BlendingFunction function );
 
 		/*
 		 * Other:

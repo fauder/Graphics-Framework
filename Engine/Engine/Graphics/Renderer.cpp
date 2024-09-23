@@ -134,14 +134,17 @@ namespace Engine
 		ImGuiDrawer::Draw( uniform_buffer_management_intrinsic, "Shader Intrinsics" );
 		ImGuiDrawer::Draw( uniform_buffer_management_global, "Shader Globals" );
 
+		// TODO: Implement drag & drop reordering of RenderGroups.
+
 		if( ImGui::Begin( ICON_FA_DRAW_POLYGON " Drawables", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			for( auto& [ render_group_id, render_group ] : render_group_map )
 			{
 				ImGui::Checkbox( ( "##" + render_group.name ).c_str(), &render_group.is_enabled );
 				ImGui::SameLine();
-				if( ImGui::TreeNodeEx( render_group.name.c_str(), ImGuiTreeNodeFlags_DefaultOpen, "Render Group [%d]: %s", render_group_id, render_group.name.c_str() ) )
+				if( ImGui::TreeNodeEx( render_group.name.c_str(), 0, "Render Group [%d]: %s", render_group_id, render_group.name.c_str() ) )
 				{
+					// TODO: Display RenderState info as a collapseable header.
 					ImGui::BeginDisabled( not render_group.is_enabled );
 
 					for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
@@ -374,6 +377,27 @@ namespace Engine
 		glDepthFunc( ( GLenum )comparison_function );
 	}
 
+	void Renderer::EnableBlending()
+	{
+		glEnable( GL_BLEND );
+	}
+
+	void Renderer::DisableBlending()
+	{
+		glDisable( GL_BLEND );
+	}
+
+	void Renderer::SetBlendingFactors( const BlendingFactor source_color_factor, const BlendingFactor destination_color_factor,
+									   const BlendingFactor source_alpha_factor, const BlendingFactor destination_alpha_factor )
+	{
+		glBlendFuncSeparate( ( GLenum )source_color_factor, ( GLenum )destination_color_factor, ( GLenum )source_alpha_factor, ( GLenum )destination_alpha_factor );
+	}
+
+	void Renderer::SetBlendingFunction( const BlendingFunction function )
+	{
+		glBlendEquation( ( GLenum )function );
+	}
+
 	void Renderer::SetPolygonMode( const PolygonMode mode )
 	{
 		glPolygonMode( GL_FRONT_AND_BACK, ( GLenum )mode );
@@ -435,6 +459,15 @@ namespace Engine
 		SetStencilTestResponses( render_state_to_set.stencil_test_response_stencil_fail, 
 								 render_state_to_set.stencil_test_response_stencil_pass_depth_fail, 
 								 render_state_to_set.stencil_test_response_both_pass );
+
+		if( render_state_to_set.blending_enable )
+			EnableBlending();
+		else
+			DisableBlending();
+
+		SetBlendingFactors( render_state_to_set.blending_source_color_factor, render_state_to_set.blending_destination_color_factor,
+							render_state_to_set.blending_source_alpha_factor, render_state_to_set.blending_destination_alpha_factor );
+		SetBlendingFunction( render_state_to_set.blending_function );
 	}
 
 	void Renderer::SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode )
@@ -448,14 +481,16 @@ namespace Engine
 								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) <
 										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
 							} );
+				break;
 
-			case SortingMode::DepthFurthestToNearest:
+			case SortingMode::DepthFarthestToNearest:
 				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
 						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
 							{
 								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) >
 										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
 							} );
+				break;
 
 			default:
 			case SortingMode::None:

@@ -40,6 +40,7 @@ SandboxApplication::SandboxApplication()
 	phong_shader( "Phong" ),
 	basic_color_shader( "Basic Color" ),
 	basic_textured_shader( "Basic Textured" ),
+	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
 	outline_shader( "Outline" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
@@ -77,9 +78,10 @@ void SandboxApplication::Initialize()
 
 /* Textures: */
 	Engine::Texture::ImportSettings texture_import_settings;
-	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",			texture_import_settings );
-	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)", texture_import_settings );
-	grass_texture                  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Grass",					R"(Asset/Texture/grass.png)",				texture_import_settings );
+	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",					texture_import_settings );
+	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)",			texture_import_settings );
+	grass_texture                  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Grass",					R"(Asset/Texture/grass.png)",						texture_import_settings );
+	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)",	texture_import_settings );
 	
 	texture_import_settings.wrap_u = GL_REPEAT;
 	texture_import_settings.wrap_v = GL_REPEAT;
@@ -89,7 +91,8 @@ void SandboxApplication::Initialize()
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
-	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
+	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
+	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
 
 /* Initial transforms: */
@@ -109,11 +112,17 @@ void SandboxApplication::Initialize()
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 	}
 
-	grass_quad_transform_array[ 0 ].SetTranslation( Vector3( -1.5f,	5.0f, -0.48f ) );
-	grass_quad_transform_array[ 1 ].SetTranslation( Vector3(  1.5f,	5.0f,  0.51f ) );
-	grass_quad_transform_array[ 2 ].SetTranslation( Vector3(  0.0f,	5.0f,  0.7f  ) );
-	grass_quad_transform_array[ 3 ].SetTranslation( Vector3( -0.3f,	5.0f, -2.3f  ) );
-	grass_quad_transform_array[ 4 ].SetTranslation( Vector3(  0.5f,	5.0f, -0.6f  ) );
+	grass_quad_transform_array[ 0 ].SetTranslation( Vector3( -1.5f,	5.0f, -0.48f + 0.01f ) ); // + 0.01f to keep the grass behind the window.
+	grass_quad_transform_array[ 1 ].SetTranslation( Vector3(  1.5f,	5.0f,  0.51f + 0.01f ) ); // + 0.01f to keep the grass behind the window.
+	grass_quad_transform_array[ 2 ].SetTranslation( Vector3(  0.0f,	5.0f,  0.7f  + 0.01f ) ); // + 0.01f to keep the grass behind the window.
+	grass_quad_transform_array[ 3 ].SetTranslation( Vector3( -0.3f,	5.0f, -2.3f  + 0.01f ) ); // + 0.01f to keep the grass behind the window.
+	grass_quad_transform_array[ 4 ].SetTranslation( Vector3(  0.5f,	5.0f, -0.6f  + 0.01f ) ); // + 0.01f to keep the grass behind the window.
+
+	window_transform_array[ 0 ].SetTranslation( Vector3( -1.5f,	5.0f, -0.48f ) );
+	window_transform_array[ 1 ].SetTranslation( Vector3(  1.5f,	5.0f,  0.51f ) );
+	window_transform_array[ 2 ].SetTranslation( Vector3(  0.0f,	5.0f,  0.7f  ) );
+	window_transform_array[ 3 ].SetTranslation( Vector3( -0.3f,	5.0f, -2.3f  ) );
+	window_transform_array[ 4 ].SetTranslation( Vector3(  0.5f,	5.0f, -0.6f  ) );
 
 /* Vertex/Index Data: */
 	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
@@ -148,13 +157,15 @@ void SandboxApplication::Initialize()
 	ResetMaterialData();
 
 /* Renderer (Drawables, RenderStates etc.): */
-	renderer.SetRenderGroupName( 0, "Default" );
-	auto& render_state_regular_meshes = renderer.GetRenderState( 0 ); // Keep default settings.
+	{
+		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 0 ), "Default" );
+		auto& render_state_regular_meshes = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 0 ) ); // Keep default settings.
+	}
 	
 	{
 		/* This pass draws the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is drawn at. */
-		renderer.SetRenderGroupName( 1, "Outlined Meshes" );
-		auto& render_state_outline_meshes = renderer.GetRenderState( 1 );
+		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 1 ), "Outlined Meshes" );
+		auto& render_state_outline_meshes = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 1 ) );
 
 		/* Omitted settings are left to defaults. */
 
@@ -169,8 +180,8 @@ void SandboxApplication::Initialize()
 
 	{
 		/* This pass draws the outlines only; It does this by rendering the mesh at everywhere the stencil buffer is NOT 1. */
-		renderer.SetRenderGroupName( 2, "Outlines" );
-		auto& render_state_outlines = renderer.GetRenderState( 2 );
+		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 2 ), "Outlines" );
+		auto& render_state_outlines = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 2 ) );
 
 		/* Omitted settings are left to defaults. */
 
@@ -180,6 +191,23 @@ void SandboxApplication::Initialize()
 		render_state_outlines.stencil_write_mask          = 0x00; // Disable writes; This pass only needs to READ the stencil buffer, to figure out where NOT to render.
 		render_state_outlines.stencil_comparison_function = Engine::Renderer::ComparisonFunction::NotEqual; // Render everywhere that's not the actual mesh, i.e., the border.
 		render_state_outlines.stencil_ref                 = 0x01;
+	}
+
+	{
+		/* This pass draws the transparent meshes. */
+		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 3 ), "Transparent Meshes" );
+		auto& render_state_transparent = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 3 ) );
+
+		/* Omitted settings are left to defaults. */
+
+		render_state_transparent.blending_enable = true;
+
+		render_state_transparent.blending_source_color_factor      = Engine::Renderer::BlendingFactor::SourceAlpha;
+		render_state_transparent.blending_destination_color_factor = Engine::Renderer::BlendingFactor::OneMinusSourceAlpha;
+		render_state_transparent.blending_source_alpha_factor      = Engine::Renderer::BlendingFactor::SourceAlpha;
+		render_state_transparent.blending_destination_alpha_factor = Engine::Renderer::BlendingFactor::OneMinusSourceAlpha;
+
+		render_state_transparent.sorting_mode = Engine::Renderer::SortingMode::DepthFarthestToNearest;
 	}
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -203,10 +231,16 @@ void SandboxApplication::Initialize()
 	front_wall_quad_drawable = Engine::Drawable( &quad_mesh, &front_wall_quad_material, &front_wall_quad_transform );
 	renderer.AddDrawable( &front_wall_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
 
-	for( auto i = 0; i < GRASS_QUAD_COUNT; i++ )
+	/*for( auto i = 0; i < GRASS_COUNT; i++ )
 	{
 		grass_quad_drawable_array[ i ] = Engine::Drawable( &quad_mesh_uvs_only, &grass_quad_material, &grass_quad_transform_array[ i ] );
 		renderer.AddDrawable( &grass_quad_drawable_array[ i ], Engine::Renderer::RenderGroupID( 0 ) );
+	}*/
+
+	for( auto i = 0; i < WINDOW_COUNT; i++ )
+	{
+		window_drawable_array[ i ] = Engine::Drawable( &quad_mesh_uvs_only, &window_material, &window_transform_array[ i ] );
+		renderer.AddDrawable( &window_drawable_array[ i ], Engine::Renderer::RenderGroupID( 3 ) );
 	}
 
 /* Models: */
@@ -395,6 +429,7 @@ void SandboxApplication::RenderImGui()
 		Engine::ImGuiDrawer::Draw( phong_shader );
 		Engine::ImGuiDrawer::Draw( basic_color_shader );
 		Engine::ImGuiDrawer::Draw( basic_textured_shader );
+		Engine::ImGuiDrawer::Draw( basic_textured_transparent_discard_shader );
 		Engine::ImGuiDrawer::Draw( outline_shader );
 	}
 
@@ -403,6 +438,7 @@ void SandboxApplication::RenderImGui()
 	Engine::ImGuiDrawer::Draw( ground_quad_material );
 	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
 	Engine::ImGuiDrawer::Draw( grass_quad_material );
+	Engine::ImGuiDrawer::Draw( window_material );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material );
 	for( auto& test_material : test_model_instance.Materials() )
@@ -629,9 +665,13 @@ void SandboxApplication::ResetMaterialData()
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 
-	grass_quad_material = Engine::Material( "Grass Quad", &basic_textured_shader );
+	grass_quad_material = Engine::Material( "Grass Quad", &basic_textured_transparent_discard_shader );
 	grass_quad_material.SetTexture( "uniform_texture_slot", grass_texture );
 	grass_quad_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+
+	window_material = Engine::Material( "Transparent Window", &basic_textured_shader );
+	window_material.SetTexture( "uniform_texture_slot", transparent_window_texture );
+	window_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	outline_material = Engine::Material( "Outline", &outline_shader );
 

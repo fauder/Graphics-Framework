@@ -64,8 +64,11 @@ private:
 	Engine::Drawable ground_quad_drawable;
 	Engine::Drawable front_wall_quad_drawable;
 
-	const static constexpr int GRASS_QUAD_COUNT = 5;
-	std::array< Engine::Drawable, GRASS_QUAD_COUNT > grass_quad_drawable_array;
+	const static constexpr int GRASS_COUNT = 5;
+	std::array< Engine::Drawable, GRASS_COUNT > grass_quad_drawable_array;
+
+	const static constexpr int WINDOW_COUNT = 5;
+	std::array< Engine::Drawable, WINDOW_COUNT > window_drawable_array;
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only;
@@ -77,6 +80,7 @@ private:
 	Engine::Shader phong_shader;
 	Engine::Shader basic_color_shader;
 	Engine::Shader basic_textured_shader;
+	Engine::Shader basic_textured_transparent_discard_shader;
 	Engine::Shader outline_shader;
 
 /* Materials: */
@@ -89,6 +93,8 @@ private:
 
 	Engine::Material grass_quad_material;
 
+	Engine::Material window_material;
+
 	Engine::Material outline_material;
 
 /* Textures: */
@@ -96,6 +102,7 @@ private:
 	Engine::Texture* container_texture_specular_map;
 	Engine::Texture* checker_pattern_texture;
 	Engine::Texture* grass_texture;
+	Engine::Texture* transparent_window_texture;
 
 /* Scene: */
 	Engine::Transform camera_transform;
@@ -111,7 +118,8 @@ private:
 	Engine::Transform ground_quad_transform;
 	Engine::Transform front_wall_quad_transform;
 
-	std::array< Engine::Transform, GRASS_QUAD_COUNT > grass_quad_transform_array;
+	std::array< Engine::Transform, GRASS_COUNT > grass_quad_transform_array;
+	std::array< Engine::Transform, WINDOW_COUNT > window_transform_array;
 
 /* Camera: */
 	Engine::Camera camera;
