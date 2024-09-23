@@ -398,6 +398,32 @@ namespace Engine
 		glBlendEquation( ( GLenum )function );
 	}
 
+	void Renderer::EnableFaceCulling()
+	{
+		glEnable( GL_CULL_FACE );
+	}
+
+	void Renderer::EnableFaceCulling( const Face face_to_cull )
+	{
+		EnableFaceCulling();
+		SetCullFace( face_to_cull );
+	}
+
+	void Renderer::DisableFaceCulling()
+	{
+		glDisable( GL_CULL_FACE );
+	}
+
+	void Renderer::SetCullFace( const Face face )
+	{
+		glCullFace( ( GLenum )face );
+	}
+
+	void Renderer::SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces )
+	{
+		glFrontFace( ( GLenum )winding_order_of_front_faces );
+	}
+
 	void Renderer::SetPolygonMode( const PolygonMode mode )
 	{
 		glPolygonMode( GL_FRONT_AND_BACK, ( GLenum )mode );

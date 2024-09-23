@@ -96,6 +96,19 @@ namespace Engine
 			DepthFarthestToNearest
 		};
 
+		enum class Face
+		{
+			Front        = GL_FRONT,
+			Back         = GL_BACK,
+			FrontAndBack = GL_FRONT_AND_BACK
+		};
+
+		enum class WindingOrder
+		{
+			Clockwise        = GL_CW,
+			CounterClockwise = GL_CCW
+		};
+
 		struct RenderState
 		{
 		/* Depth: */
@@ -261,6 +274,16 @@ namespace Engine
 		void SetBlendingFactors( const BlendingFactor source_color_factor, const BlendingFactor destination_color_factor,
 								 const BlendingFactor source_alpha_factor, const BlendingFactor destination_alpha_factor );
 		void SetBlendingFunction( const BlendingFunction function );
+
+		/*
+		 * Face Culling:
+		 */
+
+		void EnableFaceCulling();
+		void EnableFaceCulling( const Face face_to_cull );
+		void DisableFaceCulling();
+		void SetCullFace( const Face face );
+		void SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces );
 
 		/*
 		 * Other:

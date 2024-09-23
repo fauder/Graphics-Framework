@@ -260,6 +260,9 @@ void SandboxApplication::Initialize()
 /* Other: */
 	ResetCamera();
 
+	renderer.SetFrontFaceConvention( Engine::Renderer::WindingOrder::CounterClockwise );
+	renderer.EnableFaceCulling( Engine::Renderer::Face::Back );
+
 	Platform::MaximizeWindow();
 }
 
