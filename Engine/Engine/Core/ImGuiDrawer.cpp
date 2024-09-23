@@ -745,22 +745,41 @@ namespace Engine::ImGuiDrawer
 
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Features" );
+				
+				if( const auto& features = shader.Features();
+					features.empty() )
 				{
-					ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
-
-					if( const auto& features = shader.Features();
-						features.empty() )
-						ImGui::TextUnformatted( "(N/A)" );
-					else
+					ImGui::TextDisabled( "(None)" );
+				}
+				else
+				{
+					if( ImGui::BeginTable( "Feature", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 					{
-						for( const auto& feature : shader.Features() )
-						{
-							ImGui::Bullet(); ImGui::SameLine();
-							ImGui::TextUnformatted( feature.c_str() );
-						}
-					}
+						ImGui::TableSetupColumn( "Name" );
+						ImGui::TableSetupColumn( "Is Set" );
+						ImGui::TableSetupColumn( "Value" );
 
-					ImGui::PopStyleColor();
+						ImGui::TableHeadersRow();
+						ImGui::TableNextRow();
+						
+						ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
+
+						for( const auto& [ feature_name, feature ] : shader.Features() )
+						{
+							ImGui::TableNextColumn();
+							ImGui::TextUnformatted( feature_name.c_str() );
+							ImGui::TableNextColumn();
+							bool is_set = feature.is_set;
+							ImGui::Checkbox( ( "##" + feature_name ).c_str(), &is_set );
+							ImGui::TableNextColumn();
+							if( feature.value )
+								ImGui::TextUnformatted( feature.value->c_str() );
+						}
+
+						ImGui::PopStyleColor();
+
+						ImGui::EndTable();
+					}
 				}
 
 				ImGuiUtility::EndGroupPanel();
