@@ -29,14 +29,13 @@ namespace Engine
 	{
 	}
 
-	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array )
+	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& features_to_set )
 		:
 		name( name ),
 		vertex_source_path( vertex_shader_source_file_path ),
-		fragment_source_path( fragment_shader_source_file_path ),
-		feature_array( feature_array )
+		fragment_source_path( fragment_shader_source_file_path )
 	{
-		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path );
+		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path, features_to_set );
 	}
 
 	Shader::~Shader()
@@ -44,40 +43,45 @@ namespace Engine
 		glDeleteProgram( program_id );
 	}
 
-	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array )
+	bool Shader::FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& features_to_set )
 	{
 		this->vertex_source_path   = vertex_shader_source_file_path;
 		this->fragment_source_path = fragment_shader_source_file_path ;
-		this->feature_array        = feature_array;
 
 		unsigned int vertex_shader_id = 0, fragment_shader_id = 0;
 
 		std::optional< std::string > vertex_shader_source;
 		std::optional< std::string > fragment_shader_source;
+		std::unordered_map< std::string, Feature > vertex_shader_features;
+		std::unordered_map< std::string, Feature > fragment_shader_features;
 		
-		if( vertex_shader_source = ParseShaderFromFile( vertex_shader_source_file_path, ShaderType::VERTEX ); 
+		if( vertex_shader_source = ParseShaderFromFile( vertex_shader_source_file_path, ShaderType::VERTEX );
 			vertex_shader_source )
 		{
 			auto& shader_source = *vertex_shader_source;
 
-			PreProcessShaderStage_DefineDirectives( shader_source, feature_array );
 			vertex_source_include_path_array = PreprocessShaderStage_GetIncludeFilePaths( shader_source );
 			PreProcessShaderStage_IncludeDirectives( vertex_shader_source_file_path, shader_source, ShaderType::VERTEX );
+			vertex_shader_features = PreProcessShaderStage_ParseFeatures( shader_source );
+			PreProcessShaderStage_SetFeatures( shader_source, vertex_shader_features, features_to_set );
 
 			if( !CompileShader( shader_source.c_str(), vertex_shader_id, ShaderType::VERTEX ) )
 				return false;
 		}
 		else
 			return false;
+
+		feature_map.insert( vertex_shader_features.begin(), vertex_shader_features.end() );
 		
-		if( fragment_shader_source = ParseShaderFromFile( fragment_shader_source_file_path, ShaderType::FRAGMENT ); 
+		if( fragment_shader_source = ParseShaderFromFile( fragment_shader_source_file_path, ShaderType::FRAGMENT );
 			fragment_shader_source )
 		{
 			auto& shader_source = *fragment_shader_source;
 
-			PreProcessShaderStage_DefineDirectives( shader_source, feature_array );
 			fragment_source_include_path_array = PreprocessShaderStage_GetIncludeFilePaths( shader_source );
 			PreProcessShaderStage_IncludeDirectives( fragment_shader_source_file_path, shader_source, ShaderType::FRAGMENT );
+			fragment_shader_features = PreProcessShaderStage_ParseFeatures( shader_source );
+			PreProcessShaderStage_SetFeatures( shader_source, fragment_shader_features, features_to_set );
 
 			if( !CompileShader( shader_source.c_str(), fragment_shader_id, ShaderType::FRAGMENT ) )
 				return false;
@@ -87,6 +91,8 @@ namespace Engine
 			glDeleteShader( vertex_shader_id );
 			return false;
 		}
+
+		feature_map.insert( fragment_shader_features.begin(), fragment_shader_features.end() );
 
 		const bool link_result = LinkProgram( vertex_shader_id, fragment_shader_id );
 
@@ -105,8 +111,8 @@ namespace Engine
 
 			QueryUniformData();
 
-			ParseShaderSource_UniformUsageHints( *vertex_shader_source,		ShaderType::VERTEX		);
-			ParseShaderSource_UniformUsageHints( *fragment_shader_source,	ShaderType::FRAGMENT	);
+			ParseShaderSource_UniformUsageHints( *vertex_shader_source,	  ShaderType::VERTEX   );
+			ParseShaderSource_UniformUsageHints( *fragment_shader_source, ShaderType::FRAGMENT );
 
 			QueryUniformData_BlockIndexAndOffsetForBufferMembers();
 			QueryUniformBufferData( uniform_buffer_info_map_regular, Uniform::BufferCategory::Regular );
@@ -216,25 +222,124 @@ namespace Engine
 		return includes;
 	}
 
-	void Shader::PreProcessShaderStage_DefineDirectives( std::string& shader_source, const std::vector< std::string >& feature_array )
+	void Shader::PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::vector< std::string >& features_to_set )
 	{
-		auto first_new_line = shader_source.find( "\n" );
+		std::regex pattern( R"(#define\s+([_[:alnum:]]+)\s*(\S+)?\s*?\r?\n)" ); // ([_[:alnum:]]+) is to FAIL the Regex for non al-num & non-underscore character, to exclude macros mostly.
+		std::smatch matches;
 
-		std::string define_directives_combined;
-		for( const auto& define_directive : feature_array )
-			define_directives_combined += "#define " + define_directive + "\n";
+		std::string shader_source_copy( shader_source_to_modify );
 
-		shader_source = shader_source.substr( 0, first_new_line + 1 ) + define_directives_combined + shader_source.substr( first_new_line + 1 );
+		while( std::regex_search( shader_source_copy, matches, pattern ) )
+		{
+			if( std::find_if( features_to_set.cbegin(), features_to_set.cend(), [ & ]( const std::string& feature ) { return feature.find( matches[ 1 ] ) != std::string::npos; } ) != features_to_set.cend() )
+				shader_source_to_modify = std::string( matches.prefix() ) + std::string( matches.suffix() );
+
+			shader_source_copy = matches.suffix();
+		}
 	}
 
-	bool Shader::PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source, const ShaderType shader_type )
+	std::unordered_map< std::string, Shader::Feature > Shader::PreProcessShaderStage_ParseFeatures( std::string shader_source )
+	{
+		std::unordered_map< std::string, Feature > features;
+
+		/* Parse declarations via "#pragma feature <feature_name>" syntax: */
+		{
+			std::regex pattern( R"(#pragma\s+feature\s*(\S+))" );
+			std::smatch matches;
+
+			if( std::regex_search( shader_source, matches, pattern ) )
+			{
+
+				do
+				{
+					const auto& match_feature_name = matches[ 1 ]; /* First match is the pattern itself. */
+					if( match_feature_name.length() != 0 && match_feature_name.matched )
+						features.try_emplace( match_feature_name, false, std::nullopt );
+
+					shader_source = matches.suffix();
+				}
+				while( std::regex_search( shader_source, matches, pattern ) );
+			}
+		}
+
+		/* Parse definitions via "#define <feature_name> <optional_value>" syntax: */
+		{
+			std::regex pattern( R"(#define\s+([_[:alnum:]]+)\s*(\S+)?\s*\r?\n)" ); // ([_[:alnum:]]+) is to FAIL the Regex for non al-num & non-underscore character, to exclude macros mostly.
+			std::smatch matches;
+
+			if( std::regex_search( shader_source, matches, pattern ) )
+			{
+				do
+				{
+					const auto& match_feature_name = matches[ 1 ]; /* First match is the pattern itself. */
+					if( match_feature_name.length() != 0 && match_feature_name.matched )
+					{
+						if( matches.size() > 2 && matches[ 2 ].length() != 0 && matches[ 2 ].matched )
+						{
+							const auto& match_feature_value = matches[ 2 ];
+							features.try_emplace( match_feature_name, true, match_feature_value );
+						}
+						else
+							features.try_emplace( match_feature_name, true, std::nullopt );
+					}
+
+					shader_source = matches.suffix();
+				}
+				while( std::regex_search( shader_source, matches, pattern ) );
+			}
+		}
+
+		return features;
+	}
+
+	void Shader::PreProcessShaderStage_SetFeatures( std::string& shader_source_to_modify,
+													std::unordered_map< std::string, Feature >& defined_features,
+													const std::vector< std::string >& features_to_set )
+	{
+		const auto first_new_line = shader_source_to_modify.find( "\n" );
+
+		/* Remove all #defines THAT ARE SET by the client code from the shader, so that we can add the modified versions all in one go later.
+		 * This saves us from the work of finding/replacing lines of #defines individually.
+		 * We also do not remove the #define lines of macros & Features that are NOT SET by the client code. */
+		PreprocessShaderStage_StripDefinesToBeSet( shader_source_to_modify, features_to_set );
+
+		std::string define_directives_combined;
+		for( const auto& feature_definition : features_to_set )
+		{
+			auto splitted( Utility::String::Split( feature_definition, ' ' ) );
+			const std::string feature_name( std::move( splitted.front() ) );
+
+			if( auto iterator = defined_features.find( feature_name );
+				iterator != defined_features.cend() )
+			{
+				auto& defined_feature = iterator->second;
+
+				defined_feature.is_set = true;
+
+				if( splitted.size() > 1 )
+				{
+					const std::string feature_value( std::move( splitted[ 1 ] ) );
+					defined_feature.value  = feature_value;
+
+					define_directives_combined += "#define " + feature_name + " " + feature_value + "\n";
+				}
+				else
+					define_directives_combined += "#define " + feature_name + "\n";
+			}
+		}
+
+		if( not define_directives_combined.empty() )
+			shader_source_to_modify = shader_source_to_modify.substr( 0, first_new_line + 1 ) + define_directives_combined + shader_source_to_modify.substr( first_new_line + 1 );
+	}
+
+	bool Shader::PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source_to_modify, const ShaderType shader_type )
 	{
 		static char error_string[ 256 ];
 
 		const std::string shader_file_name( shader_source_path.filename().string() );
 		const std::filesystem::path directory_path( shader_source_path.parent_path() );
 
-		std::unique_ptr< char* > preprocessed_source = std::make_unique< char* >( stb_include_string( shader_source.data(),
+		std::unique_ptr< char* > preprocessed_source = std::make_unique< char* >( stb_include_string( shader_source_to_modify.data(),
 																									  nullptr,
 																									  const_cast< char* >( directory_path.string().c_str() ),
 																									  const_cast< char* >( shader_file_name.c_str() ),
@@ -247,7 +352,7 @@ namespace Engine
 			return false;
 		}
 
-		shader_source = *preprocessed_source;
+		shader_source_to_modify = *preprocessed_source;
 		return true;
 	}
 

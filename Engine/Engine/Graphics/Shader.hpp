@@ -55,26 +55,37 @@ namespace Engine
 	public:
 		using ID = unsigned int;
 
+		/* Features can be:
+		 *		Declared in shaders, via "#pragma feature <feature_name>" syntax. 
+					These types of Features need to be set from the client side to be defined by the Shader class before compilation (i.e., source is modified to #define the Feature).
+		 *		Defined in shaders directly, via "#define <feature_name> <optional_value>" syntax.
+		 */
+		struct Feature
+		{
+			bool is_set; // This means that the feature was either directly #define'd or is set by client code & will effectively be #define'd in the final shader source.
+			std::optional< std::string > value;
+		};
+
 	public:
 		/* Will be initialized later with FromFile(). */
 		Shader( const char* name );
-		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array = {} );
+		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& features_to_set = {} );
 		~Shader();
 
-		bool FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& feature_array = {} );
+		bool FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& features_to_set = {} );
 
 		void Bind() const;
 
 /* Queries: */
 
-		inline		 ID				Id()						const { return program_id;			 }
-		inline const std::string&	Name()						const { return name;				 }
-		inline const std::string&	VertexShaderSourcePath()	const { return vertex_source_path;	 }
-		inline const std::string&	FragmentShaderSourcePath()	const { return fragment_source_path; }
+		inline		 ID								Id()								const { return program_id;							}
+		inline const std::string&					Name()								const { return name;								}
+		inline const std::string&					VertexShaderSourcePath()			const { return vertex_source_path;					}
+		inline const std::string&					FragmentShaderSourcePath()			const { return fragment_source_path;				}
 		inline const std::vector< std::string >&	VertexShaderSourceIncludePaths()	const { return vertex_source_include_path_array;	}
 		inline const std::vector< std::string >&	FragmentShaderSourceIncludePaths()	const { return fragment_source_include_path_array;	}
 
-		inline const std::vector< std::string >& Features() const { return feature_array; }
+		inline const std::unordered_map< std::string, Feature >& Features() const { return feature_map; }
 
 /* Uniform APIs: */
 		inline const std::unordered_map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
@@ -282,8 +293,12 @@ namespace Engine
 
 /* Compilation & Linkage: */
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
-		void PreProcessShaderStage_DefineDirectives( std::string& shader_source, const std::vector< std::string >& feature_array );
 		std::vector< std::string > PreprocessShaderStage_GetIncludeFilePaths( std::string shader_source ) const;
+		void PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::vector< std::string >& features_to_set );
+		std::unordered_map< std::string, Feature > PreProcessShaderStage_ParseFeatures( std::string shader_source );
+		void PreProcessShaderStage_SetFeatures( std::string& shader_source_to_modify,
+												std::unordered_map< std::string, Feature >& defined_features, 
+												const std::vector< std::string >& features_to_set );
 		bool PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source_to_modify, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
@@ -323,9 +338,10 @@ namespace Engine
 		std::string vertex_source_path;
 		std::string fragment_source_path;
 
-		std::vector< std::string > feature_array;
 		std::vector< std::string > vertex_source_include_path_array;
 		std::vector< std::string > fragment_source_include_path_array;
+
+		std::unordered_map< std::string, Feature > feature_map;
 
 		std::unordered_map< std::string, Uniform::Information > uniform_info_map;
 
