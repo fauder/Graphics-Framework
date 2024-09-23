@@ -25,6 +25,10 @@ namespace Engine
 
 		~Drawable();
 
+		const Transform*	GetTransform()	const { return transform;	}
+		const Mesh*			GetMesh()		const { return mesh;		}
+		const Material*		GetMaterial()	const { return material;	}
+
 		void SetMesh( const Mesh* mesh );
 		void SetMaterial( Material* material );
 

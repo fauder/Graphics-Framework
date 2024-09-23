@@ -24,6 +24,8 @@ namespace Engine
 		inline float GetNearPlaneOffset() const { return plane_near; }
 		inline float GetFarPlaneOffset()  const { return plane_far; }
 
+		const Vector3& Position() const { return transform->GetTranslation(); }
+
 		Vector3 Right();
 		Vector3 Up();
 		Vector3 Forward();

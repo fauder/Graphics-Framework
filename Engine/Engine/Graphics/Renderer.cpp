@@ -93,6 +93,8 @@ namespace Engine
 			{
 				SetRenderState( render_group.render_state );
 
+				SortDrawablesInGroup( camera, render_group.drawable_list, render_group.render_state.sorting_mode );
+
 				for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
 				{
 					shader->Bind();
@@ -433,6 +435,32 @@ namespace Engine
 		SetStencilTestResponses( render_state_to_set.stencil_test_response_stencil_fail, 
 								 render_state_to_set.stencil_test_response_stencil_pass_depth_fail, 
 								 render_state_to_set.stencil_test_response_both_pass );
+	}
+
+	void Renderer::SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode )
+	{
+		switch( sorting_mode )
+		{
+			case SortingMode::DepthNearestToFarthest:
+				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
+						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
+							{
+								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) <
+										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+							} );
+
+			case SortingMode::DepthFurthestToNearest:
+				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
+						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
+							{
+								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) >
+										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+							} );
+
+			default:
+			case SortingMode::None:
+				break;
+		}
 	}
 
 	void Renderer::RegisterShader( const Shader& shader )

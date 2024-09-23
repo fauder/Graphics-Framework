@@ -65,11 +65,22 @@ namespace Engine
 			Invert        = GL_INVERT
 		};
 
+		enum class SortingMode
+		{
+			None,
+			DepthNearestToFarthest,
+			DepthFurthestToNearest
+		};
+
 		struct RenderState
 		{
+		/* Depth: */
+
 			bool depth_test_enable                       = true;
 			bool depth_write_enable                      = true;
 			ComparisonFunction depth_comparison_function = ComparisonFunction::Less;
+
+		/* Stencil: */
 
 			bool stencil_test_enable                       = false;
 			unsigned int stencil_write_mask                = true;
@@ -80,6 +91,9 @@ namespace Engine
 			StencilTestResponse stencil_test_response_stencil_fail            = StencilTestResponse::Keep;
 			StencilTestResponse stencil_test_response_stencil_pass_depth_fail = StencilTestResponse::Keep;
 			StencilTestResponse stencil_test_response_both_pass               = StencilTestResponse::Keep;
+
+		/* Other: */
+			SortingMode sorting_mode = SortingMode::None;
 		};
 
 		using RenderGroupID = unsigned int;
@@ -229,6 +243,7 @@ namespace Engine
 
 		RenderGroup* GetRenderGroup( const Drawable* drawable_of_interest );
 		void SetRenderState( const RenderState& render_state_to_set );
+		void SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode );
 
 		/*
 		 * Shaders:

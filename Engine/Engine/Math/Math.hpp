@@ -55,6 +55,12 @@ namespace Engine::Math
 	[[ nodiscard( "Clamped value is not assigned back to any variable." ) ]]
 	Value Clamp( const Value value, const Value minimum, const Value maximum ) { return value < minimum ? minimum : value > maximum ? maximum : value; }
 
+	template< typename Component, std::size_t Size > requires( Size > 1 )
+	Component Distance( const Vector< Component, Size >& vector_a, const Vector< Component, Size >& vector_b )
+	{
+		return ( vector_a - vector_b ).Magnitude();
+	}
+
 	int RoundToMultiple_PowerOf2( const int value, const int multiple );
 
 /* Trigonometry. */
