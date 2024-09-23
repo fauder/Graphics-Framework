@@ -18,18 +18,18 @@ namespace Engine::Primitive::NonIndexed::Cube
 		{ -0.5f, -0.5f, -0.5f }, // FRONT
 
 		{ -0.5f, -0.5f,  0.5f }, // BACK
+		{  0.5f,  0.5f,  0.5f }, // BACK
 		{  0.5f, -0.5f,  0.5f }, // BACK
 		{  0.5f,  0.5f,  0.5f }, // BACK
-		{  0.5f,  0.5f,  0.5f }, // BACK
-		{ -0.5f,  0.5f,  0.5f }, // BACK
 		{ -0.5f, -0.5f,  0.5f }, // BACK
+		{ -0.5f,  0.5f,  0.5f }, // BACK
 
 		{ -0.5f,  0.5f,  0.5f }, // LEFT
+		{ -0.5f, -0.5f, -0.5f }, // LEFT
 		{ -0.5f,  0.5f, -0.5f }, // LEFT
 		{ -0.5f, -0.5f, -0.5f }, // LEFT
-		{ -0.5f, -0.5f, -0.5f }, // LEFT
-		{ -0.5f, -0.5f,  0.5f }, // LEFT
 		{ -0.5f,  0.5f,  0.5f }, // LEFT
+		{ -0.5f, -0.5f,  0.5f }, // LEFT
 
 		{  0.5f,  0.5f,  0.5f }, // RIGHT
 		{  0.5f,  0.5f, -0.5f }, // RIGHT
@@ -39,11 +39,11 @@ namespace Engine::Primitive::NonIndexed::Cube
 		{  0.5f,  0.5f,  0.5f }, // RIGHT
 
 		{ -0.5f, -0.5f, -0.5f }, // BOTTOM
+		{  0.5f, -0.5f,  0.5f }, // BOTTOM
 		{  0.5f, -0.5f, -0.5f }, // BOTTOM
 		{  0.5f, -0.5f,  0.5f }, // BOTTOM
-		{  0.5f, -0.5f,  0.5f }, // BOTTOM
-		{ -0.5f, -0.5f,  0.5f }, // BOTTOM
 		{ -0.5f, -0.5f, -0.5f }, // BOTTOM
+		{ -0.5f, -0.5f,  0.5f }, // BOTTOM
 
 		{ -0.5f,  0.5f, -0.5f }, // TOP
 		{  0.5f,  0.5f, -0.5f }, // TOP
@@ -63,18 +63,18 @@ namespace Engine::Primitive::NonIndexed::Cube
 		{ 0.0f, 0.0f }, // FRONT
 
 		{ 0.0f, 0.0f }, // BACK
+		{ 1.0f, 1.0f }, // BACK
 		{ 1.0f, 0.0f }, // BACK
 		{ 1.0f, 1.0f }, // BACK
-		{ 1.0f, 1.0f }, // BACK
-		{ 0.0f, 1.0f }, // BACK
 		{ 0.0f, 0.0f }, // BACK
+		{ 0.0f, 1.0f }, // BACK
 
 		{ 1.0f, 0.0f }, // LEFT
+		{ 0.0f, 1.0f }, // LEFT
 		{ 1.0f, 1.0f }, // LEFT
 		{ 0.0f, 1.0f }, // LEFT
-		{ 0.0f, 1.0f }, // LEFT
-		{ 0.0f, 0.0f }, // LEFT
 		{ 1.0f, 0.0f }, // LEFT
+		{ 0.0f, 0.0f }, // LEFT
 
 		{ 1.0f, 0.0f }, // RIGHT
 		{ 1.0f, 1.0f }, // RIGHT
@@ -84,11 +84,11 @@ namespace Engine::Primitive::NonIndexed::Cube
 		{ 1.0f, 0.0f }, // RIGHT
 
 		{ 0.0f, 1.0f }, // BOTTOM
+		{ 1.0f, 0.0f }, // BOTTOM
 		{ 1.0f, 1.0f }, // BOTTOM
 		{ 1.0f, 0.0f }, // BOTTOM
-		{ 1.0f, 0.0f }, // BOTTOM
-		{ 0.0f, 0.0f }, // BOTTOM
 		{ 0.0f, 1.0f }, // BOTTOM
+		{ 0.0f, 0.0f }, // BOTTOM
 
 		{ 0.0f, 1.0f }, // TOP
 		{ 1.0f, 1.0f }, // TOP
@@ -98,6 +98,7 @@ namespace Engine::Primitive::NonIndexed::Cube
 		{ 0.0f, 1.0f }  // TOP
 	} );
 
+	// TODO: This is probably broken too (other attributes for the cube were broken; Winding orders of back, left & bottom faces were wrong.
 	constexpr std::array< Vector2, 36 > UVs_CubeMap
 	( {
 		{ 1.0f,  0.333f	}, // FRONT
