@@ -1,4 +1,5 @@
 #version 460 core
+#pragma feature DISCARD_TRANSPARENT_FRAGMENTS
 
 in vec2 varying_tex_coords;
 
