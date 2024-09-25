@@ -225,7 +225,7 @@ namespace Engine::ImGuiDrawer
 		if( flags.IsSet( Transform::Mask::Translation ) )
 		{
 			Vector3 translation = transform.GetTranslation();
-			if( Draw( translation, ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT " Position" ) )
+			if( Draw( translation, " " ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT " Position") )
 			{
 				is_modified = true;
 				transform.SetTranslation( translation );
@@ -235,7 +235,7 @@ namespace Engine::ImGuiDrawer
 		if( flags.IsSet( Transform::Mask::Rotation ) )
 		{
 			Quaternion rotation = transform.GetRotation();
-			if( Draw( rotation, ICON_FA_ARROW_ROTATE_RIGHT " Rotation" ) )
+			if( Draw( rotation, " " ICON_FA_ARROW_ROTATE_RIGHT " Rotation" ) )
 			{
 				is_modified = true;
 				transform.SetRotation( rotation );
@@ -245,7 +245,7 @@ namespace Engine::ImGuiDrawer
 		if( flags.IsSet( Transform::Mask::Scale ) )
 		{
 			Vector3 scale = transform.GetScaling();
-			if( Draw( scale, ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER " Scale" ) )
+			if( Draw( scale, " " ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER " Scale" ) )
 			{
 				is_modified = true;
 				transform.SetScaling( scale );
@@ -266,11 +266,11 @@ namespace Engine::ImGuiDrawer
 		ImGui::PushID( name );
 
 		if( flags.IsSet( Transform::Mask::Translation ) )
-			Draw( transform.GetTranslation(), ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT " Position" );
+			Draw( transform.GetTranslation(), " " ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT " Position" );
 		if( flags.IsSet( Transform::Mask::Rotation ) )
-			Draw( transform.GetRotation(), ICON_FA_ARROW_ROTATE_RIGHT " Rotation" );
+			Draw( transform.GetRotation(), " " ICON_FA_ARROW_ROTATE_RIGHT " Rotation" );
 		if( flags.IsSet( Transform::Mask::Scale ) )
-			Draw( transform.GetScaling(), ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER " Scale" );
+			Draw( transform.GetScaling(), " " ICON_FA_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER " Scale" );
 
 		ImGui::PopID();
 
@@ -388,9 +388,11 @@ namespace Engine::ImGuiDrawer
 		}
 	}
 
-	bool Draw( Material& material, ImGuiWindowFlags window_flags )
+	bool Draw( Material& material, Renderer& renderer, ImGuiWindowFlags window_flags )
 	{
 		bool is_modified = false;
+
+		bool needs_to_be_reinitialized = false; // This is set to true upon new shader assignment.
 
 		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr ) )
 		{
@@ -398,14 +400,42 @@ namespace Engine::ImGuiDrawer
 			{
 				ImGuiUtility::BeginGroupPanel();
 
-				// TODO: Implement shader selection.
-				if( material.HasShaderAssigned() )
+				//if( material.HasShaderAssigned() )
+				//{
+				//	const auto& shader_name( material.GetShaderName() );
+				//	ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
+				//}
+				//else
+				//	ImGui::TextUnformatted( ICON_FA_CODE " Shader: <unassigned>" );
+
+				ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader:" );
+				ImGui::SameLine();
+
+				//if( ImGui::Button( ICON_FA_FOLDER_OPEN " Assign" ) )
 				{
-					const auto& shader_name( material.GetShaderName() );
-					ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
+					const auto& current_shader_name( material.HasShaderAssigned() ? material.GetShaderName() : "" );
+
+					const auto& registered_shaders( renderer.RegisteredShaders() );
+					const auto& preview( current_shader_name.empty() ? ( *registered_shaders.begin() )->Name() : current_shader_name );
+					if( ImGui::BeginCombo( "##Shader Selection Combobox", preview.c_str(), ImGuiComboFlags_WidthFitPreview ) )
+					{
+						for( const auto& shader : registered_shaders )
+						{
+							const auto& selectable_shader_name( shader->Name() );
+
+							if( ImGui::Selectable( selectable_shader_name.c_str() ) )
+							{
+								if( current_shader_name != selectable_shader_name )
+								{
+									material.SetShader( shader );
+
+									renderer.OnShaderReassign( shader, material.Name() );
+								}
+							}
+						}
+						ImGui::EndCombo();
+					}
 				}
-				else
-					ImGui::TextUnformatted( ICON_FA_CODE " Shader: <unassigned>" );
 
 				ImGui::SeparatorText( "Parameters" );
 

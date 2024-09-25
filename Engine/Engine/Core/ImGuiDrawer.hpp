@@ -9,6 +9,7 @@
 #include "Graphics/Lighting/SpotLight.h"
 #include "Graphics/MaterialData/MaterialData.h"
 #include "Graphics/Material.hpp"
+#include "Graphics/Renderer.h"
 #include "Graphics/UniformBufferManagement.hpp"
 #include "Math/Polar.h"
 #include "Math/Quaternion.hpp"
@@ -259,7 +260,7 @@ namespace Engine::ImGuiDrawer
 	bool Draw(		 Transform& transform, const BitFlags< Transform::Mask > = Transform::Mask::All, const char* name = "##transform" );
 	void Draw( const Transform& transform, const BitFlags< Transform::Mask > = Transform::Mask::All, const char* name = "##transform" );
 
-	bool Draw( Material& material, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
+	bool Draw( Material& material, Renderer& renderer, ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoFocusOnAppearing );
 	/* const version of Material is nearly the same as the non-const and it was getting annoying having to update a huge and mostly unused function, so it is removed. */
 
 	template< typename BlobType > requires( std::is_base_of_v< Blob, BlobType > )
