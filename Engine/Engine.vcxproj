@@ -161,7 +161,9 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\ImGuiUtility.h" />
     <ClInclude Include="Engine\Core\Initialization.h" />
     <ClInclude Include="Engine\Core\Blob.hpp" />
+    <ClInclude Include="Engine\Graphics\Framebuffer.h" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad.h" />
+    <ClInclude Include="Engine\Graphics\Renderbuffer.h" />
     <ClInclude Include="Engine\Natvis\NatVis.h" />
     <ClInclude Include="Engine\Core\Optimization.h" />
     <ClInclude Include="Engine\Core\ServiceLocator.h" />
@@ -229,11 +231,13 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Core\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Core\ImGuiUtility.cpp" />
     <ClCompile Include="Engine\Graphics\Drawable.cpp" />
+    <ClCompile Include="Engine\Graphics\Framebuffer.cpp" />
     <ClCompile Include="Engine\Graphics\GLLogger.cpp" />
     <ClCompile Include="Engine\Graphics\Material.cpp" />
     <ClCompile Include="Engine\Graphics\Mesh.cpp" />
     <ClCompile Include="Engine\Graphics\Model.cpp" />
     <ClCompile Include="Engine\Graphics\ModelLoader.cpp" />
+    <ClCompile Include="Engine\Graphics\Renderbuffer.cpp" />
     <ClCompile Include="Engine\Graphics\Renderer.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBlockBindingPointManager.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBufferManager.cpp" />
