@@ -1,6 +1,7 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 // Engine Includes.
+#include "AssetDatabase.hpp"
 #include "ImGuiDrawer.hpp"
 #include "ImGuiUtility.h"
 #include "Graphics/ShaderTypeInformation.h"
@@ -392,7 +393,7 @@ namespace Engine::ImGuiDrawer
 	{
 		bool is_modified = false;
 
-		bool needs_to_be_reinitialized = false; // This is set to true upon new shader assignment.
+		Shader* new_shader_to_assign = nullptr; // This is only set upon new shader assignment.
 
 		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr ) )
 		{
@@ -400,42 +401,23 @@ namespace Engine::ImGuiDrawer
 			{
 				ImGuiUtility::BeginGroupPanel();
 
-				//if( material.HasShaderAssigned() )
-				//{
-				//	const auto& shader_name( material.GetShaderName() );
-				//	ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader: %s", material.GetShaderName().c_str() ); // Read-only for now.
-				//}
-				//else
-				//	ImGui::TextUnformatted( ICON_FA_CODE " Shader: <unassigned>" );
-
 				ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader:" );
 				ImGui::SameLine();
 
-				//if( ImGui::Button( ICON_FA_FOLDER_OPEN " Assign" ) )
+				const auto& current_shader_name( material.HasShaderAssigned() ? material.GetShaderName() : "" );
+
+				const auto& registered_shaders( renderer.RegisteredShaders() );
+				const auto& preview( current_shader_name.empty() ? ( *registered_shaders.begin() )->Name() : current_shader_name );
+				if( ImGui::BeginCombo( "##Shader Selection Combobox", preview.c_str(), ImGuiComboFlags_WidthFitPreview ) )
 				{
-					const auto& current_shader_name( material.HasShaderAssigned() ? material.GetShaderName() : "" );
-
-					const auto& registered_shaders( renderer.RegisteredShaders() );
-					const auto& preview( current_shader_name.empty() ? ( *registered_shaders.begin() )->Name() : current_shader_name );
-					if( ImGui::BeginCombo( "##Shader Selection Combobox", preview.c_str(), ImGuiComboFlags_WidthFitPreview ) )
+					for( const auto& shader : registered_shaders )
 					{
-						for( const auto& shader : registered_shaders )
-						{
-							const auto& selectable_shader_name( shader->Name() );
+						const auto& selectable_shader_name( shader->Name() );
 
-							if( ImGui::Selectable( selectable_shader_name.c_str() ) )
-							{
-								if( current_shader_name != selectable_shader_name )
-								{
-									const auto& previous_shader = material.GetShader();
-									material.SetShader( shader );
-
-									renderer.OnShaderReassign( previous_shader, material.Name() );
-								}
-							}
-						}
-						ImGui::EndCombo();
+						if( ImGui::Selectable( selectable_shader_name.c_str() ) && current_shader_name != selectable_shader_name )
+							new_shader_to_assign = shader;
 					}
+					ImGui::EndCombo();
 				}
 
 				ImGui::SeparatorText( "Parameters" );
@@ -608,10 +590,20 @@ namespace Engine::ImGuiDrawer
 
 								ImGui::TableNextColumn();
 
-								/* No need to update the Material when the Draw() call below returns true; Memory from the blob is provided directly to Draw(), so the Material is updated. */
-								ImGui::PushID( ( void* )&texture_pointer );
-								Draw( texture_pointer, uniform_sampler_name.c_str() );
-								ImGui::PopID();
+								const auto& current_texture_name( texture_pointer ? texture_pointer->Name() : "<unassigned>" );
+								if( ImGui::BeginCombo( ( "##Texture Selection Combobox-" + uniform_sampler_name ).c_str(), current_texture_name.c_str(), ImGuiComboFlags_WidthFitPreview ) )
+								{
+									const auto& texture_map( AssetDatabase< Texture >::Assets() );
+									for( const auto& [ texture_name, texture ] : texture_map )
+									{
+										const auto& selectable_texture_name( texture_name );
+
+										if( ImGui::Selectable( texture.Name().c_str() ) )
+											if( texture_name != current_texture_name )
+												material.SetTexture( uniform_sampler_name.c_str(), &texture );
+									}
+									ImGui::EndCombo();
+								}
 							}
 
 							ImGui::EndTable();
@@ -626,6 +618,15 @@ namespace Engine::ImGuiDrawer
 		}
 
 		ImGui::End();
+
+		/* Update the shader at the end of all stuff, to prevent invalidating stuff (textures_map of the Material for example). */
+		if( new_shader_to_assign )
+		{
+			const auto& previous_shader = material.GetShader();
+			material.SetShader( new_shader_to_assign );
+
+			renderer.OnShaderReassign( previous_shader, material.Name() );
+		}
 
 		return is_modified;
 	}
