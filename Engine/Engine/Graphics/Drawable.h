@@ -15,7 +15,7 @@ namespace Engine
 
 	public:
 		Drawable();
-		Drawable( const Mesh* mesh, Material* material, Transform* transform );
+		Drawable( const Mesh* mesh, Material* material, Transform* transform = nullptr );
 
 		Drawable( const Drawable& other )				= default;
 		Drawable& operator = ( const Drawable& other )	= default;

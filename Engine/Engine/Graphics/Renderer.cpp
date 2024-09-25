@@ -111,7 +111,8 @@ namespace Engine
 								{
 									drawable->mesh->Bind();
 
-									material->SetAndUploadUniform( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
+									if( drawable->transform )
+										material->SetAndUploadUniform( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
 
 									Render( *drawable->mesh );
 								}
