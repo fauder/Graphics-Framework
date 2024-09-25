@@ -244,6 +244,24 @@ namespace Engine
 		}
 	}
 
+	void Renderer::OnShaderReassign( Shader* previous_shader, const std::string& name_of_material_whose_shader_changed )
+	{
+		for( auto& [ render_group_id, render_group ] : render_group_map )
+		{
+			if( auto iterator = render_group.materials_in_flight.find( name_of_material_whose_shader_changed );
+				iterator != render_group.materials_in_flight.cend() )
+			{
+				Material* material = iterator->second;
+
+				if( auto ref_count = render_group.shaders_in_flight[ previous_shader ];
+					ref_count == 1 )
+					render_group.shaders_in_flight.erase( previous_shader );
+
+				render_group.shaders_in_flight[ material->shader ]++;
+			}
+		}
+	}
+
 	Renderer::RenderState& Renderer::GetRenderState( const RenderGroupID group_id_to_fetch )
 	{
 		return render_group_map[ group_id_to_fetch ].render_state;
@@ -552,7 +570,7 @@ namespace Engine
 		}
 	}
 
-	void Renderer::RegisterShader( const Shader& shader )
+	void Renderer::RegisterShader( Shader& shader )
 	{
 		if( shader.HasUniformBlocks() )
 		{
@@ -591,7 +609,7 @@ namespace Engine
 		shaders_registered.insert( &shader );
 	}
 
-	void Renderer::UnregisterShader( const Shader& shader )
+	void Renderer::UnregisterShader( Shader& shader )
 	{
 		if( auto iterator = shaders_using_intrinsics_lighting.find( &shader );
 			iterator != shaders_using_intrinsics_lighting.cend() )

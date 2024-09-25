@@ -189,6 +189,8 @@ namespace Engine
 		void RemoveDrawable( Drawable* drawable_to_remove );
 		void RemoveAllDrawables();
 
+		void OnShaderReassign( Shader* previous_shader, const std::string& name_of_material_whose_shader_changed );
+
 		/* 
 		 * Lights:
 		 */
@@ -238,6 +240,12 @@ namespace Engine
 		{
 			uniform_buffer_management_global.Set( buffer_name, uniform_member_name, value );
 		}
+
+		/*
+		 * Shaders:
+		 */
+
+		const std::unordered_set< Shader* > RegisteredShaders() const { return shaders_registered; }
 
 		/*
 		 * Clearing:
@@ -326,8 +334,8 @@ namespace Engine
 		 * Shaders:
 		 */
 
-		void RegisterShader( const Shader& shader );
-		void UnregisterShader( const Shader& shader );
+		void RegisterShader( Shader& shader );
+		void UnregisterShader( Shader& shader );
 
 		/*
 		 * Clearing:
@@ -367,7 +375,7 @@ namespace Engine
 
 		std::map< RenderGroupID, RenderGroup > render_group_map;
 
-		std::unordered_set< const Shader* > shaders_registered; // TODO: Revise; This is not utilized at all. Also it may pose problems when dynamic shader re-compile is implemented.
+		std::unordered_set< Shader* > shaders_registered; // TODO: Revise; This is not utilized at all. Also it may pose problems when dynamic shader re-compile is implemented.
 
 		/*
 		 * Uniform Management:

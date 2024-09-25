@@ -45,7 +45,7 @@ namespace Engine
 		}
 		inline bool HasShaderAssigned() const { return shader; }
 
-		void SetShader( Shader* const shader );
+		void SetShader( Shader* shader );
 
 	/* Uniforms: */
 		inline const std::unordered_map< std::string, Uniform::Information				>& GetUniformInfoMap()			const { return *uniform_info_map; }
@@ -147,7 +147,7 @@ namespace Engine
 		/* Allocated/Resized only when a shader is assigned. */
 		Blob uniform_blob_default_block;
 
-		/* Map pointer below is assigned only when the Shader itself is assigned to the Material, through Shader::GetUniformInfoMap(). */
+		/* Map pointer below is assigned only when the Shader itself is assigned/re-assigned to the Material, through Shader::GetUniformInfoMap(). */
 		const std::unordered_map< std::string, Uniform::Information >* uniform_info_map;
 
 		UniformBufferManagement< Blob > uniform_buffer_management_regular; 

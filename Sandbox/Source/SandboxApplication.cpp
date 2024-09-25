@@ -476,17 +476,17 @@ void SandboxApplication::RenderImGui()
 	}
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ] );
-	Engine::ImGuiDrawer::Draw( ground_quad_material );
-	Engine::ImGuiDrawer::Draw( front_wall_quad_material );
-	Engine::ImGuiDrawer::Draw( grass_quad_material );
-	Engine::ImGuiDrawer::Draw( window_material );
+		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ], renderer );
+	Engine::ImGuiDrawer::Draw( ground_quad_material, renderer );
+	Engine::ImGuiDrawer::Draw( front_wall_quad_material, renderer );
+	Engine::ImGuiDrawer::Draw( grass_quad_material, renderer );
+	Engine::ImGuiDrawer::Draw( window_material, renderer );
 	for( auto& cube_material : cube_material_array )
-		Engine::ImGuiDrawer::Draw( cube_material );
+		Engine::ImGuiDrawer::Draw( cube_material, renderer );
 	for( auto& test_material : test_model_instance.Materials() )
-		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ) );
-	Engine::ImGuiDrawer::Draw( outline_material );
-	Engine::ImGuiDrawer::Draw( offscreen_quad_material );
+		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ), renderer );
+	Engine::ImGuiDrawer::Draw( outline_material, renderer );
+	Engine::ImGuiDrawer::Draw( offscreen_quad_material, renderer );
 
 	if( ImGui::Begin( ICON_FA_LIGHTBULB " Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{

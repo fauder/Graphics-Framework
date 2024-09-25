@@ -46,8 +46,13 @@ namespace Engine
 		return shader;
 	}
 
-	void Material::SetShader( Shader* const shader )
+	void Material::SetShader( Shader* shader )
 	{
+		/* Clean-up of previous data: */
+		uniform_buffer_management_regular.UnregisterAllBuffers();
+		texture_map.clear();
+
+		/* Setting new data: */
 		this->shader = shader;
 
 		uniform_blob_default_block = Blob( shader->GetTotalUniformSize_DefaultBlockOnly() );
