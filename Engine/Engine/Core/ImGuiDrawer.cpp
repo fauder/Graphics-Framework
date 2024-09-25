@@ -401,20 +401,20 @@ namespace Engine::ImGuiDrawer
 			{
 				ImGuiUtility::BeginGroupPanel();
 
-				ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), ICON_FA_CODE " Shader:" );
+				ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_Header ), "Shader:" );
 				ImGui::SameLine();
 
 				const auto& current_shader_name( material.HasShaderAssigned() ? material.GetShaderName() : "" );
 
 				const auto& registered_shaders( renderer.RegisteredShaders() );
-				const auto& preview( current_shader_name.empty() ? ( *registered_shaders.begin() )->Name() : current_shader_name );
+				const auto& preview( current_shader_name.empty() ? ( *registered_shaders.begin() )->Name() : ICON_FA_CODE " " + current_shader_name );
 				if( ImGui::BeginCombo( "##Shader Selection Combobox", preview.c_str(), ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_HeightLarge ) )
 				{
 					for( const auto& shader : registered_shaders )
 					{
 						const auto& selectable_shader_name( shader->Name() );
 
-						if( ImGui::Selectable( selectable_shader_name.c_str() ) && current_shader_name != selectable_shader_name )
+						if( ImGui::Selectable( ( ICON_FA_CODE " " + selectable_shader_name ).c_str() ) && current_shader_name != selectable_shader_name )
 							new_shader_to_assign = shader;
 					}
 					ImGui::EndCombo();
@@ -590,7 +590,7 @@ namespace Engine::ImGuiDrawer
 
 								ImGui::TableNextColumn();
 
-								const auto& current_texture_name( texture_pointer ? texture_pointer->Name() : "<unassigned>" );
+								const auto& current_texture_name( texture_pointer ? ICON_FA_IMAGE " " + texture_pointer->Name() : "<unassigned>");
 								if( ImGui::BeginCombo( ( "##Texture Selection Combobox-" + uniform_sampler_name ).c_str(), current_texture_name.c_str(), ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_HeightLarge ) )
 								{
 									const auto& texture_map( AssetDatabase< Texture >::Assets() );
@@ -598,7 +598,7 @@ namespace Engine::ImGuiDrawer
 									{
 										const auto& selectable_texture_name( texture_name );
 
-										if( ImGui::Selectable( texture.Name().c_str() ) )
+										if( ImGui::Selectable( ( ICON_FA_IMAGE " " + texture.Name() ).c_str() ) )
 											if( texture_name != current_texture_name )
 												material.SetTexture( uniform_sampler_name.c_str(), &texture );
 									}
