@@ -46,6 +46,11 @@ namespace Engine
 		return shader;
 	}
 
+	Shader* Material::GetShader()
+	{
+		return shader;
+	}
+
 	void Material::SetShader( Shader* shader )
 	{
 		/* Clean-up of previous data: */

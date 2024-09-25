@@ -427,9 +427,10 @@ namespace Engine::ImGuiDrawer
 							{
 								if( current_shader_name != selectable_shader_name )
 								{
+									const auto& previous_shader = material.GetShader();
 									material.SetShader( shader );
 
-									renderer.OnShaderReassign( shader, material.Name() );
+									renderer.OnShaderReassign( previous_shader, material.Name() );
 								}
 							}
 						}

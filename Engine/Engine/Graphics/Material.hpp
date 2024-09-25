@@ -45,6 +45,7 @@ namespace Engine
 		}
 		inline bool HasShaderAssigned() const { return shader; }
 
+		Shader* GetShader();
 		void SetShader( Shader* shader );
 
 	/* Uniforms: */

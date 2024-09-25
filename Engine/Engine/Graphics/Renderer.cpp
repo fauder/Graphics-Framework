@@ -333,6 +333,64 @@ namespace Engine
 		return uniform_buffer_management_global.Get( buffer_name );
 	}
 
+	void Renderer::RegisterShader( Shader& shader )
+	{
+		if( shader.HasUniformBlocks() )
+		{
+			/* Regular Uniform Buffers are handled by the Material class.
+			 * Globals & Intrinsics are registered here. */
+
+			if( shader.HasGlobalUniformBlocks() )
+			{
+				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
+
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+			}
+
+			if( shader.HasIntrinsicUniformBlocks() )
+			{
+				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
+
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+			}
+		}
+
+		if( shader.GetUniformBufferInfoMap_Intrinsic().contains( "_Intrinsic_Lighting" ) )
+		{
+			shaders_using_intrinsics_lighting.insert( &shader );
+			update_uniform_buffer_lighting = true;
+		}
+
+		if( shader.GetUniformBufferInfoMap_Intrinsic().contains( "_Intrinsic_Other" ) )
+		{
+			shaders_using_intrinsics_other.insert( &shader );
+			update_uniform_buffer_other = true;
+		}
+
+		shaders_registered.insert( &shader );
+	}
+
+	void Renderer::UnregisterShader( Shader& shader )
+	{
+		if( auto iterator = shaders_using_intrinsics_lighting.find( &shader );
+			iterator != shaders_using_intrinsics_lighting.cend() )
+		{
+			shaders_using_intrinsics_lighting.erase( iterator );
+			update_uniform_buffer_lighting = not shaders_using_intrinsics_lighting.empty();
+		}
+
+		if( auto iterator = shaders_using_intrinsics_other.find( &shader );
+			iterator != shaders_using_intrinsics_other.cend() )
+		{
+			shaders_using_intrinsics_other.erase( iterator );
+			update_uniform_buffer_other = not shaders_using_intrinsics_other.empty();
+		}
+
+		shaders_registered.erase( &shader );
+	}
+
 	void Renderer::SetClearColor( const Color3& new_clear_color )
 	{
 		clear_color = new_clear_color;
@@ -568,64 +626,6 @@ namespace Engine
 			case SortingMode::None:
 				break;
 		}
-	}
-
-	void Renderer::RegisterShader( Shader& shader )
-	{
-		if( shader.HasUniformBlocks() )
-		{
-			/* Regular Uniform Buffers are handled by the Material class.
-			 * Globals & Intrinsics are registered here. */
-
-			if( shader.HasGlobalUniformBlocks() )
-			{
-				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
-
-				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
-			}
-
-			if( shader.HasIntrinsicUniformBlocks() )
-			{
-				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
-
-				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
-			}
-		}
-
-		if( shader.GetUniformBufferInfoMap_Intrinsic().contains( "_Intrinsic_Lighting" ) )
-		{
-			shaders_using_intrinsics_lighting.insert( &shader );
-			update_uniform_buffer_lighting = true;
-		}
-
-		if( shader.GetUniformBufferInfoMap_Intrinsic().contains( "_Intrinsic_Other" ) )
-		{
-			shaders_using_intrinsics_other.insert( &shader );
-			update_uniform_buffer_other = true;
-		}
-
-		shaders_registered.insert( &shader );
-	}
-
-	void Renderer::UnregisterShader( Shader& shader )
-	{
-		if( auto iterator = shaders_using_intrinsics_lighting.find( &shader );
-			iterator != shaders_using_intrinsics_lighting.cend() )
-		{
-			shaders_using_intrinsics_lighting.erase( iterator );
-			update_uniform_buffer_lighting = not shaders_using_intrinsics_lighting.empty();
-		}
-
-		if( auto iterator = shaders_using_intrinsics_other.find( &shader );
-			iterator != shaders_using_intrinsics_other.cend() )
-		{
-			shaders_using_intrinsics_other.erase( iterator );
-			update_uniform_buffer_other = not shaders_using_intrinsics_other.empty();
-		}
-
-		shaders_registered.erase( &shader );
 	}
 
 	void Renderer::SetClearColor()

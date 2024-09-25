@@ -245,7 +245,9 @@ namespace Engine
 		 * Shaders:
 		 */
 
-		const std::unordered_set< Shader* > RegisteredShaders() const { return shaders_registered; }
+		inline const std::unordered_set< Shader* > RegisteredShaders() const { return shaders_registered; }
+		void RegisterShader( Shader& shader );
+		void UnregisterShader( Shader& shader );
 
 		/*
 		 * Clearing:
@@ -331,13 +333,6 @@ namespace Engine
 		void SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode );
 
 		/*
-		 * Shaders:
-		 */
-
-		void RegisterShader( Shader& shader );
-		void UnregisterShader( Shader& shader );
-
-		/*
 		 * Clearing:
 		 */
 
@@ -375,7 +370,7 @@ namespace Engine
 
 		std::map< RenderGroupID, RenderGroup > render_group_map;
 
-		std::unordered_set< Shader* > shaders_registered; // TODO: Revise; This is not utilized at all. Also it may pose problems when dynamic shader re-compile is implemented.
+		std::unordered_set< Shader* > shaders_registered;
 
 		/*
 		 * Uniform Management:
