@@ -57,6 +57,7 @@ namespace Engine
 		{
 			if( not buffer_info_map.empty() )
 			{
+				buffer_map.clear();
 				buffer_info_map.clear();
 				blob_map.clear();
 			}
