@@ -55,7 +55,6 @@ namespace Engine
 	{
 		/* Clean-up of previous data: */
 		uniform_buffer_management_regular.UnregisterAllBuffers();
-		texture_map.clear();
 
 		/* Setting new data: */
 		this->shader = shader;
@@ -69,7 +68,7 @@ namespace Engine
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
 
-		PopulateTextureMap();
+		RepopulateTextureMap();
 	}
 
 	const void* Material::Get( const Uniform::Information& uniform_info ) const

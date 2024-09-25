@@ -139,6 +139,7 @@ namespace Engine
 
 	/* Texture: */
 		void PopulateTextureMap();
+		void RepopulateTextureMap();
 
 	private:
 		std::string name;
