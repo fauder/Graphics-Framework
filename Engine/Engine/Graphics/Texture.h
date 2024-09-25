@@ -5,6 +5,7 @@
 #include "Macros.h"
 
 // std Includes.
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -49,6 +50,12 @@ namespace Engine
 
 	public:
 		Texture();
+		Texture( const std::string_view name,
+				 //const std::byte* data, This is omitted from this public constructor.
+				 const int format,
+				 const int width, const int height,
+				 GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
+				 GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR );
 
 		/* Prevent copying for now: */
 		Texture( const Texture& )				= delete;
@@ -69,13 +76,13 @@ namespace Engine
 		void Activate( const int slot ) const;
 
 	private:
-	/* Private constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with parameters. */
+	/* Private constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with data. */
 		Texture( const std::string_view name,
 				 const std::byte* data,
 				 const int format,
 				 const int width, const int height,
-				 GLenum wrap_u, GLenum wrap_v,
-				 GLenum min_filter, GLenum mag_filter );
+				 GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
+				 GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR );
 
 	/* Queries: */
 		bool IsValid() const { return width > 0 && height > 0; } // Use the width & height to implicitly define validness state.

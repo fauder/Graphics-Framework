@@ -11,6 +11,10 @@
 
 namespace Engine
 {
+/*
+ * TEXTURE::LOADER API
+ */
+
 	std::optional< Texture > Texture::Loader::FromFile( const::std::string_view name, const std::string& file_path, const ImportSettings& import_settings )
 	{
 		//auto& instance = Instance();
@@ -85,6 +89,10 @@ namespace Engine
 		return maybe_texture;
 	}
 
+/* 
+ * TEXTURE PUBLIC API
+ */
+
 	Texture::Texture()
 		:
 		id( -1 ),
@@ -94,7 +102,7 @@ namespace Engine
 	{}
 
 	Texture::Texture( const std::string_view name,
-					  const std::byte* data,
+					  //const std::byte* data, This is omitted from this public constructor.
 					  const int format, const int width, const int height,
 					  GLenum wrap_u, GLenum wrap_v,
 					  GLenum min_filter, GLenum mag_filter )
@@ -117,7 +125,7 @@ namespace Engine
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_u );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_v );
 
-		glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data );
+		glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr );
 		glGenerateMipmap( GL_TEXTURE_2D );
 	}
 
@@ -155,6 +163,38 @@ namespace Engine
 	{
 		glActiveTexture( GL_TEXTURE0 + slot );
 		Bind();
+	}
+
+/*
+ * TEXTURE PRIVATE API
+ */
+
+	Texture::Texture( const std::string_view name,
+					  const std::byte* data,
+					  const int format, const int width, const int height,
+					  GLenum wrap_u, GLenum wrap_v,
+					  GLenum min_filter, GLenum mag_filter )
+		:
+		id( -1 ),
+		width( width ),
+		height( height ),
+		name( name )
+	{
+		glGenTextures( 1, &id );
+		Bind();
+
+#ifdef _DEBUG
+		if( not name.empty() )
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
+#endif // _DEBUG
+
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_u );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_v );
+
+		glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data );
+		glGenerateMipmap( GL_TEXTURE_2D );
 	}
 
 	void Texture::Bind() const
