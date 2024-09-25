@@ -172,7 +172,7 @@ namespace Engine
 		 */
 
 		void Update( Camera& camera );
-		void Render( Camera& camera );
+		void Render( Camera& camera, std::initializer_list< RenderGroupID > = {} );
 		void RenderImGui();
 		void OnProjectionParametersChange( Camera& camera );
 

@@ -81,8 +81,11 @@ namespace Engine
 		}
 	}
 
-	void Renderer::Render( Camera& camera )
+	void Renderer::Render( Camera& camera, std::initializer_list< RenderGroupID > groups_to_render )
 	{
+		ASSERT_DEBUG_ONLY( groups_to_render.end() == std::find_if( groups_to_render.begin(), groups_to_render.end(), 
+																   [ & ]( const RenderGroupID& id ) { return not render_group_map.contains( id ); } ) );
+
 		Clear();
 
 		UploadIntrinsics();
@@ -90,7 +93,8 @@ namespace Engine
 
 		for( auto& [ render_group_id, render_group ] : render_group_map )
 		{
-			if( render_group.is_enabled )
+			if( std::find( groups_to_render.begin(), groups_to_render.end(), render_group_id ) != groups_to_render.end() &&
+				render_group.is_enabled )
 			{
 				SetRenderState( render_group.render_state );
 

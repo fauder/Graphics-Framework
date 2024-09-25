@@ -234,7 +234,7 @@ namespace Engine
 																										           texture_import_settings );
                                             }
                                         }, buffer.data );
-                        },
+                        }
                     }, gltf_image.data );
 
         return texture_to_load;
