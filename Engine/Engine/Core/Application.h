@@ -1,6 +1,7 @@
 #pragma once
 
 // Engine Includes.
+#include "BitFlags.hpp"
 #include "ImGuiLog.hpp"
 #include "Math/Math.hpp"
 #include "Platform.h"
@@ -8,10 +9,16 @@
 
 namespace Engine
 {
+	enum class CreationFlags
+	{
+		None                 = 0,
+		OnStart_DisableImGui = 1
+	};
+
 	class Application
 	{
 	public:
-		Application();
+		Application( const BitFlags< CreationFlags > );
 		virtual ~Application();
 
 		virtual void Initialize();
@@ -67,5 +74,5 @@ namespace Engine
 	};
 
 	/* Needs to be implemented by the CLIENT Application. */
-	Application* CreateApplication();
+	Application* CreateApplication( const BitFlags< CreationFlags > );
 }

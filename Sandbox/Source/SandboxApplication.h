@@ -23,7 +23,7 @@ class SandboxApplication : public Engine::Application
 	DEFINE_MATH_TYPES()
 
 public:
-	SandboxApplication();
+	SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > );
 	virtual ~SandboxApplication();
 
 	virtual void Initialize() override;

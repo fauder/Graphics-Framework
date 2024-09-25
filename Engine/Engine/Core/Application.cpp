@@ -19,12 +19,12 @@
 
 namespace Engine
 {
-	Application::Application()
+	Application::Application( const BitFlags< CreationFlags > flags )
 		:
 		display_frame_statistics( true ),
 		time_current( 0.0f ),
 		time_multiplier( 1.0f ),
-		show_imgui( true ),
+		show_imgui( not flags.IsSet( CreationFlags::OnStart_DisableImGui ) ),
 		show_gl_logger( true ),
 		time_previous( 0.0f ),
 		time_previous_since_start( 0.0f ),

@@ -26,14 +26,14 @@
 
 using namespace Engine::Math::Literals;
 
-Engine::Application* Engine::CreateApplication()
+Engine::Application* Engine::CreateApplication( const Engine::BitFlags< Engine::CreationFlags > flags )
 {
-    return new SandboxApplication();
+    return new SandboxApplication( flags );
 }
 
-SandboxApplication::SandboxApplication()
+SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > flags )
 	:
-	Engine::Application(),
+	Engine::Application( flags ),
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
 	cube_drawable_outline_array( CUBE_COUNT ),
