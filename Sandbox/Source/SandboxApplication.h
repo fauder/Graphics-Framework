@@ -106,6 +106,8 @@ private:
 
 	Engine::Shader fullscreen_blit_shader;
 
+	Engine::Shader postprocessing_grayscale_shader;
+
 /* Materials: */
 	std::vector< Engine::Material > light_source_material_array;
 

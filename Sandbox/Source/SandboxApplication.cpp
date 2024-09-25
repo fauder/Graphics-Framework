@@ -44,6 +44,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
 	outline_shader( "Outline" ),
 	fullscreen_blit_shader( "Fullscreen Blit" ),
+	postprocessing_grayscale_shader( "Post-process: Grayscale" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
@@ -105,6 +106,10 @@ void SandboxApplication::Initialize()
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
 	fullscreen_blit_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/BasicTextured.frag)" );
+	postprocessing_grayscale_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/Grayscale.frag)" );
+
+	/* Register shaders not assigned to materials: */
+	renderer.RegisterShader( postprocessing_grayscale_shader );
 
 /* Initial transforms: */
 	ground_quad_transform
@@ -699,6 +704,8 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	InitializeFramebufferTextures();
 	InitializeRenderbuffers();
 	InitializeFramebuffers();
+
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment );
 }
 
 void SandboxApplication::UpdateViewMatrix()
