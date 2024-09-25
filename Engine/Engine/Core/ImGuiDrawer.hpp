@@ -251,8 +251,8 @@ namespace Engine::ImGuiDrawer
 	bool Draw(		 Math::Polar3_Spherical_Game& spherical_coords, const bool show_radius = true, const char* name = "##spherical_coords" );
 	void Draw( const Math::Polar3_Spherical_Game& spherical_coords,								   const char* name = "##spherical_coords" );
 
-	bool Draw(		 Texture* texture, const char* name );
-	void Draw( const Texture* texture, const char* name );
+	bool Draw(		 Texture* texture, const char* name = "##texture" );
+	void Draw( const Texture* texture, const char* name = "##texture" );
 
 	bool Draw(		 Camera& camera, const char* name = "##camera" );
 	void Draw( const Camera& camera, const char* name = "##camera" );
