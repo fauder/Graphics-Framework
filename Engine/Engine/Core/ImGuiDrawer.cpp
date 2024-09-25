@@ -408,7 +408,7 @@ namespace Engine::ImGuiDrawer
 
 				const auto& registered_shaders( renderer.RegisteredShaders() );
 				const auto& preview( current_shader_name.empty() ? ( *registered_shaders.begin() )->Name() : current_shader_name );
-				if( ImGui::BeginCombo( "##Shader Selection Combobox", preview.c_str(), ImGuiComboFlags_WidthFitPreview ) )
+				if( ImGui::BeginCombo( "##Shader Selection Combobox", preview.c_str(), ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_HeightLarge ) )
 				{
 					for( const auto& shader : registered_shaders )
 					{
@@ -591,7 +591,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextColumn();
 
 								const auto& current_texture_name( texture_pointer ? texture_pointer->Name() : "<unassigned>" );
-								if( ImGui::BeginCombo( ( "##Texture Selection Combobox-" + uniform_sampler_name ).c_str(), current_texture_name.c_str(), ImGuiComboFlags_WidthFitPreview ) )
+								if( ImGui::BeginCombo( ( "##Texture Selection Combobox-" + uniform_sampler_name ).c_str(), current_texture_name.c_str(), ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_HeightLarge ) )
 								{
 									const auto& texture_map( AssetDatabase< Texture >::Assets() );
 									for( const auto& [ texture_name, texture ] : texture_map )
@@ -626,6 +626,8 @@ namespace Engine::ImGuiDrawer
 			material.SetShader( new_shader_to_assign );
 
 			renderer.OnShaderReassign( previous_shader, material.Name() );
+
+			// TODO: Maybe compare previous vs current shader's vertex layouts and only allow matches?
 		}
 
 		return is_modified;
