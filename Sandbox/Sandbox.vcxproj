@@ -132,6 +132,7 @@
     <None Include="Asset\Shader\BasicTextured.frag" />
     <None Include="Asset\Shader\BasicTextured.vert" />
     <None Include="Asset\Shader\Outline.vert" />
+    <None Include="Asset\Shader\FullScreenBlit.vert" />
     <None Include="Asset\Shader\_Depth.glsl" />
     <None Include="Asset\Shader\DepthBufferVisualization.frag" />
     <None Include="Asset\Shader\Phong.frag" />

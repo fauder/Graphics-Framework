@@ -14,6 +14,7 @@
 #include "Engine/Graphics/MeshUtility.hpp"
 #include "Engine/Graphics/Primitive/Primitive_Cube.h"
 #include "Engine/Graphics/Primitive/Primitive_Quad.h"
+#include "Engine/Graphics/Primitive/Primitive_Quad_FullScreen.h"
 #include "Engine/Math/Math.hpp"
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
@@ -42,6 +43,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	basic_textured_shader( "Basic Textured" ),
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
 	outline_shader( "Outline" ),
+	fullscreen_blit_shader( "Fullscreen Blit" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
@@ -67,7 +69,7 @@ void SandboxApplication::Initialize()
 	renderer.SetClearTargets( Engine::Renderer::ClearTarget::All );
 
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
-
+	
 	Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
 
 	gl_logger.IgnoreID( 131185 );
@@ -88,12 +90,21 @@ void SandboxApplication::Initialize()
 
 	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
 
+	InitializeFramebufferTextures();
+
+/* Renderbuffers: */
+	InitializeRenderbuffers();
+
+/* Framebuffers: */
+	InitializeFramebuffers();
+
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
+	fullscreen_blit_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 
 /* Initial transforms: */
 	ground_quad_transform
@@ -142,6 +153,12 @@ void SandboxApplication::Initialize()
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Normals.cbegin(), Engine::Primitive::NonIndexed::Quad::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
 							  { /* No indices. */ } );
+
+	quad_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cend() ),
+										 "Quad (FullScreen)",
+										 { /* No normals. */ },
+										 std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cend() ),
+										 { /* No indices. */ } );
 
 /* Lighting: */
 	ResetLightingData();
@@ -210,6 +227,11 @@ void SandboxApplication::Initialize()
 		render_state_transparent.sorting_mode = Engine::Renderer::SortingMode::DepthFarthestToNearest;
 	}
 
+	{
+		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 4 ), "Screen-size Quad" );
+		auto& render_state_regular_meshes = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 4 ) ); // Keep default settings.
+	}
+
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
 		light_source_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &light_source_material_array[ i ], &light_point_transform_array[ i ] );
@@ -243,6 +265,14 @@ void SandboxApplication::Initialize()
 		renderer.AddDrawable( &window_drawable_array[ i ], Engine::Renderer::RenderGroupID( 3 ) );
 	}
 
+	offscreen_quad_drawable = Engine::Drawable( &quad_mesh_fullscreen, &offscreen_quad_material );
+	renderer.AddDrawable( &offscreen_quad_drawable, Engine::Renderer::RenderGroupID( 4 ) );
+
+	/* This is the earliest place we can MaximizeWindow() at,
+	 * because the Renderer will populate its Intrinsic UBO info only upon AddDrawable( <Drawable with a Shader using said UBO> ). */
+	ResetCamera();
+	Platform::MaximizeWindow();
+
 /* Models: */
 	if( auto config_file = std::ifstream( "config.ini" ) )
 	{
@@ -258,12 +288,8 @@ void SandboxApplication::Initialize()
 	}
 
 /* Other: */
-	ResetCamera();
-
 	renderer.SetFrontFaceConvention( Engine::Renderer::WindingOrder::CounterClockwise );
 	renderer.EnableFaceCulling( Engine::Renderer::Face::Back );
-
-	Platform::MaximizeWindow();
 }
 
 void SandboxApplication::Shutdown()
@@ -361,9 +387,21 @@ void SandboxApplication::Render()
 
 	Engine::Application::Render();
 
-	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render", true /* omit if the group is empty */ ) );
+	{
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render to Offscreen FB", true /* omit if the group is empty */ ) );
+		
+		renderer.SetCurrentFramebuffer( &offscreen_framebuffer );
 
-	renderer.Render( camera );
+		renderer.Render( camera, { 0, 1, 2, 3 } );
+	}
+
+	{
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Blit Offscreen FB to Main FB", true /* omit if the group is empty */ ) );
+
+		renderer.ResetToDefaultFramebuffer();
+
+		renderer.Render( camera, { 4 } );
+	}
 }
 
 void SandboxApplication::RenderImGui()
@@ -434,6 +472,7 @@ void SandboxApplication::RenderImGui()
 		Engine::ImGuiDrawer::Draw( basic_textured_shader );
 		Engine::ImGuiDrawer::Draw( basic_textured_transparent_discard_shader );
 		Engine::ImGuiDrawer::Draw( outline_shader );
+		Engine::ImGuiDrawer::Draw( fullscreen_blit_shader );
 	}
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -447,6 +486,7 @@ void SandboxApplication::RenderImGui()
 	for( auto& test_material : test_model_instance.Materials() )
 		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ) );
 	Engine::ImGuiDrawer::Draw( outline_material );
+	Engine::ImGuiDrawer::Draw( offscreen_quad_material );
 
 	if( ImGui::Begin( ICON_FA_LIGHTBULB " Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
@@ -579,6 +619,74 @@ void SandboxApplication::RenderImGui()
 	renderer.RenderImGui();
 }
 
+void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
+{
+	switch( key_code )
+	{
+		case Platform::KeyCode::KEY_ESCAPE:
+			if( key_action == Platform::KeyAction::PRESS )
+				Platform::SetShouldClose( true );
+			break;
+		/* Use the key below ESC to toggle between game & menu/UI. */
+		case Platform::KeyCode::KEY_GRAVE_ACCENT:
+			if( key_action == Platform::KeyAction::PRESS )
+				ui_interaction_enabled = !ui_interaction_enabled;
+			break;
+		case Platform::KeyCode::KEY_W:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				camera_transform.OffsetTranslation( camera_transform.Forward() * +camera_move_speed * time_delta );
+			break;
+		case Platform::KeyCode::KEY_S:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				camera_transform.OffsetTranslation( camera_transform.Forward() * -camera_move_speed * time_delta );
+			break;
+		case Platform::KeyCode::KEY_A:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				camera_transform.OffsetTranslation( camera_transform.Right() * -camera_move_speed * time_delta );
+			break;
+		case Platform::KeyCode::KEY_D:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				camera_transform.OffsetTranslation( camera_transform.Right() * +camera_move_speed * time_delta );
+			break;
+		case Platform::KeyCode::KEY_U:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				light_spot.data.cutoff_angle_inner = Engine::Math::Min( light_spot.data.cutoff_angle_inner + 0.33_deg, light_spot.data.cutoff_angle_outer );
+			break;
+		case Platform::KeyCode::KEY_Y:
+			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
+				light_spot.data.cutoff_angle_inner = Engine::Math::Max( light_spot.data.cutoff_angle_inner - 0.33_deg, 0_deg );
+			break;
+		case Platform::KeyCode::KEY_I:
+			if( key_action == Platform::KeyAction::PRESS )
+				show_imgui = !show_imgui;
+			break;
+		case Platform::KeyCode::KEY_O:
+			if( key_action == Platform::KeyAction::PRESS )
+				show_imgui_demo_window = !show_imgui_demo_window;
+			break;
+		default:
+			break;
+	}
+}
+
+void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
+{
+	// Re-calculate the aspect ratio:
+	if( auto_calculate_aspect_ratio )
+	{
+		camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
+		if( auto_calculate_vfov_based_on_90_hfov )
+			camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
+
+		renderer.OnProjectionParametersChange( camera );
+	}
+
+	// Re-initialize:
+	InitializeFramebufferTextures();
+	InitializeRenderbuffers();
+	InitializeFramebuffers();
+}
+
 void SandboxApplication::UpdateViewMatrix()
 {
 	view_transformation = camera.GetViewMatrix();
@@ -678,6 +786,9 @@ void SandboxApplication::ResetMaterialData()
 
 	outline_material = Engine::Material( "Outline", &outline_shader );
 
+	offscreen_quad_material = Engine::Material( "Offscreen Quad", &fullscreen_blit_shader );
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", &offscreen_framebuffer_color_attachment );
+
 	ground_quad_surface_data = front_wall_quad_surface_data =
 	{
 		.color_diffuse       = {},
@@ -766,65 +877,28 @@ void SandboxApplication::UnloadModel()
 	test_model_instance = {};
 }
 
-void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )
+void SandboxApplication::InitializeFramebufferTextures()
 {
-	switch( key_code )
-	{
-		case Platform::KeyCode::KEY_ESCAPE:
-			if( key_action == Platform::KeyAction::PRESS )
-				Platform::SetShouldClose( true );
-			break;
-		/* Use the key below ESC to toggle between game & menu/UI. */
-		case Platform::KeyCode::KEY_GRAVE_ACCENT:
-			if( key_action == Platform::KeyAction::PRESS )
-				ui_interaction_enabled = !ui_interaction_enabled;
-			break;
-		case Platform::KeyCode::KEY_W:
-			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				camera_transform.OffsetTranslation( camera_transform.Forward() * +camera_move_speed * time_delta );
-			break;
-		case Platform::KeyCode::KEY_S:
-			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				camera_transform.OffsetTranslation( camera_transform.Forward() * -camera_move_speed * time_delta );
-			break;
-		case Platform::KeyCode::KEY_A:
-			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				camera_transform.OffsetTranslation( camera_transform.Right() * -camera_move_speed * time_delta );
-			break;
-		case Platform::KeyCode::KEY_D:
-			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				camera_transform.OffsetTranslation( camera_transform.Right() * +camera_move_speed * time_delta );
-			break;
-		case Platform::KeyCode::KEY_U:
-			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				light_spot.data.cutoff_angle_inner = Engine::Math::Min( light_spot.data.cutoff_angle_inner + 0.33_deg, light_spot.data.cutoff_angle_outer );
-			break;
-		case Platform::KeyCode::KEY_Y:
-			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
-				light_spot.data.cutoff_angle_inner = Engine::Math::Max( light_spot.data.cutoff_angle_inner - 0.33_deg, 0_deg );
-			break;
-		case Platform::KeyCode::KEY_I:
-			if( key_action == Platform::KeyAction::PRESS )
-				show_imgui = !show_imgui;
-			break;
-		case Platform::KeyCode::KEY_O:
-			if( key_action == Platform::KeyAction::PRESS )
-				show_imgui_demo_window = !show_imgui_demo_window;
-			break;
-		default:
-			break;
-	}
+	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
+	std::string name( "Offscreen FB Color Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
+
+	offscreen_framebuffer_color_attachment = Engine::Texture( name, GL_RGBA, width, height );
 }
 
-void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
+void SandboxApplication::InitializeRenderbuffers()
 {
-	// Re-calculate the aspect ratio:
-	if( auto_calculate_aspect_ratio )
-	{
-		camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
-		if( auto_calculate_vfov_based_on_90_hfov )
-			camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
+	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
+	std::string name( "Offscreen FB D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
 
-		renderer.OnProjectionParametersChange( camera );
-	}
+	offscreen_framebuffer_depth_and_stencil_attachment = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+}
+
+void SandboxApplication::InitializeFramebuffers()
+{
+	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
+	std::string name( "Offscreen FB " + std::to_string( width ) + "x" + std::to_string( height ) );
+
+	offscreen_framebuffer = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+												 &offscreen_framebuffer_color_attachment,
+												 &offscreen_framebuffer_depth_and_stencil_attachment );
 }

@@ -51,6 +51,10 @@ private:
 	void ReloadModel( const std::string& file_path );
 	void UnloadModel();
 
+	void InitializeFramebufferTextures();
+	void InitializeRenderbuffers();
+	void InitializeFramebuffers();
+
 private:
 /* Renderer: */
 	Engine::Renderer renderer;
@@ -70,8 +74,25 @@ private:
 	const static constexpr int WINDOW_COUNT = 5;
 	std::array< Engine::Drawable, WINDOW_COUNT > window_drawable_array;
 
+	Engine::Drawable offscreen_quad_drawable;
+
+/* Textures: */
+	Engine::Texture offscreen_framebuffer_color_attachment;
+
+	Engine::Texture* container_texture_diffuse_map;
+	Engine::Texture* container_texture_specular_map;
+	Engine::Texture* checker_pattern_texture;
+	Engine::Texture* grass_texture;
+	Engine::Texture* transparent_window_texture;
+
+/* Renderbuffers: */
+	Engine::Renderbuffer offscreen_framebuffer_depth_and_stencil_attachment;
+
+/* Framebuffers: */
+	Engine::Framebuffer offscreen_framebuffer;
+
 /* Vertex Info.: */
-	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only;
+	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen;
 
 /* Models: */
 	ModelInstance test_model_instance;
@@ -82,6 +103,8 @@ private:
 	Engine::Shader basic_textured_shader;
 	Engine::Shader basic_textured_transparent_discard_shader;
 	Engine::Shader outline_shader;
+
+	Engine::Shader fullscreen_blit_shader;
 
 /* Materials: */
 	std::vector< Engine::Material > light_source_material_array;
@@ -97,12 +120,7 @@ private:
 
 	Engine::Material outline_material;
 
-/* Textures: */
-	Engine::Texture* container_texture_diffuse_map;
-	Engine::Texture* container_texture_specular_map;
-	Engine::Texture* checker_pattern_texture;
-	Engine::Texture* grass_texture;
-	Engine::Texture* transparent_window_texture;
+	Engine::Material offscreen_quad_material;
 
 /* Scene: */
 	Engine::Transform camera_transform;
