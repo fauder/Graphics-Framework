@@ -137,9 +137,6 @@ namespace Engine
 
 	void Renderer::RenderImGui()
 	{
-		ImGuiDrawer::Draw( uniform_buffer_management_intrinsic, "Shader Intrinsics" );
-		ImGuiDrawer::Draw( uniform_buffer_management_global, "Shader Globals" );
-
 		// TODO: Implement drag & drop reordering of RenderGroups.
 
 		if( ImGui::Begin( ICON_FA_DRAW_POLYGON " Drawables", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
@@ -181,6 +178,14 @@ namespace Engine
 		}
 
 		ImGui::End();
+
+		/* Shaders: */
+		for( const auto& shader : shaders_registered )
+			Engine::ImGuiDrawer::Draw( *shader );
+
+		/* Uniforms (Renderer-scope): */
+		ImGuiDrawer::Draw( uniform_buffer_management_intrinsic, "Shader Intrinsics" );
+		ImGuiDrawer::Draw( uniform_buffer_management_global,	"Shader Globals" );
 	}
 
 	void Renderer::OnProjectionParametersChange( Camera& camera )

@@ -470,16 +470,6 @@ void SandboxApplication::RenderImGui()
 
 	ImGui::End();
 
-	/* Shaders: */
-	{
-		Engine::ImGuiDrawer::Draw( phong_shader );
-		Engine::ImGuiDrawer::Draw( basic_color_shader );
-		Engine::ImGuiDrawer::Draw( basic_textured_shader );
-		Engine::ImGuiDrawer::Draw( basic_textured_transparent_discard_shader );
-		Engine::ImGuiDrawer::Draw( outline_shader );
-		Engine::ImGuiDrawer::Draw( fullscreen_blit_shader );
-	}
-
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ], renderer );
 	Engine::ImGuiDrawer::Draw( ground_quad_material, renderer );
