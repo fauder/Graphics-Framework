@@ -616,6 +616,16 @@ void SandboxApplication::RenderImGui()
 
 	ImGui::End();
 
+	if( ImGui::Begin( ICON_FA_IMAGE " Textures", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		const auto& texture_map( Engine::AssetDatabase< Engine::Texture >::Assets() );
+
+		for( auto& [ asset_name, asset ] : texture_map )
+			Engine::ImGuiDrawer::Draw( &asset, asset_name.c_str() );
+	}
+
+	ImGui::End();
+
 	renderer.RenderImGui();
 }
 
