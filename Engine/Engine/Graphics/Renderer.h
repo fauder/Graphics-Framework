@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Drawable.h"
+#include "Framebuffer.h"
 #include "Core/BitFlags.hpp"
 #include "Core/DirtyBlob.h"
 #include "Scene/Camera.h"
@@ -286,6 +287,15 @@ namespace Engine
 		void SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces );
 
 		/*
+		 * Framebuffer:
+		 */
+
+		void SetCurrentFramebuffer( const Framebuffer* framebuffer );
+		void ResetToDefaultFramebuffer( const Framebuffer::Usage usage = Framebuffer::Usage::Both );
+		bool DefaultFramebufferIsBound() const;
+		const Framebuffer* CurrentFramebuffer() const;
+
+		/*
 		 * Other:
 		 */
 
@@ -327,6 +337,12 @@ namespace Engine
 		void Clear() const;
 
 	private:
+
+		/*
+		 * Framebuffer:
+		 */
+
+		const Framebuffer* framebuffer_current;
 
 		/*
 		 * Clearing:

@@ -10,6 +10,7 @@ namespace Engine
 {
 	Renderer::Renderer()
 		:
+		framebuffer_current( nullptr ),
 		lights_point_active_count( 0 ),
 		lights_spot_active_count( 0 ),
 		clear_color( Color4::Gray( 0.1f ) ),
@@ -31,8 +32,8 @@ namespace Engine
 
 		if( update_uniform_buffer_other )
 		{
-		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
-		uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION", view_matrix* camera.GetProjectionMatrix() );
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION", view_matrix* camera.GetProjectionMatrix() );
 		}
 
 		if( update_uniform_buffer_lighting )
@@ -423,6 +424,28 @@ namespace Engine
 	void Renderer::SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces )
 	{
 		glFrontFace( ( GLenum )winding_order_of_front_faces );
+	}
+
+	void Renderer::SetCurrentFramebuffer( const Framebuffer* framebuffer )
+	{
+		framebuffer_current = framebuffer;
+		framebuffer_current->Bind();
+	}
+
+	void Renderer::ResetToDefaultFramebuffer( const Framebuffer::Usage usage )
+	{
+		framebuffer_current = nullptr;
+		glBindFramebuffer( ( GLenum )usage, 0 );
+	}
+
+	bool Renderer::DefaultFramebufferIsBound() const
+	{
+		return framebuffer_current == nullptr;
+	}
+
+	const Framebuffer* Renderer::CurrentFramebuffer() const
+	{
+		return framebuffer_current;
 	}
 
 	void Renderer::SetPolygonMode( const PolygonMode mode )
