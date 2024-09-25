@@ -4,8 +4,6 @@
 #include <map>
 #include <string>
 
-#include "Graphics/Texture.h"
-
 namespace Engine
 {
 	// Singleton.
@@ -70,6 +68,35 @@ namespace Engine
 				/* Asset is already loaded, return the existing one. */
 				return &instance.asset_map[ name ];
 			}
+		}
+
+		static AssetType* AddExistingAsset( AssetType&& asset, const std::string& file_path = "<not-on-disk>" )
+		{
+			auto& instance = Instance();
+
+			const auto& asset_name = asset.Name();
+
+			if( instance.asset_map.contains( asset_name ) )
+				return nullptr;
+
+			instance.asset_path_map[ asset_name ] = file_path;
+			return &( instance.asset_map[ asset_name ] = std::move( asset ) );
+		}
+
+		static AssetType* AddOrUpdateExistingAsset( AssetType&& asset, const std::string& file_path = "<not-on-disk>" )
+		{
+			auto& instance = Instance();
+
+			const auto& asset_name = asset.Name();
+
+			instance.asset_path_map[ asset_name ] = file_path;
+			return &( instance.asset_map[ asset_name ] = std::move( asset ) );
+		}
+
+		static const std::map< std::string, AssetType >& Assets()
+		{
+			auto& instance = Instance();
+			return instance.asset_map;
 		}
 
 	private:

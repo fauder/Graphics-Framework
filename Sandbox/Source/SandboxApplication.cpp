@@ -713,9 +713,9 @@ void SandboxApplication::ResetLightingData()
 		.is_enabled = true,
 		.data =
 		{
-			.ambient               = Engine::Color3{  0.05f,  0.05f,  0.05f },
-			.diffuse               = Engine::Color3{  0.4f,   0.4f,   0.4f  },
-			.specular              = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
+			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
+			.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
 		},
 		.transform = &light_directional_transform
 	};
@@ -754,8 +754,8 @@ void SandboxApplication::ResetLightingData()
 			.specular = Engine::Color3{  0.5f,   0.5f,   0.33f  },
 
 		/* End of GLSL equivalence. */
-			.cutoff_angle_inner     = 12.5_deg,
-			.cutoff_angle_outer     = 17.5_deg
+			.cutoff_angle_inner = 12.5_deg,
+			.cutoff_angle_outer = 17.5_deg
 		},
 		.transform = &light_spot_transform
 	};
@@ -801,7 +801,7 @@ void SandboxApplication::ResetMaterialData()
 	outline_material = Engine::Material( "Outline", &outline_shader );
 
 	offscreen_quad_material = Engine::Material( "Offscreen Quad", &fullscreen_blit_shader );
-	offscreen_quad_material.SetTexture( "uniform_texture_slot", &offscreen_framebuffer_color_attachment );
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment );
 
 	ground_quad_surface_data = front_wall_quad_surface_data =
 	{
@@ -896,7 +896,7 @@ void SandboxApplication::InitializeFramebufferTextures()
 	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
 	std::string name( "Offscreen FB Color Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
 
-	offscreen_framebuffer_color_attachment = Engine::Texture( name, GL_RGBA, width, height );
+	offscreen_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
 }
 
 void SandboxApplication::InitializeRenderbuffers()
@@ -913,6 +913,6 @@ void SandboxApplication::InitializeFramebuffers()
 	std::string name( "Offscreen FB " + std::to_string( width ) + "x" + std::to_string( height ) );
 
 	offscreen_framebuffer = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
-												 &offscreen_framebuffer_color_attachment,
+												 offscreen_framebuffer_color_attachment,
 												 &offscreen_framebuffer_depth_and_stencil_attachment );
 }

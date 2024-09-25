@@ -77,7 +77,7 @@ private:
 	Engine::Drawable offscreen_quad_drawable;
 
 /* Textures: */
-	Engine::Texture offscreen_framebuffer_color_attachment;
+	Engine::Texture* offscreen_framebuffer_color_attachment;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
