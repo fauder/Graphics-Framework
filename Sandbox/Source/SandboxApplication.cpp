@@ -671,6 +671,10 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 
 void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
 {
+	/* Do nothing on minimize: */
+	if( width_new_pixels == 0 || height_new_pixels == 0 )
+		return;
+
 	// Re-calculate the aspect ratio:
 	if( auto_calculate_aspect_ratio )
 	{
