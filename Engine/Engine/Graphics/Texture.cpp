@@ -142,7 +142,8 @@ namespace Engine
 
 	Texture::~Texture()
 	{
-		glDeleteTextures( 1, &id );
+		if( IsValid() )
+			glDeleteTextures( 1, &id );
 	}
 
 	void Texture::SetName( const std::string& new_name )
