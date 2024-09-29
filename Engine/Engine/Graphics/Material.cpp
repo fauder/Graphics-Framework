@@ -143,7 +143,10 @@ namespace Engine
 
 	void Material::UploadUniform( const Uniform::Information& uniform_info )
 	{
-		shader->SetUniform( uniform_info, uniform_blob_default_block.Get( uniform_info.offset ) );
+		if( uniform_info.count_array > 1 )
+			shader->SetUniformArray( uniform_info, uniform_blob_default_block.Get( uniform_info.offset ) );
+		else
+			shader->SetUniform( uniform_info, uniform_blob_default_block.Get( uniform_info.offset ) );
 	}
 
 	void Material::UploadUniforms()

@@ -68,11 +68,11 @@ namespace Engine
 		}
 
 		template< typename UniformType >
-		void SetArray( const std::string& uniform_name, const UniformType& value )
+		void SetArray( const std::string& uniform_name, const UniformType* address )
 		{
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
-			uniform_blob_default_block.Set( value, uniform_info.offset, sizeof( UniformType ) * uniform_info.count_array );
+			uniform_blob_default_block.Set( ( std::byte* )address, uniform_info.offset, sizeof( UniformType ) * uniform_info.count_array );
 		}
 
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )

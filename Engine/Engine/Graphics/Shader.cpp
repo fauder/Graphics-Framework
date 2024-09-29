@@ -646,7 +646,7 @@ namespace Engine
 				.usage_hint				 = UsageHint::Unassigned
 			};
 
-			offset += !is_buffer_member * size;
+			offset += !is_buffer_member * size * array_element_count;
 		}
 	}
 
@@ -889,7 +889,7 @@ namespace Engine
 		/* Sum of default block (i.e., not in any explicit Uniform Buffer) uniforms: */
 		for( const auto& [ uniform_name, uniform_info ] : uniform_info_map )
 			if( not uniform_info.is_buffer_member ) // Skip buffer members, as their layout (std140) means their total buffer size is calculated differently.
-				uniform_book_keeping_info.default_block_size += uniform_info.size;
+				uniform_book_keeping_info.default_block_size += uniform_info.size * uniform_info.count_array;
 
 		/* Now add buffer block sizes (calculated before): */
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_regular )
