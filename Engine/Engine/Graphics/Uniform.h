@@ -35,6 +35,7 @@ namespace Engine
 
 			std::string editor_name;
 			UsageHint usage_hint;
+			int usage_hint_array_dimensions[ 3 ];
 		};
 
 		enum class BufferCategory

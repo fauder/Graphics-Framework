@@ -11,7 +11,8 @@ namespace Engine
 
 		None,
 		AsColor3,
-		AsColor4
+		AsColor4,
+		AsArray
 	};
 
 	static UsageHint UsageHint_StringToEnum( const std::string& string )
@@ -20,6 +21,8 @@ namespace Engine
 			return UsageHint::AsColor3;
 		else if( string == "color4" )
 			return UsageHint::AsColor4;
+		else if( string.compare( 0, 5, "array", 5 ) == 0 )
+			return UsageHint::AsArray;
 		else
 			return UsageHint::None;
 	}

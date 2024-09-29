@@ -267,7 +267,7 @@ namespace Engine
 
 	void Shader::PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::vector< std::string >& features_to_set )
 	{
-		std::regex pattern( R"(#define\s+([_[:alnum:]]+)\s*(\S+)?\s*?\r?\n)" ); // ([_[:alnum:]]+) is to FAIL the Regex for non al-num & non-underscore character, to exclude macros mostly.
+		std::regex pattern( R"(#define\s+([_[:alnum:]]+)\s*(\S+)?\s*?\r?\n)" ); // ([_[:alnum:]]+) is to FAIL the Regex for non alnum & non-underscore characters, to exclude macros mostly.
 		std::smatch matches;
 
 		std::string shader_source_copy( shader_source_to_modify );
@@ -307,7 +307,7 @@ namespace Engine
 
 		/* Parse definitions via "#define <feature_name> <optional_value>" syntax: */
 		{
-			std::regex pattern( R"(#define\s+([_[:alnum:]]+)\s*(\S+)?\s*\r?\n)" ); // ([_[:alnum:]]+) is to FAIL the Regex for non al-num & non-underscore character, to exclude macros mostly.
+			std::regex pattern( R"(#define\s+([_[:alnum:]]+)\s*(\S+)?\s*\r?\n)" ); // ([_[:alnum:]]+) is to FAIL the Regex for non alnum & non-underscore characters, to exclude macros mostly.
 			std::smatch matches;
 
 			if( std::regex_search( shader_source, matches, pattern ) )
@@ -487,6 +487,24 @@ namespace Engine
 							token_end_pos != std::string::npos )
 						{
 							current_pos = hint_token_pos + 6 /* to get past "_hint_" */;
+
+							// TODO: Support parsing #defines from _hint_array_WIDTH_HEIGHT.
+
+							int array_dimensions[ 3 ] = { 0, 0, 0 };
+							auto dimension_current_pos = current_pos;
+							for( auto i = 0; i < 3; i++ )
+							{
+								if( const auto hint_array_dimensions_0_pos = shader_source.find( '_', dimension_current_pos );
+									hint_array_dimensions_0_pos != std::string::npos && hint_array_dimensions_0_pos < token_end_pos )
+								{
+									array_dimensions[ i ] = std::atoi( shader_source.data() + hint_array_dimensions_0_pos + 1 );
+
+									dimension_current_pos = hint_array_dimensions_0_pos + 1;
+								}
+								else
+									break;
+							}
+							
 							const std::string hint_string( shader_source.substr( current_pos, token_end_pos - current_pos ) );
 							const auto hint = UsageHint_StringToEnum( hint_string );
 
@@ -496,7 +514,24 @@ namespace Engine
 								if( const auto delimiter_whitespace_pos = std::string_view( shader_source ).rfind( ' ', semicolon_pos );
 									delimiter_whitespace_pos != std::string::npos )
 								{
-									const std::string uniform_name( shader_source.substr( delimiter_whitespace_pos + 1, semicolon_pos - delimiter_whitespace_pos - 1 ) );
+									std::string uniform_name;
+
+									if( hint == UsageHint::AsArray )
+									{
+										if( const auto first_square_bracket_pos = std::string_view( shader_source ).rfind( '[', delimiter_whitespace_pos );
+											first_square_bracket_pos != std::string::npos )
+										{
+											if( const auto delimiter_whitespace_before_bracket_pos = std::string_view( shader_source ).rfind( ' ', first_square_bracket_pos );
+												delimiter_whitespace_before_bracket_pos != std::string::npos )
+											{
+												uniform_name = shader_source.substr( delimiter_whitespace_before_bracket_pos + 1, first_square_bracket_pos - delimiter_whitespace_before_bracket_pos - 1 ) +
+																"[0]"; // GLSL array uniform naming convention.
+											}
+										}
+
+									}
+									else
+										uniform_name = shader_source.substr( delimiter_whitespace_pos + 1, semicolon_pos - delimiter_whitespace_pos - 1 );
 
 									if( auto iterator = uniform_info_map.find( uniform_name );
 										iterator != uniform_info_map.cend() && iterator->second.usage_hint != UsageHint::Unassigned && hint != iterator->second.usage_hint )
@@ -508,7 +543,12 @@ namespace Engine
 										LogErrors( complete_error_string );
 									}
 									else
+									{
+										ASSERT_DEBUG_ONLY( uniform_info_map.contains( uniform_name ) );
+
 										uniform_info_map[ uniform_name ].usage_hint = hint;
+										std::memcpy( uniform_info_map[ uniform_name ].usage_hint_array_dimensions, array_dimensions, sizeof( int ) * 3 );
+									}
 								}
 							}
 						}
