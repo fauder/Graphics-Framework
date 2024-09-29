@@ -953,6 +953,11 @@ namespace Engine
 			if( editor_name[ index - 1 ] == ' ' )
 				editor_name[ index ] = std::toupper( editor_name[ index ] );
 
+		/* Get rid of the 0 inside [0] for arrays: */
+		if( const auto bracket_zero_pos = editor_name.find( "[0]" );
+			bracket_zero_pos != std::string::npos )
+			editor_name.erase( bracket_zero_pos + 1, 1 );
+
 		return editor_name;
 	}
 
