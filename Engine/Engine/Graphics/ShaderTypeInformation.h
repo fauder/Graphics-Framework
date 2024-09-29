@@ -214,6 +214,16 @@ namespace Engine::GL::Type
 
 		throw std::runtime_error( "ERROR::SHADER_TYPE::GetNameOfType() called with an unknown GL type!" );
 	}
+
+	inline void* AddressOf( const GLenum type, void* address, const int element_index )
+	{
+		return ( void* )( ( uintptr_t )address + element_index * SizeOf( type ) );
+	}
+
+	inline const void* AddressOf( const GLenum type, const void* address, const int element_index )
+	{
+		return ( const void* )( ( uintptr_t )address + element_index * SizeOf( type ) );
+	}
 }
 
 /* Types not added yet:
