@@ -54,6 +54,9 @@ namespace Engine
 																																			.GetBufferInformationMap();	}
 		inline const std::unordered_map< std::string, const Texture*					>& GetTextureMap()				const { return texture_map; }
 
+		inline bool HasUniform( const std::string& uniform_name ) const { return uniform_info_map->contains( uniform_name ); }
+		inline bool HasUniformBuffer( const std::string& uniform_buffer_name ) const { return uniform_buffer_management_regular.GetBufferInformationMap().contains( uniform_buffer_name ); }
+
 		const void* Get( const Uniform::Information& uniform_info ) const;
 			  void* Get( const Uniform::Information& uniform_info );
 		const void* Get( const std::string& uniform_buffer_name ) const;
