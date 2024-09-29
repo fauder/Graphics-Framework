@@ -628,7 +628,7 @@ namespace Engine
 								&length_dontCare, &array_element_count, &type, 
 								uniform_book_keeping_info.name_holder.data() );
 
-			const int size = GetSizeOfType( type );
+			const int size = GL::Type::SizeOf( type );
 
 			const auto location = glGetUniformLocation( program_id, uniform_book_keeping_info.name_holder.c_str() );
 

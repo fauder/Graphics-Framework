@@ -704,7 +704,7 @@ namespace Engine::ImGuiDrawer
 						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.location_or_block_index );
 						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.size );
 						ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info.offset );
-						ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info.type ) );
+						ImGui::TableNextColumn(); ImGui::TextUnformatted( GL::Type::NameOf( uniform_info.type ) );
 					}
 
 					ImGui::PopStyleColor();
@@ -750,7 +750,7 @@ namespace Engine::ImGuiDrawer
 										ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->location_or_block_index );
 										ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->size );
 										ImGui::TableNextColumn(); ImGui::Text( "%d", uniform_info->offset );
-										ImGui::TableNextColumn(); ImGui::TextUnformatted( GetNameOfType( uniform_info->type ) );
+										ImGui::TableNextColumn(); ImGui::TextUnformatted( GL::Type::NameOf( uniform_info->type ) );
 									}
 								}
 

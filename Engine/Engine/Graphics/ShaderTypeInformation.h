@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include <variant>
 
-namespace Engine
+namespace Engine::GL::Type
 {
 	using ShaderTypesVariant = 
 		std::variant<
@@ -32,7 +32,7 @@ namespace Engine
 							Matrix3x2D,	Matrix3x4D,
 							Matrix4x2D,	Matrix4x3D >;
 
-	inline int GetSizeOfType( const GLenum type )
+	inline int SizeOf( const GLenum type )
 	{
 		switch( type )
 		{
@@ -95,7 +95,7 @@ namespace Engine
 		throw std::runtime_error( "ERROR::SHADER_TYPE::GetSizeOfType() called with an unknown GL type!" );
 	}
 
-	inline const char* GetNameOfType( const GLenum type )
+	inline const char* NameOf( const GLenum type )
 	{
 		switch( type )
 		{
