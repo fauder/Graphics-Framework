@@ -680,6 +680,8 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	if( width_new_pixels == 0 || height_new_pixels == 0 )
 		return;
 
+	renderer.OnFramebufferResize( width_new_pixels, height_new_pixels );
+
 	// Re-calculate the aspect ratio:
 	if( auto_calculate_aspect_ratio )
 	{

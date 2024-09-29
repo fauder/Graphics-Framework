@@ -175,6 +175,7 @@ namespace Engine
 		void Render( Camera& camera, std::initializer_list< RenderGroupID > = {} );
 		void RenderImGui();
 		void OnProjectionParametersChange( Camera& camera );
+		void OnFramebufferResize( const int new_width_in_pixels, const int new_height_in_pixels );
 
 		/* 
 		 * RenderGroup & Drawable:

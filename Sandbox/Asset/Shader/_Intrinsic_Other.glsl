@@ -8,4 +8,7 @@ layout ( row_major, std140 ) uniform _Intrinsic_Other
     float _INTRINSIC_PROJECTION_FAR;
     float _INTRINSIC_PROJECTION_ASPECT_RATIO;
     float _INTRINSIC_PROJECTION_VERTICAL_FIELD_OF_VIEW;
+
+    vec2 _INTRINSIC_VIEWPORT_SIZE;
+    //vec2 padding;
 };

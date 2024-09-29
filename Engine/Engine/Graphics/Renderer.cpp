@@ -200,6 +200,14 @@ namespace Engine
 		}
 	}
 
+	void Renderer::OnFramebufferResize( const int new_width_in_pixels, const int new_height_in_pixels )
+	{
+		if( update_uniform_buffer_other )
+		{
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_VIEWPORT_SIZE", Vector2( ( float )new_width_in_pixels, ( float )new_height_in_pixels ) );
+		}
+	}
+
 	void Renderer::AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id )
 	{
 		auto& render_group = render_group_map[ render_group_id ];
