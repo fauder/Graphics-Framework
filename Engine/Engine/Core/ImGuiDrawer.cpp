@@ -451,6 +451,33 @@ namespace Engine::ImGuiDrawer
 							case UsageHint::AsColor4:
 								is_modified |= Draw( *reinterpret_cast< Color4* >( material.Get( uniform_info ) ) );
 								break;
+							case UsageHint::AsArray:
+							{
+								// TODO: Handle different array ranks (currently hard-coded to 2).
+
+								void* address = material.Get( uniform_info );
+
+								ImGui::PushItemWidth( uniform_info.usage_hint_array_dimensions[ 1 ] * ImGui::CalcTextSize( " []" ).x + ( uniform_info.usage_hint_array_dimensions[ 1 ] - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+
+								for( int i = 0; i < uniform_info.usage_hint_array_dimensions[ 0 ]; i++ )
+								{
+									for( int j = 0; j < uniform_info.usage_hint_array_dimensions[ 1 ]; j++ )
+									{
+										void* element_address = GL::Type::AddressOf( uniform_info.type, address, + i * uniform_info.usage_hint_array_dimensions[ 1 ] + j );
+										ImGui::PushID( element_address );
+										is_modified |= Draw( uniform_info.type, element_address );
+										ImGui::PopID();
+										ImGui::SameLine();
+									}
+
+									ImGui::NewLine();
+								}
+
+								ImGui::PopItemWidth();
+
+								ImGui::NewLine();
+							}
+								break;
 							default:
 								is_modified |= Draw( uniform_info.type, material.Get( uniform_info ) );
 								break;
