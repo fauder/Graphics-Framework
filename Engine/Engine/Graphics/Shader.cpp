@@ -941,13 +941,13 @@ namespace Engine
 
 		std::replace( editor_name.begin(), editor_name.end(), '_', ' ' );
 
+		if( editor_name.compare( 0, 8, "UNIFORM ", 8 ) == 0 || editor_name.compare( 0, 8, "uniform ", 8 ) == 0 )
+			editor_name.erase( 0, 8 );
+
 		if( std::isalpha( editor_name[ 0 ] ) )
 			editor_name[ 0 ] = std::toupper( editor_name[ 0 ] );
 		else if( editor_name.starts_with( ' ' ) )
 			editor_name = editor_name.erase( 0, 1 );
-
-		if( editor_name.compare( 0, 7, "UNIFORM", 7 ) == 0 || editor_name.compare( 0, 7, "Uniform", 7 ) == 0 )
-			editor_name.erase( 0, 7 );
 
 		for( auto index = 1; index < editor_name.size(); index++ )
 			if( editor_name[ index - 1 ] == ' ' )
