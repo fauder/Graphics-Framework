@@ -116,6 +116,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
+    <ClInclude Include="Source\KernelData.h" />
     <ClInclude Include="Source\ModelInstance.h" />
     <ClInclude Include="Source\SandboxApplication.h" />
   </ItemGroup>
@@ -131,6 +132,7 @@
   <ItemGroup>
     <None Include="Asset\Shader\BasicTextured.frag" />
     <None Include="Asset\Shader\BasicTextured.vert" />
+    <None Include="Asset\Shader\GenericPostprocess.frag" />
     <None Include="Asset\Shader\Grayscale.frag" />
     <None Include="Asset\Shader\Outline.vert" />
     <None Include="Asset\Shader\FullScreenBlit.vert" />

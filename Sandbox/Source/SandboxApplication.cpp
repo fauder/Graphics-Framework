@@ -44,7 +44,8 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
 	outline_shader( "Outline" ),
 	fullscreen_blit_shader( "Fullscreen Blit" ),
-	postprocessing_grayscale_shader( "Post-process: Grayscale" ),
+	postprocess_grayscale_shader( "Post-process: Grayscale" ),
+	postprocess_generic_shader( "Post-process: Generic" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
@@ -106,10 +107,12 @@ void SandboxApplication::Initialize()
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
 	fullscreen_blit_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/BasicTextured.frag)" );
-	postprocessing_grayscale_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/Grayscale.frag)" );
+	postprocess_grayscale_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/Grayscale.frag)" );
+	postprocess_generic_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/GenericPostprocess.frag)" );
 
 	/* Register shaders not assigned to materials: */
-	renderer.RegisterShader( postprocessing_grayscale_shader );
+	renderer.RegisterShader( postprocess_grayscale_shader );
+	renderer.RegisterShader( postprocess_generic_shader );
 
 /* Initial transforms: */
 	ground_quad_transform
@@ -295,6 +298,16 @@ void SandboxApplication::Initialize()
 /* Other: */
 	renderer.SetFrontFaceConvention( Engine::Renderer::WindingOrder::CounterClockwise );
 	renderer.EnableFaceCulling( Engine::Renderer::Face::Back );
+	
+	postprocess_shader_generic_kernel = KernelData< 3, 3 >
+	{
+		.values =
+		{
+			-1.0f, -1.0f, -1.0f,
+			-1.0f, +9.0f, -1.0f,
+			-1.0f, -1.0f, -1.0f
+		}
+	};
 }
 
 void SandboxApplication::Shutdown()
@@ -382,6 +395,12 @@ void SandboxApplication::Update()
 		camera_transform.OffsetTranslation( camera_transform.Right()   * -camera_move_speed * time_delta );
 	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_D ) )
 		camera_transform.OffsetTranslation( camera_transform.Right()   * +camera_move_speed * time_delta );
+
+	/*if( offscreen_quad_material.HasUniformBuffer( "KernelData" ) )
+		offscreen_quad_material.Set( "KernelData", postprocess_shader_generic_kernel );*/
+
+	/*if( offscreen_quad_material.HasUniform( "uniform_kernel[0]" ) )
+		offscreen_quad_material.SetArray( "uniform_kernel[0]", postprocess_shader_generic_kernel.values );*/
 
 	renderer.Update( camera );
 }

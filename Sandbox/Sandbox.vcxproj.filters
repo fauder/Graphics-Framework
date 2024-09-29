@@ -4,6 +4,7 @@
     <ClInclude Include="Source\SandboxApplication.h" />
     <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
     <ClInclude Include="Source\ModelInstance.h" />
+    <ClInclude Include="Source\KernelData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\SandboxApplication.cpp" />
@@ -23,5 +24,6 @@
     <None Include="Asset\Shader\Outline.vert" />
     <None Include="Asset\Shader\FullScreenBlit.vert" />
     <None Include="Asset\Shader\Grayscale.frag" />
+    <None Include="Asset\Shader\GenericPostprocess.frag" />
   </ItemGroup>
 </Project>

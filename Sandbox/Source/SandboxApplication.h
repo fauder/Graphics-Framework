@@ -13,6 +13,7 @@
 #include "Engine/DefineMathTypes.h"
 
 // Project Includes.
+#include "KernelData.h"
 #include "ModelInstance.h"
 
 // std Includes.
@@ -106,7 +107,9 @@ private:
 
 	Engine::Shader fullscreen_blit_shader;
 
-	Engine::Shader postprocessing_grayscale_shader;
+	Engine::Shader postprocess_grayscale_shader;
+
+	Engine::Shader postprocess_generic_shader;
 
 /* Materials: */
 	std::vector< Engine::Material > light_source_material_array;
@@ -198,4 +201,6 @@ private:
 	bool show_imgui_demo_window;
 
 	std::string test_model_file_path;
+
+	KernelData< 3, 3 > postprocess_shader_generic_kernel;
 };
