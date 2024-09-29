@@ -105,7 +105,7 @@ namespace Engine
 		
 		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasRegularUniformBlocks(); }
 
-#pragma region Uniform Set< Type > Functions
+/* Uniform Upload; Non-array types: */
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );
 
@@ -133,6 +133,7 @@ namespace Engine
 			glUniform1i( location, value );
 		}
 
+		/* Vectors. */
 		template< typename Component, std::size_t Size > requires( Size >= 2 && Size <= 4 )
 		void SetUniform( const int location, const Math::Vector< Component, Size >& value )
 		{
@@ -159,15 +160,15 @@ namespace Engine
 				{
 					if constexpr( Size == 2 )
 					{
-						glUniform2fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform2fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 					if constexpr( Size == 3 )
 					{
-						glUniform3fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform3fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 					if constexpr( Size == 4 )
 					{
-						glUniform4fv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform4fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 				}
 
@@ -175,15 +176,15 @@ namespace Engine
 				{
 					if constexpr( Size == 2 )
 					{
-						glUniform2iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform2iv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 					if constexpr( Size == 3 )
 					{
-						glUniform3iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform3iv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 					if constexpr( Size == 4 )
 					{
-						glUniform4iv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform4iv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 				}
 
@@ -191,15 +192,15 @@ namespace Engine
 				{
 					if constexpr( Size == 2 )
 					{
-						glUniform2uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform2uiv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 					if constexpr( Size == 3 )
 					{
-						glUniform3uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform3uiv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 					if constexpr( Size == 4 )
 					{
-						glUniform4uiv( location, /* This is the number of ARRAY elements, not the number of vector components in this case. */ 1, value.Data() );
+						glUniform4uiv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, value.Data() );
 					}
 				}
 			}
@@ -225,46 +226,217 @@ namespace Engine
 			{
 				if constexpr( RowSize == 2U )
 				{
-					glUniformMatrix2fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix2fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 3U )
 				{
-					glUniformMatrix3fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix3fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 4U )
 				{
-					glUniformMatrix4fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix4fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 			}
 			else
 			{
 				if constexpr( RowSize == 2U && ColumnSize == 3U )
 				{
-					glUniformMatrix2x3fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix2x3fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 2U && ColumnSize == 4U )
 				{
-					glUniformMatrix2x4fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix2x4fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 3U && ColumnSize == 2U )
 				{
-					glUniformMatrix3x2fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix3x2fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 3U && ColumnSize == 4U )
 				{
-					glUniformMatrix3x4fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix3x4fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 4U && ColumnSize == 2U )
 				{
-					glUniformMatrix4x2fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix4x2fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 				if constexpr( RowSize == 4U && ColumnSize == 3U )
 				{
-					glUniformMatrix4x3fv( location, 1, GL_TRUE, value.Data() );
+					glUniformMatrix4x3fv( location, /* This is the number of ARRAY elements, which is 1 for non-arrays */ 1, GL_TRUE, value.Data() );
 				}
 			}
 		}
-#pragma endregion
+
+/* Uniform Upload; Array types: */
+
+		template< typename UniformType >
+		void SetUniformArray( const int location, const UniformType* address, const int element_count );
+
+		template<>
+		void SetUniformArray< float >( const int location, const float* address, const int element_count )
+		{
+			ASSERT_DEBUG_ONLY( element_count > 1 );
+			glUniform1fv( location, element_count, address );
+		}
+
+		template<>
+		void SetUniformArray< int >( const int location, const int* address, const int element_count )
+		{
+			ASSERT_DEBUG_ONLY( element_count > 1 );
+			glUniform1iv( location, element_count, address );
+		}
+
+		template<>
+		void SetUniformArray< unsigned int >( const int location, const unsigned int* address, const int element_count )
+		{
+			ASSERT_DEBUG_ONLY( element_count > 1 );
+			glUniform1uiv( location, element_count, address );
+		}
+
+		template<>
+		void SetUniformArray< bool >( const int location, const bool* address, const int element_count )
+		{
+			ASSERT_DEBUG_ONLY( element_count > 1 );
+			glUniform1iv( location, element_count, reinterpret_cast< const int* >( address ) );
+		}
+
+		/* Vectors. */
+		template< typename Component, std::size_t Size > requires( Size >= 2 && Size <= 4 )
+		void SetUniformArray( const int location, const Math::Vector< Component, Size >* address, const int element_count )
+		{
+			ASSERT_DEBUG_ONLY( element_count > 1 );
+			if constexpr( std::is_same_v< Component, bool > )
+			{
+				/* Since sizeof( bool ) != sizeof( int ), we have to create a Vector<> of integers, copy the data into it & pass its address for the memory to be laid out correctly: */
+				Math::Vector< int, Size > integer_version;
+				for( int i = 0; i < Size; i++ )
+					integer_version[ i ] = ( *address )[ i ];
+
+				if constexpr( Size == 2 )
+				{
+					glUniform2iv( location, element_count, reinterpret_cast< const int* >( integer_version.Data() ) );
+				}
+				if constexpr( Size == 3 )
+				{
+					glUniform3iv( location, element_count, reinterpret_cast< const int* >( integer_version.Data() ) );
+				}
+				if constexpr( Size == 4 )
+				{
+					glUniform4iv( location, element_count, reinterpret_cast< const int* >( integer_version.Data() ) );
+				}
+			}
+			else
+			{
+				if constexpr( std::is_same_v< Component, float > )
+				{
+					if constexpr( Size == 2 )
+					{
+						glUniform2fv( location, element_count, reinterpret_cast< const float* >( address ) );
+					}
+					if constexpr( Size == 3 )
+					{
+						glUniform3fv( location, element_count, reinterpret_cast< const float* >( address ) );
+					}
+					if constexpr( Size == 4 )
+					{
+						glUniform4fv( location, element_count, reinterpret_cast< const float* >( address ) );
+					}
+				}
+
+				if constexpr( std::is_same_v< Component, int > )
+				{
+					if constexpr( Size == 2 )
+					{
+						glUniform2iv( location, element_count, reinterpret_cast< const int* >( address ) );
+					}
+					if constexpr( Size == 3 )
+					{
+						glUniform3iv( location, element_count, reinterpret_cast< const int* >( address ) );
+					}
+					if constexpr( Size == 4 )
+					{
+						glUniform4iv( location, element_count, reinterpret_cast< const int* >( address ) );
+					}
+				}
+
+				if constexpr( std::is_same_v< Component, unsigned int > )
+				{
+					if constexpr( Size == 2 )
+					{
+						glUniform2uiv( location, element_count, reinterpret_cast< const unsigned int* >( address ) );
+					}
+					if constexpr( Size == 3 )
+					{
+						glUniform3uiv( location, element_count, reinterpret_cast< const unsigned int* >( address ) );
+					}
+					if constexpr( Size == 4 )
+					{
+						glUniform4uiv( location, element_count, reinterpret_cast< const unsigned int* >( address ) );
+					}
+				}
+			}
+		}
+
+		template<>
+		void SetUniformArray< Color3 >( const int location, const Engine::Color3* address, const int element_count )
+		{
+			SetUniformArray( location, reinterpret_cast< const Vector3* >( address ), element_count );
+		}
+
+		template<>
+		void SetUniformArray< Color4 >( const int location, const Engine::Color4* address, const int element_count )
+		{
+			SetUniformArray( location, reinterpret_cast< const Vector4* >( address ), element_count );
+		}
+
+		template< Concepts::Arithmetic Type, std::size_t RowSize, std::size_t ColumnSize >
+		requires Concepts::NonZero< RowSize > && Concepts::NonZero< ColumnSize >
+		void SetUniformArray( const int location, const Math:: Matrix< Type, RowSize, ColumnSize >* address, const int element_count )
+		{
+			ASSERT_DEBUG_ONLY( element_count > 1 );
+
+			if constexpr( RowSize == ColumnSize )
+			{
+				if constexpr( RowSize == 2U )
+				{
+					glUniformMatrix2fv( location, element_count, GL_TRUE, address->Data() );
+				}
+				if constexpr( RowSize == 3U )
+				{
+					glUniformMatrix3fv( location, element_count, GL_TRUE, address->Data() );
+				}
+				if constexpr( RowSize == 4U )
+				{
+					glUniformMatrix4fv( location, element_count, GL_TRUE, address->Data() );
+				}
+			}
+			else
+			{
+				if constexpr( RowSize == 2U && ColumnSize == 3U )
+				{
+					glUniformMatrix2x3fv( location, element_count, GL_TRUE, address->Data() );
+				}
+				if constexpr( RowSize == 2U && ColumnSize == 4U )
+				{
+					glUniformMatrix2x4fv( location, element_count, GL_TRUE, address->Data() );
+				}
+				if constexpr( RowSize == 3U && ColumnSize == 2U )
+				{
+					glUniformMatrix3x2fv( location, element_count, GL_TRUE, address->Data() );
+				}
+				if constexpr( RowSize == 3U && ColumnSize == 4U )
+				{
+					glUniformMatrix3x4fv( location, element_count, GL_TRUE, address->Data() );
+				}
+				if constexpr( RowSize == 4U && ColumnSize == 2U )
+				{
+					glUniformMatrix4x2fv( location, element_count, GL_TRUE, address->Data() );
+				}
+				if constexpr( RowSize == 4U && ColumnSize == 3U )
+				{
+					glUniformMatrix4x3fv( location, element_count, GL_TRUE, address->Data() );
+				}
+			}
+		}
 
 	/*
 	 * "Setting" Uniform Buffers is not the Shader's responsibility (nor can it do it); It's just an OpenGL Buffer Object.
@@ -286,8 +458,18 @@ namespace Engine
 			SetUniform( uniform_info.location_or_block_index, value );
 		}
 
+		template< typename UniformType >
+		/* Prohibit Uniform Buffers: */ requires( not std::is_base_of_v< Std140StructTag, UniformType > )
+			void SetUniformArray( const char* uniform_name, const UniformType* value, const int element_count )
+		{
+			const auto& uniform_info = GetUniformInformation( uniform_name );
+
+			SetUniformArray( uniform_info.location_or_block_index, value, element_count );
+		}
+
 /* Uniform setters; By info. & pointer: */
 		void SetUniform( const Uniform::Information& uniform_info, const void* value_pointer );
+		void SetUniformArray( const Uniform::Information& uniform_info, const void* value_pointer );
 
 	private:
 

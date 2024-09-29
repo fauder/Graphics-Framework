@@ -67,6 +67,14 @@ namespace Engine
 			uniform_blob_default_block.Set( value, uniform_info.offset );
 		}
 
+		template< typename UniformType >
+		void SetArray( const std::string& uniform_name, const UniformType& value )
+		{
+			const auto& uniform_info = GetUniformInformation( uniform_name );
+
+			uniform_blob_default_block.Set( value, uniform_info.offset, sizeof( UniformType ) * uniform_info.count_array );
+		}
+
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
 		void Set( const std::string& uniform_buffer_name, const StructType& value )
 		{
@@ -133,6 +141,17 @@ namespace Engine
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
 			uniform_blob_default_block.Set( value, uniform_info.offset );
+
+			UploadUniform( uniform_info );
+		}
+
+		template< typename UniformType >
+		void SetAndUploadUniformArray( const std::string& uniform_name, const UniformType& value ) // Renderer calls this, it has private access through friend declaration.
+		{
+			Set( uniform_name, value );
+			const auto& uniform_info = GetUniformInformation( uniform_name );
+
+			uniform_blob_default_block.Set( value, uniform_info.offset, uniform_info.count_array );
 
 			UploadUniform( uniform_info );
 		}

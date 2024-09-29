@@ -29,6 +29,7 @@ namespace Engine
 			int location_or_block_index; // Changes meaning depending on context; location if this is a stand-alone uniform, or the index of the block if this resides in a uniform buffer block.
 			int size;
 			int offset;
+			int count_array; // Element count (>= 1) for arrays, 1 for non-arrays.
 			GLenum type;
 			bool is_buffer_member;
 
