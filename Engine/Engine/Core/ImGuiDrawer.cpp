@@ -372,7 +372,10 @@ namespace Engine::ImGuiDrawer
 		if( ImGui::Begin( ICON_FA_IMAGE " Textures" ) )
 		{
 			const ImVec2 region_available( ImGui::GetContentRegionAvail() );
-			const ImVec2 child_size( region_available.x, region_available.y / 2.0f - IMGUI_STYLE->ItemSpacing.y );
+			const float separator_height( IMGUI_STYLE->ItemSpacing.y * 2.0f );
+			const float line_height( ImGui::CalcTextSize( "A" ).y );
+
+			const ImVec2 child_size( region_available.x, region_available.y / 2.0f - separator_height - line_height );
 
 			if( ImGui::BeginChild( "Textures", child_size ) )
 			{
@@ -391,25 +394,30 @@ namespace Engine::ImGuiDrawer
 
 			ImGui::Separator();
 
-			const ImVec2 image_max_size( ImGui::GetContentRegionAvail() );
-
 			if( selected_texture )
 			{
+				const ImVec2 preview_area_size( ImGui::GetContentRegionAvail() - ImVec2( 0.0f, line_height ) );
+
 				const float image_width( ( float )selected_texture->Width() );
 				const float image_height( ( float )selected_texture->Height() );
 				const float image_aspect_ratio = image_width / image_height;
 
-				const float image_width_fit  = image_max_size.y < image_max_size.x ? image_aspect_ratio * image_max_size.y : image_max_size.x;
+				const float image_width_fit  = preview_area_size.y < preview_area_size.x ? image_aspect_ratio * preview_area_size.y : preview_area_size.x;
 				const float image_height_fit = image_width_fit / image_aspect_ratio;
 
-				const float padding_x = ( image_max_size.x - image_width_fit ) / 2.0f;
-				const float padding_y = ( image_max_size.y - image_height_fit ) / 2.0f;
+				const float padding_x = ( preview_area_size.x - image_width_fit ) / 2.0f;
+				const float padding_y = ( preview_area_size.y - image_height_fit ) / 2.0f;
 
 				ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( padding_x, padding_y ) );
 				ImGui::Image( ( void* )( intptr_t )selected_texture->Id(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
+
+				char info_line_buffer[ 255 ];
+				sprintf_s( info_line_buffer, 255, "%dx%d", ( int )image_width, ( int )image_height );
+				ImGui::Indent( ( preview_area_size.x - ImGui::CalcTextSize( info_line_buffer ).x ) / 2.0f );
+				ImGui::TextUnformatted( info_line_buffer );
 			}
 			else
-				ImGui::Dummy( image_max_size );
+				ImGui::Dummy( ImGui::GetContentRegionAvail() );
 		}
 
 		ImGui::End();

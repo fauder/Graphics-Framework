@@ -89,10 +89,10 @@ namespace Engine
 
 	/* Queries: */
 		inline const ID				Id()		const { return id;			}
-		inline const std::string&	Name()		const { return name;		}
 		inline const Vector2I&		Size()		const { return size;		}
 		inline const int			Width()		const { return size.X();	}
 		inline const int			Height()	const { return size.Y();	}
+		inline const std::string&	Name()		const { return name;		}
 
 	/* Usage: */
 		void SetName( const std::string& new_name );
