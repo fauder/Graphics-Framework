@@ -170,8 +170,6 @@ namespace Engine
 				uniform_blob_default_block.Set( ( const std::byte* )&texture_unit_slot, sampler_uniform_info.offset, sampler_uniform_info.size );
 
 				texture->Activate( texture_unit_slot );
-
-				UploadUniform( sampler_uniform_info );
 			}
 		}
 	}
