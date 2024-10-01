@@ -73,6 +73,11 @@ namespace Engine
 			Base( r, g, b, a )
 		{}
 
+		constexpr Color4( const Color3& color, const float alpha )
+			:
+			Base( color.X(), color.Y(), color.Z(), alpha )
+		{}
+
 		template< std::size_t VectorSize > requires( VectorSize <= Base::Dimension() )
 		constexpr Color4( const Vector< float, VectorSize >& vector )
 			:
