@@ -93,10 +93,10 @@ namespace Engine::Math
 		constexpr Component& operator[] ( const std::size_t index ) { return data[ index ]; }
 		constexpr const Component& operator[] ( const std::size_t index ) const { return data[ index ]; }
 
-		constexpr Component X() const requires( Size >= 1 ) { return data[ 0 ]; };
-		constexpr Component Y() const requires( Size >= 2 ) { return data[ 1 ]; };
-		constexpr Component Z() const requires( Size >= 3 ) { return data[ 2 ]; };
-		constexpr Component W() const requires( Size >= 4 ) { return data[ 3 ]; };
+		constexpr const Component& X() const requires( Size >= 1 ) { return data[ 0 ]; };
+		constexpr const Component& Y() const requires( Size >= 2 ) { return data[ 1 ]; };
+		constexpr const Component& Z() const requires( Size >= 3 ) { return data[ 2 ]; };
+		constexpr const Component& W() const requires( Size >= 4 ) { return data[ 3 ]; };
 
 		constexpr const Vector< Component, 2 >& XY()   const requires( Size >= 2 ) { return reinterpret_cast< const Vector< Component,2 >& >( *this ); };
 		constexpr const Vector< Component, 3 >& XYZ()  const requires( Size >= 3 ) { return reinterpret_cast< const Vector< Component,3 >& >( *this ); };
