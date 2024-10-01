@@ -143,7 +143,10 @@ namespace Engine
 		{
 			for( auto& [ render_group_id, render_group ] : render_group_map )
 			{
-				ImGui::Checkbox( ( "##" + render_group.name ).c_str(), &render_group.is_enabled );
+				ImGui::PushID( render_group_id );
+				ImGui::Checkbox( "", &render_group.is_enabled );
+				ImGui::PopID();
+
 				ImGui::SameLine();
 				if( ImGui::TreeNodeEx( render_group.name.c_str(), 0, "Render Group [%d]: %s", render_group_id, render_group.name.c_str() ) )
 				{
@@ -161,7 +164,7 @@ namespace Engine
 									if( drawable->material->Name() == material_name )
 									{
 										ImGui::PushID( drawable );
-										ImGui::Checkbox( drawable->material->name.c_str(), &drawable->is_enabled );
+										ImGui::Checkbox( "", &drawable->is_enabled );
 										ImGui::PopID();
 										ImGui::BeginDisabled( not drawable->is_enabled );
 										ImGui::SameLine(); ImGui::TextUnformatted( drawable->material->name.c_str() );
