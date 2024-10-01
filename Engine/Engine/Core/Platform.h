@@ -189,6 +189,7 @@ namespace Platform
 	bool IsKeyReleased( const KeyCode key_code );
 
 	/* Mouse IO. */
+	void ResetMouseDeltas();
 	void CaptureMouse( const bool should_capture );
 	float GetMouseSensitivity();
 	void SetMouseSensitivity( const float new_sensitivity );

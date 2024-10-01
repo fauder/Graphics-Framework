@@ -274,6 +274,12 @@ namespace Platform
 		return glfwGetKey( WINDOW, int( key_code ) ) == GLFW_RELEASE;
 	}
 
+	void ResetMouseDeltas()
+	{
+		MOUSE_CAPTURE_IS_RESET = true;
+		MOUSE_CURSOR_X_DELTA = MOUSE_CURSOR_Y_DELTA = 0.0f;
+	}
+
 	void CaptureMouse( const bool should_capture )
 	{
 		if( !MOUSE_CAPTURE_ENABLED && should_capture )
