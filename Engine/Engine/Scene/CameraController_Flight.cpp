@@ -64,6 +64,11 @@ namespace Engine
 		return *this;
 	}
 
+	void CameraController_Flight::ResetToTransform()
+	{
+		orientation_spherical = Math::ToPolar3_Spherical_Game( camera->Forward() );
+	}
+
 	void CameraController_Flight::RecalculateRotationFromSphericalCoordinates()
 	{
 		camera->SetLookRotation( Math::ToVector3( orientation_spherical ) );

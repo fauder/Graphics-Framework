@@ -683,7 +683,10 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 		/* Use the key below ESC to toggle between game & menu/UI. */
 		case Platform::KeyCode::KEY_GRAVE_ACCENT:
 			if( key_action == Platform::KeyAction::PRESS )
+			{
 				ui_interaction_enabled = !ui_interaction_enabled;
+				Platform::ResetMouseDeltas();
+			}
 			break;
 		case Platform::KeyCode::KEY_W:
 			if( key_action == Platform::KeyAction::PRESS || key_action == Platform::KeyAction::REPEAT )
@@ -911,6 +914,8 @@ void SandboxApplication::ResetCamera( const CameraView view )
 		default:
 			break;
 	}
+
+	camera_controller.ResetToTransform();
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

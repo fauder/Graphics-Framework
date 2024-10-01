@@ -28,6 +28,8 @@ namespace Engine
 		CameraController_Flight& OffsetPitch( const Radians delta );
 		CameraController_Flight& OffsetPitch( const Radians delta, const Radians clamp_minimum, const Radians clamp_maximum );
 
+		void ResetToTransform();
+
 	private:
 		void RecalculateRotationFromSphericalCoordinates();
 
