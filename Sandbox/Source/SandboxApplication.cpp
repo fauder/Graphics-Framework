@@ -815,7 +815,7 @@ void SandboxApplication::ResetLightingData()
 		.is_enabled = true,
 		.data =
 		{
-			.ambient  = Engine::Color3{  0.05f,  0.05f,  0.05f },
+			.ambient  = Engine::Color3{  0.33f,  0.33f,  0.33f },
 			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
 			.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
 		},
