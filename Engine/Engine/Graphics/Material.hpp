@@ -168,13 +168,14 @@ namespace Engine
 
 		Shader* shader;
 
-		/* Allocated/Resized only when a shader is assigned. */
+		/* Allocated/Resized only when a shader is assigned. 
+		 * NOTE: Can't use a DirtyBlob for the default block as each Material possibly has different values per Material, thus the uniforms need to be updated per-frame. */
 		Blob uniform_blob_default_block;
 
 		/* Map pointer below is assigned only when the Shader itself is assigned/re-assigned to the Material, through Shader::GetUniformInfoMap(). */
 		const std::unordered_map< std::string, Uniform::Information >* uniform_info_map;
 
-		UniformBufferManagement< Blob > uniform_buffer_management_regular; 
+		UniformBufferManagement< Blob > uniform_buffer_management_regular; // Read above for why this does not use a DirtyBlob instead of a regular Blob.
 
 		std::unordered_map< std::string, const Texture* > texture_map;
 	};
