@@ -162,6 +162,12 @@ namespace Engine
 		Bind();
 	}
 
+	void Texture::GenerateMipmaps()
+	{
+		Bind();
+		glGenerateMipmap( GL_TEXTURE_2D );
+	}
+
 /*
  * TEXTURE PRIVATE API
  */
