@@ -383,7 +383,7 @@ void SandboxApplication::Update()
 			const auto [ mouse_x_delta_pos, mouse_y_delta_pos ] = Platform::GetMouseCursorDeltas();
 			camera_controller
 				.OffsetHeading( Radians( +mouse_x_delta_pos ) )
-				.OffsetPitch( Radians( +mouse_y_delta_pos ), -60.0_deg, +60.0_deg );
+				.OffsetPitch( Radians( +mouse_y_delta_pos ), -Engine::Constants< Radians >::Pi_Over_Two(), Engine::Constants< Radians >::Pi_Over_Two() );
 		}
 	}
 
@@ -460,7 +460,7 @@ void SandboxApplication::RenderImGui()
 				if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
 																		"Standard glTF (*.gltf)",	"*.gltf",
 																		"Binary glTF (*.glb)",		"*.glb" },
-																		"Choose a Model to Load" );
+																	 "Choose a Model to Load" );
 					maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
 				{
 					ReloadModel( *maybe_file_name );
@@ -580,11 +580,40 @@ void SandboxApplication::RenderImGui()
 
 	if( ImGui::Begin( ICON_FA_VIDEO " Camera", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset##Camera" ) )
-			ResetCamera();
+	/* Row 1: */
+		const float button_width( ImGui::CalcTextSize( ICON_FA_ARROWS_ROTATE " XXXXXX" ).x + style.ItemInnerSpacing.x );
+		ImGui::SetCursorPosX( button_width );
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Top" ) )
+			ResetCamera( CameraView::TOP );
 
-		ImGui::SameLine(); if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset to 2nd View" ) )
-			ResetCamera_2ndView();
+	/* Row 2: */
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Left" ) )
+			ResetCamera( CameraView::LEFT );
+		ImGui::SameLine();
+		ImGui::SetCursorPosX( button_width );
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Front" ) )
+			ResetCamera( CameraView::FRONT );
+		ImGui::SameLine();
+		ImGui::SetCursorPosX( button_width * 2 );
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Right" ) )
+			ResetCamera( CameraView::RIGHT );
+
+	/* Row 3: */
+		ImGui::SetCursorPosX( button_width );
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Back" ) )
+			ResetCamera( CameraView::BACK );
+
+	/* Row 4: */
+		ImGui::SetCursorPosX( button_width );
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Bottom" ) )
+			ResetCamera( CameraView::BOTTOM );
+
+
+		ImGui::NewLine();
+
+	/* Row 5: */
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Custom (1)" ) )
+			ResetCamera( CameraView::CUSTOM_1 );
 
 		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
 		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
@@ -841,20 +870,47 @@ void SandboxApplication::ResetMaterialData()
 	outline_material.Set( "uniform_outline_thickness", 0.1f );
 }
 
-void SandboxApplication::ResetCamera()
+void SandboxApplication::ResetCamera( const CameraView view )
 {
-	camera_transform.SetTranslation( 0.0f, 10.0f, -20.0f );
-	camera_transform.LookAt( Vector3::Forward() );
-
 	camera_is_animated = false;
-}
 
-void SandboxApplication::ResetCamera_2ndView()
-{
-	camera_transform.SetTranslation( 12.0f, 10.0f, -14.0f );
-	camera_transform.SetRotation( -35_deg, 0_deg, 0_deg );
+	switch( view )
+	{
+		case CameraView::FRONT: 
+			camera_transform.SetTranslation( 0.0f, 10.0f, -20.0f );
+			camera_transform.LookAt( Vector3::Forward() );
+			break;
+		case CameraView::BACK:
+			camera_transform.SetTranslation( 0.0f, 10.0f, +20.0f );
+			camera_transform.LookAt( Vector3::Backward() );
+			break;
+		case CameraView::LEFT:
+			camera_transform.SetTranslation( -10.0f, 10.0f, 0.0f );
+			camera_transform.LookAt( Vector3::Right() );
+			break;
+		case CameraView::RIGHT:
+			camera_transform.SetTranslation( +10.0f, 10.0f, 0.0f );
+			camera_transform.LookAt( Vector3::Left() );
+			break;
+		case CameraView::TOP:
+			camera_transform.SetTranslation( 0.0f, 60.0f, 0.0f );
+			camera_transform.LookAt( Vector3::Down() );
+			break;
+		case CameraView::BOTTOM:
+			camera_transform.SetTranslation( 0.0f, -20.0f, 0.0f );
+			camera_transform.LookAt( Vector3::Up() );
+			break;
 
-	camera_is_animated = false;
+
+
+		case CameraView::CUSTOM_1:
+			camera_transform.SetTranslation( 12.0f, 10.0f, -14.0f );
+			camera_transform.SetRotation( -35_deg, 0_deg, 0_deg );
+			break;
+
+		default:
+			break;
+	}
 }
 
 SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const

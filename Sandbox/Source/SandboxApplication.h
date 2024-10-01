@@ -23,6 +23,18 @@ class SandboxApplication : public Engine::Application
 {
 	DEFINE_MATH_TYPES()
 
+	enum class CameraView
+	{
+		FRONT,
+		BACK,
+		LEFT,
+		RIGHT,
+		TOP,
+		BOTTOM,
+
+		CUSTOM_1,
+	};
+
 public:
 	SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > );
 	virtual ~SandboxApplication();
@@ -45,8 +57,7 @@ private:
 
 	void ResetLightingData();
 	void ResetMaterialData();
-	void ResetCamera();
-	void ResetCamera_2ndView();
+	void ResetCamera( const CameraView view = CameraView::FRONT );
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
 
 	void ReloadModel( const std::string& file_path );
