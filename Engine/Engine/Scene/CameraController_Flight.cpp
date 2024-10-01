@@ -14,6 +14,13 @@ namespace Engine
 	{
 	}
 
+	CameraController_Flight& CameraController_Flight::Invert()
+	{
+		camera->SetLookRotation( -camera->Forward() );
+		ResetToTransform();
+		return *this;
+	}
+
 	CameraController_Flight& CameraController_Flight::SetHeading( const Radians new_heading )
 	{
 		orientation_spherical.Heading() = new_heading;
@@ -39,6 +46,11 @@ namespace Engine
 		return *this;
 	}
 
+	CameraController_Flight& CameraController_Flight::InvertHeading()
+	{
+		return OffsetHeading( Constants< Radians >::Pi() );
+	}
+
 	CameraController_Flight& CameraController_Flight::SetPitch( const Radians new_pitch )
 	{
 		orientation_spherical.Pitch() = new_pitch;
@@ -61,6 +73,12 @@ namespace Engine
 	CameraController_Flight& CameraController_Flight::OffsetPitch( const Radians delta, const Radians clamp_minimum, const Radians clamp_maximum )
 	{
 		SetPitch( Math::Clamp( orientation_spherical.Pitch() + delta, clamp_minimum, clamp_maximum ) );
+		return *this;
+	}
+
+	CameraController_Flight& CameraController_Flight::InvertPitch()
+	{
+		SetPitch( -orientation_spherical.Pitch() );
 		return *this;
 	}
 
