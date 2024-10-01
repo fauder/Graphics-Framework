@@ -160,7 +160,9 @@ namespace Engine
 								{
 									if( drawable->material->Name() == material_name )
 									{
-										ImGui::Checkbox( ( "##" + drawable->material->name ).c_str(), &drawable->is_enabled );
+										ImGui::PushID( drawable );
+										ImGui::Checkbox( drawable->material->name.c_str(), &drawable->is_enabled );
+										ImGui::PopID();
 										ImGui::BeginDisabled( not drawable->is_enabled );
 										ImGui::SameLine(); ImGui::TextUnformatted( drawable->material->name.c_str() );
 										ImGui::EndDisabled();
