@@ -53,8 +53,6 @@ public:
 	virtual void OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels ) override;
 
 private:
-	void UpdateViewMatrix();
-
 	void ResetLightingData();
 	void ResetMaterialData();
 	void ResetCamera( const CameraView view = CameraView::FRONT );
@@ -77,8 +75,11 @@ private:
 	std::vector< Engine::Drawable > cube_drawable_array;
 	std::vector< Engine::Drawable > cube_drawable_outline_array;
 
-	Engine::Drawable ground_quad_drawable;
-	Engine::Drawable front_wall_quad_drawable;
+	Engine::Drawable ground_drawable;
+	Engine::Drawable wall_front_drawable;
+	Engine::Drawable wall_left_drawable;
+	Engine::Drawable wall_right_drawable;
+	Engine::Drawable wall_back_drawable;
 
 	const static constexpr int GRASS_COUNT = 5;
 	std::array< Engine::Drawable, GRASS_COUNT > grass_quad_drawable_array;
@@ -88,8 +89,10 @@ private:
 
 	Engine::Drawable offscreen_quad_drawable;
 
+	Engine::Drawable mirror_quad_drawable;
+
 /* Textures: */
-	Engine::Texture* offscreen_framebuffer_color_attachment;
+	std::array< Engine::Texture*, 2 > offscreen_framebuffer_color_attachment_array;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
@@ -98,13 +101,13 @@ private:
 	Engine::Texture* transparent_window_texture;
 
 /* Renderbuffers: */
-	Engine::Renderbuffer offscreen_framebuffer_depth_and_stencil_attachment;
+	std::array< Engine::Renderbuffer, 2 > offscreen_framebuffer_depth_and_stencil_attachment_array;
 
 /* Framebuffers: */
-	Engine::Framebuffer offscreen_framebuffer;
+	std::array< Engine::Framebuffer, 2 > offscreen_framebuffer_array;
 
 /* Vertex Info.: */
-	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen;
+	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;
 
 /* Models: */
 	ModelInstance test_model_instance;
@@ -127,8 +130,8 @@ private:
 
 	std::vector< Engine::Material > cube_material_array;
 
-	Engine::Material ground_quad_material;
-	Engine::Material front_wall_quad_material;
+	Engine::Material ground_material;
+	Engine::Material wall_material;
 
 	Engine::Material grass_quad_material;
 
@@ -137,6 +140,7 @@ private:
 	Engine::Material outline_material;
 
 	Engine::Material offscreen_quad_material;
+	Engine::Material mirror_quad_material;
 
 /* Scene: */
 	Engine::Transform camera_transform;
@@ -149,8 +153,11 @@ private:
 	/* GameObjects: */
 	std::vector< Engine::Transform > cube_transform_array;
 
-	Engine::Transform ground_quad_transform;
-	Engine::Transform front_wall_quad_transform;
+	Engine::Transform ground_transform;
+	Engine::Transform wall_front_transform;
+	Engine::Transform wall_left_transform;
+	Engine::Transform wall_right_transform;
+	Engine::Transform wall_back_transform;
 
 	std::array< Engine::Transform, GRASS_COUNT > grass_quad_transform_array;
 	std::array< Engine::Transform, WINDOW_COUNT > window_transform_array;
@@ -174,7 +181,7 @@ private:
 
 	std::vector< Engine::MaterialData::PhongMaterialData > cube_surface_data_array;
 	Engine::MaterialData::PhongMaterialData ground_quad_surface_data;
-	Engine::MaterialData::PhongMaterialData front_wall_quad_surface_data;
+	Engine::MaterialData::PhongMaterialData wall_surface_data;
 	std::vector< Engine::MaterialData::PhongMaterialData > test_model_node_surface_data_array;
 
 	Engine::DirectionalLight light_directional;
@@ -213,5 +220,5 @@ private:
 
 	std::string test_model_file_path;
 
-	KernelData< 3, 3 > postprocess_shader_generic_kernel;
+	bool draw_rear_view_cam_to_imgui;
 };

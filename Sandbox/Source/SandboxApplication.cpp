@@ -55,7 +55,8 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	auto_calculate_aspect_ratio( true ),
 	auto_calculate_vfov_based_on_90_hfov( true ),
 	ui_interaction_enabled( false ),
-	show_imgui_demo_window( false )
+	show_imgui_demo_window( false ),
+	draw_rear_view_cam_to_imgui( true )
 {
 	Initialize();
 }
@@ -115,13 +116,25 @@ void SandboxApplication::Initialize()
 	renderer.RegisterShader( postprocess_generic_shader );
 
 /* Initial transforms: */
-	ground_quad_transform
-		.SetScaling( 25.0f, 75.0f, 1.0f )
+	ground_transform
+		.SetScaling( 30.0f, 60.0f, 1.0f )
 		.SetRotation( 0.0_deg, 90.0_deg, 0.0_deg );
 
-	front_wall_quad_transform
-		.SetScaling( 25.0f, 25.0f, 1.0f )
-		.SetTranslation( Vector3::Forward() * 15.0f );
+	wall_front_transform
+		.SetScaling( 30.0f, 15.0f, 1.0f )
+		.SetTranslation( 0.0f, 7.5, 30.0f );
+	wall_left_transform
+		.SetScaling( 60.0f, 15.0f, 1.0f )
+		.SetRotation( -90.0_deg, 0.0_deg, 0.0_deg )
+		.SetTranslation( -15.0f, 7.5f, 0.0f );
+	wall_right_transform
+		.SetScaling( 60.0f, 15.0f, 1.0f )
+		.SetRotation( +90.0_deg, 0.0_deg, 0.0_deg )
+		.SetTranslation( +15.0f, 7.5f, 0.0f );
+	wall_back_transform
+		.SetScaling( 30.0f, 15.0f, 1.0f )
+		.SetRotation( 180.0_deg, 0.0_deg, 0.0_deg )
+		.SetTranslation( 0.0f, 7.5f, -30.0f );
 
 	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
 	{
@@ -167,6 +180,23 @@ void SandboxApplication::Initialize()
 										 { /* No normals. */ },
 										 std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cend() ),
 										 { /* No indices. */ } );
+
+
+	constexpr std::array< Vector3, 6 > quad_mesh_positions_ndc
+	( {
+		{ -0.425f, 0.35f, -0.01f }, // A little z offset backwards to make sure this is rendered in front & shows.
+		{  0.425f, 0.35f, -0.01f }, // A little z offset backwards to make sure this is rendered in front & shows.
+		{  0.425f, 0.80f, -0.01f }, // A little z offset backwards to make sure this is rendered in front & shows.
+		{  0.425f, 0.80f, -0.01f }, // A little z offset backwards to make sure this is rendered in front & shows.
+		{ -0.425f, 0.80f, -0.01f }, // A little z offset backwards to make sure this is rendered in front & shows.
+		{ -0.425f, 0.35f, -0.01f }  // A little z offset backwards to make sure this is rendered in front & shows.
+	} );
+
+	quad_mesh_mirror = Engine::Mesh( std::vector< Vector3 >( quad_mesh_positions_ndc.cbegin(), quad_mesh_positions_ndc.cend() ),
+									 "Quad (Rear-view mirror)",
+									 { /* No normals. */ },
+									 std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cend() ),
+									 { /* No indices. */ } );
 
 /* Lighting: */
 	ResetLightingData();
@@ -237,7 +267,7 @@ void SandboxApplication::Initialize()
 
 	{
 		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 4 ), "Screen-size Quad" );
-		auto& render_state_regular_meshes = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 4 ) ); // Keep default settings.
+		auto& render_state_screen_size_quad = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 4 ) ); // Keep default settings.
 	}
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
@@ -255,11 +285,17 @@ void SandboxApplication::Initialize()
 		renderer.AddDrawable( &cube_drawable_outline_array[ i ], Engine::Renderer::RenderGroupID( 2 ) );
 	}
 
-	ground_quad_drawable = Engine::Drawable( &quad_mesh, &ground_quad_material, &ground_quad_transform );
-	renderer.AddDrawable( &ground_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
+	ground_drawable = Engine::Drawable( &quad_mesh, &ground_material, &ground_transform );
+	renderer.AddDrawable( &ground_drawable, Engine::Renderer::RenderGroupID( 0 ) );
 
-	front_wall_quad_drawable = Engine::Drawable( &quad_mesh, &front_wall_quad_material, &front_wall_quad_transform );
-	renderer.AddDrawable( &front_wall_quad_drawable, Engine::Renderer::RenderGroupID( 0 ) );
+	wall_front_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_front_transform );
+	wall_left_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_left_transform );
+	wall_right_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_right_transform );
+	wall_back_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_back_transform );
+	renderer.AddDrawable( &wall_front_drawable, Engine::Renderer::RenderGroupID( 0 ) );
+	renderer.AddDrawable( &wall_left_drawable,  Engine::Renderer::RenderGroupID( 0 ) );
+	renderer.AddDrawable( &wall_right_drawable, Engine::Renderer::RenderGroupID( 0 ) );
+	renderer.AddDrawable( &wall_back_drawable,  Engine::Renderer::RenderGroupID( 0 ) );
 
 	/*for( auto i = 0; i < GRASS_COUNT; i++ )
 	{
@@ -275,6 +311,11 @@ void SandboxApplication::Initialize()
 
 	offscreen_quad_drawable = Engine::Drawable( &quad_mesh_fullscreen, &offscreen_quad_material );
 	renderer.AddDrawable( &offscreen_quad_drawable, Engine::Renderer::RenderGroupID( 4 ) );
+
+	mirror_quad_drawable = Engine::Drawable( &quad_mesh_mirror, &mirror_quad_material );
+	renderer.AddDrawable( &mirror_quad_drawable, Engine::Renderer::RenderGroupID( 4 ) );
+
+	mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
 	/* This is the earliest place we can MaximizeWindow() at,
 	 * because the Renderer will populate its Intrinsic UBO info only upon AddDrawable( <Drawable with a Shader using said UBO> ). */
@@ -298,16 +339,6 @@ void SandboxApplication::Initialize()
 /* Other: */
 	renderer.SetFrontFaceConvention( Engine::Renderer::WindingOrder::CounterClockwise );
 	renderer.EnableFaceCulling( Engine::Renderer::Face::Back );
-	
-	postprocess_shader_generic_kernel = KernelData< 3, 3 >
-	{
-		.values =
-		{
-			-1.0f, -1.0f, -1.0f,
-			-1.0f, +9.0f, -1.0f,
-			-1.0f, -1.0f, -1.0f
-		}
-	};
 }
 
 void SandboxApplication::Shutdown()
@@ -395,32 +426,45 @@ void SandboxApplication::Update()
 		camera_transform.OffsetTranslation( camera_transform.Right()   * -camera_move_speed * time_delta );
 	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_D ) )
 		camera_transform.OffsetTranslation( camera_transform.Right()   * +camera_move_speed * time_delta );
-
-	/*if( offscreen_quad_material.HasUniformBuffer( "KernelData" ) )
-		offscreen_quad_material.Set( "KernelData", postprocess_shader_generic_kernel );*/
-
-	/*if( offscreen_quad_material.HasUniform( "uniform_kernel[0]" ) )
-		offscreen_quad_material.SetArray( "uniform_kernel[0]", postprocess_shader_generic_kernel.values );*/
-
-	renderer.Update( camera );
 }
 
 void SandboxApplication::Render()
 {
-	UpdateViewMatrix();
-
 	Engine::Application::Render();
 
+	/* Pass 1 - Rear-cam view: Invert camera direction, draw everything to the off-screen frame-buffer 1. */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render to Offscreen FB", true /* omit if the group is empty */ ) );
-		
-		renderer.SetCurrentFramebuffer( &offscreen_framebuffer );
+		auto log_group( gl_logger.TemporaryLogGroup( "SandboxApp::Render(): Render to Offscreen FB 1 (Rear view)", true /* omit if the group is empty */ ) );
+
+		camera_controller.Invert();
+		renderer.Update( camera );
+
+		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 0 ] );
 
 		renderer.Render( camera, { 0, 1, 2, 3 } );
+
+		/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+		offscreen_framebuffer_color_attachment_array[ 0 ]->GenerateMipmaps();
 	}
 
+	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), draw everything to the off-screen frame-buffer 2. */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Blit Offscreen FB to Main FB", true /* omit if the group is empty */ ) );
+		auto log_group( gl_logger.TemporaryLogGroup( "SandboxApp::Render(): Render to Offscreen FB 2 (Default view)", true /* omit if the group is empty */ ) );
+		
+		camera_controller.Invert();
+		renderer.Update( camera );
+
+		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 1 ] );
+
+		renderer.Render( camera, { 0, 1, 2, 3 } );
+
+		/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+		offscreen_framebuffer_color_attachment_array[ 1 ]->GenerateMipmaps();
+	}
+
+	/* Pass 3: Blit both off-screen frame-buffers to quads on default frame-buffer. */
+	{
+		auto log_group( gl_logger.TemporaryLogGroup( "SandboxApp::Render(): Blit Offscreen FB(s) to Main FB", true /* omit if the group is empty */ ) );
 
 		renderer.ResetToDefaultFramebuffer();
 
@@ -442,6 +486,25 @@ void SandboxApplication::RenderImGui()
 		ImGui::ShowDemoWindow();
 
 	const auto& style = ImGui::GetStyle();
+
+	{
+		const auto [ width, height ] = Platform::GetFramebufferSizeInPixels();
+		static auto rear_view_window_size = ImVec2( width / 4.0f, height / 4.0f );
+		ImGui::SetNextWindowSize( ImVec2( width / 4.0f, height / 4.0f ), ImGuiCond_FirstUseEver );
+	}
+	if( ImGui::Begin( "Rear-view Camera", nullptr, ImGuiWindowFlags_NoScrollbar ) )
+	{
+		if( ImGui::Checkbox( "Draw to this window instead of default Framebuffer", &draw_rear_view_cam_to_imgui ) )
+			mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
+
+		if( draw_rear_view_cam_to_imgui )
+		{
+			const ImVec2 negative_size_offset( style.WindowPadding * 2 );
+			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_color_attachment_array[ 0 ]->Id(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+		}
+	}
+
+	ImGui::End();
 
 	if( ImGui::Begin( ICON_FA_CUBES " Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
@@ -491,8 +554,8 @@ void SandboxApplication::RenderImGui()
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ], renderer );
-	Engine::ImGuiDrawer::Draw( ground_quad_material, renderer );
-	Engine::ImGuiDrawer::Draw( front_wall_quad_material, renderer );
+	Engine::ImGuiDrawer::Draw( ground_material, renderer );
+	Engine::ImGuiDrawer::Draw( wall_material, renderer );
 	Engine::ImGuiDrawer::Draw( grass_quad_material, renderer );
 	Engine::ImGuiDrawer::Draw( window_material, renderer );
 	for( auto& cube_material : cube_material_array )
@@ -501,6 +564,7 @@ void SandboxApplication::RenderImGui()
 		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ), renderer );
 	Engine::ImGuiDrawer::Draw( outline_material, renderer );
 	Engine::ImGuiDrawer::Draw( offscreen_quad_material, renderer );
+	Engine::ImGuiDrawer::Draw( mirror_quad_material, renderer );
 
 	if( ImGui::Begin( ICON_FA_LIGHTBULB " Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
@@ -548,7 +612,7 @@ void SandboxApplication::RenderImGui()
 						const bool was_enabled = light_point_array[ i ].is_enabled;
 						if( Engine::ImGuiDrawer::Draw( light_point_array[ i ], name.c_str(), light_point_array_is_animated /* hide position. */ ) )
 						{
-							light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+							light_source_material_array[ i ].Set( "uniform_color", Engine::Color4( light_point_array[ i ].data.diffuse_and_attenuation_linear.color, 1.0f ) );
 							if( was_enabled != light_point_array[ i ].is_enabled )
 								light_source_drawable_array[ i ].ToggleOnOrOff();
 						}
@@ -748,12 +812,8 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	InitializeRenderbuffers();
 	InitializeFramebuffers();
 
-	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment );
-}
-
-void SandboxApplication::UpdateViewMatrix()
-{
-	view_transformation = camera.GetViewMatrix();
+	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
 }
 
 void SandboxApplication::ResetLightingData()
@@ -826,19 +886,19 @@ void SandboxApplication::ResetMaterialData()
 		cube_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	}
 
-	ground_quad_material = Engine::Material( "Ground", &phong_shader );
-	ground_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
-	ground_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
-	const auto& ground_quad_scale( ground_quad_transform.GetScaling() );
+	ground_material = Engine::Material( "Ground", &phong_shader );
+	ground_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
+	ground_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
+	const auto& ground_quad_scale( ground_transform.GetScaling() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
-	ground_quad_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
+	ground_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
-	front_wall_quad_material = Engine::Material( "Front Wall", &phong_shader );
-	front_wall_quad_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
-	front_wall_quad_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
-	const auto& front_wall_quad_scale( front_wall_quad_transform.GetScaling() );
+	wall_material = Engine::Material( "Front Wall", &phong_shader );
+	wall_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
+	wall_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
+	const auto& front_wall_quad_scale( wall_front_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
-	front_wall_quad_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
+	wall_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 
 	grass_quad_material = Engine::Material( "Grass Quad", &basic_textured_transparent_discard_shader );
 	grass_quad_material.SetTexture( "uniform_texture_slot", grass_texture );
@@ -851,9 +911,12 @@ void SandboxApplication::ResetMaterialData()
 	outline_material = Engine::Material( "Outline", &outline_shader );
 
 	offscreen_quad_material = Engine::Material( "Offscreen Quad", &fullscreen_blit_shader );
-	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment );
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
 
-	ground_quad_surface_data = front_wall_quad_surface_data =
+	mirror_quad_material = Engine::Material( "Rear-view Mirror", &fullscreen_blit_shader );
+	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
+
+	ground_quad_surface_data = wall_surface_data =
 	{
 		.color_diffuse       = {},
 		.has_texture_diffuse = 1,
@@ -862,12 +925,12 @@ void SandboxApplication::ResetMaterialData()
 
 	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, ground_quad_surface_data );
 
-	ground_quad_material.Set( "PhongMaterialData", ground_quad_surface_data );
-	front_wall_quad_material.Set( "PhongMaterialData", front_wall_quad_surface_data );
+	ground_material.Set( "PhongMaterialData", ground_quad_surface_data );
+	wall_material.Set( "PhongMaterialData", wall_surface_data );
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ].Set( "uniform_color", light_point_array[ i ].data.diffuse_and_attenuation_linear.color );
+		light_source_material_array[ i ].Set( "uniform_color", Engine::Color4( light_point_array[ i ].data.diffuse_and_attenuation_linear.color, 1.0f ) );
 
 	outline_material.Set( "uniform_color", Engine::Color4::Orange() );
 	outline_material.Set( "uniform_outline_thickness", 0.1f );
@@ -973,25 +1036,33 @@ void SandboxApplication::UnloadModel()
 void SandboxApplication::InitializeFramebufferTextures()
 {
 	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-	std::string name( "Offscreen FB Color Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
 
-	offscreen_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+	std::string name( "Offscreen FB 1 Color Tex" + std::to_string( width ) + "x" + std::to_string( height ) );
+	offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+	name[ strlen( "Offscreen FB " ) ] = '2';
+	offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
 }
 
 void SandboxApplication::InitializeRenderbuffers()
 {
 	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-	std::string name( "Offscreen FB D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
+	std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
 
-	offscreen_framebuffer_depth_and_stencil_attachment = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+	offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+	name[ strlen( "Offscreen FB " ) ] = '2';
+	offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
 }
 
 void SandboxApplication::InitializeFramebuffers()
 {
 	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-	std::string name( "Offscreen FB " + std::to_string( width ) + "x" + std::to_string( height ) );
+	std::string name( "Offscreen FB 1 " + std::to_string( width ) + "x" + std::to_string( height ) );
 
-	offscreen_framebuffer = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
-												 offscreen_framebuffer_color_attachment,
-												 &offscreen_framebuffer_depth_and_stencil_attachment );
+	offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+															offscreen_framebuffer_color_attachment_array[ 0 ],
+															&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
+	name[ strlen( "Offscreen FB " ) ] = '2';
+	offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+															offscreen_framebuffer_color_attachment_array[ 1 ],
+															&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
 }
