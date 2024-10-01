@@ -96,8 +96,7 @@ namespace Engine
 	Texture::Texture()
 		:
 		id( -1 ),
-		width( 0 ),
-		height( 0 ),
+		size( ZERO_INITIALIZATION ),
 		name( "<unnamed>" )
 	{}
 
@@ -108,8 +107,7 @@ namespace Engine
 					  Filtering min_filter, Filtering mag_filter )
 		:
 		id( -1 ),
-		width( width ),
-		height( height ),
+		size( width, height ),
 		name( name )
 	{
 		glGenTextures( 1, &id );
@@ -133,17 +131,15 @@ namespace Engine
 		:
 		id( std::exchange( donor.id, -1 ) ),
 		name( std::exchange( donor.name, {} ) ),
-		width( std::exchange( donor.width, 0 ) ),
-		height( std::exchange( donor.height, 0 ) )
+		size( std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } ) )
 	{
 	}
 
 	Texture& Texture::operator =( Texture&& donor )
 	{
-		id     = std::exchange( donor.id, -1 );
-		name   = std::exchange( donor.name, {} );
-		width  = std::exchange( donor.width, 0 );
-		height = std::exchange( donor.height, 0 );
+		id   = std::exchange( donor.id, -1 );
+		name = std::exchange( donor.name, {} );
+		size = std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } );
 
 		return *this;
 	}
@@ -176,8 +172,7 @@ namespace Engine
 					  Filtering min_filter, Filtering mag_filter )
 		:
 		id( -1 ),
-		width( width ),
-		height( height ),
+		size( width, height ),
 		name( name )
 	{
 		glGenTextures( 1, &id );

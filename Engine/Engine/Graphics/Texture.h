@@ -3,6 +3,7 @@
 // Engine Includes.
 #include "Graphics.h"
 #include "Macros.h"
+#include "Math/Vector.hpp"
 
 // std Includes.
 #include <optional>
@@ -87,11 +88,14 @@ namespace Engine
 		~Texture();
 
 	/* Queries: */
-		inline const ID				Id()	const { return id;	 }
-		inline const std::string&	Name()	const { return name; }
-		void SetName( const std::string& new_name );
+		inline const ID				Id()		const { return id;			}
+		inline const std::string&	Name()		const { return name;		}
+		inline const Vector2I&		Size()		const { return size;		}
+		inline const int			Width()		const { return size.X();	}
+		inline const int			Height()	const { return size.Y();	}
 
 	/* Usage: */
+		void SetName( const std::string& new_name );
 		void Activate( const int slot ) const;
 
 	private:
@@ -104,14 +108,14 @@ namespace Engine
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 	/* Queries: */
-		bool IsValid() const { return width > 0 && height > 0; } // Use the width & height to implicitly define validness state.
+		bool IsValid() const { return size.X() > 0 && size.Y() > 0; } // Use the width & height to implicitly define validness state.
 
 	/* Usage: */
 		void Bind() const;
 
 	private:
 		ID id;
-		int width, height;
+		Vector2I size;
 		std::string name;
 	};
 };
