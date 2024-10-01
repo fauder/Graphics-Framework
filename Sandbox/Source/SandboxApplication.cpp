@@ -87,8 +87,8 @@ void SandboxApplication::Initialize()
 	grass_texture                  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Grass",					R"(Asset/Texture/grass.png)",						texture_import_settings );
 	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)",	texture_import_settings );
 	
-	texture_import_settings.wrap_u = GL_REPEAT;
-	texture_import_settings.wrap_v = GL_REPEAT;
+	texture_import_settings.wrap_u = Engine::Texture::Wrapping::Repeat;
+	texture_import_settings.wrap_v = Engine::Texture::Wrapping::Repeat;
 
 	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
 

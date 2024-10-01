@@ -17,19 +17,38 @@ namespace Engine
 	class Texture
 	{
 	public:
+		enum class Wrapping
+		{
+			ClampToEdge       = GL_CLAMP_TO_EDGE,
+			ClampToBorder     = GL_CLAMP_TO_BORDER,
+			MirroredRepeat    = GL_MIRRORED_REPEAT,
+			Repeat            = GL_REPEAT,
+			MirrorClampToEdge = GL_MIRROR_CLAMP_TO_EDGE
+		};
+
+		enum class Filtering
+		{
+			Nearest				  = GL_NEAREST,
+			Linear			      = GL_LINEAR,
+			Nearest_MipmapNearest = GL_NEAREST_MIPMAP_NEAREST,
+			Linear_MipmapNearest  = GL_LINEAR_MIPMAP_NEAREST,
+			Nearest_MipmapLinear  = GL_NEAREST_MIPMAP_LINEAR,
+			Linear_MipmapLinear	  = GL_LINEAR_MIPMAP_LINEAR
+		};
+
 		struct ImportSettings
 		{
 			int format;
 			bool flip_vertically;
 
-			GLenum wrap_u;
-			GLenum wrap_v;
-			GLenum min_filter;
-			GLenum mag_filter;
+			Wrapping wrap_u;
+			Wrapping wrap_v;
+			Filtering min_filter;
+			Filtering mag_filter;
 
 			ImportSettings( const int format = GL_RGBA, const bool flip_vertically = true,
-							GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
-							GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR )
+							const Wrapping  wrap_u     = Wrapping::ClampToEdge,			 const Wrapping  wrap_v     = Wrapping::ClampToEdge,
+							const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear )
 				:
 				format( format ),
 				flip_vertically( flip_vertically ),
@@ -54,8 +73,8 @@ namespace Engine
 				 //const std::byte* data, This is omitted from this public constructor.
 				 const int format,
 				 const int width, const int height,
-				 GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
-				 GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR );
+				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge,
+				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 		/* Prevent copying for now: */
 		Texture( const Texture& )				= delete;
@@ -81,8 +100,8 @@ namespace Engine
 				 const std::byte* data,
 				 const int format,
 				 const int width, const int height,
-				 GLenum wrap_u = GL_CLAMP_TO_EDGE, GLenum wrap_v = GL_CLAMP_TO_EDGE,
-				 GLenum min_filter = GL_LINEAR_MIPMAP_LINEAR, GLenum mag_filter = GL_LINEAR );
+				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge,
+				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 	/* Queries: */
 		bool IsValid() const { return width > 0 && height > 0; } // Use the width & height to implicitly define validness state.

@@ -104,8 +104,8 @@ namespace Engine
 	Texture::Texture( const std::string_view name,
 					  //const std::byte* data, This is omitted from this public constructor.
 					  const int format, const int width, const int height,
-					  GLenum wrap_u, GLenum wrap_v,
-					  GLenum min_filter, GLenum mag_filter )
+					  Wrapping  wrap_u,		Wrapping  wrap_v,
+					  Filtering min_filter, Filtering mag_filter )
 		:
 		id( -1 ),
 		width( width ),
@@ -120,10 +120,10 @@ namespace Engine
 			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
 #endif // _DEBUG
 
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_u );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_v );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, ( GLenum )min_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, ( GLenum )mag_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,	   ( GLenum )wrap_u );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,	   ( GLenum )wrap_v );
 
 		glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr );
 		glGenerateMipmap( GL_TEXTURE_2D );
@@ -172,8 +172,8 @@ namespace Engine
 	Texture::Texture( const std::string_view name,
 					  const std::byte* data,
 					  const int format, const int width, const int height,
-					  GLenum wrap_u, GLenum wrap_v,
-					  GLenum min_filter, GLenum mag_filter )
+					  Wrapping  wrap_u,		Wrapping  wrap_v,
+					  Filtering min_filter, Filtering mag_filter )
 		:
 		id( -1 ),
 		width( width ),
@@ -188,10 +188,10 @@ namespace Engine
 			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
 #endif // _DEBUG
 
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_u );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_v );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, ( GLenum )min_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, ( GLenum )mag_filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,	   ( GLenum )wrap_u );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,	   ( GLenum )wrap_v );
 
 		glTexImage2D( GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data );
 		glGenerateMipmap( GL_TEXTURE_2D );

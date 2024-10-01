@@ -192,8 +192,8 @@ namespace Engine
                       Texture*& texture_to_load )
     {
         Engine::Texture::ImportSettings texture_import_settings;
-        texture_import_settings.wrap_u = GL_MIRRORED_REPEAT;
-        texture_import_settings.wrap_v = GL_MIRRORED_REPEAT;
+        texture_import_settings.wrap_u = Texture::Wrapping::MirroredRepeat;
+        texture_import_settings.wrap_v = Texture::Wrapping::MirroredRepeat;
 
         // TODO: Import sampler settings and remove the hard-coded wrapping parameters above.
 
