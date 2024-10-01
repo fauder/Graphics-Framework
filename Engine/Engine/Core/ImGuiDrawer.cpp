@@ -329,19 +329,90 @@ namespace Engine::ImGuiDrawer
 		// TODO: Implement texture selection.
 
 		if( texture )
-			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), ICON_FA_IMAGE R"~(" %s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+		{
+			ImGui::Image( ( void* )( intptr_t )texture->Id(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			ImGui::SameLine();
+			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
+		}
 		else
-			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), ICON_FA_IMAGE "    <unassigned>" );
+		{
+			ImGui::Dummy( ImVec2( 24, 24 ) + IMGUI_STYLE->ItemInnerSpacing );
+			ImGui::SameLine();
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
+		}
 
 		return false;
 	}
 
 	void Draw( const Texture* texture, const char* name )
 	{
+		ImGui::BeginDisabled();
+
 		if( texture )
-			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), ICON_FA_IMAGE R"~( "%s (ID: %d)")~", texture->Name().c_str(), texture->Id() );
+		{
+			ImGui::Image( ( void* )( intptr_t )texture->Id(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			ImGui::SameLine();
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
+		}
 		else
-			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), ICON_FA_IMAGE "    <unassigned>" );
+		{
+			ImGui::Dummy( ImVec2( 24, 24 ) + IMGUI_STYLE->ItemInnerSpacing );
+			ImGui::SameLine();
+			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
+		}
+
+		ImGui::EndDisabled();
+	}
+
+	void Draw( const std::map< std::string, Texture >& texture_map, const Vector2& window_size )
+	{
+		static const Texture* selected_texture = nullptr;
+
+		ImGui::SetNextWindowSize( reinterpret_cast< const ImVec2& >( window_size ) );
+		if( ImGui::Begin( ICON_FA_IMAGE " Textures" ) )
+		{
+			const ImVec2 region_available( ImGui::GetContentRegionAvail() );
+			const ImVec2 child_size( region_available.x, region_available.y / 2.0f - IMGUI_STYLE->ItemSpacing.y );
+
+			if( ImGui::BeginChild( "Textures", child_size ) )
+			{
+				for( const auto& [ asset_name, asset ] : texture_map )
+				{
+					ImGui::PushID( asset_name.c_str() );
+					if( ImGui::Selectable( "" ) )
+						selected_texture = &asset;
+					ImGui::PopID();
+					ImGui::SameLine();
+					Engine::ImGuiDrawer::Draw( &asset, asset_name.c_str() );
+				}
+			}
+
+			ImGui::EndChild();
+
+			ImGui::Separator();
+
+			const ImVec2 image_max_size( ImGui::GetContentRegionAvail() );
+
+			if( selected_texture )
+			{
+				const float image_width( ( float )selected_texture->Width() );
+				const float image_height( ( float )selected_texture->Height() );
+				const float image_aspect_ratio = image_width / image_height;
+
+				const float image_width_fit  = image_max_size.y < image_max_size.x ? image_aspect_ratio * image_max_size.y : image_max_size.x;
+				const float image_height_fit = image_width_fit / image_aspect_ratio;
+
+				const float padding_x = ( image_max_size.x - image_width_fit ) / 2.0f;
+				const float padding_y = ( image_max_size.y - image_height_fit ) / 2.0f;
+
+				ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( padding_x, padding_y ) );
+				ImGui::Image( ( void* )( intptr_t )selected_texture->Id(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
+			}
+			else
+				ImGui::Dummy( image_max_size );
+		}
+
+		ImGui::End();
 	}
 
 	bool Draw( Camera& camera, const char* name )
