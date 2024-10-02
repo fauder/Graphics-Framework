@@ -178,7 +178,8 @@ namespace Engine
 		const ImVec2 max_size_half_width( max_size.x / 2.0f, max_size.y );
 		const float  max_width = max_size.x;
 
-		ImGuiUtility::SetNextWindowPos( ImGuiUtility::HorizontalWindowPositioning::RIGHT, ImGuiUtility::VerticalWindowPositioning::TOP );
+		// TODO: Convert this to an ImGui overlay.
+
 		if( ImGui::Begin( ICON_FA_CHART_LINE " Frame Statistics", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			ImGui::Text( "FPS: %.1f fps  |  # Frames: %8lu", fps, frame_count );
