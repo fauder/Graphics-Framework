@@ -59,7 +59,7 @@ namespace Engine
 	{
 	}
 
-	void GLLogger::Insert( const char* message, const unsigned int id )
+	void GLLogger::Insert( const char* message, const unsigned int id ) const
 	{
 		glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, id, GL_DEBUG_SEVERITY_NOTIFICATION, -1, message );
 	}
@@ -94,23 +94,23 @@ namespace Engine
 		return group;
 	}
 
-	void GLLogger::SetLabel( const GLenum object_type, const GLuint object_id, const char* label )
+	void GLLogger::SetLabel( const GLenum object_type, const GLuint object_id, const char* label ) const
 	{
 		glObjectLabel( object_type, object_id, -1, label );
 	}
 
-	void GLLogger::SetLabel( const GLenum object_type, const GLuint object_id, const std::string& name )
+	void GLLogger::SetLabel( const GLenum object_type, const GLuint object_id, const std::string& name ) const
 	{
 		glObjectLabel( object_type, object_id, -1, name.c_str() );
 	}
 
-	void GLLogger::GetLabel( const GLenum object_type, const GLuint object_id, char* label )
+	void GLLogger::GetLabel( const GLenum object_type, const GLuint object_id, char* label ) const
 	{
 		int label_length;
 		glGetObjectLabel( object_type, object_id, GL_MAX_LABEL_LENGTH, &label_length, label );
 	}
 
-	std::string GLLogger::GetLabel( const GLenum object_type, const GLuint object_id )
+	std::string GLLogger::GetLabel( const GLenum object_type, const GLuint object_id ) const
 	{
 		static char OBJECT_LABEL_STORAGE[ GL_MAX_LABEL_LENGTH ];
 		int label_length;

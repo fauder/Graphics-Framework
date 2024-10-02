@@ -40,7 +40,7 @@ namespace Engine
 		~GLLogger();
 
 	/* Custom messages: */
-		void Insert( const char* message, const unsigned int id = 0 );
+		void Insert( const char* message, const unsigned int id = 0 ) const;
 
 	/* Grouping: */
 		/* omit_empty_group: If true, defers the push operation until an actual log is recorded between this function call & the PopGroup() call. If no calls were made in-between,
@@ -51,10 +51,10 @@ namespace Engine
 		GLLogGroup TemporaryLogGroup( const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
 
 	/* Labeling: */
-		void SetLabel( const GLenum object_type, const GLuint object_id, const char* label );
-		void SetLabel( const GLenum object_type, const GLuint object_id, const std::string& name );
-		void GetLabel( const GLenum object_type, const GLuint object_id, char* label );
-		std::string GetLabel( const GLenum object_type, const GLuint object_id );
+		void SetLabel( const GLenum object_type, const GLuint object_id, const char* label ) const;
+		void SetLabel( const GLenum object_type, const GLuint object_id, const std::string& name ) const;
+		void GetLabel( const GLenum object_type, const GLuint object_id, char* label ) const;
+		std::string GetLabel( const GLenum object_type, const GLuint object_id ) const;
 
 	/* Filtering IDs: */
 		static void IgnoreID( const unsigned int id_to_ignore );
