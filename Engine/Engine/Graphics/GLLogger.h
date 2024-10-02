@@ -50,6 +50,9 @@ namespace Engine
 
 		GLLogGroup TemporaryLogGroup( const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
 
+	/* Marker: */
+		void Marker( const char* marker_label );
+
 	/* Labeling: */
 		void SetLabel( const GLenum object_type, const GLuint object_id, const char* label ) const;
 		void SetLabel( const GLenum object_type, const GLuint object_id, const std::string& name ) const;

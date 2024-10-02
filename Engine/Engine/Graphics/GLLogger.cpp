@@ -70,7 +70,7 @@ namespace Engine
 	{
 		if( omit_empty_group )
 		{
-			/* Defer actual glPushDebugGroup() to InternalDebugOutputCallback(); This way a group can be checked to see if it is emptyand if so, skipped.Else, it is pushed first. */
+			/* Defer actual glPushDebugGroup() to InternalDebugOutputCallback(); This way a group can be checked to see if it is empty and if so, skipped. Else, it is pushed first. */
 			empty_log_groups.push( group_name );
 		}
 		else
@@ -92,6 +92,11 @@ namespace Engine
 	{
 		GLLogGroup group( this, group_name, omit_empty_group, id );
 		return group;
+	}
+
+	void GLLogger::Marker( const char* marker_label )
+	{
+		glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_MARKER, 0, GL_DEBUG_SEVERITY_NOTIFICATION, -1, marker_label );
 	}
 
 	void GLLogger::SetLabel( const GLenum object_type, const GLuint object_id, const char* label ) const
@@ -147,6 +152,9 @@ namespace Engine
 
 	void GLLogger::InternalDebugOutputCallback( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters )
 	{
+		if( type == GL_DEBUG_TYPE_MARKER )
+			return;
+
 		/* We pop one group name every time a log is made. This way, we can check if any logs were recorded between push/pop of a specific log group & can skip the group if it is empty. */
 		if( not empty_log_groups.empty() )
 		{
@@ -154,6 +162,8 @@ namespace Engine
 
 			if( group_name != message )
 			{
+				/* This group is not empty; We can push the group. */
+
 				glPushDebugGroup( GL_DEBUG_SOURCE_APPLICATION, id, -1, group_name );
 
 				empty_log_groups.pop();
@@ -174,9 +184,7 @@ namespace Engine
 		static std::vector< char > full_message( fixed_portion_length + 255, ' ' ); // Initial max. message length of 255 reserved.
 
 		if( length > 255 )
-		{
 			full_message.resize( fixed_portion_length + length );
-		}
 
 		sprintf_s( full_message.data(), full_message.size(), "| %-17s | %13s | %13s | (%u):    %s", severity_string, source_string, type_string, id, message );
 
