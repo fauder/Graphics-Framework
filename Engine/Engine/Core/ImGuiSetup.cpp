@@ -12,8 +12,9 @@ namespace ImGuiSetup
         ImGui::CreateContext();
 
         ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         // Setup Platform/Renderer backends.
         ImGui_ImplGlfw_InitForOpenGL( reinterpret_cast< GLFWwindow* >( Platform::GetWindowHandle() ), true );
@@ -168,5 +169,8 @@ namespace ImGuiSetup
         style.SeparatorTextBorderSize = 2.0f;
         style.SeparatorTextAlign      = ImVec2( 0.0f, 0.5f );
         style.SeparatorTextPadding    = ImVec2( 4, 2 );
+
+        /* Disable collapse button: */
+        style.WindowMenuButtonPosition = ImGuiDir_None;
     }
 }
