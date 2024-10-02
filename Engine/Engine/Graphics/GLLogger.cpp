@@ -6,7 +6,39 @@
 
 namespace Engine
 {
-	GLLogger::GLLogger()
+	GLLogger::GLLogGroup::GLLogGroup( GLLogger* logger, const char* group_name, const bool omit_empty_group, const unsigned int id )
+		:
+		logger( logger )
+	{
+		logger->PushGroup( group_name, omit_empty_group, id );
+	}
+
+	GLLogger::GLLogGroup::GLLogGroup( GLLogGroup&& donor )
+		:
+		logger( std::exchange( donor.logger, nullptr ) )
+	{}
+
+	GLLogger::GLLogGroup& GLLogger::GLLogGroup::operator=( GLLogGroup&& donor )
+	{
+		logger = std::exchange( donor.logger, nullptr );
+		return *this;
+	}
+
+	GLLogger::GLLogGroup::~GLLogGroup()
+	{
+		Close();
+	}
+
+	void GLLogger::GLLogGroup::Close()
+	{
+		if( logger )
+		{
+			logger->PopGroup();
+			logger = nullptr;
+		}
+	}
+
+	GLLogger::GLLogger( const bool never_omit_empty_groups )
 		:
 		logger(
 		{

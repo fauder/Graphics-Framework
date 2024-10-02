@@ -16,31 +16,17 @@ namespace Engine
 	private:
 		struct GLLogGroup
 		{
-			GLLogGroup( GLLogger* logger, const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 )
-				:
-				logger( logger )
-			{
-				logger->PushGroup( group_name, omit_empty_group, id );
-			}
+			GLLogGroup( GLLogger* logger, const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
 
 			GLLogGroup( const GLLogGroup& other )            = delete;
 			GLLogGroup& operator=( const GLLogGroup& other ) = delete;
 
-			GLLogGroup( GLLogGroup&& donor )
-				:
-				logger( std::exchange( donor.logger, nullptr ) )
-			{}
+			GLLogGroup( GLLogGroup&& donor );
+			GLLogGroup& operator=( GLLogGroup&& donor );
 
-			GLLogGroup& operator=( GLLogGroup&& donor )
-			{
-				logger = std::exchange( donor.logger, nullptr );
-			}
+			~GLLogGroup();
 
-			~GLLogGroup()
-			{
-				if( logger )
-					logger->PopGroup();
-			}
+			void Close();
 
 		private:
 			GLLogger* logger;
