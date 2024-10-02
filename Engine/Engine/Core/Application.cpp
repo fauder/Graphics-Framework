@@ -158,6 +158,8 @@ namespace Engine
 
 	void Application::RenderImGui()
 	{
+		ImGui::DockSpaceOverViewport();
+
 		ImGuiDrawer::Update();
 
 		RenderImGui_FrameStatistics();
