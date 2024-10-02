@@ -53,6 +53,8 @@ public:
 	virtual void OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels ) override;
 
 private:
+	void RenderImGui_Viewport();
+
 	void ResetLightingData();
 	void ResetMaterialData();
 	void ResetCamera( const CameraView view = CameraView::FRONT );
@@ -93,6 +95,7 @@ private:
 
 /* Textures: */
 	std::array< Engine::Texture*, 2 > offscreen_framebuffer_color_attachment_array;
+	Engine::Texture* editor_framebuffer_color_attachment;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
@@ -102,9 +105,11 @@ private:
 
 /* Renderbuffers: */
 	std::array< Engine::Renderbuffer, 2 > offscreen_framebuffer_depth_and_stencil_attachment_array;
+	Engine::Renderbuffer editor_framebuffer_depth_and_stencil_attachment;
 
 /* Framebuffers: */
 	std::array< Engine::Framebuffer, 2 > offscreen_framebuffer_array;
+	Engine::Framebuffer editor_framebuffer; // Not to be confused with the default frame-buffer.
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;

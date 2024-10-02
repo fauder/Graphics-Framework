@@ -443,7 +443,7 @@ void SandboxApplication::Render()
 
 		renderer.Render( camera, { 0, 1, 2, 3 } );
 
-		/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		offscreen_framebuffer_color_attachment_array[ 0 ]->GenerateMipmaps();
 	}
 
@@ -458,18 +458,27 @@ void SandboxApplication::Render()
 
 		renderer.Render( camera, { 0, 1, 2, 3 } );
 
-		/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		offscreen_framebuffer_color_attachment_array[ 1 ]->GenerateMipmaps();
 	}
 
-	/* Pass 3: Blit both off-screen frame-buffers to quads on default frame-buffer. */
+	/* Pass 3: Blit both off-screen frame-buffers to quads on the editor frame-buffer. */
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "SandboxApp::Render(): Blit Offscreen FB(s) to Main FB", true /* omit if the group is empty */ ) );
 
-		renderer.ResetToDefaultFramebuffer();
+		if( show_imgui )
+			renderer.SetCurrentFramebuffer( &editor_framebuffer );
+		else
+			renderer.ResetToDefaultFramebuffer();
 
 		renderer.Render( camera, { 4 } );
+
+		/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+		editor_framebuffer_color_attachment->GenerateMipmaps();
 	}
+
+	if( show_imgui )
+		renderer.ResetToDefaultFramebuffer();
 }
 
 void SandboxApplication::RenderImGui()
@@ -485,11 +494,12 @@ void SandboxApplication::RenderImGui()
 	if( show_imgui_demo_window )
 		ImGui::ShowDemoWindow();
 
+	RenderImGui_Viewport();
+
 	const auto& style = ImGui::GetStyle();
 
 	{
 		const auto [ width, height ] = Platform::GetFramebufferSizeInPixels();
-		static auto rear_view_window_size = ImVec2( width / 4.0f, height / 4.0f );
 		ImGui::SetNextWindowSize( ImVec2( width / 4.0f, height / 4.0f ), ImGuiCond_FirstUseEver );
 	}
 	if( ImGui::Begin( "Rear-view Camera", nullptr, ImGuiWindowFlags_NoScrollbar ) )
@@ -808,6 +818,27 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
 }
 
+void SandboxApplication::RenderImGui_Viewport()
+{
+	{
+		const auto [ width, height ] = Platform::GetFramebufferSizeInPixels();
+		ImGui::SetNextWindowSize( ImVec2( ( float )width, ( float )height ), ImGuiCond_Appearing );
+	}
+
+	if( ImGui::Begin( "Viewport" ) )
+	{
+		if( ImGui::IsWindowHovered() )
+		{
+			ImGui::SetNextFrameWantCaptureMouse( false );
+			ImGui::SetNextFrameWantCaptureKeyboard( false );
+		}
+
+		ImGui::Image( ( void* )( intptr_t )editor_framebuffer_color_attachment->Id(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+	}
+
+	ImGui::End();
+}
+
 void SandboxApplication::ResetLightingData()
 {
 	light_directional = 
@@ -902,11 +933,11 @@ void SandboxApplication::ResetMaterialData()
 
 	outline_material = Engine::Material( "Outline", &outline_shader );
 
-	offscreen_quad_material = Engine::Material( "Offscreen Quad", &fullscreen_blit_shader );
-	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
-
 	mirror_quad_material = Engine::Material( "Rear-view Mirror", &fullscreen_blit_shader );
 	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
+
+	offscreen_quad_material = Engine::Material( "Offscreen Quad", &fullscreen_blit_shader );
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
 
 	ground_quad_surface_data = wall_surface_data =
 	{
@@ -1029,32 +1060,61 @@ void SandboxApplication::InitializeFramebufferTextures()
 {
 	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
 
-	std::string name( "Offscreen FB 1 Color Tex" + std::to_string( width ) + "x" + std::to_string( height ) );
-	offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
-	name[ strlen( "Offscreen FB " ) ] = '2';
-	offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+	/* Main: */
+	{
+		std::string name( "Editor FB Color Tex" + std::to_string( width ) + "x" + std::to_string( height ) );
+		editor_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+	}
+
+	/* Offscreen: */
+	{
+		std::string name( "Offscreen FB 1 Color Tex" + std::to_string( width ) + "x" + std::to_string( height ) );
+		offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+		name[ strlen( "Offscreen FB " ) ] = '2';
+		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+	}
 }
 
 void SandboxApplication::InitializeRenderbuffers()
 {
 	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-	std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
 
-	offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
-	name[ strlen( "Offscreen FB " ) ] = '2';
-	offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+	/* Main: */
+	{
+		std::string name( "Editor FB D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
+		editor_framebuffer_depth_and_stencil_attachment = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+	}
+
+	/* Offscreen: */
+	{
+		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
+		offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+		name[ strlen( "Offscreen FB " ) ] = '2';
+		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+	}
 }
 
 void SandboxApplication::InitializeFramebuffers()
 {
 	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-	std::string name( "Offscreen FB 1 " + std::to_string( width ) + "x" + std::to_string( height ) );
 
-	offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
-															offscreen_framebuffer_color_attachment_array[ 0 ],
-															&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
-	name[ strlen( "Offscreen FB " ) ] = '2';
-	offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
-															offscreen_framebuffer_color_attachment_array[ 1 ],
-															&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
+	/* Main: */
+	{
+		std::string name( "Editor FB " + std::to_string( width ) + "x" + std::to_string( height ) );
+		editor_framebuffer = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+												  editor_framebuffer_color_attachment,
+												  &editor_framebuffer_depth_and_stencil_attachment );
+	}
+
+	/* Offscreen: */
+	{
+		std::string name( "Offscreen FB 1 " + std::to_string( width ) + "x" + std::to_string( height ) );
+		offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+																offscreen_framebuffer_color_attachment_array[ 0 ],
+																&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
+		name[ strlen( "Offscreen FB " ) ] = '2';
+		offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+																offscreen_framebuffer_color_attachment_array[ 1 ],
+																&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
+	}
 }
