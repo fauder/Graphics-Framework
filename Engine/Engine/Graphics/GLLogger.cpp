@@ -42,15 +42,15 @@ namespace Engine
 		:
 		logger(
 		{
-			/* Red for error logs.		*/ ImVec4( 1.0f, 0.0f, 0.0f, 1.0f ), // <-- ERROR
-			/* Yellow for warning logs. */ ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), // <-- DEPRECATED_BEHAVIOR
-			/* Yellow for warning logs. */ ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), // <-- UNDEFINED_BEHAVIOR 
-			/* Yellow for warning logs. */ ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), // <-- PORTABILITY        
-			/* Yellow for warning logs. */ ImVec4( 1.0f, 1.0f, 0.0f, 1.0f ), // <-- PERFORMANCE        
-			/* White for other logs.	*/ ImVec4( 1.0f, 1.0f, 1.0f, 1.0f ), // <-- MARKER    
-			/* White for other logs.	*/ ImVec4( 1.0f, 1.0f, 1.0f, 1.0f ), // <-- PUSH_GROUP		 
-			/* White for other logs.	*/ ImVec4( 1.0f, 1.0f, 1.0f, 1.0f ), // <-- POP_GROUP		 
-			/* White for other logs.	*/ ImVec4( 1.0f, 1.0f, 1.0f, 1.0f ), // <-- OTHER		
+			/* Red for error logs.		*/ ImVec4( 1.0f,  0.0f,  0.0f,  1.0f ), // <-- ERROR
+			/* Yellow for warning logs. */ ImVec4( 1.0f,  1.0f,  0.0f,  1.0f ), // <-- DEPRECATED_BEHAVIOR
+			/* Yellow for warning logs. */ ImVec4( 1.0f,  1.0f,  0.0f,  1.0f ), // <-- UNDEFINED_BEHAVIOR
+			/* Yellow for warning logs. */ ImVec4( 1.0f,  1.0f,  0.0f,  1.0f ), // <-- PORTABILITY
+			/* Yellow for warning logs. */ ImVec4( 1.0f,  1.0f,  0.0f,  1.0f ), // <-- PERFORMANCE
+			/* White for other logs.	*/ ImVec4( 0.04f, 0.3f,  0.15f, 1.0f ), // <-- MARKER
+			/* White for other logs.	*/ ImVec4( 0.38f, 1.0f,  0.82f, 1.0f ), // <-- PUSH_GROUP
+			/* White for other logs.	*/ ImVec4( 0.38f, 1.0f,  0.82f, 1.0f ), // <-- POP_GROUP
+			/* White for other logs.	*/ ImVec4( 1.0f,  1.0f,  1.0f,  1.0f ), // <-- OTHER
 		} )
 	{
 	}
