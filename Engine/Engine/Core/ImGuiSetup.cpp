@@ -61,8 +61,14 @@ namespace ImGuiSetup
         icons_config.GlyphMinAdvanceX     = icon_font_size;
         icons_config.FontDataOwnedByAtlas = false;
 
+        ImFontGlyphRangesBuilder font_glyph_ranges_builder;
+        //font_glyph_ranges_builder.AddChar( 0x00A6 ); // Left here as example, for future reference.
+        font_glyph_ranges_builder.AddRanges( io.Fonts->GetGlyphRangesDefault() );
+        static ImVector< ImWchar > glyph_ranges;
+        font_glyph_ranges_builder.BuildRanges( &glyph_ranges );
+
         io.Fonts->Clear();
-        io.Fonts->AddFontFromFileTTF( "Asset/Font/JetBrainsMono-Regular.ttf", 18 );
+        io.Fonts->AddFontFromFileTTF( "Asset/Font/JetBrainsMono-Regular.ttf", 18, nullptr, glyph_ranges.Data );
         /* Merge in icons from icon font(s): */
         io.Fonts->AddFontFromFileTTF( "Asset/Font/Font-Awesome/" FONT_ICON_FILE_NAME_FAS, icon_font_size, &icons_config, icons_ranges ); // Merge into JetBrainsMono-Regular (18).
 
