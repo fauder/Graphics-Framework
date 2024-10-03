@@ -119,6 +119,10 @@ namespace Platform
 		glfwSetScrollCallback( WINDOW, OnMouseScrolled );
 	}
 
+	/*
+	 * Initialization:
+	 */
+
 	void InitializeAndCreateWindow( const int width_pixels, const int height_pixels )
 	{
 		glfwInit();
@@ -167,6 +171,10 @@ namespace Platform
 		RegisterMousePositionChangeCallback();
 		RegisterMouseScrollCallback();
 	}
+
+	/*
+	 * Window/Framebuffer:
+	 */
 
 	void ResizeWindow( const int width_new_pixels, const int height_new_pixels )
 	{
@@ -235,6 +243,10 @@ namespace Platform
 		glfwSwapBuffers( WINDOW );
 	}
 
+	/*
+	 * Events:
+	 */
+
 	void PollEvents()
 	{
 		MOUSE_CURSOR_X_DELTA = MOUSE_CURSOR_Y_DELTA = 0.0f;
@@ -243,11 +255,19 @@ namespace Platform
 	}
 
 #ifdef _DEBUG
+	/*
+	 * GL Debug Output:
+	 */
+
 	void SetGLDebugOutputCallback( std::function< void( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters ) > callback )
 	{
 		GL_DEBUG_OUTPUT_CALLBACK = callback;
 	}
 #endif // _DEBUG
+
+	/*
+	 * Keyboard IO:
+	 */
 
 	void SetKeyboardEventCallback( std::function< void( const KeyCode key_code, const KeyAction action, const KeyMods mods ) > callback )
 	{
@@ -272,6 +292,20 @@ namespace Platform
 			return false;
 
 		return glfwGetKey( WINDOW, int( key_code ) ) == GLFW_RELEASE;
+	}
+
+	/*
+	 * Mouse IO:
+	 */
+
+	bool IsMouseButtonPressed( const MouseButton mouse_button )
+	{
+		return glfwGetMouseButton( WINDOW, ( int )mouse_button ) == GLFW_PRESS;
+	}
+	
+	bool IsMouseButtonReleased( const MouseButton mouse_button )
+	{
+		return glfwGetMouseButton( WINDOW, ( int )mouse_button ) == GLFW_RELEASE;
 	}
 
 	void ResetMouseDeltas()
@@ -317,6 +351,10 @@ namespace Platform
 	{
 		return { MOUSE_SCROLL_X_OFFSET, MOUSE_SCROLL_Y_OFFSET };
 	}
+
+	/*
+	 * File IO:
+	 */
 
 	std::optional< std::string > BrowseFileName( const std::vector< std::string >& filters, const std::string& prompt )
 	{
@@ -419,10 +457,27 @@ namespace Platform
 		throw std::logic_error( "Platform::BrowseDirectory() not implemented for current platform." );
 	}
 
+	/*
+	 * Time-keeping Facilities:
+	 */
+
 	float CurrentTime()
 	{
 		return static_cast< float >( glfwGetTime() );
 	}
+
+	/*
+	 * Shutdown:
+	 */
+
+	void CleanUp()
+	{
+		glfwTerminate();
+	}
+
+	/*
+	 * Other:
+	 */
 
 	void SetShouldClose( const bool value )
 	{
@@ -437,11 +492,6 @@ namespace Platform
 	void ChangeTitle( const char* new_title )
 	{
 		glfwSetWindowTitle( WINDOW, new_title );
-	}
-
-	void CleanUp()
-	{
-		glfwTerminate();
 	}
 
 	void* GetWindowHandle()

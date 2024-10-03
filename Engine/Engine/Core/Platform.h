@@ -147,12 +147,21 @@ namespace Platform
 	};
 	enum class KeyMods
 	{
-		SHIFT           = 0x0001,
-		CONTROL         = 0x0002,
-		ALT             = 0x0004,
-		SUPER           = 0x0008,
-		CAPS_LOCK       = 0x0010,
-		NUM_LOCK        = 0x0020
+		SHIFT     = 0x0001,
+		CONTROL   = 0x0002,
+		ALT       = 0x0004,
+		SUPER     = 0x0008,
+		CAPS_LOCK = 0x0010,
+		NUM_LOCK  = 0x0020
+	};
+
+	enum class MouseButton
+	{
+		Left    = 0,
+		Middle  = 1,
+		Right   = 2,
+		Extra_1 = 3,
+		Extra_2 = 4
 	};
 
 	/* Initialization. */
@@ -189,6 +198,8 @@ namespace Platform
 	bool IsKeyReleased( const KeyCode key_code );
 
 	/* Mouse IO. */
+	bool IsMouseButtonPressed( const MouseButton mouse_button );
+	bool IsMouseButtonReleased( const MouseButton mouse_button );
 	void ResetMouseDeltas();
 	void CaptureMouse( const bool should_capture );
 	float GetMouseSensitivity();
@@ -201,7 +212,7 @@ namespace Platform
 	std::optional< std::string > BrowseFileName( const std::vector< std::string >& filters, const std::string& prompt = "" );
 	std::optional< std::string > BrowseDirectory( const std::string& title, const std::string& folder_path = "" );
 
-	/* Time-Keeping Facilities. */
+	/* Time-keeping Facilities. */
 	float CurrentTime();
 
 	/* Shutdown. */
