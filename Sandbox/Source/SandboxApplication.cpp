@@ -79,7 +79,7 @@ void SandboxApplication::Initialize()
 
 	//Engine::Math::Random::SeedRandom();
 
-	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init.", true /* omit if the group is empty */ ) );
+	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init." ) );
 
 /* Textures: */
 	Engine::Texture::ImportSettings texture_import_settings;
@@ -356,7 +356,9 @@ void SandboxApplication::Shutdown()
 
 void SandboxApplication::Update()
 {
-	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Update", true /* omit if the group is empty */ ) );
+	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Update()" ) );
+
+	// TODO: Separate applicationg logs from GL logs.
 
 	current_time_as_angle = Radians( time_current );
 	const Radians current_time_mod_two_pi( std::fmod( time_current, Engine::Constants< float >::Two_Pi() ) );
@@ -434,7 +436,7 @@ void SandboxApplication::Render()
 
 	/* Pass 1 - Rear-cam view: Invert camera direction, draw everything to the off-screen frame-buffer 1. */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "SandboxApp::Render(): Render to Offscreen FB 1 (Rear view)", true /* omit if the group is empty */ ) );
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 1 (Rear view)" ) );
 
 		camera_controller.Invert();
 		renderer.Update( camera );
@@ -449,7 +451,7 @@ void SandboxApplication::Render()
 
 	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), draw everything to the off-screen frame-buffer 2. */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "SandboxApp::Render(): Render to Offscreen FB 2 (Default view)", true /* omit if the group is empty */ ) );
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 2 (Default view)" ) );
 		
 		camera_controller.Invert();
 		renderer.Update( camera );
@@ -464,7 +466,7 @@ void SandboxApplication::Render()
 
 	/* Pass 3: Blit both off-screen frame-buffers to quads on the editor frame-buffer. */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "SandboxApp::Render(): Blit Offscreen FB(s) to Main FB", true /* omit if the group is empty */ ) );
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Blit Offscreen FB(s) to Main FB" ) );
 
 		if( show_imgui )
 			renderer.SetCurrentFramebuffer( &editor_framebuffer );
@@ -483,13 +485,7 @@ void SandboxApplication::Render()
 
 void SandboxApplication::RenderImGui()
 {
-	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Application ImGui", true /* omit if the group is empty */ ) );
-
-		Application::RenderImGui();
-	}
-
-	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox ImGui", true /* omit if the group is empty */ ) );
+	Application::RenderImGui();
 
 	if( show_imgui_demo_window )
 		ImGui::ShowDemoWindow();
@@ -704,7 +700,7 @@ void SandboxApplication::RenderImGui()
 					camera.SetAspectRatio( Platform::GetAspectRatio() ); // If we don't do this, CalculateVerticalFieldOfView() below will work with possibly the old aspect ratio and produce incorrect results.
 					camera = Engine::Camera( &camera_transform, camera.GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
 				}
-
+				
 				bool modified = false;
 
 				modified |= Engine::ImGuiDrawer::Draw( camera, "Main Camera" );

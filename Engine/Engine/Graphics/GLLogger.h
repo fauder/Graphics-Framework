@@ -16,7 +16,7 @@ namespace Engine
 	private:
 		struct GLLogGroup
 		{
-			GLLogGroup( GLLogger* logger, const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
+			GLLogGroup( GLLogger* logger, const char* group_name );
 
 			GLLogGroup( const GLLogGroup& other )            = delete;
 			GLLogGroup& operator=( const GLLogGroup& other ) = delete;
@@ -33,22 +33,23 @@ namespace Engine
 		};
 
 	private:
-		using CallbackType = std::function< void( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters ) >;
+		using CallbackType = std::function< void( GLenum source, GLenum type, unsigned int id /* will be ignored */, GLenum severity, GLsizei length, const char* message,
+												  const void* parameters /* will be ignored */ ) >;
 
 	public:
 		GLLogger();
 		~GLLogger();
 
 	/* Custom messages: */
-		void Insert( const char* message, const unsigned int id = 0 ) const;
+		void Insert( const char* message ) const;
 
 	/* Grouping: */
 		/* omit_empty_group: If true, defers the push operation until an actual log is recorded between this function call & the PopGroup() call. If no calls were made in-between,
 		 * the group is not pushed/popped. It is effectively omitted. */
-		void PushGroup( const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
+		void PushGroup( const char* group_name );
 		void PopGroup();
 
-		GLLogGroup TemporaryLogGroup( const char* group_name, const bool omit_empty_group = false, const unsigned int id = 0 );
+		GLLogGroup TemporaryLogGroup( const char* group_name );
 
 	/* Marker: */
 		void Marker( const char* marker_label );
@@ -71,6 +72,7 @@ namespace Engine
 
 	private:
 		void InternalDebugOutputCallback( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters );
+		void Log( GLenum source, GLenum type, GLenum severity, GLsizei length, const char* message, const void* parameters );
 
 		static const char* GLenumToString_Source( const GLenum source );
 		static const char* GLenumToString_Type( const GLenum type );
@@ -79,6 +81,6 @@ namespace Engine
 	private:
 		ImGuiLog< GLLogType, std::size_t( GLLogType::COUNT ) > logger;
 
-		std::stack< const char* > empty_log_groups;
+		std::stack< const char* > groups_empty; /* We keep tabs of the empty groups & while we do push/pop them, we do not log them. */
 	};
 }

@@ -6,11 +6,11 @@
 
 namespace Engine
 {
-	GLLogger::GLLogGroup::GLLogGroup( GLLogger* logger, const char* group_name, const bool omit_empty_group, const unsigned int id )
+	GLLogger::GLLogGroup::GLLogGroup( GLLogger* logger, const char* group_name )
 		:
 		logger( logger )
 	{
-		logger->PushGroup( group_name, omit_empty_group, id );
+		logger->PushGroup( group_name );
 	}
 
 	GLLogger::GLLogGroup::GLLogGroup( GLLogGroup&& donor )
@@ -38,7 +38,7 @@ namespace Engine
 		}
 	}
 
-	GLLogger::GLLogger( const bool never_omit_empty_groups )
+	GLLogger::GLLogger()
 		:
 		logger(
 		{
@@ -59,38 +59,28 @@ namespace Engine
 	{
 	}
 
-	void GLLogger::Insert( const char* message, const unsigned int id ) const
+	void GLLogger::Insert( const char* message ) const
 	{
-		glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, id, GL_DEBUG_SEVERITY_NOTIFICATION, -1, message );
+		glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, 0 /* ignored */, GL_DEBUG_SEVERITY_NOTIFICATION, -1, message);
 	}
 
 	/* omit_empty_group: If true, defers the push operation until an actual log is recorded between this function call & the PopGroup() call. If no calls were made in-between,
 	 * the group is not pushed/popped. It is effectively omitted. */
-	void GLLogger::PushGroup( const char* group_name, const bool omit_empty_group, const unsigned int id )
+	void GLLogger::PushGroup( const char* group_name )
 	{
-		if( omit_empty_group )
-		{
-			/* Defer actual glPushDebugGroup() to InternalDebugOutputCallback(); This way a group can be checked to see if it is empty and if so, skipped. Else, it is pushed first. */
-			empty_log_groups.push( group_name );
-		}
-		else
-			glPushDebugGroup( GL_DEBUG_SOURCE_APPLICATION, id, -1, group_name );
+		groups_empty.push( group_name ); // This will be checked & popped by the actual debug output callback.
+
+		glPushDebugGroup( GL_DEBUG_SOURCE_APPLICATION, 0 /* ignored */, -1, group_name);
 	}
 
 	void GLLogger::PopGroup()
 	{
-		if( not empty_log_groups.empty() )
-		{
-			empty_log_groups.pop();
-			return;
-		}
-
-		glPopDebugGroup();
+		glPopDebugGroup(); // groups_empty will be popped if non-empty, in the actual debug output callback.
 	}
 
-	GLLogger::GLLogGroup GLLogger::TemporaryLogGroup( const char* group_name, const bool omit_empty_group, const unsigned int id )
+	GLLogger::GLLogGroup GLLogger::TemporaryLogGroup( const char* group_name )
 	{
-		GLLogGroup group( this, group_name, omit_empty_group, id );
+		GLLogGroup group( this, group_name );
 		return group;
 	}
 
@@ -150,43 +140,63 @@ namespace Engine
  * Private API:
  */
 
-	void GLLogger::InternalDebugOutputCallback( GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char* message, const void* parameters )
+	void GLLogger::InternalDebugOutputCallback( GLenum source, GLenum type, unsigned int id /* ignored */, GLenum severity, GLsizei length, const char* message, 
+												const void* parameters /* ignored */ )
 	{
 		if( type == GL_DEBUG_TYPE_MARKER )
 			return;
 
-		/* We pop one group name every time a log is made. This way, we can check if any logs were recorded between push/pop of a specific log group & can skip the group if it is empty. */
-		if( not empty_log_groups.empty() )
+		if( not groups_empty.empty() )
 		{
-			const auto& group_name = empty_log_groups.top();
+			if( type == GL_DEBUG_TYPE_PUSH_GROUP ) // Can not process this type while the group is still empty.
+				return;
 
-			if( group_name != message )
+			if( type == GL_DEBUG_TYPE_POP_GROUP ) // Can not process this type while the group is still empty.
 			{
-				/* This group is not empty; We can push the group. */
-
-				glPushDebugGroup( GL_DEBUG_SOURCE_APPLICATION, id, -1, group_name );
-
-				empty_log_groups.pop();
+				groups_empty.pop();
+				return;
 			}
+
+			/* We pop one group name every time a log is made. This way, we can check if any logs were recorded between push/pop of a specific log group & can skip empty groups. */
+			auto group_name = groups_empty.top();
+			groups_empty.pop();
+
+			/* First log the group name: */
+			Log( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_PUSH_GROUP, GL_DEBUG_SEVERITY_NOTIFICATION, -1, group_name, parameters );
+
+			/* Resume logging the actual message. */
 		}
 
-		const auto severity_string = GLenumToString_Severity( severity );	// Has a max length of 17.
-		const auto source_string   = GLenumToString_Source( source );		// Has a max length of 13.
-		const auto type_string     = GLenumToString_Type( type );			// Has a max length of 13.
+		Log( source, type, severity, length, message, parameters );
+	}
 
+	void GLLogger::Log( GLenum source, GLenum type, GLenum severity, GLsizei length, const char* message, const void* parameters )
+	{
 		constexpr std::size_t fixed_portion_length =
 			1 + 1 +				// 1 vertical line + 1 space.
 			17 + 1 + 1 + 1 +	// Severity ( max length = 17 ) + 1 space + 1 vertical line + 1 space.
 			13 + 1 + 1 + 1 +	// Source   ( max length = 13 ) + 1 space + 1 vertical line + 1 space.
-			13 + 1 + 1 + 1 +	// Type     ( max length = 13 ) + 1 space + 1 vertical line + 1 space.
-			1 + 10 + 1 + 1 + 4;	// Open parenthesis + id (max 10 digits) + close parenthesis + colon + 4 spaces.
+			13 + 1 + 1 +		// Type     ( max length = 13 ) + 1 space + 1 vertical line.
+			1 + 4;				// Colon + 4 spaces.
 
 		static std::vector< char > full_message( fixed_portion_length + 255, ' ' ); // Initial max. message length of 255 reserved.
 
 		if( length > 255 )
 			full_message.resize( fixed_portion_length + length );
 
-		sprintf_s( full_message.data(), full_message.size(), "| %-17s | %13s | %13s | (%u):    %s", severity_string, source_string, type_string, id, message );
+		/* Write group names directly. */
+		if( type == GL_DEBUG_TYPE_PUSH_GROUP )
+			sprintf_s( full_message.data(), full_message.size(), ICON_FA_ANGLE_UP " %s", message );
+		else if( type == GL_DEBUG_TYPE_POP_GROUP )
+			sprintf_s( full_message.data(), full_message.size(), ICON_FA_ANGLE_DOWN );
+		else
+		{
+			const auto severity_string = GLenumToString_Severity( severity );	// Has a max length of 17.
+			const auto source_string   = GLenumToString_Source( source );		// Has a max length of 13.
+			const auto type_string     = GLenumToString_Type( type );			// Has a max length of 13.
+
+			sprintf_s( full_message.data(), full_message.size(), ICON_FA_ELLIPSIS_VERTICAL "\t%-17s | %13s | %13s: \t%s", severity_string, source_string, type_string, message );
+		}
 
 		logger.AddLog( GLenumToGLLogType( type ), full_message.data() );
 	}
@@ -212,12 +222,12 @@ namespace Engine
 		
 		switch( type )
 		{
-			case GL_DEBUG_TYPE_ERROR 				: return "ERROR";
-			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR 	: return "DEPRECATED";
-			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR 	: return "UNDEFINED";
-			case GL_DEBUG_TYPE_PORTABILITY 			: return "PORTABILITY";
-			case GL_DEBUG_TYPE_PERFORMANCE 			: return "PERFORMANCE";
-			case GL_DEBUG_TYPE_MARKER 				: return "MARKER";
+			case GL_DEBUG_TYPE_ERROR 				: return ICON_FA_CIRCLE_EXCLAMATION;
+			case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR 	: return ICON_FA_TRIANGLE_EXCLAMATION " DEPRECATED";
+			case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR 	: return ICON_FA_TRIANGLE_EXCLAMATION " UNDEFINED";
+			case GL_DEBUG_TYPE_PORTABILITY 			: return ICON_FA_TRIANGLE_EXCLAMATION " PORTABILITY";
+			case GL_DEBUG_TYPE_PERFORMANCE 			: return ICON_FA_GAUGE;
+			case GL_DEBUG_TYPE_MARKER 				: return ICON_FA_FLAG;
 			case GL_DEBUG_TYPE_PUSH_GROUP 			: return "PUSH_GROUP";
 			case GL_DEBUG_TYPE_POP_GROUP 			: return "POP_GROUP";
 			case GL_DEBUG_TYPE_OTHER 				: return "OTHER";
