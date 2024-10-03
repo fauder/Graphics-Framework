@@ -87,6 +87,25 @@ namespace Engine::Math
 		{
 		}
 
+	/* Comparison operators. */
+		bool operator ==( const Vector& right_hand_side ) const
+		{
+			bool result = true;
+
+			for( auto i = 0; i < Size; i++ )
+				if constexpr( std::is_integral_v< Component > )
+					result &= data[ i ] == right_hand_side.data[ i ];
+				else
+					result &= Math::IsEqual( data[ i ], right_hand_side.data[ i ] );
+
+			return result;
+		}
+
+		bool operator !=( const Vector& right_hand_side ) const
+		{
+			return !operator==( right_hand_side );
+		}
+
 	/* Getters & Setters. */
 		Component* Data() { return data; };
 		const Component* Data() const { return data; };
