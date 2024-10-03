@@ -63,9 +63,9 @@ private:
 	void ReloadModel( const std::string& file_path );
 	void UnloadModel();
 
-	void InitializeFramebufferTextures();
-	void InitializeRenderbuffers();
-	void InitializeFramebuffers();
+	void InitializeFramebufferTextures( const int width_new_pixels, const int height_new_pixels );
+	void InitializeRenderbuffers( const int width_new_pixels, const int height_new_pixels );
+	void InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels );
 
 private:
 /* Renderer: */

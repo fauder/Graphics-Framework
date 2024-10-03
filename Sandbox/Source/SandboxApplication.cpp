@@ -93,14 +93,6 @@ void SandboxApplication::Initialize()
 
 	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
 
-	InitializeFramebufferTextures();
-
-/* Renderbuffers: */
-	InitializeRenderbuffers();
-
-/* Framebuffers: */
-	InitializeFramebuffers();
-
 /* Shaders: */
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
@@ -317,9 +309,23 @@ void SandboxApplication::Initialize()
 
 	mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
+/* Camera: */
+	ResetCamera();
+
 	/* This is the earliest place we can MaximizeWindow() at,
 	 * because the Renderer will populate its Intrinsic UBO info only upon AddDrawable( <Drawable with a Shader using said UBO> ). */
-	ResetCamera();
+
+/* Framebuffer Textures: */
+	//InitializeFramebufferTextures();
+
+/* Renderbuffers: */
+	//InitializeRenderbuffers();
+
+/* Framebuffers: */
+	//InitializeFramebuffers();
+
+	/* No need to Initialize these as maximizing the window will cause these to be called in OnFramebufferResizeEvent(). */
+
 	Platform::MaximizeWindow();
 
 /* Models: */
@@ -806,9 +812,9 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	}
 
 	// Re-initialize:
-	InitializeFramebufferTextures();
-	InitializeRenderbuffers();
-	InitializeFramebuffers();
+	InitializeFramebufferTextures( width_new_pixels, height_new_pixels );
+	InitializeRenderbuffers( width_new_pixels, height_new_pixels );
+	InitializeFramebuffers( width_new_pixels, height_new_pixels );
 
 	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
 	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
@@ -823,6 +829,17 @@ void SandboxApplication::RenderImGui_Viewport()
 
 	if( ImGui::Begin( "Viewport" ) )
 	{
+		const ImVec2   viewport_size_imvec2( ImGui::GetContentRegionAvail() );
+		const Vector2I viewport_size( ( int )viewport_size_imvec2.x, ( int )viewport_size_imvec2.y );
+
+		if( viewport_size != editor_framebuffer_color_attachment->Size() )
+		{
+			const auto& imgui_io = ImGui::GetIO();
+			if( (     imgui_io.WantCaptureMouse && imgui_io.MouseReleased[ 0 ] ) ||
+				( not imgui_io.WantCaptureMouse && Platform::IsMouseButtonReleased( Platform::MouseButton::Left ) ) )
+				OnFramebufferResizeEvent( viewport_size.X(), viewport_size.Y() );
+		}
+
 		if( ImGui::IsWindowHovered() )
 		{
 			ImGui::SetNextFrameWantCaptureMouse( false );
@@ -1052,64 +1069,58 @@ void SandboxApplication::UnloadModel()
 	test_model_instance = {};
 }
 
-void SandboxApplication::InitializeFramebufferTextures()
+void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixels, const int height_new_pixels )
 {
-	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-
 	/* Main: */
 	{
-		std::string name( "Editor FB Color Tex" + std::to_string( width ) + "x" + std::to_string( height ) );
-		editor_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+		std::string name( "Editor FB Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		editor_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width_new_pixels, height_new_pixels ) );
 	}
 
 	/* Offscreen: */
 	{
-		std::string name( "Offscreen FB 1 Color Tex" + std::to_string( width ) + "x" + std::to_string( height ) );
-		offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+		std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width_new_pixels, height_new_pixels ) );
 		name[ strlen( "Offscreen FB " ) ] = '2';
-		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width, height ) );
+		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width_new_pixels, height_new_pixels ) );
 	}
 }
 
-void SandboxApplication::InitializeRenderbuffers()
+void SandboxApplication::InitializeRenderbuffers( const int width_new_pixels, const int height_new_pixels )
 {
-	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-
 	/* Main: */
 	{
-		std::string name( "Editor FB D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
-		editor_framebuffer_depth_and_stencil_attachment = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+		std::string name( "Editor FB D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		editor_framebuffer_depth_and_stencil_attachment = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
 	}
 
 	/* Offscreen: */
 	{
-		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width ) + "x" + std::to_string( height ) );
-		offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
 		name[ strlen( "Offscreen FB " ) ] = '2';
-		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels() );
+		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
 	}
 }
 
-void SandboxApplication::InitializeFramebuffers()
+void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels )
 {
-	const auto width( Platform::GetFramebufferWidthInPixels() ), height( Platform::GetFramebufferHeightInPixels() );
-
 	/* Main: */
 	{
-		std::string name( "Editor FB " + std::to_string( width ) + "x" + std::to_string( height ) );
-		editor_framebuffer = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+		std::string name( "Editor FB " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		editor_framebuffer = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
 												  editor_framebuffer_color_attachment,
 												  &editor_framebuffer_depth_and_stencil_attachment );
 	}
 
 	/* Offscreen: */
 	{
-		std::string name( "Offscreen FB 1 " + std::to_string( width ) + "x" + std::to_string( height ) );
-		offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+		std::string name( "Offscreen FB 1 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
 																offscreen_framebuffer_color_attachment_array[ 0 ],
 																&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
 		name[ strlen( "Offscreen FB " ) ] = '2';
-		offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, Platform::GetFramebufferWidthInPixels(), Platform::GetFramebufferHeightInPixels(),
+		offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
 																offscreen_framebuffer_color_attachment_array[ 1 ],
 																&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
 	}
