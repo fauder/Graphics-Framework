@@ -36,8 +36,12 @@ namespace Platform
 
 	void OnResizeWindow( GLFWwindow* window, const int width_new_pixels, const int height_new_pixels )
 	{
+		if( glfwGetMouseButton( WINDOW, GLFW_MOUSE_BUTTON_LEFT ) != GLFW_RELEASE )
+			return;
+
 		glfwSetWindowSize( window, width_new_pixels, height_new_pixels );
-		glViewport( 0, 0, width_new_pixels, height_new_pixels );
+
+		/* It is the client application's (renderer's) responsibility to call glViewport(). */
 
 		if( FRAMEBUFFER_RESIZE_CALLBACK )
 			FRAMEBUFFER_RESIZE_CALLBACK( width_new_pixels, height_new_pixels );
