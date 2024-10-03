@@ -90,6 +90,7 @@ namespace Engine
 			{
 				ImGuiSetup::BeginFrame();
 				RenderImGui();
+				auto log_group( ServiceLocator< GLLogger >::Get().TemporaryLogGroup( "ImGuiSetup::EndFrame()" ) );
 				ImGuiSetup::EndFrame();
 			}
 
