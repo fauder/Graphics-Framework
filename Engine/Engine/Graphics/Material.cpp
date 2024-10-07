@@ -177,7 +177,7 @@ namespace Engine
 	void Material::PopulateTextureMap()
 	{
 		for( const auto& [ uniform_name, uniform_info ] : *uniform_info_map )
-			if( uniform_info.type == GL_SAMPLER_2D )
+			if( uniform_info.type == GL_SAMPLER_2D || uniform_info.type == GL_SAMPLER_CUBE )
 				texture_map.emplace( uniform_name, nullptr );
 	}
 
@@ -186,7 +186,8 @@ namespace Engine
 		std::erase_if( texture_map, [ & ]( const auto& name_texture_pair ) { return not uniform_info_map->contains( name_texture_pair.first ); } );
 
 		for( const auto& [ uniform_name, uniform_info ] : *uniform_info_map )
-			if( uniform_info.type == GL_SAMPLER_2D && not texture_map.contains( uniform_name ) )
+			if( ( uniform_info.type == GL_SAMPLER_2D || uniform_info.type == GL_SAMPLER_CUBE ) &&
+				not texture_map.contains( uniform_name ) )
 				texture_map.emplace( uniform_name, nullptr );
 	}
 }

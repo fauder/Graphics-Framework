@@ -182,6 +182,7 @@ namespace Engine
 			case GL_SAMPLER_1D 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
 			case GL_SAMPLER_2D 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
 			case GL_SAMPLER_3D 			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_SAMPLER_CUBE 		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
 		}
 
 		throw std::runtime_error( "ERROR::SHADER::SetUniform( uniform_info, value_pointer ) called for an unknown GL type!" );
@@ -223,6 +224,7 @@ namespace Engine
 			case GL_SAMPLER_1D 			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
 			case GL_SAMPLER_2D 			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
 			case GL_SAMPLER_3D 			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
+			case GL_SAMPLER_CUBE		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
 		}
 
 		throw std::runtime_error( "ERROR::SHADER::SetUniformArray( uniform_info, value_pointer ) called for an unknown GL type!" );
