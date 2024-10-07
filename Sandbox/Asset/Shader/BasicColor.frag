@@ -2,7 +2,7 @@
 
 out vec4 out_color;
 
-uniform vec4 uniform_color; /* _hint_color3 */
+uniform vec4 uniform_color; /* _hint_color4 */
 
 void main()
 {
