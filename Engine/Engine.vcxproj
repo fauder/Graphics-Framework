@@ -238,6 +238,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Graphics\Mesh.cpp" />
     <ClCompile Include="Engine\Graphics\Model.cpp" />
     <ClCompile Include="Engine\Graphics\ModelLoader.cpp" />
+    <ClCompile Include="Engine\Graphics\Primitive\Primitive_Cube_FullScreen.h" />
     <ClCompile Include="Engine\Graphics\Renderbuffer.cpp" />
     <ClCompile Include="Engine\Graphics\Renderer.cpp" />
     <ClCompile Include="Engine\Graphics\UniformBlockBindingPointManager.cpp" />
