@@ -12,4 +12,5 @@ void main()
     varying_tex_coords = position;
 
     gl_Position = vec4( position, 1.0f ) * _INTRINSIC_TRANSFORM_VIEW_ROTATION_ONLY * _INTRINSIC_TRANSFORM_PROJECTION;
+    gl_Position.z = gl_Position.w;
 }

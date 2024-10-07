@@ -39,12 +39,12 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
 	cube_drawable_outline_array( CUBE_COUNT ),
-	render_group_id_skybox( 0 ),
-	render_group_id_regular( 1 ),
-	render_group_id_outlined_mesh( 2 ),
-	render_group_id_outline( 3 ),
-	render_group_id_transparent( 4 ),
-	render_group_id_screen_size_quad( 5 ),
+	render_group_id_skybox( 999 ),
+	render_group_id_regular( 0 ),
+	render_group_id_outlined_mesh( 1 ),
+	render_group_id_outline( 2 ),
+	render_group_id_transparent( 3 ),
+	render_group_id_screen_size_quad( 4 ),
 	skybox_shader( "Skybox" ),
 	phong_shader( "Phong" ),
 	basic_color_shader( "Basic Color" ),
@@ -231,11 +231,11 @@ void SandboxApplication::Initialize()
 /* Renderer (Drawables, RenderStates etc.): */
 	{
 		renderer.SetRenderGroupName( render_group_id_skybox, "Skybox" );
-		auto& render_state_skybox = renderer.GetRenderState( render_group_id_skybox ); // Keep default settings except for the depth test & back face culling.
+		auto& render_state_skybox = renderer.GetRenderState( render_group_id_skybox ); // Keep default settings except for back face culling.
+
+		render_state_skybox.depth_comparison_function = Engine::Renderer::ComparisonFunction::LessOrEqual;
 
 		render_state_skybox.face_culling_enable = false;
-
-		render_state_skybox.depth_test_enable = false;
 	}
 
 	{
@@ -484,7 +484,7 @@ void SandboxApplication::Render()
 
 		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 1 ] );
 
-		renderer.Render( camera, { render_group_id_skybox, render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent } );
+		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
 
 		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		offscreen_framebuffer_color_attachment_array[ 1 ]->GenerateMipmaps();
