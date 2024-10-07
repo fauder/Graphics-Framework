@@ -6,6 +6,7 @@
 #include "Std140StructTag.h"
 #include "Uniform.h"
 #include "Lighting/Lighting.h"
+#include "VertexLayout.hpp"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
 #include "Math/Vector.hpp"
@@ -86,6 +87,9 @@ namespace Engine
 		inline const std::vector< std::string >&	FragmentShaderSourceIncludePaths()	const { return fragment_source_include_path_array;	}
 
 		inline const std::unordered_map< std::string, Feature >& Features() const { return feature_map; }
+
+		inline const VertexLayout& GetSourceVertexLayout()	const { return vertex_layout_source; }
+		inline const VertexLayout& GetActiveVertexLayout()	const { return vertex_layout_active; }
 
 /* Uniform APIs: */
 		inline const std::unordered_map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
@@ -487,8 +491,11 @@ namespace Engine
 
 		/*std::string ShaderSource_CommentsStripped( const std::string& shader_source );*/
 		void ParseShaderSource_UniformUsageHints( const std::string& shader_source, const ShaderType shader_type );
+		void ParseShaderSource_VertexLayout( std::string shader_source );
 
 /* Shader Introspection: */
+		void QueryVertexAttributes();
+
 		void GetUniformBookKeepingInfo();
 		
 		/* Expects empty input vectors. */
@@ -532,5 +539,8 @@ namespace Engine
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_intrinsic;
 
 		Uniform::ActiveUniformBookKeepingInformation uniform_book_keeping_info;
+
+		VertexLayout vertex_layout_source;
+		VertexLayout vertex_layout_active;
 	};
 }

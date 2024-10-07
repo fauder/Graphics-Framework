@@ -105,12 +105,15 @@ namespace Engine
 			ServiceLocator< GLLogger >::Get().SetLabel( GL_PROGRAM, program_id, name );
 #endif // _DEBUG
 
+			QueryVertexAttributes();
+
 			GetUniformBookKeepingInfo();
 			if( uniform_book_keeping_info.count == 0 )
 				return true;
 
 			QueryUniformData();
 
+			ParseShaderSource_VertexLayout( *vertex_shader_source );
 			ParseShaderSource_UniformUsageHints( *vertex_shader_source,	  ShaderType::VERTEX   );
 			ParseShaderSource_UniformUsageHints( *fragment_shader_source, ShaderType::FRAGMENT );
 
@@ -573,6 +576,67 @@ namespace Engine
 		while( current_pos != std::string::npos && current_pos != 0 );
 	}
 
+	void Shader::ParseShaderSource_VertexLayout( std::string shader_source )
+	{
+		/* Example:
+			...
+			layout (location = 0) in vec3 position;
+			layout (location = 1) in vec2 tex_coords;
+			...
+		*/
+
+		/*												  location			   type	   name			*/
+		std::regex pattern( R"(layout\s*\(\s*location\s*=\s*(\d+)\s*\)\s*in\s+(\w+)\s+(\w+)\s*;)" );
+		std::smatch matches;
+
+		std::vector< VertexAttribute > attributes;
+
+		while( std::regex_search( shader_source, matches, pattern ) )
+		{
+			const std::string location_string( matches[ 1 ] );
+			const std::string location_type( matches[ 2 ] );
+			const std::string location_name( matches[ 3 ] );
+
+			if( location_string.length() != 0 && matches[ 1 ].matched && 
+				  location_type.length() != 0 && matches[ 2 ].matched &&
+				  location_name.length() != 0 && matches[ 3 ].matched )
+			{
+				const GLenum type( GL::Type::TypeOf( location_type.c_str() ) );
+				attributes.push_back( { GL::Type::CountOf( type ), GL::Type::ComponentTypeOf( type ), ( unsigned int )std::stoi( location_string ), false } );
+			}
+
+			shader_source = matches.suffix();
+		}
+
+		if( not attributes.empty() )
+		{
+			std::sort( attributes.begin(), attributes.end(), []( const VertexAttribute& left, const VertexAttribute& right ) { return left.location < right.location; } );
+			vertex_layout_source = VertexLayout( attributes );
+		}
+	}
+
+	void Shader::QueryVertexAttributes()
+	{
+		int active_attribute_count;
+		glGetProgramiv( program_id, GL_ACTIVE_ATTRIBUTES, &active_attribute_count );
+
+		static char attribute_name[ 255 ];
+
+		std::vector< VertexAttribute > attributes( active_attribute_count );
+		for( auto attribute_index = 0; attribute_index < active_attribute_count; attribute_index++ )
+		{
+			int attribute_name_length, attribute_size;
+			GLenum attribute_vector_type;
+			glGetActiveAttrib( program_id, attribute_index, 255, &attribute_name_length, &attribute_size, &attribute_vector_type, attribute_name );
+			const unsigned int attribute_location = glGetAttribLocation( program_id, attribute_name );
+
+			attributes[ attribute_index ] = { GL::Type::CountOf( attribute_vector_type ), GL::Type::ComponentTypeOf( attribute_vector_type ), attribute_location, false };
+		}
+
+		std::sort( attributes.begin(), attributes.end(), []( const VertexAttribute& left, const VertexAttribute& right ) { return left.location < right.location; } );
+		vertex_layout_active = VertexLayout( attributes );
+	}
+
 	void Shader::GetUniformBookKeepingInfo()
 	{
 		glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &uniform_book_keeping_info.count );
@@ -866,8 +930,8 @@ namespace Engine
 					uniform_buffer_info.members_struct_map.emplace( aggregate_name,
 																	Uniform::BufferMemberInformation_Struct
 																	{
-																		 .offset = uniform_info->offset,
-																		 .size = size,
+																		 .offset      = uniform_info->offset,
+																		 .size        = size,
 																		 .editor_name = UniformEditorName_BufferMemberAggregate( aggregate_name ),
 																		 .members_map = members_map
 																	} );
