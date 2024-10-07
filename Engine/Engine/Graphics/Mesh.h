@@ -51,6 +51,8 @@ namespace Engine
 		~Mesh();
 
 	/* Queries: */
+		inline const std::string& Name() const { return name; }
+
 		inline PrimitiveType Primitive() const { return primitive_type; }
 
 		inline int VertexCount() const { return vertex_buffer.Count(); }
@@ -64,6 +66,8 @@ namespace Engine
 		}
 
 		inline bool HasIndices() const { return IndexCount(); }
+
+		inline bool IsCompatibleWith( const VertexLayout& other_vertex_layout ) const { return vertex_layout.IsCompatibleWith( other_vertex_layout ); }
 
 	/* Index Data: */
 		inline const std::vector< std::uint16_t >& Indices_U16() const { return indices_u16; };
@@ -100,6 +104,8 @@ namespace Engine
 																					 const std::vector< Color4 >& colors_rgba );
 
  	private:
+		std::string name;
+
 		PrimitiveType primitive_type;
 
 		std::vector< std::uint16_t > indices_u16;
@@ -118,7 +124,5 @@ namespace Engine
 		std::optional< IndexBuffer_U16 > index_buffer_u16;
 		std::optional< IndexBuffer_U32 > index_buffer_u32;
 		VertexArray vertex_array;
-
-		std::string name;
 	};
 }
