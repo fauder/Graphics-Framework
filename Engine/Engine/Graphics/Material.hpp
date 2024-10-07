@@ -65,6 +65,14 @@ namespace Engine
 		template< typename UniformType >
 		void Set( const std::string& uniform_name, const UniformType& value )
 		{
+#ifdef _DEBUG
+			if( not HasUniform( uniform_name ) )
+			{
+				ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": uniform ")" + std::string( uniform_name ) + R"(" does not exist!)" );
+				return;
+			}
+#endif // _DEBUG
+	
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
 			uniform_blob_default_block.Set( value, uniform_info.offset );
@@ -73,9 +81,17 @@ namespace Engine
 		template< typename UniformType >
 		void SetArray( const std::string& uniform_name, const UniformType* address )
 		{
+#ifdef _DEBUG
+			if( not HasUniform( uniform_name ) )
+			{
+				ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": uniform (array) ")" + std::string( uniform_name ) + R"(" does not exist!)" );
+				return;
+			}
+		#endif // _DEBUG
+
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
-			uniform_blob_default_block.Set( ( std::byte* )address, uniform_info.offset, sizeof( UniformType ) * uniform_info.count_array );
+			uniform_blob_default_block.Set( ( std::byte* )address, uniform_info.offset, sizeof( UniformType )* uniform_info.count_array );
 		}
 
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
@@ -136,10 +152,18 @@ namespace Engine
 
 		void UploadUniform( const Uniform::Information& uniform_info );
 		void UploadUniforms(); // Renderer calls this, it has private access through friend declaration.
-		
+
 		template< typename UniformType >
 		void SetAndUploadUniform( const std::string& uniform_name, const UniformType& value ) // Renderer calls this, it has private access through friend declaration.
 		{
+		#ifdef _DEBUG
+			if( not HasUniform( uniform_name ) )
+			{
+				ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": uniform ")" + std::string( uniform_name ) + R"(" does not exist!)" );
+				return;
+			}
+		#endif // _DEBUG
+
 			Set( uniform_name, value );
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
@@ -151,6 +175,14 @@ namespace Engine
 		template< typename UniformType >
 		void SetAndUploadUniformArray( const std::string& uniform_name, const UniformType& value ) // Renderer calls this, it has private access through friend declaration.
 		{
+		#ifdef _DEBUG
+			if( not HasUniform( uniform_name ) )
+			{
+				ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": uniform (array) ")" + std::string( uniform_name ) + R"(" does not exist!)" );
+				return;
+			}
+#endif // _DEBUG
+
 			Set( uniform_name, value );
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 
