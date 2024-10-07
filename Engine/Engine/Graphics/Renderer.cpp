@@ -27,13 +27,15 @@ namespace Engine
 
 	void Renderer::Update( Camera& camera )
 	{
-		const auto& view_matrix     = camera.GetViewMatrix();
-		const auto& view_matrix_3x3 = view_matrix.SubMatrix< 3 >();
+		const auto& view_matrix               = camera.GetViewMatrix();
+		const auto& view_matrix_3x3           = view_matrix.SubMatrix< 3 >();
+		const auto& view_matrix_rotation_only = Matrix4x4( view_matrix_3x3 );
 
 		if( update_uniform_buffer_other )
 		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW", view_matrix );
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION", view_matrix* camera.GetProjectionMatrix() );
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW",				view_matrix );
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_ROTATION_ONLY",	view_matrix_rotation_only );
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION",		view_matrix * camera.GetProjectionMatrix() );
 		}
 
 		if( update_uniform_buffer_lighting )
