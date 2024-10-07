@@ -25,5 +25,7 @@
     <None Include="Asset\Shader\FullScreenBlit.vert" />
     <None Include="Asset\Shader\Grayscale.frag" />
     <None Include="Asset\Shader\GenericPostprocess.frag" />
+    <None Include="Asset\Shader\Skybox.vert" />
+    <None Include="Asset\Shader\Skybox.frag" />
   </ItemGroup>
 </Project>

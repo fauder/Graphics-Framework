@@ -13,6 +13,7 @@
 #include "Engine/Graphics/GLLogger.h"
 #include "Engine/Graphics/MeshUtility.hpp"
 #include "Engine/Graphics/Primitive/Primitive_Cube.h"
+#include "Engine/Graphics/Primitive/Primitive_Cube_FullScreen.h"
 #include "Engine/Graphics/Primitive/Primitive_Quad.h"
 #include "Engine/Graphics/Primitive/Primitive_Quad_FullScreen.h"
 #include "Engine/Math/Math.hpp"
@@ -38,6 +39,13 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	light_source_drawable_array( LIGHT_POINT_COUNT ),
 	cube_drawable_array( CUBE_COUNT ),
 	cube_drawable_outline_array( CUBE_COUNT ),
+	render_group_id_skybox( 0 ),
+	render_group_id_regular( 1 ),
+	render_group_id_outlined_mesh( 2 ),
+	render_group_id_outline( 3 ),
+	render_group_id_transparent( 4 ),
+	render_group_id_screen_size_quad( 5 ),
+	skybox_shader( "Skybox" ),
 	phong_shader( "Phong" ),
 	basic_color_shader( "Basic Color" ),
 	basic_textured_shader( "Basic Textured" ),
@@ -83,9 +91,25 @@ void SandboxApplication::Initialize()
 
 /* Textures: */
 	Engine::Texture::ImportSettings texture_import_settings;
+	texture_import_settings.format          = GL_RGB;
+	texture_import_settings.min_filter      = Engine::Texture::Filtering::Linear;
+	texture_import_settings.flip_vertically = false;
+	skybox_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Skybox", 
+																					{
+																						R"(Asset/Texture/Skybox/right.jpg)",
+																						R"(Asset/Texture/Skybox/left.jpg)",
+																						R"(Asset/Texture/Skybox/top.jpg)",
+																						R"(Asset/Texture/Skybox/bottom.jpg)",
+																						R"(Asset/Texture/Skybox/front.jpg)",
+																						R"(Asset/Texture/Skybox/back.jpg)"
+																					}, texture_import_settings );
+
+	texture_import_settings.format          = GL_RGBA;
+	texture_import_settings.min_filter      = Engine::Texture::Filtering::Linear_MipmapLinear;
+	texture_import_settings.flip_vertically = true;
+
 	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",					texture_import_settings );
 	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)",			texture_import_settings );
-	grass_texture                  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Grass",					R"(Asset/Texture/grass.png)",						texture_import_settings );
 	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)",	texture_import_settings );
 	
 	texture_import_settings.wrap_u = Engine::Texture::Wrapping::Repeat;
@@ -94,6 +118,7 @@ void SandboxApplication::Initialize()
 	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
 
 /* Shaders: */
+	skybox_shader.FromFile( R"(Asset/Shader/Skybox.vert)", R"(Asset/Shader/Skybox.frag)" );
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
@@ -136,12 +161,6 @@ void SandboxApplication::Initialize()
 			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 	}
 
-	grass_quad_transform_array[ 0 ].SetTranslation( Vector3( -1.5f,	5.0f, -0.48f + 0.01f ) ); // + 0.01f to keep the grass behind the window.
-	grass_quad_transform_array[ 1 ].SetTranslation( Vector3(  1.5f,	5.0f,  0.51f + 0.01f ) ); // + 0.01f to keep the grass behind the window.
-	grass_quad_transform_array[ 2 ].SetTranslation( Vector3(  0.0f,	5.0f,  0.7f  + 0.01f ) ); // + 0.01f to keep the grass behind the window.
-	grass_quad_transform_array[ 3 ].SetTranslation( Vector3( -0.3f,	5.0f, -2.3f  + 0.01f ) ); // + 0.01f to keep the grass behind the window.
-	grass_quad_transform_array[ 4 ].SetTranslation( Vector3(  0.5f,	5.0f, -0.6f  + 0.01f ) ); // + 0.01f to keep the grass behind the window.
-
 	window_transform_array[ 0 ].SetTranslation( Vector3( -1.5f,	5.0f, -0.48f ) );
 	window_transform_array[ 1 ].SetTranslation( Vector3(  1.5f,	5.0f,  0.51f ) );
 	window_transform_array[ 2 ].SetTranslation( Vector3(  0.0f,	5.0f,  0.7f  ) );
@@ -154,6 +173,12 @@ void SandboxApplication::Initialize()
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
 							  { /* No indices. */ } );
+
+	cube_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cend() ),
+										 "Cube (Fullscreen)",
+										 { /* No normals.	*/ },
+										 { /* No uvs.		*/ },
+										 { /* No indices.	*/ } );
 
 	quad_mesh_uvs_only = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
 									   "Quad (UVs Only)",
@@ -205,14 +230,23 @@ void SandboxApplication::Initialize()
 
 /* Renderer (Drawables, RenderStates etc.): */
 	{
-		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 0 ), "Default" );
-		auto& render_state_regular_meshes = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 0 ) ); // Keep default settings.
+		renderer.SetRenderGroupName( render_group_id_skybox, "Skybox" );
+		auto& render_state_skybox = renderer.GetRenderState( render_group_id_skybox ); // Keep default settings except for the depth test & back face culling.
+
+		render_state_skybox.face_culling_enable = false;
+
+		render_state_skybox.depth_test_enable = false;
+	}
+
+	{
+		renderer.SetRenderGroupName( render_group_id_regular, "Default" );
+		auto& render_state_regular_meshes = renderer.GetRenderState( render_group_id_regular ); // Keep default settings.
 	}
 	
 	{
 		/* This pass draws the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is drawn at. */
-		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 1 ), "Outlined Meshes" );
-		auto& render_state_outline_meshes = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 1 ) );
+		renderer.SetRenderGroupName( render_group_id_outlined_mesh, "Outlined Meshes" );
+		auto& render_state_outline_meshes = renderer.GetRenderState( render_group_id_outlined_mesh );
 
 		/* Omitted settings are left to defaults. */
 
@@ -227,8 +261,8 @@ void SandboxApplication::Initialize()
 
 	{
 		/* This pass draws the outlines only; It does this by rendering the mesh at everywhere the stencil buffer is NOT 1. */
-		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 2 ), "Outlines" );
-		auto& render_state_outlines = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 2 ) );
+		renderer.SetRenderGroupName( render_group_id_outline, "Outlines" );
+		auto& render_state_outlines = renderer.GetRenderState( render_group_id_outline );
 
 		/* Omitted settings are left to defaults. */
 
@@ -242,8 +276,8 @@ void SandboxApplication::Initialize()
 
 	{
 		/* This pass draws the transparent meshes. */
-		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 3 ), "Transparent Meshes" );
-		auto& render_state_transparent = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 3 ) );
+		renderer.SetRenderGroupName( render_group_id_transparent, "Transparent Meshes" );
+		auto& render_state_transparent = renderer.GetRenderState( render_group_id_transparent );
 
 		/* Omitted settings are left to defaults. */
 
@@ -258,54 +292,53 @@ void SandboxApplication::Initialize()
 	}
 
 	{
-		renderer.SetRenderGroupName( Engine::Renderer::RenderGroupID( 4 ), "Screen-size Quad" );
-		auto& render_state_screen_size_quad = renderer.GetRenderState( Engine::Renderer::RenderGroupID( 4 ) ); // Keep default settings.
+		renderer.SetRenderGroupName( render_group_id_screen_size_quad, "Screen-size Quad" );
+		auto& render_state_screen_size_quad = renderer.GetRenderState( render_group_id_screen_size_quad ); // Keep default settings.
 	}
+
+	/* Create Drawables and assign them RenderGroups: */
+
+	skybox_drawable = Engine::Drawable( &cube_mesh_fullscreen, &skybox_material );
+	renderer.AddDrawable( &skybox_drawable, render_group_id_skybox );
 
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
 		light_source_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &light_source_material_array[ i ], &light_point_transform_array[ i ] );
-		renderer.AddDrawable( &light_source_drawable_array[ i ], Engine::Renderer::RenderGroupID( 0 ) );
+		renderer.AddDrawable( &light_source_drawable_array[ i ], render_group_id_regular );
 	}
 
 	for( auto i = 0; i < CUBE_COUNT; i++ )
 	{
 		cube_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &cube_material_array[ i ], &cube_transform_array[ i ] );
-		renderer.AddDrawable( &cube_drawable_array[ i ], Engine::Renderer::RenderGroupID( 1 ) );
+		renderer.AddDrawable( &cube_drawable_array[ i ], render_group_id_outlined_mesh );
 
 		cube_drawable_outline_array[ i ] = Engine::Drawable( &cube_mesh, &outline_material, &cube_transform_array[ i ] );
-		renderer.AddDrawable( &cube_drawable_outline_array[ i ], Engine::Renderer::RenderGroupID( 2 ) );
+		renderer.AddDrawable( &cube_drawable_outline_array[ i ], render_group_id_outline );
 	}
 
 	ground_drawable = Engine::Drawable( &quad_mesh, &ground_material, &ground_transform );
-	renderer.AddDrawable( &ground_drawable, Engine::Renderer::RenderGroupID( 0 ) );
+	renderer.AddDrawable( &ground_drawable, render_group_id_regular );
 
 	wall_front_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_front_transform );
 	wall_left_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_left_transform );
 	wall_right_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_right_transform );
 	wall_back_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_back_transform );
-	renderer.AddDrawable( &wall_front_drawable, Engine::Renderer::RenderGroupID( 0 ) );
-	renderer.AddDrawable( &wall_left_drawable,  Engine::Renderer::RenderGroupID( 0 ) );
-	renderer.AddDrawable( &wall_right_drawable, Engine::Renderer::RenderGroupID( 0 ) );
-	renderer.AddDrawable( &wall_back_drawable,  Engine::Renderer::RenderGroupID( 0 ) );
-
-	/*for( auto i = 0; i < GRASS_COUNT; i++ )
-	{
-		grass_quad_drawable_array[ i ] = Engine::Drawable( &quad_mesh_uvs_only, &grass_quad_material, &grass_quad_transform_array[ i ] );
-		renderer.AddDrawable( &grass_quad_drawable_array[ i ], Engine::Renderer::RenderGroupID( 0 ) );
-	}*/
+	/*renderer.AddDrawable( &wall_front_drawable, render_group_id_regular );
+	renderer.AddDrawable( &wall_left_drawable, render_group_id_regular );
+	renderer.AddDrawable( &wall_right_drawable, render_group_id_regular );
+	renderer.AddDrawable( &wall_back_drawable, render_group_id_regular );*/
 
 	for( auto i = 0; i < WINDOW_COUNT; i++ )
 	{
 		window_drawable_array[ i ] = Engine::Drawable( &quad_mesh_uvs_only, &window_material, &window_transform_array[ i ] );
-		renderer.AddDrawable( &window_drawable_array[ i ], Engine::Renderer::RenderGroupID( 3 ) );
+		renderer.AddDrawable( &window_drawable_array[ i ], render_group_id_transparent );
 	}
 
 	offscreen_quad_drawable = Engine::Drawable( &quad_mesh_fullscreen, &offscreen_quad_material );
-	renderer.AddDrawable( &offscreen_quad_drawable, Engine::Renderer::RenderGroupID( 4 ) );
+	renderer.AddDrawable( &offscreen_quad_drawable, render_group_id_screen_size_quad );
 
 	mirror_quad_drawable = Engine::Drawable( &quad_mesh_mirror, &mirror_quad_material );
-	renderer.AddDrawable( &mirror_quad_drawable, Engine::Renderer::RenderGroupID( 4 ) );
+	renderer.AddDrawable( &mirror_quad_drawable, render_group_id_screen_size_quad );
 
 	mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
@@ -315,16 +348,7 @@ void SandboxApplication::Initialize()
 	/* This is the earliest place we can MaximizeWindow() at,
 	 * because the Renderer will populate its Intrinsic UBO info only upon AddDrawable( <Drawable with a Shader using said UBO> ). */
 
-/* Framebuffer Textures: */
-	//InitializeFramebufferTextures();
-
-/* Renderbuffers: */
-	//InitializeRenderbuffers();
-
-/* Framebuffers: */
-	//InitializeFramebuffers();
-
-	/* No need to Initialize these as maximizing the window will cause these to be called in OnFramebufferResizeEvent(). */
+	/* No need to Initialize Framebuffer related stuff as maximizing the window will cause them to be (re)initialized in OnFramebufferResizeEvent(). */
 
 	Platform::MaximizeWindow();
 
@@ -445,7 +469,7 @@ void SandboxApplication::Render()
 
 		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 0 ] );
 
-		renderer.Render( camera, { 0, 1, 2, 3 } );
+		renderer.Render( camera, { render_group_id_skybox, render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent } );
 
 		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		offscreen_framebuffer_color_attachment_array[ 0 ]->GenerateMipmaps();
@@ -460,7 +484,7 @@ void SandboxApplication::Render()
 
 		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 1 ] );
 
-		renderer.Render( camera, { 0, 1, 2, 3 } );
+		renderer.Render( camera, { render_group_id_skybox, render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent } );
 
 		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		offscreen_framebuffer_color_attachment_array[ 1 ]->GenerateMipmaps();
@@ -475,7 +499,7 @@ void SandboxApplication::Render()
 		else
 			renderer.ResetToDefaultFramebuffer();
 
-		renderer.Render( camera, { 4 } );
+		renderer.Render( camera, { render_group_id_screen_size_quad } );
 
 		/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		editor_framebuffer_color_attachment->GenerateMipmaps();
@@ -560,11 +584,11 @@ void SandboxApplication::RenderImGui()
 
 	ImGui::End();
 
+	Engine::ImGuiDrawer::Draw( skybox_material, renderer );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ], renderer );
 	Engine::ImGuiDrawer::Draw( ground_material, renderer );
 	Engine::ImGuiDrawer::Draw( wall_material, renderer );
-	Engine::ImGuiDrawer::Draw( grass_quad_material, renderer );
 	Engine::ImGuiDrawer::Draw( window_material, renderer );
 	for( auto& cube_material : cube_material_array )
 		Engine::ImGuiDrawer::Draw( cube_material, renderer );
@@ -905,6 +929,9 @@ void SandboxApplication::ResetLightingData()
 
 void SandboxApplication::ResetMaterialData()
 {
+	skybox_material = Engine::Material( "Skybox", &skybox_shader );
+	skybox_material.SetTexture( "uniform_texture_slot", skybox_texture );
+
 	light_source_material_array.resize( LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &basic_color_shader );
@@ -931,10 +958,6 @@ void SandboxApplication::ResetMaterialData()
 	const auto& front_wall_quad_scale( wall_front_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	wall_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
-
-	grass_quad_material = Engine::Material( "Grass Quad", &basic_textured_transparent_discard_shader );
-	grass_quad_material.SetTexture( "uniform_texture_slot", grass_texture );
-	grass_quad_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	window_material = Engine::Material( "Transparent Window", &basic_textured_shader );
 	window_material.SetTexture( "uniform_texture_slot", transparent_window_texture );
@@ -1042,8 +1065,8 @@ void SandboxApplication::ReloadModel( const std::string& file_path )
 											 /* Specular texture: */ checker_pattern_texture,
 											 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f },
 											 {
-												{ Engine::Renderer::RenderGroupID( 1 ), nullptr },
-												{ Engine::Renderer::RenderGroupID( 2 ), &outline_material }
+												{ render_group_id_outlined_mesh,	nullptr },
+												{ render_group_id_outline,			&outline_material }
 											 } );
 
 		for( const auto& [ render_group_id, drawables_array ] : test_model_instance.DrawablesMap() )

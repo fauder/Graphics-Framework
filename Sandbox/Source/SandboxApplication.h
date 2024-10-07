@@ -77,14 +77,13 @@ private:
 	std::vector< Engine::Drawable > cube_drawable_array;
 	std::vector< Engine::Drawable > cube_drawable_outline_array;
 
+	Engine::Drawable skybox_drawable;
+
 	Engine::Drawable ground_drawable;
 	Engine::Drawable wall_front_drawable;
 	Engine::Drawable wall_left_drawable;
 	Engine::Drawable wall_right_drawable;
 	Engine::Drawable wall_back_drawable;
-
-	const static constexpr int GRASS_COUNT = 5;
-	std::array< Engine::Drawable, GRASS_COUNT > grass_quad_drawable_array;
 
 	const static constexpr int WINDOW_COUNT = 5;
 	std::array< Engine::Drawable, WINDOW_COUNT > window_drawable_array;
@@ -93,14 +92,22 @@ private:
 
 	Engine::Drawable mirror_quad_drawable;
 
+	const Engine::Renderer::RenderGroupID render_group_id_skybox;
+	const Engine::Renderer::RenderGroupID render_group_id_regular;
+	const Engine::Renderer::RenderGroupID render_group_id_outlined_mesh;
+	const Engine::Renderer::RenderGroupID render_group_id_outline;
+	const Engine::Renderer::RenderGroupID render_group_id_transparent;
+	const Engine::Renderer::RenderGroupID render_group_id_screen_size_quad;
+
 /* Textures: */
+	Engine::Texture* skybox_texture;
+
 	std::array< Engine::Texture*, 2 > offscreen_framebuffer_color_attachment_array;
 	Engine::Texture* editor_framebuffer_color_attachment;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
 	Engine::Texture* checker_pattern_texture;
-	Engine::Texture* grass_texture;
 	Engine::Texture* transparent_window_texture;
 
 /* Renderbuffers: */
@@ -112,12 +119,13 @@ private:
 	Engine::Framebuffer editor_framebuffer; // Not to be confused with the default frame-buffer.
 
 /* Vertex Info.: */
-	Engine::Mesh cube_mesh, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;
+	Engine::Mesh cube_mesh, cube_mesh_fullscreen, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;
 
 /* Models: */
 	ModelInstance test_model_instance;
 
 /* Shaders: */
+	Engine::Shader skybox_shader;
 	Engine::Shader phong_shader;
 	Engine::Shader basic_color_shader;
 	Engine::Shader basic_textured_shader;
@@ -131,14 +139,14 @@ private:
 	Engine::Shader postprocess_generic_shader;
 
 /* Materials: */
+	Engine::Material skybox_material;
+
 	std::vector< Engine::Material > light_source_material_array;
 
 	std::vector< Engine::Material > cube_material_array;
 
 	Engine::Material ground_material;
 	Engine::Material wall_material;
-
-	Engine::Material grass_quad_material;
 
 	Engine::Material window_material;
 
@@ -164,7 +172,6 @@ private:
 	Engine::Transform wall_right_transform;
 	Engine::Transform wall_back_transform;
 
-	std::array< Engine::Transform, GRASS_COUNT > grass_quad_transform_array;
 	std::array< Engine::Transform, WINDOW_COUNT > window_transform_array;
 
 /* Camera: */
