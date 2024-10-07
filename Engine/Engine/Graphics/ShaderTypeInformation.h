@@ -195,7 +195,7 @@ namespace Engine::GL::Type
 			case GL_FLOAT_MAT4x2 									: return "mat4x2";
 			case GL_FLOAT_MAT4x3 									: return "mat4x3";
 
-			/* Float matrices: */
+			/* Double matrices: */
 			case GL_DOUBLE_MAT2 									: return "dmat2";
 			case GL_DOUBLE_MAT3 									: return "dmat3";
 			case GL_DOUBLE_MAT4 									: return "dmat4";
@@ -271,6 +271,128 @@ namespace Engine::GL::Type
 		}
 
 		throw std::runtime_error( "ERROR::SHADER_TYPE::NameOf() called with an unknown GL type!" );
+	}
+
+	inline const GLenum TypeOf( const char* name )
+	{
+		static std::unordered_map< std::string, GLenum > lookUp_table =
+		{
+			/* Scalars & vectors: */
+			{ "float",					GL_FLOAT },
+			{ "vec2",					GL_FLOAT_VEC2 },
+			{ "vec3",					GL_FLOAT_VEC3 },
+			{ "vec4",					GL_FLOAT_VEC4 },
+			
+			{ "double",					GL_DOUBLE },
+			{ "dvec2",					GL_DOUBLE_VEC2 },
+			{ "dvec3",					GL_DOUBLE_VEC3 },
+			{ "dvec4",					GL_DOUBLE_VEC4 },
+
+			{ "int",					GL_INT },
+			{ "ivec2",					GL_INT_VEC2 },
+			{ "ivec3",					GL_INT_VEC3 },
+			{ "ivec4",					GL_INT_VEC4 },
+			
+			{ "unsigned int",			GL_UNSIGNED_INT },
+			{ "uvec2",					GL_UNSIGNED_INT_VEC2 },
+			{ "uvec3",					GL_UNSIGNED_INT_VEC3 },
+			{ "uvec4",					GL_UNSIGNED_INT_VEC4 },
+			
+			{ "bool",					GL_BOOL },
+			{ "bvec2",					GL_BOOL_VEC2 },
+			{ "bvec3",					GL_BOOL_VEC3 },
+			{ "bvec4",					GL_BOOL_VEC4 },
+			
+			/* Float matrices: */
+			{ "mat2",					GL_FLOAT_MAT2 },
+			{ "mat3",					GL_FLOAT_MAT3 },
+			{ "mat4",					GL_FLOAT_MAT4 },
+			
+			{ "mat2x3",					GL_FLOAT_MAT2x3 },
+			{ "mat2x4",					GL_FLOAT_MAT2x4 },
+			{ "mat3x2",					GL_FLOAT_MAT3x2 },
+			{ "mat3x4",					GL_FLOAT_MAT3x4 },
+			{ "mat4x2",					GL_FLOAT_MAT4x2 },
+			{ "mat4x3",					GL_FLOAT_MAT4x3 },
+
+			/* Double matrices: */
+			{ "dmat2",					GL_DOUBLE_MAT2 },
+			{ "dmat3",					GL_DOUBLE_MAT3 },
+			{ "dmat4",					GL_DOUBLE_MAT4 },
+			
+			{ "dmat2x3",				GL_DOUBLE_MAT2x3 },
+			{ "dmat2x4",				GL_DOUBLE_MAT2x4 },
+			{ "dmat3x2",				GL_DOUBLE_MAT3x2 },
+			{ "dmat3x4",				GL_DOUBLE_MAT3x4 },
+			{ "dmat4x2",				GL_DOUBLE_MAT4x2 },
+			{ "dmat4x3",				GL_DOUBLE_MAT4x3 },
+
+			/* Texture samplers: */
+			{ "sampler1D",				GL_SAMPLER_1D },
+			{ "sampler2D",				GL_SAMPLER_2D },
+			{ "sampler3D",				GL_SAMPLER_3D },
+
+			{ "samplerCube",			GL_SAMPLER_CUBE },
+			
+			{ "sampler1DShadow",		GL_SAMPLER_1D_SHADOW },
+			{ "sampler2DShadow",		GL_SAMPLER_2D_SHADOW },
+			
+			{ "sampler1DArray",			GL_SAMPLER_1D_ARRAY },
+			{ "sampler2DArray",			GL_SAMPLER_2D_ARRAY },
+			
+			{ "sampler1DArrayShadow",	GL_SAMPLER_1D_ARRAY_SHADOW },
+			{ "sampler2DArrayShadow",	GL_SAMPLER_2D_ARRAY_SHADOW },
+			
+			{ "sampler2DMS",			GL_SAMPLER_2D_MULTISAMPLE },
+			
+			{ "sampler2DMSArray",		GL_SAMPLER_2D_MULTISAMPLE_ARRAY },
+			
+			{ "samplerCubeShadow",		GL_SAMPLER_CUBE_SHADOW },
+			
+			{ "samplerBuffer",			GL_SAMPLER_BUFFER },
+			
+			{ "sampler2DRect",			GL_SAMPLER_2D_RECT },
+			
+			{ "sampler2DRectShadow",	GL_SAMPLER_2D_RECT_SHADOW },
+			
+			{ "isampler1D",				GL_INT_SAMPLER_1D },
+			{ "isampler2D",				GL_INT_SAMPLER_2D },
+			{ "isampler3D",				GL_INT_SAMPLER_3D },
+			
+			{ "isamplerCube",			GL_INT_SAMPLER_CUBE },
+			
+			{ "isampler1DArray",		GL_INT_SAMPLER_1D_ARRAY },
+			{ "isampler2DArray",		GL_INT_SAMPLER_2D_ARRAY },
+			
+			{ "isampler2DMS",			GL_INT_SAMPLER_2D_MULTISAMPLE },
+			
+			{ "isampler2DMSArray",		GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY },
+			
+			{ "isamplerBuffer",			GL_INT_SAMPLER_BUFFER },
+			
+			{ "isampler2DRect",			GL_INT_SAMPLER_2D_RECT },
+			
+			{ "usampler1D",				GL_UNSIGNED_INT_SAMPLER_1D },
+			{ "usampler2D",				GL_UNSIGNED_INT_SAMPLER_2D },
+			{ "usampler3D",				GL_UNSIGNED_INT_SAMPLER_3D },
+			
+			{ "usamplerCube",			GL_UNSIGNED_INT_SAMPLER_CUBE },
+			
+			{ "usampler2DArray",		GL_UNSIGNED_INT_SAMPLER_1D_ARRAY },
+			{ "usampler2DArray",		GL_UNSIGNED_INT_SAMPLER_2D_ARRAY },
+			
+			{ "usampler2DMS",			GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE },
+			
+			{ "usampler2DMSArray",		GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY },
+			
+			{ "usamplerBuffer",			GL_UNSIGNED_INT_SAMPLER_BUFFER },
+			
+			{ "usampler2DRect",			GL_UNSIGNED_INT_SAMPLER_2D_RECT },
+		};
+
+		return lookUp_table[ name ];
+
+		throw std::runtime_error( "ERROR::SHADER_TYPE::TypeOf() called with an unknown string!" );
 	}
 
 	inline GLenum ComponentTypeOf( const GLenum type )
