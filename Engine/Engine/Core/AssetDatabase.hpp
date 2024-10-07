@@ -34,6 +34,28 @@ namespace Engine
 			return &instance.asset_map[ name ];
 		}
 
+		/* For assets with mulitple source-assets, such as cubemaps. */
+		static AssetType* CreateAssetFromFile( const std::string& name, const std::initializer_list< std::string > file_paths,
+											   const typename AssetType::ImportSettings& import_settings )
+		{
+			auto& instance = Instance();
+
+			if( not instance.asset_path_map.contains( *file_paths.begin() ) ) // TODO: Fix this.
+			{
+				if( auto maybe_asset = AssetType::Loader::FromFile( name, file_paths, import_settings );
+					maybe_asset )
+				{
+					instance.asset_map[ name ]      = std::move( *maybe_asset );
+					instance.asset_path_map[ name ] = *file_paths.begin(); // TODO: Fix this.
+				}
+				else // Failed to load asset:
+					return nullptr;
+			}
+
+			/* Asset is already loaded, return the existing one. */
+			return &instance.asset_map[ name ];
+		}
+
 		static AssetType* CreateAssetFromMemory( const std::string& name, const std::byte* data, const int size, const typename AssetType::ImportSettings& import_settings )
 		{
 			auto& instance = Instance();

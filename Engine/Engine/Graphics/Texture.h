@@ -15,9 +15,20 @@ namespace Engine
 	template< typename AssetType >
 	class AssetDatabase;
 
+	enum class TextureType
+	{
+		None,
+
+		Texture2D = GL_TEXTURE_2D,
+		Cubemap   = GL_TEXTURE_CUBE_MAP
+	};
+
 	class Texture
 	{
 	public:
+		struct CubeMapConstructorTag {};
+		static constexpr CubeMapConstructorTag CUBEMAP_CONSTRUCTOR;
+
 		enum class Wrapping
 		{
 			ClampToEdge       = GL_CLAMP_TO_EDGE,
@@ -44,17 +55,19 @@ namespace Engine
 
 			Wrapping wrap_u;
 			Wrapping wrap_v;
+			Wrapping wrap_w;
 			Filtering min_filter;
 			Filtering mag_filter;
 
 			ImportSettings( const int format = GL_RGBA, const bool flip_vertically = true,
-							const Wrapping  wrap_u     = Wrapping::ClampToEdge,			 const Wrapping  wrap_v     = Wrapping::ClampToEdge,
+							const Wrapping  wrap_u     = Wrapping::ClampToEdge,			 const Wrapping  wrap_v     = Wrapping::ClampToEdge,	const Wrapping wrap_w = Wrapping::ClampToEdge,
 							const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear )
 				:
 				format( format ),
 				flip_vertically( flip_vertically ),
 				wrap_u( wrap_u ),
 				wrap_v( wrap_v ),
+				wrap_w( wrap_w ),
 				min_filter( min_filter ),
 				mag_filter( mag_filter )
 			{}
@@ -70,11 +83,20 @@ namespace Engine
 
 	public:
 		Texture();
+		/* Allocate-only constructor (no data). */
 		Texture( const std::string_view name,
 				 //const std::byte* data, This is omitted from this public constructor.
 				 const int format,
 				 const int width, const int height,
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge,
+				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
+
+		/* Cubemap allocate-only constructor (no data). */
+		Texture( CubeMapConstructorTag tag, const std::string_view name,
+				 //const std::byte* data, This is omitted from this public constructor.
+				 const int format,
+				 const int width, const int height,
+				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v	 = Wrapping::ClampToEdge,	const Wrapping wrap_w = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 		/* Prevent copying for now: */
@@ -93,6 +115,7 @@ namespace Engine
 		inline const int			Width()		const { return size.X();	}
 		inline const int			Height()	const { return size.Y();	}
 		inline const std::string&	Name()		const { return name;		}
+		inline const TextureType	Type()		const { return type;		}
 
 	/* Usage: */
 		void SetName( const std::string& new_name );
@@ -100,12 +123,21 @@ namespace Engine
 		void GenerateMipmaps();
 
 	private:
-	/* Private constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with data. */
+		/* Private regular constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with data. */
 		Texture( const std::string_view name,
 				 const std::byte* data,
 				 const int format,
 				 const int width, const int height,
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge,
+				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
+
+		/* Private cubemap constructor: Only the AssetDatabase< Texture > should be able to construct a cubemap Texture with data. */
+		Texture( CubeMapConstructorTag tag, 
+				 const std::string_view name,
+				 const std::array< const std::byte*, 6 >& cubemap_data_array,
+				 const int format,
+				 const int width, const int height,
+				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge, const Wrapping wrap_w = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 	/* Queries: */
@@ -118,5 +150,6 @@ namespace Engine
 		ID id;
 		Vector2I size;
 		std::string name;
+		TextureType type;
 	};
 };
