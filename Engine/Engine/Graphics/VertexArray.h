@@ -2,7 +2,7 @@
 
 // Engine Includes.
 #include "VertexBuffer.h"
-#include "VertexBufferLayout.hpp"
+#include "VertexLayout.hpp"
 #include "IndexBuffer.h"
 
 // std Includes.
@@ -21,10 +21,10 @@ namespace Engine
 		VertexArray& operator =( const VertexArray& right_hand_side )	= delete;
 		VertexArray( VertexArray&& donor );
 		VertexArray& operator =( VertexArray&& donor );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::string& name = {} );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U32& index_buffer, const std::string& name = {} );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U16& index_buffer, const std::string& name = {} );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, 
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, const IndexBuffer_U32& index_buffer, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, const IndexBuffer_U16& index_buffer, const std::string& name = {} );
+		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, 
 					 const std::optional< IndexBuffer_U16 >& index_buffer_u16, const std::optional< IndexBuffer_U32 >& index_buffer_u32,
 					 const std::string& name = {} );
 		~VertexArray();
@@ -38,7 +38,7 @@ namespace Engine
 
 	private:
 		inline bool IsValid() const { return vertex_count; } // Use the vertex count to implicitly define validness state.
-		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout );
+		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout );
 
 	private:
 		ID id;

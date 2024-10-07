@@ -37,11 +37,11 @@ namespace Engine
 		unsigned int vertex_count_interleaved;
 		const auto interleaved_vertices = MeshUtility::Interleave( vertex_count_interleaved, positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgba );
 
-		vertex_buffer        = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), name + " Vertex Buffer", usage );
-		vertex_buffer_layout = VertexBufferLayout( AttributeCountsAndTypes( positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgba ) );
-		index_buffer_u16     = indices_u16.empty() ? std::nullopt : std::optional< IndexBuffer_U16 >( std::in_place, indices_u16, name + " Index Buffer (U16)", usage );
-		index_buffer_u32     = indices_u32.empty() ? std::nullopt : std::optional< IndexBuffer_U32 >( std::in_place, indices_u32, name + " Index Buffer (U32)", usage );
-		vertex_array         = VertexArray( vertex_buffer, vertex_buffer_layout, index_buffer_u16, index_buffer_u32, name + " VAO");
+		vertex_buffer    = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), name + " Vertex Buffer", usage );
+		vertex_layout    = VertexLayout( AttributeCountsAndTypes( positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgba ) );
+		index_buffer_u16 = indices_u16.empty() ? std::nullopt : std::optional< IndexBuffer_U16 >( std::in_place, indices_u16, name + " Index Buffer (U16)", usage );
+		index_buffer_u32 = indices_u32.empty() ? std::nullopt : std::optional< IndexBuffer_U32 >( std::in_place, indices_u32, name + " Index Buffer (U32)", usage );
+		vertex_array     = VertexArray( vertex_buffer, vertex_layout, index_buffer_u16, index_buffer_u32, name + " VAO");
 	}
 
 	Mesh::~Mesh()

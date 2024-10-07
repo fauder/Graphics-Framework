@@ -114,7 +114,7 @@ namespace Engine
 		std::vector< Color4  > colors_rgba;
 
 		VertexBuffer vertex_buffer;
-		VertexBufferLayout vertex_buffer_layout;
+		VertexLayout vertex_layout;
 		std::optional< IndexBuffer_U16 > index_buffer_u16;
 		std::optional< IndexBuffer_U32 > index_buffer_u32;
 		VertexArray vertex_array;

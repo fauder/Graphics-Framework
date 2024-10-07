@@ -26,27 +26,27 @@ namespace Engine
 		inline unsigned int Size() const { return count * sizeof( type ); }
 	};
 
-	class VertexBufferLayout
+	class VertexLayout
 	{
 	public:
-		VertexBufferLayout()
+		VertexLayout()
 		{}
 
 		/* Prevent copying but allow moving: */
-		VertexBufferLayout( const VertexBufferLayout& )				= delete;
-		VertexBufferLayout& operator =( const VertexBufferLayout& ) = delete;
-		VertexBufferLayout( VertexBufferLayout&& )					= default;
-		VertexBufferLayout& operator =( VertexBufferLayout&& )		= default;
+		VertexLayout( const VertexLayout& )				= delete;
+		VertexLayout& operator =( const VertexLayout& ) = delete;
+		VertexLayout( VertexLayout&& )					= default;
+		VertexLayout& operator =( VertexLayout&& )		= default;
 
 		template< typename Collection > 
-		VertexBufferLayout( Collection&& attribute_counts_and_types )
+		VertexLayout( Collection&& attribute_counts_and_types )
 		{
 			for( const auto& attribute : attribute_counts_and_types )
 				if( !attribute.Empty() )
 					attributes.push_back( { attribute.count, attribute.type, ( unsigned int )attributes.size(), GL_FALSE } );
 		}
 
-		~VertexBufferLayout()
+		~VertexLayout()
 		{}
 
 		template< typename Type >

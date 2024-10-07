@@ -41,7 +41,7 @@ namespace Engine
 		return *this;
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const std::string& name )
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout, const std::string& name )
 		:
 		id( -1 ),
 		name( name ),
@@ -55,7 +55,7 @@ namespace Engine
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U16& index_buffer, const std::string& name )
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout, const IndexBuffer_U16& index_buffer, const std::string& name )
 		:
 		id( -1 ),
 		name( name ),
@@ -70,7 +70,7 @@ namespace Engine
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout, const IndexBuffer_U32& index_buffer, const std::string& name )
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout, const IndexBuffer_U32& index_buffer, const std::string& name )
 		:
 		id( -1 ),
 		name( name ),
@@ -85,7 +85,7 @@ namespace Engine
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout,
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout,
 							  const std::optional< IndexBuffer_U16 >& index_buffer_u16, const std::optional< IndexBuffer_U32 >& index_buffer_u32,
 							  const std::string& name )
 		:
@@ -129,7 +129,7 @@ namespace Engine
 		glBindVertexArray( 0 );
 	}
 
-	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexBufferLayout& vertex_buffer_layout )
+	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout )
 	{
 		glGenVertexArrays( 1, &id );
 		Bind();
