@@ -56,9 +56,34 @@ namespace Engine
 	{
 	}
 
-	void GLLogger::Insert( const char* message ) const
+	void GLLogger::Info( const std::string& message )
 	{
-		glDebugMessageInsert( GL_DEBUG_SOURCE_APPLICATION, GL_DEBUG_TYPE_OTHER, 0 /* ignored */, GL_DEBUG_SEVERITY_NOTIFICATION, -1, message);
+		logger.AddLog( GLLogType::NORMAL, message );
+	}
+
+	void GLLogger::Info( const char* message )
+	{
+		logger.AddLog( GLLogType::NORMAL, message );
+	}
+
+	void GLLogger::Warning( const std::string& message )
+	{
+		logger.AddLog( GLLogType::WARNING, ICON_FA_TRIANGLE_EXCLAMATION + ( " " + message ) );
+	}
+
+	void GLLogger::Warning( const char* message )
+	{
+		logger.AddLog( GLLogType::WARNING, ( std::string( ICON_FA_TRIANGLE_EXCLAMATION ) + " " + message ).c_str() );
+	}
+
+	void GLLogger::Error( const std::string& message )
+	{
+		logger.AddLog( GLLogType::ERROR_, ICON_FA_CIRCLE_EXCLAMATION + ( " " + message ) );
+	}
+
+	void GLLogger::Error( const char* message )
+	{
+		logger.AddLog( GLLogType::ERROR_, ( std::string( ICON_FA_CIRCLE_EXCLAMATION ) + " " + message ).c_str() );
 	}
 
 	/* omit_empty_group: If true, defers the push operation until an actual log is recorded between this function call & the PopGroup() call. If no calls were made in-between,

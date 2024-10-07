@@ -41,7 +41,12 @@ namespace Engine
 		~GLLogger();
 
 	/* Custom messages: */
-		void Insert( const char* message ) const;
+		void Info( const std::string& message );
+		void Info( const char* message );
+		void Warning( const std::string& message );
+		void Warning( const char* message );
+		void Error( const std::string& message );
+		void Error( const char* message );
 
 	/* Grouping: */
 		/* omit_empty_group: If true, defers the push operation until an actual log is recorded between this function call & the PopGroup() call. If no calls were made in-between,
