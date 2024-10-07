@@ -15,6 +15,10 @@ namespace Engine
 		int count;
 		GLenum type;
 
+		/* Comparison operators. */
+		constexpr bool operator ==( const VertexAttributeCountAndType& ) const = default;
+		constexpr bool operator !=( const VertexAttributeCountAndType& ) const = default;
+
 		inline bool Empty() const { return count == 0; }
 	}; 
 	
@@ -22,6 +26,10 @@ namespace Engine
 	{
 		unsigned int location;
 		GLint normalize;
+
+		/* Comparison operators. */
+		constexpr bool operator ==( const VertexAttribute& ) const = default;
+		constexpr bool operator !=( const VertexAttribute& ) const = default;
 
 		inline unsigned int Size() const { return count * sizeof( type ); }
 	};
@@ -48,6 +56,10 @@ namespace Engine
 
 		~VertexLayout()
 		{}
+
+		/* Comparison operators. */
+		constexpr bool operator ==( const VertexLayout& ) const = default;
+		constexpr bool operator !=( const VertexLayout& ) const = default;
 
 		template< typename Type >
 		void Push( const int count );
@@ -91,6 +103,20 @@ namespace Engine
 				stride += attributes[ index ].Size();
 
 			return stride;
+		}
+
+		inline unsigned int Count() const { return ( unsigned int )attributes.size(); }
+
+		inline bool IsCompatibleWith( const VertexLayout& other ) const
+		{
+			if( other.Count() != Count() )
+				return false;
+
+			for( auto i = 0; i < attributes.size(); i++ )
+				if( other.attributes[ i ] != attributes[ i ] )
+					return false;
+			
+			return true;
 		}
 
 	private:
