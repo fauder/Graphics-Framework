@@ -37,62 +37,120 @@ namespace Engine::GL::Type
 		switch( type )
 		{
 			/* Scalars & vectors: */
-			case GL_FLOAT								: return sizeof( float );
-			case GL_FLOAT_VEC2							: return sizeof( Vector2 );
-			case GL_FLOAT_VEC3							: return sizeof( Vector3 );
-			case GL_FLOAT_VEC4							: return sizeof( Vector4 );
-			
-			case GL_DOUBLE								: return sizeof( double );
-			case GL_DOUBLE_VEC2							: return sizeof( Vector2D );
-			case GL_DOUBLE_VEC3							: return sizeof( Vector3D );
-			case GL_DOUBLE_VEC4							: return sizeof( Vector4D );
-			
-			case GL_INT									: return sizeof( int );
-			case GL_INT_VEC2							: return sizeof( Vector2I );
-			case GL_INT_VEC3							: return sizeof( Vector3I );
-			case GL_INT_VEC4							: return sizeof( Vector4I );
-			
-			case GL_UNSIGNED_INT						: return sizeof( unsigned int );
-			case GL_UNSIGNED_INT_VEC2					: return sizeof( Vector2U );
-			case GL_UNSIGNED_INT_VEC3					: return sizeof( Vector3U );
-			case GL_UNSIGNED_INT_VEC4					: return sizeof( Vector4U );
-			
-			case GL_BOOL								: return sizeof( bool );
-			case GL_BOOL_VEC2							: return sizeof( Vector2B );
-			case GL_BOOL_VEC3							: return sizeof( Vector3B );
-			case GL_BOOL_VEC4							: return sizeof( Vector4B );
-			
+			case GL_FLOAT				: return sizeof( float );
+			case GL_FLOAT_VEC2			: return sizeof( Vector2 );
+			case GL_FLOAT_VEC3			: return sizeof( Vector3 );
+			case GL_FLOAT_VEC4			: return sizeof( Vector4 );
+
+			case GL_DOUBLE				: return sizeof( double );
+			case GL_DOUBLE_VEC2			: return sizeof( Vector2D );
+			case GL_DOUBLE_VEC3			: return sizeof( Vector3D );
+			case GL_DOUBLE_VEC4			: return sizeof( Vector4D );
+
+			case GL_INT					: return sizeof( int );
+			case GL_INT_VEC2			: return sizeof( Vector2I );
+			case GL_INT_VEC3			: return sizeof( Vector3I );
+			case GL_INT_VEC4			: return sizeof( Vector4I );
+
+			case GL_UNSIGNED_INT		: return sizeof( unsigned int );
+			case GL_UNSIGNED_INT_VEC2	: return sizeof( Vector2U );
+			case GL_UNSIGNED_INT_VEC3	: return sizeof( Vector3U );
+			case GL_UNSIGNED_INT_VEC4	: return sizeof( Vector4U );
+
+			case GL_BOOL				: return sizeof( bool );
+			case GL_BOOL_VEC2			: return sizeof( Vector2B );
+			case GL_BOOL_VEC3			: return sizeof( Vector3B );
+			case GL_BOOL_VEC4			: return sizeof( Vector4B );
+
 			/* Float matrices: */
-			case GL_FLOAT_MAT2 							: return sizeof( Matrix2x2 );
-			case GL_FLOAT_MAT3 							: return sizeof( Matrix3x3 );
-			case GL_FLOAT_MAT4 							: return sizeof( Matrix4x4 );
-			
-			case GL_FLOAT_MAT2x3 						: return sizeof( Matrix2x3 );
-			case GL_FLOAT_MAT2x4 						: return sizeof( Matrix2x4 );
-			case GL_FLOAT_MAT3x2 						: return sizeof( Matrix3x2 );
-			case GL_FLOAT_MAT3x4 						: return sizeof( Matrix3x4 );
-			case GL_FLOAT_MAT4x2 						: return sizeof( Matrix4x2 );
-			case GL_FLOAT_MAT4x3 						: return sizeof( Matrix4x3 );
+			case GL_FLOAT_MAT2 			: return sizeof( Matrix2x2 );
+			case GL_FLOAT_MAT3 			: return sizeof( Matrix3x3 );
+			case GL_FLOAT_MAT4 			: return sizeof( Matrix4x4 );
+
+			case GL_FLOAT_MAT2x3 		: return sizeof( Matrix2x3 );
+			case GL_FLOAT_MAT2x4 		: return sizeof( Matrix2x4 );
+			case GL_FLOAT_MAT3x2 		: return sizeof( Matrix3x2 );
+			case GL_FLOAT_MAT3x4 		: return sizeof( Matrix3x4 );
+			case GL_FLOAT_MAT4x2 		: return sizeof( Matrix4x2 );
+			case GL_FLOAT_MAT4x3 		: return sizeof( Matrix4x3 );
 
 			/* Double matrices: */
-			case GL_DOUBLE_MAT2 						: return sizeof( Matrix2x2D );
-			case GL_DOUBLE_MAT3 						: return sizeof( Matrix3x3D );
-			case GL_DOUBLE_MAT4 						: return sizeof( Matrix4x4D );
-			
-			case GL_DOUBLE_MAT2x3 						: return sizeof( Matrix2x3D );
-			case GL_DOUBLE_MAT2x4 						: return sizeof( Matrix2x4D );
-			case GL_DOUBLE_MAT3x2 						: return sizeof( Matrix3x2D );
-			case GL_DOUBLE_MAT3x4 						: return sizeof( Matrix3x4D );
-			case GL_DOUBLE_MAT4x2 						: return sizeof( Matrix4x2D );
-			case GL_DOUBLE_MAT4x3 						: return sizeof( Matrix4x3D );
+			case GL_DOUBLE_MAT2 		: return sizeof( Matrix2x2D );
+			case GL_DOUBLE_MAT3 		: return sizeof( Matrix3x3D );
+			case GL_DOUBLE_MAT4 		: return sizeof( Matrix4x4D );
+
+			case GL_DOUBLE_MAT2x3 		: return sizeof( Matrix2x3D );
+			case GL_DOUBLE_MAT2x4 		: return sizeof( Matrix2x4D );
+			case GL_DOUBLE_MAT3x2 		: return sizeof( Matrix3x2D );
+			case GL_DOUBLE_MAT3x4 		: return sizeof( Matrix3x4D );
+			case GL_DOUBLE_MAT4x2 		: return sizeof( Matrix4x2D );
+			case GL_DOUBLE_MAT4x3 		: return sizeof( Matrix4x3D );
 
 			/* Texture samplers: */
-			case GL_SAMPLER_1D 							: return sizeof( int );
-			case GL_SAMPLER_2D 							: return sizeof( int );
-			case GL_SAMPLER_3D 							: return sizeof( int );
+			case GL_SAMPLER_1D 			: return sizeof( int );
+			case GL_SAMPLER_2D 			: return sizeof( int );
+			case GL_SAMPLER_3D 			: return sizeof( int );
 		}
 
-		throw std::runtime_error( "ERROR::SHADER_TYPE::GetSizeOfType() called with an unknown GL type!" );
+		throw std::runtime_error( "ERROR::SHADER_TYPE::SizeOf() called with an unknown GL type!" );
+	}
+
+	inline int CountOf( const GLenum type )
+	{
+		switch( type )
+		{
+			/* Scalars & vectors: */
+			case GL_FLOAT				: return 1;
+			case GL_FLOAT_VEC2			: return 2;
+			case GL_FLOAT_VEC3			: return 3;
+			case GL_FLOAT_VEC4			: return 4;
+
+			case GL_DOUBLE				: return 1;
+			case GL_DOUBLE_VEC2			: return 2;
+			case GL_DOUBLE_VEC3			: return 3;
+			case GL_DOUBLE_VEC4			: return 4;
+
+			case GL_INT					: return 1;
+			case GL_INT_VEC2			: return 2;
+			case GL_INT_VEC3			: return 3;
+			case GL_INT_VEC4			: return 4;
+
+			case GL_UNSIGNED_INT		: return 1;
+			case GL_UNSIGNED_INT_VEC2	: return 2;
+			case GL_UNSIGNED_INT_VEC3	: return 3;
+			case GL_UNSIGNED_INT_VEC4	: return 4;
+
+			case GL_BOOL				: return 1;
+			case GL_BOOL_VEC2			: return 2;
+			case GL_BOOL_VEC3			: return 3;
+			case GL_BOOL_VEC4			: return 4;
+
+			/* Float matrices: */
+			case GL_FLOAT_MAT2 			: return 4;
+			case GL_FLOAT_MAT3 			: return 9;
+			case GL_FLOAT_MAT4 			: return 16;
+
+			case GL_FLOAT_MAT2x3 		: return 6;
+			case GL_FLOAT_MAT2x4 		: return 8;
+			case GL_FLOAT_MAT3x2 		: return 6;
+			case GL_FLOAT_MAT3x4 		: return 12;
+			case GL_FLOAT_MAT4x2 		: return 8;
+			case GL_FLOAT_MAT4x3 		: return 12;
+
+			/* Double matrices: */
+			case GL_DOUBLE_MAT2 		: return 4;
+			case GL_DOUBLE_MAT3 		: return 9;
+			case GL_DOUBLE_MAT4 		: return 16;
+
+			case GL_DOUBLE_MAT2x3 		: return 6;
+			case GL_DOUBLE_MAT2x4 		: return 8;
+			case GL_DOUBLE_MAT3x2 		: return 6;
+			case GL_DOUBLE_MAT3x4 		: return 12;
+			case GL_DOUBLE_MAT4x2 		: return 8;
+			case GL_DOUBLE_MAT4x3 		: return 12;
+		}
+
+		throw std::runtime_error( "ERROR::SHADER_TYPE::CountOf() called with an unknown GL type!" );
 	}
 
 	inline const char* NameOf( const GLenum type )
@@ -212,7 +270,65 @@ namespace Engine::GL::Type
 			case GL_UNSIGNED_INT_SAMPLER_2D_RECT 					: return "usampler2DRect";
 		}
 
-		throw std::runtime_error( "ERROR::SHADER_TYPE::GetNameOfType() called with an unknown GL type!" );
+		throw std::runtime_error( "ERROR::SHADER_TYPE::NameOf() called with an unknown GL type!" );
+	}
+
+	inline GLenum ComponentTypeOf( const GLenum type )
+	{
+		switch( type )
+		{
+			/* Scalars & vectors: */
+			case GL_FLOAT				:
+			case GL_FLOAT_VEC2			:
+			case GL_FLOAT_VEC3			:
+			case GL_FLOAT_VEC4			: return GL_FLOAT;
+
+			case GL_DOUBLE				:
+			case GL_DOUBLE_VEC2			:
+			case GL_DOUBLE_VEC3			:
+			case GL_DOUBLE_VEC4			: return GL_DOUBLE;
+
+			case GL_INT					:
+			case GL_INT_VEC2			:
+			case GL_INT_VEC3			:
+			case GL_INT_VEC4			: return GL_INT;
+
+			case GL_UNSIGNED_INT		:
+			case GL_UNSIGNED_INT_VEC2	:
+			case GL_UNSIGNED_INT_VEC3	:
+			case GL_UNSIGNED_INT_VEC4	: return GL_UNSIGNED_INT;
+
+			case GL_BOOL				:
+			case GL_BOOL_VEC2			:
+			case GL_BOOL_VEC3			:
+			case GL_BOOL_VEC4			: return GL_BOOL;
+
+			/* Float matrices: */
+			case GL_FLOAT_MAT2 			:
+			case GL_FLOAT_MAT3 			:
+			case GL_FLOAT_MAT4 			:
+
+			case GL_FLOAT_MAT2x3 		:
+			case GL_FLOAT_MAT2x4 		:
+			case GL_FLOAT_MAT3x2 		:
+			case GL_FLOAT_MAT3x4 		:
+			case GL_FLOAT_MAT4x2 		:
+			case GL_FLOAT_MAT4x3 		: return GL_FLOAT;
+
+			/* Double matrices: */
+			case GL_DOUBLE_MAT2 		:
+			case GL_DOUBLE_MAT3 		:
+			case GL_DOUBLE_MAT4 		:
+
+			case GL_DOUBLE_MAT2x3 		:
+			case GL_DOUBLE_MAT2x4 		:
+			case GL_DOUBLE_MAT3x2 		:
+			case GL_DOUBLE_MAT3x4 		:
+			case GL_DOUBLE_MAT4x2 		:
+			case GL_DOUBLE_MAT4x3 		: return GL_DOUBLE;
+		}
+
+		throw std::runtime_error( "ERROR::SHADER_TYPE::CountOf() called with an unknown GL type!" );
 	}
 
 	inline void* AddressOf( const GLenum type, void* address, const int element_index )
