@@ -278,6 +278,12 @@ namespace Engine
 					render_group.shaders_in_flight.erase( previous_shader );
 
 				render_group.shaders_in_flight[ material->shader ]++;
+
+				/* Log warning if the new shader is incompatible with mesh(es). */
+				for( auto& drawable : render_group.drawable_list )
+					if( drawable->material == material &&
+						not drawable->mesh->IsCompatibleWith( drawable->material->shader->GetSourceVertexLayout() ) )
+						ServiceLocator< GLLogger >::Get().Error( "Mesh \"" + drawable->mesh->Name() + "\" is not compatible with its current shader \"" + material->shader->Name() + "\"." );
 			}
 		}
 	}
