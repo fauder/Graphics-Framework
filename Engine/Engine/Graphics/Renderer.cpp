@@ -506,32 +506,6 @@ namespace Engine
 		glBlendEquation( ( GLenum )function );
 	}
 
-	void Renderer::EnableFaceCulling()
-	{
-		glEnable( GL_CULL_FACE );
-	}
-
-	void Renderer::EnableFaceCulling( const Face face_to_cull )
-	{
-		EnableFaceCulling();
-		SetCullFace( face_to_cull );
-	}
-
-	void Renderer::DisableFaceCulling()
-	{
-		glDisable( GL_CULL_FACE );
-	}
-
-	void Renderer::SetCullFace( const Face face )
-	{
-		glCullFace( ( GLenum )face );
-	}
-
-	void Renderer::SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces )
-	{
-		glFrontFace( ( GLenum )winding_order_of_front_faces );
-	}
-
 	void Renderer::SetCurrentFramebuffer( const Framebuffer* framebuffer )
 	{
 		framebuffer_current = framebuffer;
@@ -597,6 +571,14 @@ namespace Engine
 
 	void Renderer::SetRenderState( const RenderState& render_state_to_set )
 	{
+		if( render_state_to_set.face_culling_enable )
+			EnableFaceCulling();
+		else
+			DisableFaceCulling();
+
+		SetCullFace( render_state_to_set.face_culling_face_to_cull );
+		SetFrontFaceConvention( render_state_to_set.face_culling_winding_order );
+
 		if( render_state_to_set.depth_test_enable )
 			EnableDepthTest();
 		else
@@ -662,5 +644,25 @@ namespace Engine
 	void Renderer::Clear() const
 	{
 		glClear( ( GLbitfield )clear_targets.ToBits() );
+	}
+
+	void Renderer::EnableFaceCulling()
+	{
+		glEnable( GL_CULL_FACE );
+	}
+
+	void Renderer::DisableFaceCulling()
+	{
+		glDisable( GL_CULL_FACE );
+	}
+
+	void Renderer::SetCullFace( const Face face )
+	{
+		glCullFace( ( GLenum )face );
+	}
+
+	void Renderer::SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces )
+	{
+		glFrontFace( ( GLenum )winding_order_of_front_faces );
 	}
 }

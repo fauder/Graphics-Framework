@@ -112,6 +112,11 @@ namespace Engine
 
 		struct RenderState
 		{
+		/* Face-culling & winding-order: */
+			bool face_culling_enable                = true; // Differing from GL here; Back face culling is the default, to save perf.
+			Face face_culling_face_to_cull          = Face::Back;
+			WindingOrder face_culling_winding_order = WindingOrder::CounterClockwise;
+
 		/* Depth: */
 
 			bool depth_test_enable                       = true;
@@ -288,16 +293,6 @@ namespace Engine
 		void SetBlendingFunction( const BlendingFunction function );
 
 		/*
-		 * Face Culling:
-		 */
-
-		void EnableFaceCulling();
-		void EnableFaceCulling( const Face face_to_cull );
-		void DisableFaceCulling();
-		void SetCullFace( const Face face );
-		void SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces );
-
-		/*
 		 * Framebuffer:
 		 */
 
@@ -339,6 +334,15 @@ namespace Engine
 
 		void SetClearColor();
 		void Clear() const;
+
+		/*
+		 * Face Culling:
+		 */
+
+		void EnableFaceCulling();
+		void DisableFaceCulling();
+		void SetCullFace( const Face face );
+		void SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces );
 
 	private:
 

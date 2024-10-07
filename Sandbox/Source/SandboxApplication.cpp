@@ -341,10 +341,6 @@ void SandboxApplication::Initialize()
 				ReloadModel( test_model_file_path );
 		}
 	}
-
-/* Other: */
-	renderer.SetFrontFaceConvention( Engine::Renderer::WindingOrder::CounterClockwise );
-	renderer.EnableFaceCulling( Engine::Renderer::Face::Back );
 }
 
 void SandboxApplication::Shutdown()
