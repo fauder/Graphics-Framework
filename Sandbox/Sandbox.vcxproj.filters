@@ -19,7 +19,7 @@
     <None Include="Asset\Shader\_Intrinsic_Lighting.glsl" />
     <None Include="Asset\Shader\_Intrinsic_Other.glsl" />
     <None Include="Asset\Shader\_Global.glsl" />
-    <None Include="Asset\Shader\DepthBufferVisualization.frag" />
+    <None Include="Asset\Shader\VisualizeDepth.frag" />
     <None Include="Asset\Shader\_Depth.glsl" />
     <None Include="Asset\Shader\Outline.vert" />
     <None Include="Asset\Shader\FullScreenBlit.vert" />
@@ -27,5 +27,7 @@
     <None Include="Asset\Shader\GenericPostprocess.frag" />
     <None Include="Asset\Shader\Skybox.vert" />
     <None Include="Asset\Shader\Skybox.frag" />
+    <None Include="Asset\Shader\VisualizeNormals.geom" />
+    <None Include="Asset\Shader\VisualizeNormals.vert" />
   </ItemGroup>
 </Project>

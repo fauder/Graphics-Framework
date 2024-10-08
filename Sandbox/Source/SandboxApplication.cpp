@@ -55,6 +55,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	fullscreen_blit_shader( "Fullscreen Blit" ),
 	postprocess_grayscale_shader( "Post-process: Grayscale" ),
 	postprocess_generic_shader( "Post-process: Generic" ),
+	normal_visualization_shader( "Normal Visualization" ),
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
@@ -129,10 +130,13 @@ void SandboxApplication::Initialize()
 	fullscreen_blit_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	postprocess_grayscale_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/Grayscale.frag)" );
 	postprocess_generic_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/GenericPostprocess.frag)" );
+	normal_visualization_shader.FromFile( R"(Asset/Shader/VisualizeNormals.vert)", R"(Asset/Shader/BasicColor.frag)", { /* No features defined. */ },
+										  R"(Asset/Shader/VisualizeNormals.geom)" );
 
 	/* Register shaders not assigned to materials: */
 	renderer.RegisterShader( postprocess_grayscale_shader );
 	renderer.RegisterShader( postprocess_generic_shader );
+	renderer.RegisterShader( normal_visualization_shader );
 
 /* Initial transforms: */
 	ground_transform

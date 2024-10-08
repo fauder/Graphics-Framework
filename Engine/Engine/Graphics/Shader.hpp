@@ -14,7 +14,6 @@
 // std Includes.
 #include <array>
 #include <filesystem>
-#include <iostream>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -25,7 +24,9 @@ namespace Engine
 	enum class ShaderType
 	{
 		VERTEX,
+		GEOMETRY,
 		FRAGMENT,
+
 		_COUNT_
 	};
 
@@ -34,6 +35,7 @@ namespace Engine
 		constexpr std::array< const char*, ( int )ShaderType::_COUNT_ > shader_type_identifiers
 		{
 			"VERTEX",
+			"GEOMETRY",
 			"FRAGMENT"
 		};
 
@@ -45,6 +47,7 @@ namespace Engine
 		constexpr std::array< int, ( int )ShaderType::_COUNT_ > shader_type_identifiers
 		{
 			GL_VERTEX_SHADER,
+			GL_GEOMETRY_SHADER,
 			GL_FRAGMENT_SHADER
 		};
 
@@ -70,21 +73,29 @@ namespace Engine
 	public:
 		/* Will be initialized later with FromFile(). */
 		Shader( const char* name );
-		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& features_to_set = {} );
+		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, 
+				const std::initializer_list< std::string > = {}, 
+				const char* geometry_shader_source_file_path = nullptr );
 		~Shader();
 
-		bool FromFile( const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, const std::vector< std::string >& features_to_set = {} );
+		bool FromFile( const char* vertex_shader_source_file_path,
+					   const char* fragment_shader_source_file_path,
+					   const std::initializer_list< std::string > = {},
+					   const char* geometry_shader_source_file_path = nullptr );
 
 		void Bind() const;
 
 /* Queries: */
 
-		inline		 ID								Id()								const { return program_id;							}
-		inline const std::string&					Name()								const { return name;								}
-		inline const std::string&					VertexShaderSourcePath()			const { return vertex_source_path;					}
-		inline const std::string&					FragmentShaderSourcePath()			const { return fragment_source_path;				}
-		inline const std::vector< std::string >&	VertexShaderSourceIncludePaths()	const { return vertex_source_include_path_array;	}
-		inline const std::vector< std::string >&	FragmentShaderSourceIncludePaths()	const { return fragment_source_include_path_array;	}
+		inline		 ID								Id()							const { return program_id;							}
+		inline const std::string&					Name()							const { return name;								}
+		inline bool									HasGeometryStage()				const { return not geometry_source_path.empty();	}
+		inline const std::string&					VertexSourcePath()				const { return vertex_source_path;					}
+		inline const std::string&					GeometrySourcePath()			const { return geometry_source_path;				}
+		inline const std::string&					FragmentSourcePath()			const { return fragment_source_path;				}
+		inline const std::vector< std::string >&	VertexSourceIncludePaths()		const { return vertex_source_include_path_array;	}
+		inline const std::vector< std::string >&	GeometrySourceIncludePaths()	const { return geometry_source_include_path_array;	}
+		inline const std::vector< std::string >&	FragmentSourceIncludePaths()	const { return fragment_source_include_path_array;	}
 
 		inline const std::unordered_map< std::string, Feature >& Features() const { return feature_map; }
 
@@ -480,14 +491,15 @@ namespace Engine
 /* Compilation & Linkage: */
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		std::vector< std::string > PreprocessShaderStage_GetIncludeFilePaths( std::string shader_source ) const;
-		void PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::vector< std::string >& features_to_set );
+		void PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::initializer_list< std::string > features_to_set );
 		std::unordered_map< std::string, Feature > PreProcessShaderStage_ParseFeatures( std::string shader_source );
 		void PreProcessShaderStage_SetFeatures( std::string& shader_source_to_modify,
-												std::unordered_map< std::string, Feature >& defined_features, 
-												const std::vector< std::string >& features_to_set );
+												std::unordered_map< std::string, Feature >& defined_features,
+												const std::initializer_list< std::string > features_to_set );
 		bool PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source_to_modify, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
+		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int geometry_shader_id, const unsigned int fragment_shader_id );
 
 		/*std::string ShaderSource_CommentsStripped( const std::string& shader_source );*/
 		void ParseShaderSource_UniformUsageHints( const std::string& shader_source, const ShaderType shader_type );
@@ -525,9 +537,11 @@ namespace Engine
 		std::string name;
 
 		std::string vertex_source_path;
+		std::string geometry_source_path;
 		std::string fragment_source_path;
 
 		std::vector< std::string > vertex_source_include_path_array;
+		std::vector< std::string > geometry_source_include_path_array;
 		std::vector< std::string > fragment_source_include_path_array;
 
 		std::unordered_map< std::string, Feature > feature_map;
