@@ -27,5 +27,7 @@
     <None Include="Asset\Shader\GenericPostprocess.frag" />
     <None Include="Asset\Shader\Skybox.vert" />
     <None Include="Asset\Shader\Skybox.frag" />
+    <None Include="Asset\Shader\VisualizeNormals.geom" />
+    <None Include="Asset\Shader\VisualizeNormals.vert" />
   </ItemGroup>
 </Project>

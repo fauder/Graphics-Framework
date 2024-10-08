@@ -139,6 +139,8 @@ private:
 
 	Engine::Shader postprocess_generic_shader;
 
+	Engine::Shader normal_visualization_shader;
+
 /* Materials: */
 	Engine::Material skybox_material;
 
