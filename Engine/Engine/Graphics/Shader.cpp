@@ -486,7 +486,7 @@ namespace Engine
 					comment_block_end_token_pos != std::string::npos )
 				{
 					if( const auto hint_token_pos = shader_source.find( "_hint_", current_pos );
-						hint_token_pos != std::string::npos )
+						hint_token_pos != std::string::npos && hint_token_pos < comment_block_end_token_pos )
 					{
 						if( const auto token_end_pos = shader_source.find( ' ', current_pos + 6 /* to get past "_hint_" */ );
 							token_end_pos != std::string::npos )
