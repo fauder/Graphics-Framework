@@ -549,10 +549,11 @@ namespace Engine
 									}
 									else
 									{
-										ASSERT_DEBUG_ONLY( uniform_info_map.contains( uniform_name ) );
-
-										uniform_info_map[ uniform_name ].usage_hint = hint;
-										std::memcpy( uniform_info_map[ uniform_name ].usage_hint_array_dimensions, array_dimensions, sizeof( int ) * 3 );
+										if( uniform_info_map.contains( uniform_name ) )
+										{
+											uniform_info_map[ uniform_name ].usage_hint = hint;
+											std::memcpy( uniform_info_map[ uniform_name ].usage_hint_array_dimensions, array_dimensions, sizeof( int ) * 3 );
+										}
 									}
 								}
 							}
