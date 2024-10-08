@@ -566,7 +566,7 @@ namespace Engine::ImGuiDrawer
 							{
 								float& actual_uniform = *reinterpret_cast< float* >( material.Get( uniform_info ) );
 								float temp = actual_uniform * 100.0f;
-								if( ImGui::SliderFloat( "##scalar_float", &temp, 0.0f, 100.0f, "%.1f\%" ) )
+								if( ImGui::SliderFloat( "##scalar_float", &temp, 0.0f, 100.0f, "%.1f%%" ) )
 								{
 									actual_uniform = temp / 100.0f;
 									is_modified = true;
