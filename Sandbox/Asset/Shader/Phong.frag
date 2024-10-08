@@ -22,6 +22,13 @@ layout ( std140 ) uniform PhongMaterialData
 
 uniform sampler2D uniform_diffuse_map_slot, uniform_specular_map_slot;
 
+#pragma feature SKYBOX_ENVIRONMENT_MAPPING
+
+#ifdef SKYBOX_ENVIRONMENT_MAPPING
+uniform samplerCube uniform_texture_skybox_slot;
+uniform sampler2D uniform_reflection_map_slot;
+uniform float uniform_reflectivity; /* _hint_normalized_percentage */
+#endif
 
 vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_direction_view_space,
 										 vec3 diffuse_sample, vec3 specular_sample )
@@ -146,4 +153,13 @@ void main()
 														diffuse_sample, specular_sample );
 
 	out_color = vec4( from_directional_light + from_point_light + from_spot_light, 1.0 );
+
+#ifdef SKYBOX_ENVIRONMENT_MAPPING
+	vec4 reflected         = reflect( varying_position_view_space, normal_view_space );
+	vec4 reflection_sample = vec4( texture( uniform_texture_skybox_slot, reflected.xyz ).rgb, 1.0 );
+
+	vec4 reflection_map_sample = vec4( texture( uniform_reflection_map_slot, varying_tex_coords ).rgb, 1.0 );
+
+	out_color = mix( out_color, ( 1.0 - reflection_map_sample.r ) * reflection_sample, uniform_reflectivity );
+#endif
 }

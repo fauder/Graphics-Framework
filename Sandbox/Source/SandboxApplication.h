@@ -127,6 +127,7 @@ private:
 /* Shaders: */
 	Engine::Shader skybox_shader;
 	Engine::Shader phong_shader;
+	Engine::Shader phong_skybox_reflection_shader;
 	Engine::Shader basic_color_shader;
 	Engine::Shader basic_textured_shader;
 	Engine::Shader basic_textured_transparent_discard_shader;

@@ -47,6 +47,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	render_group_id_screen_size_quad( 4 ),
 	skybox_shader( "Skybox" ),
 	phong_shader( "Phong" ),
+	phong_skybox_reflection_shader( "Phong (w/ Skybox Reflection)" ),
 	basic_color_shader( "Basic Color" ),
 	basic_textured_shader( "Basic Textured" ),
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
@@ -109,7 +110,7 @@ void SandboxApplication::Initialize()
 	texture_import_settings.flip_vertically = true;
 
 	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",					texture_import_settings );
-	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)",			texture_import_settings );
+	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map",	R"(Asset/Texture/container2_specular.png)",			texture_import_settings );
 	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)",	texture_import_settings );
 	
 	texture_import_settings.wrap_u = Engine::Texture::Wrapping::Repeat;
@@ -120,6 +121,7 @@ void SandboxApplication::Initialize()
 /* Shaders: */
 	skybox_shader.FromFile( R"(Asset/Shader/Skybox.vert)", R"(Asset/Shader/Skybox.frag)" );
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
+	phong_skybox_reflection_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING" } );
 	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
@@ -937,7 +939,18 @@ void SandboxApplication::ResetMaterialData()
 		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &basic_color_shader );
 	
 	cube_material_array.resize( CUBE_COUNT );
-	for( auto i = 0; i < CUBE_COUNT; i++ )
+
+	/* Set the first cube's material to Phong shader w/ skybox reflection: */
+	cube_material_array[ 0 ] = Engine::Material( "Cube #1", &phong_skybox_reflection_shader );
+	cube_material_array[ 0 ].SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
+	cube_material_array[ 0 ].SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
+	cube_material_array[ 0 ].SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
+	cube_material_array[ 0 ].SetTexture( "uniform_texture_skybox_slot", skybox_texture );
+	cube_material_array[ 0 ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+	cube_material_array[ 0 ].Set( "uniform_reflectivity", 1.0f );
+
+	/* The rest of the cubes use the regular (not reflected) Phong shader: */
+	for( auto i = 1; i < CUBE_COUNT; i++ )
 	{
 		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
 		cube_material_array[ i ].SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
