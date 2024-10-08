@@ -285,7 +285,7 @@ namespace Engine
 				for( auto& drawable : render_group.drawable_list )
 					if( drawable->material == material &&
 						not drawable->mesh->IsCompatibleWith( drawable->material->shader->GetSourceVertexLayout() ) )
-						ServiceLocator< GLLogger >::Get().Error( "Mesh \"" + drawable->mesh->Name() + "\" is not compatible with its current shader \"" + material->shader->Name() + "\"." );
+						ServiceLocator< GLLogger >::Get().Warning( "Mesh \"" + drawable->mesh->Name() + "\" is not compatible with its current shader \"" + material->shader->Name() + "\"." );
 			}
 		}
 	}
