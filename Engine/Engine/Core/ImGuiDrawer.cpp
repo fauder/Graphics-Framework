@@ -766,9 +766,9 @@ namespace Engine::ImGuiDrawer
 				ImGuiUtility::BeginGroupPanel();
 
 				ImGui::SeparatorText( "Source Files" );
-				auto DrawSourceFiles = [&]( const std::string& tree_node_name, const std::string& source_path, const std::vector< std::string >& include_paths )
+				auto DrawSourceFiles = [ & ]( const std::string& tree_node_name, const std::string& source_path, const std::vector< std::string >& include_paths )
 				{
-					if( ImGui::TreeNodeEx( tree_node_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+					if( not source_path.empty() && ImGui::TreeNodeEx( tree_node_name.c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
 					{
 						if( ImGui::BeginTable( "Source Files", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 						{
@@ -797,8 +797,9 @@ namespace Engine::ImGuiDrawer
 					}
 				};
 
-				DrawSourceFiles( "Vertex Shader##" + shader.Name(), shader.VertexShaderSourcePath(), shader.VertexShaderSourceIncludePaths() );
-				DrawSourceFiles( "Fragment Shader##" + shader.Name(), shader.FragmentShaderSourcePath(), shader.FragmentShaderSourceIncludePaths() );
+				DrawSourceFiles( "Vertex Shader##"   + shader.Name(), shader.VertexSourcePath(),   shader.VertexSourceIncludePaths()   );
+				DrawSourceFiles( "Geometry Shader##" + shader.Name(), shader.GeometrySourcePath(), shader.GeometrySourceIncludePaths() );
+				DrawSourceFiles( "Fragment Shader##" + shader.Name(), shader.FragmentSourcePath(), shader.FragmentSourceIncludePaths() );
 
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniforms" );
