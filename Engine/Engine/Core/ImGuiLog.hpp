@@ -48,10 +48,6 @@ namespace Engine
 		void AddLog( const Type type, const char* text )
 		{
 			/* There may be multiple lines in text. */
-			int counter = 0;
-			while( text[ counter++ ] != '\n' && text[ counter++ ] != '\0' )
-			{}
-
 			std::string_view text_view( text );
 			const auto potential_lines = Utility::String::Split( text_view, '\n' );
 
@@ -81,15 +77,12 @@ namespace Engine
 				return;
 
 			for( const auto& line : lines )
-				lineOffsets.push_back( lineOffsets.back() + ( int )line.size() );
+				lineOffsets.push_back( lineOffsets.back() + ( int )line.size() + 1 ); // + 1 is for the new line character, which was stripped from each line in Split() above.
 
 			allText.append( text );
 
-			if( lines.back().back() != '\n' )
-			{
-				allText.append( "\n" );
-				lineOffsets.back()++;
-			}
+			if( text_view.back() != '\n' )
+				allText.append( "\n" ); // No need to increment the line offset of the last line here because the loop above always adds +1 to the offsets (for newline), even if there's no trailing newline yet.
 
 			lineTypes.insert( lineTypes.begin() + lineTypes.size(), ( int )lines.size(), type );
 		}
