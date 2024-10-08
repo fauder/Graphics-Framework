@@ -151,12 +151,6 @@ namespace Engine
 
 	void Material::UploadUniforms()
 	{
-		for( const auto& [ uniform_name, uniform_info ] : *uniform_info_map )
-			if( not uniform_info.is_buffer_member )
-				UploadUniform( uniform_info );
-
-		uniform_buffer_management_regular.UploadAll();
-
 		unsigned int texture_unit_slots_in_use = 0; // This can be controlled via a central manager class if more complex use-cases arise. For now every Material will act as if it is the only one using Texture Unit slots.
 
 		/* Copy texture slot to blob, activate the slot & upload the slot uniform to GPU. */
@@ -172,6 +166,12 @@ namespace Engine
 				texture->Activate( texture_unit_slot );
 			}
 		}
+
+		for( const auto& [ uniform_name, uniform_info ] : *uniform_info_map )
+			if( not uniform_info.is_buffer_member )
+				UploadUniform( uniform_info );
+
+		uniform_buffer_management_regular.UploadAll();
 	}
 
 	void Material::PopulateTextureMap()
