@@ -278,11 +278,13 @@ namespace Engine
 
 	std::optional< std::string > Shader::ParseShaderFromFile( const char* file_path, const ShaderType shader_type )
 	{
-		const std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::FILE_NOT_SUCCESSFULLY_READ\nShader name: " + name + "\n" );
+		const std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::FILE_NOT_SUCCESSFULLY_READ\n\tShader name: " + name + "\n" );
 
 		if( const auto source = Engine::Utility::ReadFileIntoString( file_path, error_prompt.c_str() );
 			source )
 			return *source;
+
+		ServiceLocator< GLLogger >::Get().Error( error_prompt );
 
 		return std::nullopt;
 	}
@@ -435,7 +437,7 @@ namespace Engine
 																									  error_string ) );
 		if( not *preprocessed_source )
 		{
-			const std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::INCLUDE_FILE_NOT_SUCCESSFULLY_READ\nShader name: " + name + "\n\t" 
+			const std::string error_prompt( std::string( "ERROR::SHADER::" ) + ShaderTypeString( shader_type ) + "::INCLUDE_FILE_NOT_SUCCESSFULLY_READ\n\tShader name: " + name + "\n\t" 
 											+ error_string );
 			LogErrors( error_prompt );
 			return false;
@@ -1049,6 +1051,9 @@ namespace Engine
 		if( IsDebuggerPresent() )
 			OutputDebugStringA( ( "\n" + error_string + "\n" ).c_str() );
 #endif // _WIN32 && _DEBUG
+
+		ServiceLocator< GLLogger >::Get().Error( error_string );
+
 		throw std::logic_error( error_string );
 	}
 
