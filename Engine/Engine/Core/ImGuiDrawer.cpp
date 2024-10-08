@@ -559,6 +559,20 @@ namespace Engine::ImGuiDrawer
 								ImGui::NewLine();
 							}
 								break;
+							case UsageHint::AsSlider_Normalized:
+								is_modified |= ImGui::SliderFloat( "##scalar_float", reinterpret_cast< float* >( material.Get( uniform_info ) ), 0.0f, 1.0f, GetFormat< float >() );
+								break;
+							case UsageHint::AsSlider_Normalized_Percentage:
+							{
+								float& actual_uniform = *reinterpret_cast< float* >( material.Get( uniform_info ) );
+								float temp = actual_uniform * 100.0f;
+								if( ImGui::SliderFloat( "##scalar_float", &temp, 0.0f, 100.0f, "%.1f\%" ) )
+								{
+									actual_uniform = temp / 100.0f;
+									is_modified = true;
+								}
+							}
+								break;
 							default:
 								is_modified |= Draw( uniform_info.type, material.Get( uniform_info ) );
 								break;

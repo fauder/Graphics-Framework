@@ -12,7 +12,9 @@ namespace Engine
 		None,
 		AsColor3,
 		AsColor4,
-		AsArray
+		AsArray,
+		AsSlider_Normalized,
+		AsSlider_Normalized_Percentage,
 	};
 
 	static UsageHint UsageHint_StringToEnum( const std::string& string )
@@ -23,6 +25,10 @@ namespace Engine
 			return UsageHint::AsColor4;
 		else if( string.compare( 0, 5, "array", 5 ) == 0 )
 			return UsageHint::AsArray;
+		else if( string == "normalized" )
+			return UsageHint::AsSlider_Normalized;
+		else if( string == "normalized_percentage" )
+			return UsageHint::AsSlider_Normalized_Percentage;
 		else
 			return UsageHint::None;
 	}
