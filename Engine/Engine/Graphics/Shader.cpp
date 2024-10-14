@@ -30,30 +30,34 @@ namespace Engine
 	}
 
 	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, 
-					const std::initializer_list< std::string > features_to_set,
+					const std::vector< std::string >& features_to_set,
 					const char* geometry_shader_source_file_path )
 		:
 		name( name ),
 		vertex_source_path( vertex_shader_source_file_path ),
 		geometry_source_path( geometry_shader_source_file_path ),
-		fragment_source_path( fragment_shader_source_file_path )
+		fragment_source_path( fragment_shader_source_file_path ),
+		features_requested( features_to_set )
 	{
 		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path, features_to_set, geometry_shader_source_file_path );
 	}
 
 	Shader::~Shader()
 	{
-		glDeleteProgram( program_id );
+		if( IsValid() )
+			glDeleteProgram( program_id );
 	}
 
 	bool Shader::FromFile( const char* vertex_shader_source_file_path,
 						   const char* fragment_shader_source_file_path,
-						   const std::initializer_list< std::string > features_to_set,
+						   const std::vector< std::string >& features_to_set,
 						   const char* geometry_shader_source_file_path )
 	{
 		this->vertex_source_path   = vertex_shader_source_file_path;
 		this->geometry_source_path = geometry_shader_source_file_path ? geometry_shader_source_file_path : "";
 		this->fragment_source_path = fragment_shader_source_file_path;
+
+		features_requested = features_to_set;
 
 		unsigned int vertex_shader_id = 0, geometry_shader_id = 0, fragment_shader_id = 0;
 
@@ -168,13 +172,13 @@ namespace Engine
 			CalculateTotalUniformSizes();
 			EnumerateUniformBufferCategories();
 
-			for( auto& [uniform_buffer_name, uniform_buffer_info] : uniform_buffer_info_map_regular )
+			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_regular )
 				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 
-			for( auto& [uniform_buffer_name, uniform_buffer_info] : uniform_buffer_info_map_global )
+			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_global )
 				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 
-			for( auto& [uniform_buffer_name, uniform_buffer_info] : uniform_buffer_info_map_intrinsic )
+			for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map_intrinsic )
 				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 
 			last_write_time_map.emplace( vertex_source_path, std::filesystem::last_write_time( vertex_source_path ) );
@@ -211,38 +215,38 @@ namespace Engine
 		switch( uniform_info.type )
 		{
 			/* Scalars & vectors: */
-			case GL_FLOAT: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const float* >( value_pointer ) ); return;
-			case GL_FLOAT_VEC2: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2* >( value_pointer ) ); return;
-			case GL_FLOAT_VEC3: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3* >( value_pointer ) ); return;
-			case GL_FLOAT_VEC4: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4* >( value_pointer ) ); return;
+			case GL_FLOAT				: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const float*			>( value_pointer ) ); return;
+			case GL_FLOAT_VEC2			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2*		>( value_pointer ) ); return;
+			case GL_FLOAT_VEC3			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3*		>( value_pointer ) ); return;
+			case GL_FLOAT_VEC4			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4*		>( value_pointer ) ); return;
 			//case GL_DOUBLE				: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const double*		>(  count_array ); return;
-			case GL_INT: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int* >( value_pointer ) ); return;
-			case GL_INT_VEC2: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2I* >( value_pointer ) ); return;
-			case GL_INT_VEC3: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3I* >( value_pointer ) ); return;
-			case GL_INT_VEC4: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4I* >( value_pointer ) ); return;
-			case GL_UNSIGNED_INT: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const unsigned int* >( value_pointer ) ); return;
-			case GL_UNSIGNED_INT_VEC2: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2U* >( value_pointer ) ); return;
-			case GL_UNSIGNED_INT_VEC3: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3U* >( value_pointer ) ); return;
-			case GL_UNSIGNED_INT_VEC4: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4U* >( value_pointer ) ); return;
-			case GL_BOOL: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const bool* >( value_pointer ) ); return;
-			case GL_BOOL_VEC2: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2B* >( value_pointer ) ); return;
-			case GL_BOOL_VEC3: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3B* >( value_pointer ) ); return;
-			case GL_BOOL_VEC4: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4B* >( value_pointer ) ); return;
+			case GL_INT					: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_INT_VEC2			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2I*		>( value_pointer ) ); return;
+			case GL_INT_VEC3			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3I*		>( value_pointer ) ); return;
+			case GL_INT_VEC4			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4I*		>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const unsigned int*	>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT_VEC2	: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2U*		>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT_VEC3	: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3U*		>( value_pointer ) ); return;
+			case GL_UNSIGNED_INT_VEC4	: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4U*		>( value_pointer ) ); return;
+			case GL_BOOL				: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const bool*			>( value_pointer ) ); return;
+			case GL_BOOL_VEC2			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector2B*		>( value_pointer ) ); return;
+			case GL_BOOL_VEC3			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector3B*		>( value_pointer ) ); return;
+			case GL_BOOL_VEC4			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Vector4B*		>( value_pointer ) ); return;
 			/* Matrices: */
-			case GL_FLOAT_MAT2: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x2* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT3: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x3* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT4: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x4* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT2x3: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x3* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT2x4: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x4* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT3x2: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x2* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT3x4: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x4* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT4x2: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x2* >( value_pointer ) ); return;
-			case GL_FLOAT_MAT4x3: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x3* >( value_pointer ) ); return;
+			case GL_FLOAT_MAT2			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x2*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT3			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x3*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT4			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x4*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT2x3		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x3*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT2x4		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix2x4*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT3x2		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x2*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT3x4		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix3x4*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT4x2		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x2*		>( value_pointer ) ); return;
+			case GL_FLOAT_MAT4x3		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const Matrix4x3*		>( value_pointer ) ); return;
 			/* Samplers: */
-			case GL_SAMPLER_1D: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int* >( value_pointer ) ); return;
-			case GL_SAMPLER_2D: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int* >( value_pointer ) ); return;
-			case GL_SAMPLER_3D: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int* >( value_pointer ) ); return;
-			case GL_SAMPLER_CUBE: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int* >( value_pointer ) ); return;
+			case GL_SAMPLER_1D			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_SAMPLER_2D			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_SAMPLER_3D			: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
+			case GL_SAMPLER_CUBE		: SetUniform( uniform_info.location_or_block_index, *reinterpret_cast< const int*			>( value_pointer ) ); return;
 		}
 
 		throw std::runtime_error( "ERROR::SHADER::SetUniform( uniform_info, value_pointer ) called for an unknown GL type!" );
@@ -253,38 +257,38 @@ namespace Engine
 		switch( uniform_info.type )
 		{
 			/* Scalars & vectors: */
-			case GL_FLOAT: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const float* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_VEC2: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_VEC3: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_VEC4: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4* >( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT				: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const float*			>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_VEC2			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_VEC3			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_VEC4			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4*		>( value_pointer ), uniform_info.count_array ); return;
 			//case GL_DOUBLE				: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const double*		>( value_pointer ), uniform_info.count_array ); return;
-			case GL_INT: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_INT_VEC2: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2I* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_INT_VEC3: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3I* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_INT_VEC4: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4I* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_UNSIGNED_INT: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const unsigned int* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_UNSIGNED_INT_VEC2: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2U* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_UNSIGNED_INT_VEC3: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3U* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_UNSIGNED_INT_VEC4: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4U* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_BOOL: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const bool* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_BOOL_VEC2: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2B* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_BOOL_VEC3: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3B* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_BOOL_VEC4: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4B* >( value_pointer ), uniform_info.count_array ); return;
+			case GL_INT					: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
+			case GL_INT_VEC2			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2I*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_INT_VEC3			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3I*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_INT_VEC4			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4I*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_UNSIGNED_INT		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const unsigned int*	>( value_pointer ), uniform_info.count_array ); return;
+			case GL_UNSIGNED_INT_VEC2	: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2U*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_UNSIGNED_INT_VEC3	: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3U*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_UNSIGNED_INT_VEC4	: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4U*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_BOOL				: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const bool*			>( value_pointer ), uniform_info.count_array ); return;
+			case GL_BOOL_VEC2			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector2B*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_BOOL_VEC3			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector3B*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_BOOL_VEC4			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Vector4B*		>( value_pointer ), uniform_info.count_array ); return;
 			/* Matrices: */
-			case GL_FLOAT_MAT2: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix2x2* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT3: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix3x3* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT4: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix4x4* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT2x3: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix2x3* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT2x4: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix2x4* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT3x2: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix3x2* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT3x4: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix3x4* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT4x2: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix4x2* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_FLOAT_MAT4x3: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix4x3* >( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT2			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix2x2*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT3			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix3x3*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT4			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix4x4*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT2x3		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix2x3*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT2x4		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix2x4*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT3x2		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix3x2*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT3x4		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix3x4*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT4x2		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix4x2*		>( value_pointer ), uniform_info.count_array ); return;
+			case GL_FLOAT_MAT4x3		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const Matrix4x3*		>( value_pointer ), uniform_info.count_array ); return;
 			/* Samplers: */
-			case GL_SAMPLER_1D: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_SAMPLER_2D: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_SAMPLER_3D: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int* >( value_pointer ), uniform_info.count_array ); return;
-			case GL_SAMPLER_CUBE: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int* >( value_pointer ), uniform_info.count_array ); return;
+			case GL_SAMPLER_1D			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
+			case GL_SAMPLER_2D			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
+			case GL_SAMPLER_3D			: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
+			case GL_SAMPLER_CUBE		: SetUniformArray( uniform_info.location_or_block_index, reinterpret_cast< const int*			>( value_pointer ), uniform_info.count_array ); return;
 		}
 
 		throw std::runtime_error( "ERROR::SHADER::SetUniformArray( uniform_info, value_pointer ) called for an unknown GL type!" );
@@ -295,6 +299,71 @@ namespace Engine
  *	PRIVATE API:
  *
  */
+
+	/* Private, for shader recompilation only, called by the Renderer alone. */
+	Shader::Shader( Shader&& donor )
+		:
+		program_id( std::exchange( donor.program_id, 0 ) ),
+		name( std::exchange( donor.name, "<scheduled-for-deletion>" ) ),
+
+		vertex_source_path( std::move( donor.vertex_source_path ) ),
+		geometry_source_path( std::move( donor.geometry_source_path ) ),
+		fragment_source_path( std::move( donor.fragment_source_path ) ),
+
+		vertex_source_include_path_array( std::move( donor.vertex_source_include_path_array ) ),
+		geometry_source_include_path_array( std::move( donor.geometry_source_include_path_array ) ),
+		fragment_source_include_path_array( std::move( donor.fragment_source_include_path_array ) ),
+
+		features_requested( std::move( donor.features_requested ) ),
+		feature_map( std::move( donor.feature_map ) ),
+
+		uniform_info_map( std::move( donor.uniform_info_map ) ),
+
+		uniform_buffer_info_map_regular( std::move( donor.uniform_buffer_info_map_regular ) ),
+		uniform_buffer_info_map_global( std::move( donor.uniform_buffer_info_map_global ) ),
+		uniform_buffer_info_map_intrinsic( std::move( donor.uniform_buffer_info_map_intrinsic ) ),
+
+		last_write_time_map( std::exchange( donor.last_write_time_map, {} ) ),
+
+		uniform_book_keeping_info( std::move( donor.uniform_book_keeping_info ) ),
+
+		vertex_layout_source( std::move( donor.vertex_layout_source ) ),
+		vertex_layout_active( std::move( donor.vertex_layout_active ) )
+	{
+	}
+
+	/* Private, for shader recompilation only, called by the Renderer alone. */
+	Shader& Shader::operator=( Shader&& donor )
+	{
+		program_id = std::exchange( donor.program_id, 0 );
+		name       = std::exchange( donor.name, "<scheduled-for-deletion>" );
+
+		vertex_source_path   = std::move( donor.vertex_source_path );
+		geometry_source_path = std::move( donor.geometry_source_path );
+		fragment_source_path = std::move( donor.fragment_source_path );
+
+		vertex_source_include_path_array   = std::move( donor.vertex_source_include_path_array );
+		geometry_source_include_path_array = std::move( donor.geometry_source_include_path_array );
+		fragment_source_include_path_array = std::move( donor.fragment_source_include_path_array );
+
+		features_requested = std::move( donor.features_requested );
+		feature_map        = std::move( donor.feature_map );
+
+		uniform_info_map = std::move( donor.uniform_info_map );
+
+		uniform_buffer_info_map_regular   = std::move( donor.uniform_buffer_info_map_regular );
+		uniform_buffer_info_map_global    = std::move( donor.uniform_buffer_info_map_global );
+		uniform_buffer_info_map_intrinsic = std::move( donor.uniform_buffer_info_map_intrinsic );
+
+		last_write_time_map = std::exchange( donor.last_write_time_map, {} );
+
+		uniform_book_keeping_info = std::move( donor.uniform_book_keeping_info );
+
+		vertex_layout_source = std::move( donor.vertex_layout_source );
+		vertex_layout_active = std::move( donor.vertex_layout_active );
+
+		return *this;
+	}
 
 	std::optional< std::string > Shader::ParseShaderFromFile( const char* file_path, const ShaderType shader_type )
 	{
@@ -332,7 +401,7 @@ namespace Engine
 		return includes;
 	}
 
-	void Shader::PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::initializer_list< std::string > features_to_set )
+	void Shader::PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::vector< std::string >& features_to_set )
 	{
 		std::regex pattern( R"(#define\s+([_[:alnum:]]+)\s*(\S+)?\s*?\r?\n)" ); // ([_[:alnum:]]+) is to FAIL the Regex for non alnum & non-underscore characters, to exclude macros mostly.
 		std::smatch matches;
@@ -405,7 +474,7 @@ namespace Engine
 
 	void Shader::PreProcessShaderStage_SetFeatures( std::string& shader_source_to_modify,
 													std::unordered_map< std::string, Feature >& defined_features,
-													const std::initializer_list< std::string > features_to_set )
+													const std::vector< std::string >& features_to_set )
 	{
 		const auto first_new_line = shader_source_to_modify.find( "\n" );
 
