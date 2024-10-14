@@ -50,7 +50,7 @@ namespace Engine
 
 	/* Uniforms: */
 		inline const std::unordered_map< std::string, Uniform::Information				>& GetUniformInfoMap()			const { return *uniform_info_map; }
-		inline const std::unordered_map< std::string, const Uniform::BufferInformation*	>& GetUniformBufferInfoMap()	const { return uniform_buffer_management_regular
+		inline const std::unordered_map< std::string, const Uniform::BufferInformation	>& GetUniformBufferInfoMap()	const { return uniform_buffer_management_regular
 																																			.GetBufferInformationMap();	}
 		inline const std::unordered_map< std::string, const Texture*					>& GetTextureMap()				const { return texture_map; }
 

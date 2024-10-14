@@ -56,6 +56,8 @@ namespace Engine
 
 	class Shader
 	{
+		friend class Renderer;
+
 	public:
 		using ID = unsigned int;
 
@@ -74,16 +76,29 @@ namespace Engine
 		/* Will be initialized later with FromFile(). */
 		Shader( const char* name );
 		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, 
-				const std::initializer_list< std::string > = {}, 
+				const std::vector< std::string >& = {}, 
 				const char* geometry_shader_source_file_path = nullptr );
+
+		Shader( const Shader& )			   = delete;
+		Shader& operator=( const Shader& ) = delete;
+
+		// Move constructors are private, for shader recompilation use only. Renderer (a friend class) is the only caller.
+
 		~Shader();
+
+/* Usage: */
+
+		void Bind() const;
+
+/* Compilation: */
 
 		bool FromFile( const char* vertex_shader_source_file_path,
 					   const char* fragment_shader_source_file_path,
-					   const std::initializer_list< std::string > = {},
+					   const std::vector< std::string >& = {},
 					   const char* geometry_shader_source_file_path = nullptr );
 
-		void Bind() const;
+
+		bool RecompileFromThis( Shader& new_shader );
 
 /* Queries: */
 
@@ -102,7 +117,10 @@ namespace Engine
 		inline const VertexLayout& GetSourceVertexLayout()	const { return vertex_layout_source; }
 		inline const VertexLayout& GetActiveVertexLayout()	const { return vertex_layout_active; }
 
+		bool SourceFilesAreModified();
+
 /* Uniform APIs: */
+
 		inline const std::unordered_map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
 
 		inline const std::unordered_map< std::string, Uniform::BufferInformation	>& GetUniformBufferInfoMap_Regular()	const { return uniform_buffer_info_map_regular;		}
@@ -121,6 +139,7 @@ namespace Engine
 		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasRegularUniformBlocks(); }
 
 /* Uniform Upload; Non-array types: */
+
 		template< typename UniformType >
 		void SetUniform( const int location, const UniformType& value );
 
@@ -464,6 +483,7 @@ namespace Engine
 	 */
 
 /* Uniform setters; By name & value: */
+
 		template< typename UniformType >
 		/* Prohibit Uniform Buffers: */ requires( not std::is_base_of_v< Std140StructTag, UniformType > )
 		void SetUniform( const char* uniform_name, const UniformType& value )
@@ -483,19 +503,35 @@ namespace Engine
 		}
 
 /* Uniform setters; By info. & pointer: */
+
 		void SetUniform( const Uniform::Information& uniform_info, const void* value_pointer );
 		void SetUniformArray( const Uniform::Information& uniform_info, const void* value_pointer );
 
+
+
+
 	private:
 
+
+
+		/* Private, for shader recompilation only, called by the Renderer alone. */
+		Shader( Shader&& );
+		/* Private, for shader recompilation only, called by the Renderer alone. */
+		Shader& operator=( Shader&& );
+
+/* Queries: */
+
+		inline bool IsValid() const { return program_id > 0; }
+
 /* Compilation & Linkage: */
+
 		std::optional< std::string > ParseShaderFromFile( const char* file_path, const ShaderType shader_type );
 		std::vector< std::string > PreprocessShaderStage_GetIncludeFilePaths( std::string shader_source ) const;
-		void PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::initializer_list< std::string > features_to_set );
+		void PreprocessShaderStage_StripDefinesToBeSet( std::string& shader_source_to_modify, const std::vector< std::string >& features_to_set );
 		std::unordered_map< std::string, Feature > PreProcessShaderStage_ParseFeatures( std::string shader_source );
 		void PreProcessShaderStage_SetFeatures( std::string& shader_source_to_modify,
 												std::unordered_map< std::string, Feature >& defined_features,
-												const std::initializer_list< std::string > features_to_set );
+												const std::vector< std::string >& features_to_set );
 		bool PreProcessShaderStage_IncludeDirectives( const std::filesystem::path& shader_source_path, std::string& shader_source_to_modify, const ShaderType shader_type );
 		bool CompileShader( const char* source, unsigned int& shader_id, const ShaderType shader_type );
 		bool LinkProgram( const unsigned int vertex_shader_id, const unsigned int fragment_shader_id );
@@ -506,6 +542,7 @@ namespace Engine
 		void ParseShaderSource_VertexLayout( std::string shader_source );
 
 /* Shader Introspection: */
+
 		void QueryVertexAttributes();
 
 		void GetUniformBookKeepingInfo();
@@ -523,12 +560,14 @@ namespace Engine
 		const Uniform::Information& GetUniformInformation( const std::string& uniform_name );
 
 /* Error Checking/Reporting: */
+
 		void LogErrors( const std::string& error_string ) const;
 		void LogErrors_Compilation( const int shader_id, const ShaderType shader_type ) const;
 		void LogErrors_Linking() const;
 		std::string FormatErrorLog( const char* log ) const;
 
 /* Editor: */
+
 		std::string UniformEditorName( const std::string_view original_name );
 		std::string UniformEditorName_BufferMemberAggregate( const std::string_view aggregate_name );
 
@@ -544,6 +583,7 @@ namespace Engine
 		std::vector< std::string > geometry_source_include_path_array;
 		std::vector< std::string > fragment_source_include_path_array;
 
+		std::vector< std::string > features_requested;
 		std::unordered_map< std::string, Feature > feature_map;
 
 		std::unordered_map< std::string, Uniform::Information > uniform_info_map;
@@ -551,6 +591,8 @@ namespace Engine
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_regular;
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_global;
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_intrinsic;
+
+		std::unordered_map< std::string, std::filesystem::file_time_type > last_write_time_map;
 
 		Uniform::ActiveUniformBookKeepingInformation uniform_book_keeping_info;
 
