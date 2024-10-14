@@ -27,6 +27,8 @@ namespace Engine
 
 	void Renderer::Update( Camera& camera )
 	{
+		RecompileModifiedShaders();
+
 		const auto& view_matrix               = camera.GetViewMatrix();
 		const auto& view_matrix_3x3           = view_matrix.SubMatrix< 3 >();
 		const auto& view_matrix_rotation_only = Matrix4x4( view_matrix_3x3 );
@@ -187,7 +189,7 @@ namespace Engine
 		ImGui::End();
 
 		/* Shaders: */
-		for( const auto& shader : shaders_registered )
+		for( auto& shader : shaders_registered )
 			Engine::ImGuiDrawer::Draw( *shader );
 
 		/* Uniforms (Renderer-scope): */
@@ -402,6 +404,28 @@ namespace Engine
 
 	void Renderer::UnregisterShader( Shader& shader )
 	{
+		if( shader.HasUniformBlocks() )
+		{
+			/* Regular Uniform Buffers are handled by the Material class.
+			 * Globals & Intrinsics are registered here. */
+
+			if( shader.HasGlobalUniformBlocks() )
+			{
+				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
+
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					uniform_buffer_management_global.UnregisterBuffer( uniform_buffer_name );
+			}
+
+			if( shader.HasIntrinsicUniformBlocks() )
+			{
+				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
+
+				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
+					uniform_buffer_management_intrinsic.UnregisterBuffer( uniform_buffer_name );
+			}
+		}
+
 		if( auto iterator = shaders_using_intrinsics_lighting.find( &shader );
 			iterator != shaders_using_intrinsics_lighting.cend() )
 		{
@@ -635,6 +659,44 @@ namespace Engine
 			default:
 			case SortingMode::None:
 				break;
+		}
+	}
+
+	void Renderer::RecompileModifiedShaders()
+	{
+		/* Shader Recompilation: */
+		static std::vector< Shader* > shaders_to_recompile;
+
+		/* Have to do two passes as shaders to be recompiled need to be removed from shaders_registered, which we can not do while traversing the container. */
+
+		shaders_to_recompile.clear();
+
+		for( const auto& shader : shaders_registered )
+			if( shader->SourceFilesAreModified() )
+				shaders_to_recompile.push_back( shader );
+
+		for( auto& shader : shaders_to_recompile )
+		{
+			Shader new_shader( shader->name.c_str() );
+			if( shader->RecompileFromThis( new_shader ) )
+			{
+				UnregisterShader( *shader );
+
+				/* Swap: */
+				{
+					Shader temp( std::move( *shader ) );
+					*shader = std::move( new_shader );
+					new_shader = std::move( temp );
+
+					new_shader.program_id = 0; // To prevent double-deletion.
+				}
+
+				RegisterShader( *shader );
+
+				ServiceLocator< GLLogger >::Get().Info( "\"" + shader->name + "\" shader's source files are modified. It is recompiled." );
+			}
+			else
+				ServiceLocator< GLLogger >::Get().Error( "\"" + shader->name + "\" shader's source files are modified but it could not be recompiled successfully." );
 		}
 	}
 

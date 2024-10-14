@@ -98,6 +98,8 @@ namespace Engine
 					   const char* geometry_shader_source_file_path = nullptr );
 
 
+		bool RecompileFromThis( Shader& new_shader );
+
 /* Queries: */
 
 		inline		 ID								Id()							const { return program_id;							}

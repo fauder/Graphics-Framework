@@ -195,6 +195,11 @@ namespace Engine
 		glUseProgram( program_id );
 	}
 
+	bool Shader::RecompileFromThis( Shader& new_shader )
+	{
+		return new_shader.FromFile( vertex_source_path.c_str(), fragment_source_path.c_str(), features_requested, geometry_source_path.empty() ? nullptr : geometry_source_path.c_str() );
+	}
+
 	bool Shader::SourceFilesAreModified()
 	{
 		for( auto& [ source, last_write_time ] : last_write_time_map )

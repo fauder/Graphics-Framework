@@ -328,6 +328,8 @@ namespace Engine
 		void SetRenderState( const RenderState& render_state_to_set );
 		void SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode );
 
+		void RecompileModifiedShaders();
+
 		/*
 		 * Clearing:
 		 */
