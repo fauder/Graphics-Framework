@@ -16,7 +16,7 @@ namespace Engine
 	{
 		Blob::Set( value, offset, size );
 
-		dirty_sections.push_back( Section{ offset, size } );
+		dirty_sections.emplace_back( offset, size );
 	}
 
 	void DirtyBlob::Clear()

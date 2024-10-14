@@ -38,7 +38,7 @@ namespace Engine
 		{
 			Blob::Set( ( std::byte* )( &value ), offset, sizeof( Type ) );
 
-			dirty_sections.push_back( Section{ offset, sizeof( Type ) } );
+			dirty_sections.emplace_back( offset, sizeof( Type ) );
 		}
 
 		void Set( const std::byte* value, const std::size_t offset, const std::size_t size );

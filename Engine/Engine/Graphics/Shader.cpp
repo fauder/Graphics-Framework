@@ -396,7 +396,7 @@ namespace Engine
 			{
 				const auto& match = matches[ 1 ]; /* First match is the pattern itself. */
 				if( match.length() != 0 && match.matched )
-					includes.push_back( match );
+					includes.emplace_back( match );
 
 				shader_source = matches.suffix();
 			}
