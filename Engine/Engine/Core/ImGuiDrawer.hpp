@@ -296,7 +296,7 @@ namespace Engine::ImGuiDrawer
 
 						std::byte* memory_blob = ( std::byte* )buffer_management.Get( uniform_buffer_name );
 
-						for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info->members_struct_map )
+						for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info.members_struct_map )
 						{
 							ImGui::TableNextColumn();
 
@@ -321,7 +321,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextRow();
 						}
 
-						for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info->members_array_map )
+						for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info.members_array_map )
 						{
 							ImGui::TableNextColumn();
 
@@ -365,7 +365,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextRow();
 						}
 
-						for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info->members_single_map )
+						for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
 						{
 							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
 
@@ -418,7 +418,7 @@ namespace Engine::ImGuiDrawer
 
 						std::byte* memory_blob = ( std::byte* )buffer_management.Get( uniform_buffer_name );
 
-						for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info->members_struct_map )
+						for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info.members_struct_map )
 						{
 							ImGui::TableNextColumn();
 
@@ -443,7 +443,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextRow();
 						}
 
-						for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info->members_array_map )
+						for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info.members_array_map )
 						{
 							ImGui::TableNextColumn();
 
@@ -487,7 +487,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextRow();
 						}
 
-						for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info->members_single_map )
+						for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
 						{
 							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
 

@@ -373,7 +373,7 @@ namespace Engine
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+					uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, uniform_buffer_info );
 			}
 
 			if( shader.HasIntrinsicUniformBlocks() )
@@ -381,7 +381,7 @@ namespace Engine
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+					uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, uniform_buffer_info );
 			}
 		}
 

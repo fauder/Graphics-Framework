@@ -582,7 +582,7 @@ namespace Engine::ImGuiDrawer
 
 					for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 					{
-						ASSERT_DEBUG_ONLY( not uniform_buffer_info->IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
+						ASSERT_DEBUG_ONLY( not uniform_buffer_info.IsGlobalOrIntrinsic() && "Materials can not have Intrinsic/Global uniforms!" );
 
 						ImGui::TableNextColumn();
 
@@ -592,7 +592,7 @@ namespace Engine::ImGuiDrawer
 
 							std::byte* memory_blob = ( std::byte* )material.Get( uniform_buffer_name );
 
-							for( const auto& [ uniform_buffer_member_struct_name, uniform_buffer_member_struct_info ] : uniform_buffer_info->members_struct_map )
+							for( const auto& [ uniform_buffer_member_struct_name, uniform_buffer_member_struct_info ] : uniform_buffer_info.members_struct_map )
 							{
 								ImGui::TableNextColumn();
 
@@ -622,7 +622,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& [ uniform_buffer_member_array_name, uniform_buffer_member_array_info ] : uniform_buffer_info->members_array_map )
+							for( const auto& [ uniform_buffer_member_array_name, uniform_buffer_member_array_info ] : uniform_buffer_info.members_array_map )
 							{
 								ImGui::TableNextColumn();
 
@@ -669,7 +669,7 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextRow();
 							}
 
-							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info->members_single_map )
+							for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_info ] : uniform_buffer_info.members_single_map )
 							{
 								const bool is_padding = uniform_buffer_member_info->editor_name.compare( 0, 8, "Padding", 8 ) == 0;
 

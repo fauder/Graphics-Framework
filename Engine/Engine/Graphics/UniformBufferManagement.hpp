@@ -29,16 +29,16 @@ namespace Engine
 		~UniformBufferManagement() = default;
 
 	/* Queries: */
-		inline const std::unordered_map< std::string, const Uniform::BufferInformation* >& GetBufferInformationMap() const { return buffer_info_map; }
+		inline const std::unordered_map< std::string, const Uniform::BufferInformation >& GetBufferInformationMap() const { return buffer_info_map; }
 
 	/* Register/Unregister Buffer API: */
-		void RegisterBuffer( const std::string& buffer_name, const Uniform::BufferInformation* buffer_info )
+		void RegisterBuffer( const std::string& buffer_name, const Uniform::BufferInformation buffer_info )
 		{
 			if( buffer_info_map.try_emplace( buffer_name, buffer_info ).second ) // .second returns whether the emplace was successfull or not.
 			{
-				buffer_map.emplace( buffer_name, UniformBufferManager::CreateOrRequest( buffer_name, *buffer_info ) );
+				buffer_map.emplace( buffer_name, UniformBufferManager::CreateOrRequest( buffer_name, buffer_info ) );
 
-				blob_map.emplace( buffer_name, buffer_info->size );
+				blob_map.emplace( buffer_name, buffer_info.size );
 			}
 		}
 
@@ -77,7 +77,7 @@ namespace Engine
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
 		void Set( const std::string& buffer_name, const StructType& value )
 		{
-			const auto& buffer_info = *buffer_info_map[ buffer_name ];
+			const auto& buffer_info = buffer_info_map[ buffer_name ];
 
 			blob_map[ buffer_name ].Set( reinterpret_cast< const std::byte* >( &value ), 0 /* because every buffer has its own blob. */, buffer_info.size );
 		}
@@ -86,7 +86,7 @@ namespace Engine
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
 		void SetPartial_Array( const std::string& buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const StructType& value )
 		{
-			const auto& buffer_info              = *buffer_info_map[ buffer_name ];
+			const auto& buffer_info              = buffer_info_map[ buffer_name ];
 			const auto& buffer_member_array_info = buffer_info.members_array_map.at( uniform_member_array_instance_name );
 
 			const auto effective_offset = buffer_member_array_info.offset + 
@@ -99,7 +99,7 @@ namespace Engine
 		/* For PARTIAL setting of ARRAY uniforms INSIDE a Uniform Buffer. */
 		void SetPartial_Array( const std::string& buffer_name, const char* uniform_member_array_instance_name, const unsigned int array_index, const std::byte* value )
 		{
-			const auto& buffer_info              = *buffer_info_map[ buffer_name ];
+			const auto& buffer_info              = buffer_info_map[ buffer_name ];
 			const auto& buffer_member_array_info = buffer_info.members_array_map.at( uniform_member_array_instance_name );
 
 			const auto effective_offset = buffer_member_array_info.offset + 
@@ -113,7 +113,7 @@ namespace Engine
 		template< typename StructType > requires( std::is_base_of_v< Std140StructTag, StructType > )
 		void SetPartial_Struct( const std::string& buffer_name, const char* uniform_member_struct_instance_name, const StructType& value )
 		{
-			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
+			const auto& buffer_info               = buffer_info_map[ buffer_name ];
 			const auto& buffer_member_struct_info = buffer_info.members_struct_map.at( uniform_member_struct_instance_name );
 
 			const auto effective_offset = buffer_member_struct_info.offset;
@@ -125,7 +125,7 @@ namespace Engine
 		/* For PARTIAL setting of STRUCT uniforms INSIDE a Uniform Buffer. */
 		void SetPartial_Struct( const std::string& buffer_name, const char* uniform_member_struct_instance_name, const std::byte* value )
 		{
-			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
+			const auto& buffer_info               = buffer_info_map[ buffer_name ];
 			const auto& buffer_member_struct_info = buffer_info.members_struct_map.at( uniform_member_struct_instance_name );
 
 			const auto effective_offset = buffer_member_struct_info.offset;
@@ -138,7 +138,7 @@ namespace Engine
 		template< typename UniformType > requires( not std::is_pointer_v< UniformType > ) // Don't want to "override" the overload below for actual pointer types.
 		void SetPartial( const std::string& buffer_name, const char* uniform_member_name, const UniformType& value )
 		{
-			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
+			const auto& buffer_info               = buffer_info_map[ buffer_name ];
 			const auto& buffer_member_single_info = buffer_info.members_single_map.at( uniform_member_name );
 
 			/* Update the value in the internal memory blob: */
@@ -148,7 +148,7 @@ namespace Engine
 		/* For PARTIAL setting of NON-AGGREGATE uniforms INSIDE a Uniform Buffer. */
 		void SetPartial( const std::string& buffer_name, const char* uniform_member_name, const std::byte* value )
 		{
-			const auto& buffer_info               = *buffer_info_map[ buffer_name ];
+			const auto& buffer_info               = buffer_info_map[ buffer_name ];
 			const auto& buffer_member_single_info = buffer_info.members_single_map.at( uniform_member_name );
 
 			/* Update the value in the internal memory blob: */
@@ -160,8 +160,7 @@ namespace Engine
 		{
 			for( auto& [ uniform_buffer_name, uniform_blob ] : blob_map )
 			{
-				const auto& uniform_buffer      = buffer_map[ uniform_buffer_name ];
-				const auto& uniform_buffer_info = buffer_info_map[ uniform_buffer_name ];
+				const auto& uniform_buffer = buffer_map[ uniform_buffer_name ];
 
 				if constexpr( std::is_same_v< BlobType, DirtyBlob > )
 				{
@@ -185,7 +184,7 @@ namespace Engine
 	private:
 		// TODO: Use hashes instead of strings as keys.
 
-		std::unordered_map< std::string, const Uniform::BufferInformation* > buffer_info_map;
+		std::unordered_map< std::string, const Uniform::BufferInformation > buffer_info_map;
 
 		std::unordered_map< std::string, UniformBuffer* > buffer_map;
 

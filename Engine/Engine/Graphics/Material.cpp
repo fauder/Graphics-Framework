@@ -31,7 +31,7 @@ namespace Engine
 		const auto& uniform_buffer_info_map = shader->GetUniformBufferInfoMap_Regular();
 
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, uniform_buffer_info );
 
 		PopulateTextureMap();
 	}
@@ -66,7 +66,7 @@ namespace Engine
 		const auto& uniform_buffer_info_map = shader->GetUniformBufferInfoMap_Regular();
 
 		for( const auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, &uniform_buffer_info );
+			uniform_buffer_management_regular.RegisterBuffer( uniform_buffer_name, uniform_buffer_info );
 
 		RepopulateTextureMap();
 	}
