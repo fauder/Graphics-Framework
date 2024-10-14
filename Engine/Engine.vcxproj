@@ -178,7 +178,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Graphics\Lighting\Light.hpp" />
     <ClInclude Include="Engine\Graphics\Lighting\PointLight.h" />
     <ClInclude Include="Engine\Graphics\Lighting\SpotLight.h" />
-    <ClInclude Include="Engine\Graphics\Macros.h" />
+    <ClInclude Include="Engine\Graphics\GraphicsMacros.h" />
     <ClInclude Include="Engine\Graphics\Mesh.h" />
     <ClInclude Include="Engine\Graphics\Material.hpp" />
     <ClInclude Include="Engine\Graphics\Model.h" />

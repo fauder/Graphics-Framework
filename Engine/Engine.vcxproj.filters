@@ -168,7 +168,7 @@
     <ClInclude Include="Engine\Graphics\GLLogger.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\Macros.h">
+    <ClInclude Include="Engine\Graphics\GraphicsMacros.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Core\ServiceLocator.h">
