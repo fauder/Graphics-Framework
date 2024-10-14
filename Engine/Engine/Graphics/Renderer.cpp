@@ -147,12 +147,12 @@ namespace Engine
 		{
 			for( auto& [ render_group_id, render_group ] : render_group_map )
 			{
-				ImGui::PushID( render_group_id );
+				ImGui::PushID( ( int )render_group_id );
 				ImGui::Checkbox( "", &render_group.is_enabled );
 				ImGui::PopID();
 
 				ImGui::SameLine();
-				if( ImGui::TreeNodeEx( render_group.name.c_str(), 0, "Render Group [%d]: %s", render_group_id, render_group.name.c_str() ) )
+				if( ImGui::TreeNodeEx( render_group.name.c_str(), 0, "Render Group [%d]: %s", ( int )render_group_id, render_group.name.c_str() ) )
 				{
 					// TODO: Display RenderState info as a collapseable header.
 					ImGui::BeginDisabled( not render_group.is_enabled );
