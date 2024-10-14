@@ -102,6 +102,8 @@ namespace Engine
 		inline const VertexLayout& GetSourceVertexLayout()	const { return vertex_layout_source; }
 		inline const VertexLayout& GetActiveVertexLayout()	const { return vertex_layout_active; }
 
+		bool SourceFilesAreModified();
+
 /* Uniform APIs: */
 		inline const std::unordered_map< std::string, Uniform::Information >& GetUniformInfoMap() const { return uniform_info_map; }
 
@@ -551,6 +553,8 @@ namespace Engine
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_regular;
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_global;
 		std::unordered_map< std::string, Uniform::BufferInformation	> uniform_buffer_info_map_intrinsic;
+
+		std::unordered_map< std::string, std::filesystem::file_time_type > last_write_time_map;
 
 		Uniform::ActiveUniformBookKeepingInformation uniform_book_keeping_info;
 

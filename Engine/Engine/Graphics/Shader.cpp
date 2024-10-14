@@ -176,6 +176,11 @@ namespace Engine
 
 			for( auto& [uniform_buffer_name, uniform_buffer_info] : uniform_buffer_info_map_intrinsic )
 				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
+
+			last_write_time_map.emplace( vertex_source_path, std::filesystem::last_write_time( vertex_source_path ) );
+			if( not geometry_source_path.empty() )
+				last_write_time_map.emplace( geometry_source_path, std::filesystem::last_write_time( geometry_source_path ) );
+			last_write_time_map.emplace( fragment_source_path, std::filesystem::last_write_time( fragment_source_path ) );
 		}
 
 		return link_result;
@@ -184,6 +189,21 @@ namespace Engine
 	void Shader::Bind() const
 	{
 		glUseProgram( program_id );
+	}
+
+	bool Shader::SourceFilesAreModified()
+	{
+		for( auto& [ source, last_write_time ] : last_write_time_map )
+		{
+			if( const auto new_last_write_time = std::filesystem::last_write_time( source );
+				new_last_write_time != last_write_time )
+			{
+				last_write_time = new_last_write_time;
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	void Shader::SetUniform( const Uniform::Information& uniform_info, const void* value_pointer )
