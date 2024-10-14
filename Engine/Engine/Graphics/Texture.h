@@ -27,7 +27,7 @@ namespace Engine
 	{
 	public:
 		struct CubeMapConstructorTag {};
-		static constexpr CubeMapConstructorTag CUBEMAP_CONSTRUCTOR;
+		static constexpr CubeMapConstructorTag CUBEMAP_CONSTRUCTOR = {};
 
 		enum class Wrapping
 		{
