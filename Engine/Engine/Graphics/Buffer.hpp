@@ -15,7 +15,7 @@
 
 namespace Engine
 {
-	template< GLenum TargetType, typename BufferElementType >
+	template< GLenum TargetType >
 	class Buffer
 	{
 	public:
@@ -51,7 +51,8 @@ namespace Engine
 #endif // _DEBUG
 		}
 
-		Buffer( const std::span< const BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
+		template< typename BufferElementType >
+		Buffer( const std::span< BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
 			id( -1 ),
 			name( name ),
@@ -73,7 +74,8 @@ namespace Engine
 		/* To support cases where the count can not be deduced from the type alone;
 		 * For example consider a vertex buffer that is passed as std::span< float >, with the following vertex attributes: 3x floats position, 3x floats normal, 2x floats uv.
 		 * data_span.size() would give the actual vertex count times 8 (3 + 3 + 2) in this case. */
-		Buffer( const unsigned int count, const std::span< const BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
+		template< typename BufferElementType >
+		Buffer( const unsigned int count, const std::span< BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
 			id( -1 ),
 			name( name ),
@@ -166,4 +168,9 @@ namespace Engine
 		unsigned int count;
 		unsigned int size;
 	};
+
+	using VertexBuffer   = Buffer< GL_ARRAY_BUFFER >;
+	using InstanceBuffer = Buffer< GL_ARRAY_BUFFER >;
+	using IndexBuffer    = Buffer< GL_ELEMENT_ARRAY_BUFFER >;
+	using UniformBuffer  = Buffer< GL_UNIFORM_BUFFER >;
 }

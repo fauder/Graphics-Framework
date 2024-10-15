@@ -12,8 +12,7 @@ namespace Engine
 				const std::string&				name,
 				std::vector< Vector3 >&&		normals,
 				std::vector< Vector2 >&&		uvs_0,
-				std::vector< std::uint16_t >&&	indices_u16,
-				std::vector< std::uint32_t >&&	indices_u32,
+				std::vector< std::uint32_t >&&	indices,
 				const PrimitiveType				primitive_type,
 				const GLenum					usage,
 				/* Below are seldom used so they come after. */
@@ -23,8 +22,7 @@ namespace Engine
 				std::vector< Color4 >&&			colors_rgba )
 		:
 		primitive_type( primitive_type ),
-		indices_u16( indices_u16 ),
-		indices_u32( indices_u32 ),
+		indices( indices ),
 		positions( positions ),
 		normals( normals ),
 		uvs_0( uvs_0 ),
@@ -39,9 +37,8 @@ namespace Engine
 
 		vertex_buffer    = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), name + " Vertex Buffer", usage );
 		vertex_layout    = VertexLayout( AttributeCountsAndTypes( positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgba ) );
-		index_buffer_u16 = indices_u16.empty() ? std::nullopt : std::optional< IndexBuffer_U16 >( std::in_place, indices_u16, name + " Index Buffer (U16)", usage );
-		index_buffer_u32 = indices_u32.empty() ? std::nullopt : std::optional< IndexBuffer_U32 >( std::in_place, indices_u32, name + " Index Buffer (U32)", usage );
-		vertex_array     = VertexArray( vertex_buffer, vertex_layout, index_buffer_u16, index_buffer_u32, name + " VAO");
+		index_buffer     = indices.empty() ? std::nullopt : std::optional< IndexBuffer >( std::in_place, std::span( indices ), name + " Index Buffer", usage );
+		vertex_array     = VertexArray( vertex_buffer, vertex_layout, index_buffer, name + " VAO");
 	}
 
 	Mesh::~Mesh()

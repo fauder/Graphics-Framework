@@ -158,13 +158,12 @@ namespace Engine
                 return false;
             const std::uint32_t index_count = static_cast< std::uint32_t >( index_accessor.count );
 
-            std::vector< std::uint16_t > indices_u16;
             std::vector< std::uint32_t > indices_u32;
 
             if( index_accessor.componentType == fastgltf::ComponentType::UnsignedByte || index_accessor.componentType == fastgltf::ComponentType::UnsignedShort )
             {
-                indices_u16.resize( index_count );
-                fastgltf::copyFromAccessor< std::uint16_t >( gltf_asset, index_accessor, indices_u16.data() );
+                indices_u32.resize( index_count );
+                fastgltf::copyFromAccessor< std::uint16_t >( gltf_asset, index_accessor, indices_u32.data() );
             }
             else
             {
@@ -180,7 +179,7 @@ namespace Engine
 																				   sub_mesh_name,
 																				   std::move( normals ),
 																				   std::move( uvs_0 ),
-																				   std::move( indices_u16 ), std::move( indices_u32 ) ) ),
+																				   std::move( indices_u32 ) ) ),
 														sub_mesh_albedo_texture,
                                                         std::move( sub_mesh_albedo_color ) );
 		}

@@ -1,9 +1,8 @@
 #pragma once
 
 // Engine Includes.
-#include "VertexBuffer.h"
+#include "Buffer.hpp"
 #include "VertexLayout.hpp"
-#include "IndexBuffer.h"
 
 // std Includes.
 #include <optional>
@@ -22,10 +21,8 @@ namespace Engine
 		VertexArray( VertexArray&& donor );
 		VertexArray& operator =( VertexArray&& donor );
 		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, const std::string& name = {} );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, const IndexBuffer_U32& index_buffer, const std::string& name = {} );
-		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, const IndexBuffer_U16& index_buffer, const std::string& name = {} );
 		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, 
-					 const std::optional< IndexBuffer_U16 >& index_buffer_u16, const std::optional< IndexBuffer_U32 >& index_buffer_u32,
+					 const std::optional< IndexBuffer >& index_buffer,
 					 const std::string& name = {} );
 		~VertexArray();
 
@@ -45,8 +42,8 @@ namespace Engine
 
 		std::string name;
 
-		unsigned int vertex_buffer_id;
-		unsigned int index_buffer_id;
+		VertexBuffer::ID vertex_buffer_id;
+		IndexBuffer::ID index_buffer_id;
 
 		unsigned int vertex_count;
 		unsigned int index_count;

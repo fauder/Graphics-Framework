@@ -38,8 +38,7 @@ namespace Engine
 			  const std::string&				name			= {},
 			  std::vector< Vector3			>&& normals			= {},
 			  std::vector< Vector2			>&& uvs_0			= {}, 
-			  std::vector< std::uint16_t	>&& indices_u16		= {},
-			  std::vector< std::uint32_t	>&& indices_u32		= {},
+			  std::vector< std::uint32_t	>&& indices		    = {},
 			  const PrimitiveType				primitive_type	= PrimitiveType::Triangles,
 			  const GLenum						usage			= GL_STATIC_DRAW,
 			  /* Below are seldom used so they come after. */
@@ -56,27 +55,16 @@ namespace Engine
 		inline PrimitiveType Primitive() const { return primitive_type; }
 
 		inline int VertexCount() const { return vertex_buffer.Count(); }
-		inline int IndexCount() const
-		{
-			return index_buffer_u16.has_value()
-						? index_buffer_u16->Count()
-						: index_buffer_u32.has_value()
-							? index_buffer_u32->Count()
-							: 0;
-		}
+		inline int IndexCount()  const { return index_buffer.has_value() ? index_buffer->Count() : 0; }
 
 		inline bool HasIndices() const { return IndexCount(); }
 
 		inline bool IsCompatibleWith( const VertexLayout& other_vertex_layout ) const { return vertex_layout.IsCompatibleWith( other_vertex_layout ); }
 
 	/* Index Data: */
-		inline const std::vector< std::uint16_t >& Indices_U16() const { return indices_u16; };
-		inline const std::vector< std::uint32_t >& Indices_U32() const { return indices_u32; };
-		inline const std::uint16_t* Indices_Raw_U16() const { return indices_u16.data(); };
-		inline const std::uint32_t* Indices_Raw_U32() const { return indices_u32.data(); };
-		inline bool Has16BitIndices() const { return index_buffer_u16.has_value(); }
-		inline bool Has32BitIndices() const { return index_buffer_u32.has_value(); }
-		inline GLenum IndexType() const { return Has16BitIndices() ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT; }
+		inline const std::vector< std::uint32_t >&	Indices()		const { return indices; };
+		inline const std::uint32_t*					Indices_Raw()	const { return indices.data(); };
+		inline constexpr GLenum						IndexType()		const { return GL_UNSIGNED_INT; }
 
 	/* Vertex Data: */
 		inline const std::vector< Vector3 >& Positions()	const { return positions;	};
@@ -108,8 +96,7 @@ namespace Engine
 
 		PrimitiveType primitive_type;
 
-		std::vector< std::uint16_t > indices_u16;
-		std::vector< std::uint32_t > indices_u32;
+		std::vector< std::uint32_t > indices;
 
 		std::vector< Vector3 > positions;
 		std::vector< Vector3 > normals;
@@ -121,8 +108,7 @@ namespace Engine
 
 		VertexBuffer vertex_buffer;
 		VertexLayout vertex_layout;
-		std::optional< IndexBuffer_U16 > index_buffer_u16;
-		std::optional< IndexBuffer_U32 > index_buffer_u32;
+		std::optional< IndexBuffer > index_buffer;
 		VertexArray vertex_array;
 	};
 }
