@@ -685,10 +685,10 @@ namespace Engine
 				/* Swap: */
 				{
 					Shader temp( std::move( *shader ) );
-					*shader = std::move( new_shader );
+					*shader    = std::move( new_shader );
 					new_shader = std::move( temp );
 
-					new_shader.program_id = 0; // To prevent double-deletion.
+					new_shader.program_id.Reset(); // To prevent double-deletion.
 				}
 
 				RegisterShader( *shader );

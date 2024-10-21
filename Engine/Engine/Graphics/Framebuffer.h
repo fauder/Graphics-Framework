@@ -13,7 +13,7 @@ namespace Engine
 	class Framebuffer
 	{
 	public:
-		using ID = unsigned int;
+		using ID = ID< Framebuffer >;
 
 		enum class Usage
 		{

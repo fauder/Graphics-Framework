@@ -222,6 +222,9 @@
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad_FullScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Graphics\ID.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Core\Macros.h">
       <Filter>Header Files</Filter>
     </ClInclude>

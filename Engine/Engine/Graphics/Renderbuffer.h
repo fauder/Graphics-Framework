@@ -8,7 +8,7 @@ namespace Engine
 	class Renderbuffer
 	{
 	public:
-		using ID = unsigned int;
+		using ID = ID< Renderbuffer >;
 
 	public:
 		Renderbuffer();

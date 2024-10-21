@@ -164,6 +164,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\Macros.h" />
     <ClInclude Include="Engine\Core\Macros_SpaceshipOperator.h" />
     <ClInclude Include="Engine\Graphics\Framebuffer.h" />
+    <ClInclude Include="Engine\Graphics\ID.hpp" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad.h" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad_FullScreen.h" />
     <ClInclude Include="Engine\Graphics\Renderbuffer.h" />

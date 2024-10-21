@@ -9,10 +9,10 @@ namespace Engine
 {
 	VertexArray::VertexArray( const std::string& name )
 		:
-		id( -1 ),
+		id( {} ),
 		name( name ),
-		vertex_buffer_id( -1 ),
-		index_buffer_id( -1 ),
+		vertex_buffer_id( {} ),
+		index_buffer_id( {} ),
 		vertex_count( 0 ),
 		index_count( 0 )
 	{
@@ -20,10 +20,10 @@ namespace Engine
 
 	VertexArray::VertexArray( VertexArray&& donor )
 		:
-		id( std::exchange( donor.id, -1 ) ),
+		id( std::exchange( donor.id, {} ) ),
 		name( std::exchange( donor.name, {} ) ),
-		vertex_buffer_id( std::exchange( donor.vertex_buffer_id, -1 ) ),
-		index_buffer_id( std::exchange( donor.index_buffer_id, -1 ) ),
+		vertex_buffer_id( std::exchange( donor.vertex_buffer_id, {} ) ),
+		index_buffer_id( std::exchange( donor.index_buffer_id, {} ) ),
 		vertex_count( std::exchange( donor.vertex_count, 0 ) ),
 		index_count( std::exchange( donor.index_count, 0 ) )
 	{
@@ -31,10 +31,10 @@ namespace Engine
 
 	VertexArray& VertexArray::operator=( VertexArray&& donor )
 	{
-		id               = std::exchange( donor.id,					-1 );
+		id               = std::exchange( donor.id,					{} );
 		name             = std::exchange( donor.name,				{} );
-		vertex_buffer_id = std::exchange( donor.vertex_buffer_id,	-1 );
-		index_buffer_id  = std::exchange( donor.index_buffer_id,	-1 );
+		vertex_buffer_id = std::exchange( donor.vertex_buffer_id,	{} );
+		index_buffer_id  = std::exchange( donor.index_buffer_id,	{} );
 		vertex_count     = std::exchange( donor.vertex_count,		 0 );
 		index_count      = std::exchange( donor.index_count,		 0 );
 
@@ -43,10 +43,10 @@ namespace Engine
 
 	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout, const std::string& name )
 		:
-		id( -1 ),
+		id( {} ),
 		name( name ),
 		vertex_buffer_id( vertex_buffer.Id() ),
-		index_buffer_id( -1 ),
+		index_buffer_id( {} ),
 		vertex_count( vertex_buffer.Count() ),
 		index_count( 0 )
 	{
@@ -59,12 +59,12 @@ namespace Engine
 							  const std::optional< IndexBuffer >& index_buffer,
 							  const std::string& name )
 		:
-		id( -1 ),
+		id( {} ),
 		name( name ),
 		vertex_buffer_id( vertex_buffer.Id() ),
 		index_buffer_id( index_buffer
 							? index_buffer->Id()
-							: -1 ),
+							: IndexBuffer::ID() ),
 		vertex_count( vertex_buffer.Count() ),
 		index_count( index_buffer
 						? index_buffer->Count()
@@ -80,12 +80,15 @@ namespace Engine
 	VertexArray::~VertexArray()
 	{
 		if( IsValid() )
-			glDeleteVertexArrays( 1, &id );
+		{
+			glDeleteVertexArrays( 1, id.Address() );
+			id.Reset(); // OpenGL does not reset the id to zero.
+		}
 	}
 
 	void VertexArray::Bind() const
 	{
-		glBindVertexArray( id );
+		glBindVertexArray( id.Get() );
 	}
 
 	void VertexArray::Unbind() const
@@ -95,12 +98,12 @@ namespace Engine
 
 	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout )
 	{
-		glGenVertexArrays( 1, &id );
+		glGenVertexArrays( 1, id.Address() );
 		Bind();
 
 #ifdef _DEBUG
 		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_VERTEX_ARRAY, id, name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_VERTEX_ARRAY, id.Get(), name );
 #endif // _DEBUG
 
 		vertex_buffer.Bind();

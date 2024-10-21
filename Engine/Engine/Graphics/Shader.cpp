@@ -45,7 +45,10 @@ namespace Engine
 	Shader::~Shader()
 	{
 		if( IsValid() )
-			glDeleteProgram( program_id );
+		{
+			glDeleteProgram( program_id.Get() );
+			program_id.Reset();
+		}
 	}
 
 	bool Shader::FromFile( const char* vertex_shader_source_file_path,
@@ -144,7 +147,7 @@ namespace Engine
 		if( link_result )
 		{
 		#ifdef _DEBUG
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_PROGRAM, program_id, name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_PROGRAM, program_id.Get(), name );
 		#endif // _DEBUG
 
 			QueryVertexAttributes();
@@ -192,7 +195,7 @@ namespace Engine
 
 	void Shader::Bind() const
 	{
-		glUseProgram( program_id );
+		glUseProgram( program_id.Get() );
 	}
 
 	bool Shader::RecompileFromThis( Shader& new_shader )
@@ -308,7 +311,7 @@ namespace Engine
 	/* Private, for shader recompilation only, called by the Renderer alone. */
 	Shader::Shader( Shader&& donor )
 		:
-		program_id( std::exchange( donor.program_id, 0 ) ),
+		program_id( std::exchange( donor.program_id, {} ) ),
 		name( std::exchange( donor.name, "<scheduled-for-deletion>" ) ),
 
 		vertex_source_path( std::move( donor.vertex_source_path ) ),
@@ -340,7 +343,7 @@ namespace Engine
 	/* Private, for shader recompilation only, called by the Renderer alone. */
 	Shader& Shader::operator=( Shader&& donor )
 	{
-		program_id = std::exchange( donor.program_id, 0 );
+		program_id = std::exchange( donor.program_id, {} );
 		name       = std::exchange( donor.name, "<scheduled-for-deletion>" );
 
 		vertex_source_path   = std::move( donor.vertex_source_path );
@@ -566,17 +569,17 @@ namespace Engine
 
 	bool Shader::LinkProgram( const unsigned int vertex_shader_id, const unsigned int geometry_shader_id, const unsigned int fragment_shader_id )
 	{
-		program_id = glCreateProgram();
+		program_id = ID( glCreateProgram() );
 
-		glAttachShader( program_id, vertex_shader_id );
+		glAttachShader( program_id.Get(), vertex_shader_id );
 		if( geometry_shader_id > 0 )
-			glAttachShader( program_id, geometry_shader_id );
-		glAttachShader( program_id, fragment_shader_id );
+			glAttachShader( program_id.Get(), geometry_shader_id );
+		glAttachShader( program_id.Get(), fragment_shader_id );
 
-		glLinkProgram( program_id );
+		glLinkProgram( program_id.Get() );
 
 		int success;
-		glGetProgramiv( program_id, GL_LINK_STATUS, &success );
+		glGetProgramiv( program_id.Get(), GL_LINK_STATUS, &success );
 		if( !success )
 		{
 			LogErrors_Linking();
@@ -767,7 +770,7 @@ namespace Engine
 	void Shader::QueryVertexAttributes()
 	{
 		int active_attribute_count;
-		glGetProgramiv( program_id, GL_ACTIVE_ATTRIBUTES, &active_attribute_count );
+		glGetProgramiv( program_id.Get(), GL_ACTIVE_ATTRIBUTES, &active_attribute_count );
 
 		static char attribute_name[ 255 ];
 
@@ -776,8 +779,8 @@ namespace Engine
 		{
 			int attribute_name_length, attribute_size;
 			GLenum attribute_vector_type;
-			glGetActiveAttrib( program_id, attribute_index, 255, &attribute_name_length, &attribute_size, &attribute_vector_type, attribute_name );
-			const unsigned int attribute_location = glGetAttribLocation( program_id, attribute_name );
+			glGetActiveAttrib( program_id.Get(), attribute_index, 255, &attribute_name_length, &attribute_size, &attribute_vector_type, attribute_name );
+			const unsigned int attribute_location = glGetAttribLocation( program_id.Get(), attribute_name );
 
 			attributes[ attribute_index ] = { GL::Type::CountOf( attribute_vector_type ), GL::Type::ComponentTypeOf( attribute_vector_type ), attribute_location, false };
 		}
@@ -788,8 +791,8 @@ namespace Engine
 
 	void Shader::GetUniformBookKeepingInfo()
 	{
-		glGetProgramiv( program_id, GL_ACTIVE_UNIFORMS, &uniform_book_keeping_info.count );
-		glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_book_keeping_info.name_max_length );
+		glGetProgramiv( program_id.Get(), GL_ACTIVE_UNIFORMS, &uniform_book_keeping_info.count );
+		glGetProgramiv( program_id.Get(), GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_book_keeping_info.name_max_length );
 		uniform_book_keeping_info.name_holder = std::string( uniform_book_keeping_info.name_max_length, '?' );
 	}
 
@@ -801,7 +804,7 @@ namespace Engine
 		block_indices.resize( active_uniform_count );
 		std::iota( corresponding_uniform_indices.begin(), corresponding_uniform_indices.end(), 0 );
 
-		glGetActiveUniformsiv( program_id, active_uniform_count, corresponding_uniform_indices.data(), GL_UNIFORM_BLOCK_INDEX, reinterpret_cast< int* >( block_indices.data() ) );
+		glGetActiveUniformsiv( program_id.Get(), active_uniform_count, corresponding_uniform_indices.data(), GL_UNIFORM_BLOCK_INDEX, reinterpret_cast< int* >( block_indices.data() ) );
 
 		int block_count = 0;
 		for( auto uniform_index = 0; uniform_index < active_uniform_count; uniform_index++ )
@@ -837,13 +840,13 @@ namespace Engine
 			 */
 			int array_element_count = 0, length_dontCare = 0;
 			GLenum type;
-			glGetActiveUniform( program_id, uniform_index, uniform_book_keeping_info.name_max_length,
+			glGetActiveUniform( program_id.Get(), uniform_index, uniform_book_keeping_info.name_max_length,
 								&length_dontCare, &array_element_count, &type, 
 								uniform_book_keeping_info.name_holder.data() );
 
 			const int size = GL::Type::SizeOf( type );
 
-			const auto location = glGetUniformLocation( program_id, uniform_book_keeping_info.name_holder.c_str() );
+			const auto location = glGetUniformLocation( program_id.Get(), uniform_book_keeping_info.name_holder.c_str() );
 
 			const bool is_buffer_member = location == -1;
 
@@ -870,7 +873,7 @@ namespace Engine
 			return;
 
 		std::vector< int > corresponding_offsets( corresponding_uniform_indices.size() );
-		glGetActiveUniformsiv( program_id, ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET, corresponding_offsets.data() );
+		glGetActiveUniformsiv( program_id.Get(), ( int )corresponding_uniform_indices.size(), corresponding_uniform_indices.data(), GL_UNIFORM_OFFSET, corresponding_offsets.data() );
 
 		for( int index = 0; index < corresponding_uniform_indices.size(); index++ )
 		{
@@ -879,7 +882,7 @@ namespace Engine
 			const auto offset        = corresponding_offsets[ index ];
 
 			int length = 0;
-			glGetActiveUniformName( program_id, uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() );
+			glGetActiveUniformName( program_id.Get(), uniform_index, uniform_book_keeping_info.name_max_length, &length, uniform_book_keeping_info.name_holder.data() );
 
 			const auto& uniform_name = uniform_book_keeping_info.name_holder.c_str();
 
@@ -894,23 +897,23 @@ namespace Engine
 	void Shader::QueryUniformBufferData( std::unordered_map< std::string, Uniform::BufferInformation >& uniform_buffer_info_map, const Uniform::BufferCategory category_of_interest )
 	{
 		int active_uniform_block_count = 0;
-		glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCKS, &active_uniform_block_count );
+		glGetProgramiv( program_id.Get(), GL_ACTIVE_UNIFORM_BLOCKS, &active_uniform_block_count );
 
 		if( active_uniform_block_count == 0 )
 			return;
 
 		int uniform_block_name_max_length = 0;
-		glGetProgramiv( program_id, GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &uniform_block_name_max_length );
+		glGetProgramiv( program_id.Get(), GL_ACTIVE_UNIFORM_BLOCK_MAX_NAME_LENGTH, &uniform_block_name_max_length );
 		std::string name( uniform_block_name_max_length, '?' );
 
 		int offset = 0;
 		for( int uniform_block_index = 0; uniform_block_index < active_uniform_block_count; uniform_block_index++ )
 		{
 			int length = 0;
-			glGetActiveUniformBlockName( program_id, uniform_block_index, uniform_block_name_max_length, &length, name.data() );
+			glGetActiveUniformBlockName( program_id.Get(), uniform_block_index, uniform_block_name_max_length, &length, name.data() );
 			
 			int size;
-			glGetActiveUniformBlockiv( program_id, uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size );
+			glGetActiveUniformBlockiv( program_id.Get(), uniform_block_index, GL_UNIFORM_BLOCK_DATA_SIZE,	&size );
 
 			const auto category = Uniform::DetermineBufferCategory( name );
 
@@ -1163,7 +1166,7 @@ namespace Engine
 	void Shader::LogErrors_Linking() const
 	{
 		char info_log[ 512 ];
-		glGetProgramInfoLog( program_id, 512, NULL, info_log );
+		glGetProgramInfoLog( program_id.Get(), 512, NULL, info_log );
 
 		const std::string complete_error_string( "ERROR::SHADER::PROGRAM::LINK:\nShader name: " + name + FormatErrorLog( info_log ) );
 		LogErrors( complete_error_string );

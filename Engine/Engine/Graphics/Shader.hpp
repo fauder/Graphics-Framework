@@ -3,9 +3,10 @@
 // Engine Includes.
 #include "Graphics.h"
 #include "Color.hpp"
+#include "Id.hpp"
+#include "Lighting/Lighting.h"
 #include "Std140StructTag.h"
 #include "Uniform.h"
-#include "Lighting/Lighting.h"
 #include "VertexLayout.hpp"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
@@ -54,12 +55,15 @@ namespace Engine
 		return shader_type_identifiers[ ( int )shader_type ];
 	}
 
+	/* Forward Declaration: */
+	class Renderer;
+
 	class Shader
 	{
 		friend class Renderer;
 
 	public:
-		using ID = unsigned int;
+		using ID = ID< Renderer >;
 
 		/* Features can be:
 		 *		Declared in shaders, via "#pragma feature <feature_name>" syntax. 
@@ -521,7 +525,7 @@ namespace Engine
 
 /* Queries: */
 
-		inline bool IsValid() const { return program_id > 0; }
+		inline bool IsValid() const { return program_id.IsValid(); }
 
 /* Compilation & Linkage: */
 

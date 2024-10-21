@@ -538,7 +538,7 @@ void SandboxApplication::RenderImGui()
 		if( draw_rear_view_cam_to_imgui )
 		{
 			const ImVec2 negative_size_offset( style.WindowPadding * 2 );
-			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_color_attachment_array[ 0 ]->Id(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_color_attachment_array[ 0 ]->Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
 		}
 	}
 
@@ -872,7 +872,7 @@ void SandboxApplication::RenderImGui_Viewport()
 			ImGui::SetNextFrameWantCaptureKeyboard( false );
 		}
 
-		ImGui::Image( ( void* )( intptr_t )editor_framebuffer_color_attachment->Id(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+		ImGui::Image( ( void* )( intptr_t )editor_framebuffer_color_attachment->Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
 	}
 
 	ImGui::End();

@@ -87,8 +87,8 @@ namespace Engine
 		{
 			const auto binding_point_found = *maybe_binding_point;
 
-			const unsigned int block_index = glGetUniformBlockIndex( shader.Id(), block_name.c_str() );
-			glUniformBlockBinding( shader.Id(), block_index, binding_point_found );
+			const unsigned int block_index = glGetUniformBlockIndex( shader.Id().Get(), block_name.c_str() );
+			glUniformBlockBinding( shader.Id().Get(), block_index, binding_point_found );
 
 			return binding_point_found;
 		}
@@ -98,8 +98,8 @@ namespace Engine
 			{
 				const auto binding_point_to_assign = binding_point_book_keeping.Assign( block_name );
 
-				const unsigned int block_index = glGetUniformBlockIndex( shader.Id(), block_name.c_str() );
-				glUniformBlockBinding( shader.Id(), block_index, binding_point_to_assign );
+				const unsigned int block_index = glGetUniformBlockIndex( shader.Id().Get(), block_name.c_str() );
+				glUniformBlockBinding( shader.Id().Get(), block_index, binding_point_to_assign );
 
 				return binding_point_to_assign;
 			}
@@ -114,13 +114,13 @@ namespace Engine
 
 	void UniformBlockBindingPointManager::BindBufferToBindingPoint( const UniformBuffer& uniform_buffer, const Uniform::BindingPoint binding_point )
 	{
-		glBindBufferBase( GL_UNIFORM_BUFFER, binding_point, uniform_buffer.Id() );
+		glBindBufferBase( GL_UNIFORM_BUFFER, binding_point, uniform_buffer.Id().Get() );
 	}
 
 	void UniformBlockBindingPointManager::BindBufferToBindingPoint_Partial( const UniformBuffer& uniform_buffer, const Uniform::BindingPoint binding_point,
 																			 const unsigned int offset, const unsigned int size )
 	{
-		glBindBufferRange( GL_UNIFORM_BUFFER, binding_point, uniform_buffer.Id(), ( GLintptr )offset, ( GLsizeiptr )size );
+		glBindBufferRange( GL_UNIFORM_BUFFER, binding_point, uniform_buffer.Id().Get(), ( GLintptr )offset, ( GLsizeiptr )size );
 	}
 
 	unsigned int UniformBlockBindingPointManager::QueryMaximumUniformBufferBindingCount()

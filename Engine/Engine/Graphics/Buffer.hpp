@@ -3,6 +3,7 @@
 // Engine Includes.
 #include "GLLogger.h"
 #include "Graphics.h"
+#include "ID.hpp"
 #include "Core/ServiceLocator.h"
 #include "Core/Assertion.h"
 
@@ -19,12 +20,12 @@ namespace Engine
 	class Buffer
 	{
 	public:
-		using ID = unsigned int;
+		using ID = ID< Buffer >;
 
 	public:
 		Buffer()
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name(),
 			count( 0 ),
 			size( 0 )
@@ -34,7 +35,7 @@ namespace Engine
 		/* Only allocate memory.*/
 		Buffer( const unsigned int size, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name( name ),
 			count( 0 ),
 			size( size )
@@ -47,14 +48,14 @@ namespace Engine
 
 #ifdef _DEBUG
 			if( not name.empty() )
-				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id.Get(), name );
 #endif // _DEBUG
 		}
 
 		template< typename BufferElementType >
 		Buffer( const std::span< BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name( name ),
 			count( ( unsigned int )data_span.size() ),
 			size( ( unsigned int )data_span.size_bytes() )
@@ -67,7 +68,7 @@ namespace Engine
 
 #ifdef _DEBUG
 			if( not name.empty() )
-				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id.Get(), name );
 #endif // _DEBUG
 		}
 
@@ -77,7 +78,7 @@ namespace Engine
 		template< typename BufferElementType >
 		Buffer( const unsigned int count, const std::span< BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name( name ),
 			count( count ),
 			size( ( unsigned int )data_span.size_bytes() )
@@ -90,7 +91,7 @@ namespace Engine
 
 #ifdef _DEBUG
 			if( not name.empty() )
-				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id.Get(), name );
 #endif // _DEBUG
 		}
 
@@ -101,7 +102,7 @@ namespace Engine
 		/* Allow moving. */
 		Buffer( Buffer&& donor )
 			:
-			id( std::exchange( donor.id, -1 ) ),
+			id( std::exchange( donor.id, {} ) ),
 			name( std::exchange( donor.name, {} ) ),
 			count( std::exchange( donor.count, 0 ) ),
 			size( std::exchange( donor.size, 0 ) )
@@ -110,7 +111,7 @@ namespace Engine
 		
 		Buffer& operator =( Buffer&& donor )
 		{
-			id    = std::exchange( donor.id,	-1 );
+			id    = std::exchange( donor.id,	{} );
 			name  = std::exchange( donor.name,	{} );
 			count = std::exchange( donor.count,  0 );
 			size  = std::exchange( donor.size,	 0 );
@@ -128,7 +129,7 @@ namespace Engine
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "Attempting Bind() on Buffer with zero size!" );
 
-			glBindBuffer( TargetType, id );
+			glBindBuffer( TargetType, id.Get() );
 		}
 
 		void Update( const void* data, const GLenum usage = GL_STATIC_DRAW ) const
@@ -145,7 +146,7 @@ namespace Engine
 			glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() );
 		}
 		
-		ID				Id()	const { return id;		}
+		const ID&		Id()	const { return id;		}
 		unsigned int	Size()	const { return size;	}
 		unsigned int	Count()	const { return count;	}
 
@@ -154,12 +155,13 @@ namespace Engine
 
 		void CreateBuffer()
 		{
-			glGenBuffers( 1, &id );
+			glGenBuffers( 1, id.Address() );
 		}
 
-		void DeleteBuffer()
+		void DeleteBuffer() 
 		{
-			glDeleteBuffers( 1, &id );
+			glDeleteBuffers( 1, id.Address() );
+			id.Reset(); // OpenGL does not reset the id to zero.
 		}
 
 	private:

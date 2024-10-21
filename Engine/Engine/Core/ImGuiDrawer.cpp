@@ -332,7 +332,7 @@ namespace Engine::ImGuiDrawer
 
 		if( texture )
 		{
-			ImGui::Image( ( void* )( intptr_t )texture->Id(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
 			ImGui::SameLine();
 			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
 		}
@@ -352,7 +352,7 @@ namespace Engine::ImGuiDrawer
 
 		if( texture )
 		{
-			ImGui::Image( ( void* )( intptr_t )texture->Id(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
 		}
@@ -411,7 +411,7 @@ namespace Engine::ImGuiDrawer
 				const float padding_y = ( preview_area_size.y - image_height_fit ) / 2.0f;
 
 				ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( padding_x, padding_y ) );
-				ImGui::Image( ( void* )( intptr_t )selected_texture->Id(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
+				ImGui::Image( ( void* )( intptr_t )selected_texture->Id().Get(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
 
 				char info_line_buffer[ 255 ];
 				sprintf_s( info_line_buffer, 255, "%dx%d", ( int )image_width, ( int )image_height );

@@ -12,7 +12,7 @@ namespace Engine
 	class VertexArray
 	{
 	public:
-		using ID = unsigned int;
+		using ID = ID< VertexArray >;
 
 	public:
 		VertexArray( const std::string& name = {} );

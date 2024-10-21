@@ -145,7 +145,7 @@ namespace Engine
 
 	Texture::Texture()
 		:
-		id( -1 ),
+		id( {} ),
 		size( ZERO_INITIALIZATION ),
 		name( "<unnamed>" ),
 		type( TextureType::None )
@@ -158,17 +158,17 @@ namespace Engine
 					  Wrapping  wrap_u,		Wrapping  wrap_v,
 					  Filtering min_filter, Filtering mag_filter )
 		:
-		id( -1 ),
+		id( {} ),
 		size( width, height ),
 		name( name ),
 		type( TextureType::Texture2D )
 	{
-		glGenTextures( 1, &id );
+		glGenTextures( 1, id.Address() );
 		Bind();
 
 #ifdef _DEBUG
 		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id.Get(), this->name );
 #endif // _DEBUG
 
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, ( GLenum )min_filter );
@@ -189,17 +189,17 @@ namespace Engine
 					  Wrapping  wrap_u,		Wrapping  wrap_v,	 Wrapping wrap_w,
 					  Filtering min_filter, Filtering mag_filter )
 		:
-		id( -1 ),
+		id( {} ),
 		size( width, height ),
 		name( name ),
 		type( TextureType::Cubemap )
 	{
-		glGenTextures( 1, &id );
+		glGenTextures( 1, id.Address() );
 		Bind();
 
 #ifdef _DEBUG
 		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id.Get(), this->name );
 #endif // _DEBUG
 
 
@@ -215,7 +215,7 @@ namespace Engine
 
 	Texture::Texture( Texture&& donor )
 		:
-		id( std::exchange( donor.id, -1 ) ),
+		id( std::exchange( donor.id, {} ) ),
 		name( std::exchange( donor.name, {} ) ),
 		size( std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } ) ),
 		type( std::exchange( donor.type, TextureType::None ) )
@@ -224,10 +224,10 @@ namespace Engine
 
 	Texture& Texture::operator =( Texture&& donor )
 	{
-		id   = std::exchange( donor.id, -1 );
-		name = std::exchange( donor.name, {} );
-		size = std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } );
-		type = std::exchange( donor.type, TextureType::None );
+		id   = std::exchange( donor.id,		{} );
+		name = std::exchange( donor.name,	{} );
+		size = std::exchange( donor.size,	Vector2I{ ZERO_INITIALIZATION } );
+		type = std::exchange( donor.type,	TextureType::None );
 
 		return *this;
 	}
@@ -235,7 +235,10 @@ namespace Engine
 	Texture::~Texture()
 	{
 		if( IsValid() )
-			glDeleteTextures( 1, &id );
+		{
+			glDeleteTextures( 1, id.Address() );
+			id.Reset(); // OpenGL does not reset the id to zero.
+		}
 	}
 
 	void Texture::SetName( const std::string& new_name )
@@ -266,17 +269,17 @@ namespace Engine
 					  Wrapping  wrap_u,		Wrapping  wrap_v,
 					  Filtering min_filter, Filtering mag_filter )
 		:
-		id( -1 ),
+		id( {} ),
 		size( width, height ),
 		name( name ),
 		type( TextureType::Texture2D )
 	{
-		glGenTextures( 1, &id );
+		glGenTextures( 1, id.Address() );
 		Bind();
 
 #ifdef _DEBUG
 		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id.Get(), this->name );
 #endif // _DEBUG
 
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, ( GLenum )min_filter );
@@ -296,17 +299,17 @@ namespace Engine
 					  Wrapping  wrap_u,		Wrapping  wrap_v,	Wrapping wrap_w,
 					  Filtering min_filter, Filtering mag_filter )
 		:
-		id( -1 ),
+		id( {} ),
 		size( width, height ),
 		name( name ),
 		type( TextureType::Cubemap )
 	{
-		glGenTextures( 1, &id );
+		glGenTextures( 1, id.Address() );
 		Bind();
 
 #ifdef _DEBUG
 		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id, this->name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_TEXTURE, id.Get(), this->name );
 #endif // _DEBUG
 
 		for( auto i = 0; i < 6; i++ )
@@ -321,6 +324,6 @@ namespace Engine
 
 	void Texture::Bind() const
 	{
-		glBindTexture( ( GLenum )type, id );
+		glBindTexture( ( GLenum )type, id.Get() );
 	}
 }
