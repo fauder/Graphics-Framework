@@ -818,7 +818,7 @@ namespace Engine::ImGuiDrawer
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniforms" );
 
-				if( ImGui::BeginTable( "Uniforms", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+				if( shader.HasDefaultUniforms() && ImGui::BeginTable( "Uniforms", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 				{
 					ImGui::TableSetupColumn( "Name"		);
 					ImGui::TableSetupColumn( "Location" );
@@ -848,11 +848,13 @@ namespace Engine::ImGuiDrawer
 
 					ImGui::EndTable();
 				}
+				else
+					ImGui::TextDisabled( "(None)" );
 
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniform Buffers" );
 
-				if( ImGui::BeginTable( "Uniform Buffers", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+				if( shader.HasUniformBlocks() && ImGui::BeginTable( "Uniform Buffers", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 				{
 					ImGui::TableSetupColumn( "Name"				);
 					ImGui::TableSetupColumn( "Binding/Location" );
@@ -913,6 +915,8 @@ namespace Engine::ImGuiDrawer
 
 					ImGui::EndTable();
 				}
+				else
+					ImGui::TextDisabled( "(None)" );
 
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Features" );
