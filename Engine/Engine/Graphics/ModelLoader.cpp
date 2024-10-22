@@ -160,16 +160,9 @@ namespace Engine
 
             std::vector< std::uint32_t > indices_u32;
 
-            if( index_accessor.componentType == fastgltf::ComponentType::UnsignedByte || index_accessor.componentType == fastgltf::ComponentType::UnsignedShort )
-            {
-                indices_u32.resize( index_count );
-                fastgltf::copyFromAccessor< std::uint16_t >( gltf_asset, index_accessor, indices_u32.data() );
-            }
-            else
-            {
-                indices_u32.resize( index_count );
-                fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
-            }
+            // Ignore 16 bit indices (or any other format other than 32 bit for that matter).
+            indices_u32.resize( index_count );
+            fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
 
             std::string sub_mesh_name( mesh_group_to_load.name + "_" + std::to_string( std::distance( gltf_mesh.primitives.begin(), submesh_iterator ) ) );
 
