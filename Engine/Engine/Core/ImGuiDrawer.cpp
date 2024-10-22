@@ -11,15 +11,20 @@
 
 namespace Engine::ImGuiDrawer
 {
+	State STATE;
+
 	using namespace Engine::Math::Literals;
+
+	void Initialize()
+	{
+		ServiceLocator< State >::Register( &STATE );
+	}
 
 	void Update()
 	{
-		IMGUI_STYLE = &ImGui::GetStyle();
-
 		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr ) )
 		{
-			ImGui::Checkbox( "Hide padding parameters", &WINDOW_MATERIAL_PADDING_HIDE );
+			ImGui::Checkbox( "Hide padding parameters", &ServiceLocator< State >::Get().window_material_padding_hide );
 			ImGui::Separator();
 		}
 		ImGui::End();
@@ -185,14 +190,16 @@ namespace Engine::ImGuiDrawer
 
 	bool Draw( Color3& color, const char* name )
 	{
-		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		return ImGui::ColorEdit3( name, color.Data() );
 		ImGui::PopItemWidth();
 	}
 
 	void Draw( const Color3& color, const char* name )
 	{
-		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::ColorEdit3( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
@@ -202,14 +209,16 @@ namespace Engine::ImGuiDrawer
 
 	bool Draw( Color4& color, const char* name )
 	{
-		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		return ImGui::ColorEdit4( name, color.Data() );
 		ImGui::PopItemWidth();
 	}
 
 	void Draw( const Color4& color, const char* name )
 	{
-		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::ColorEdit4( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
@@ -338,7 +347,8 @@ namespace Engine::ImGuiDrawer
 		}
 		else
 		{
-			ImGui::Dummy( ImVec2( 24, 24 ) + IMGUI_STYLE->ItemInnerSpacing );
+			const auto& style = ImGui::GetStyle();
+			ImGui::Dummy( ImVec2( 24, 24 ) + style.ItemInnerSpacing );
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
 		}
@@ -358,7 +368,8 @@ namespace Engine::ImGuiDrawer
 		}
 		else
 		{
-			ImGui::Dummy( ImVec2( 24, 24 ) + IMGUI_STYLE->ItemInnerSpacing );
+			const auto& style = ImGui::GetStyle();
+			ImGui::Dummy( ImVec2( 24, 24 ) + style.ItemInnerSpacing );
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
 		}
@@ -374,7 +385,8 @@ namespace Engine::ImGuiDrawer
 		if( ImGui::Begin( ICON_FA_IMAGE " Textures" ) )
 		{
 			const ImVec2 region_available( ImGui::GetContentRegionAvail() );
-			const float separator_height( IMGUI_STYLE->ItemSpacing.y * 2.0f );
+			const auto& style = ImGui::GetStyle();
+			const float separator_height( style.ItemSpacing.y * 2.0f );
 			const float line_height( ImGui::CalcTextSize( "A" ).y );
 
 			const ImVec2 child_size( region_available.x, region_available.y / 2.0f - separator_height - line_height );
@@ -538,7 +550,9 @@ namespace Engine::ImGuiDrawer
 
 								void* address = material.Get( uniform_info );
 
-								ImGui::PushItemWidth( uniform_info.usage_hint_array_dimensions[ 1 ] * ImGui::CalcTextSize( " []" ).x + ( uniform_info.usage_hint_array_dimensions[ 1 ] - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+								const auto& style = ImGui::GetStyle();
+								ImGui::PushItemWidth( uniform_info.usage_hint_array_dimensions[ 1 ] * ImGui::CalcTextSize( " []" ).x + 
+													  ( uniform_info.usage_hint_array_dimensions[ 1 ] - 1 ) * style.ItemInnerSpacing.x );
 
 								for( int i = 0; i < uniform_info.usage_hint_array_dimensions[ 0 ]; i++ )
 								{
@@ -673,7 +687,7 @@ namespace Engine::ImGuiDrawer
 							{
 								const bool is_padding = uniform_buffer_member_info->editor_name.compare( 0, 8, "Padding", 8 ) == 0;
 
-								if( is_padding && WINDOW_MATERIAL_PADDING_HIDE )
+								if( is_padding && ServiceLocator< State >::Get().window_material_padding_hide )
 									continue;
 
 								ImGui::BeginDisabled( is_padding );

@@ -18,14 +18,14 @@
 // Vendor Includes.
 #include "ImGui/imgui.h"
 
-namespace
-{
-	ImGuiStyle* IMGUI_STYLE;
-	bool WINDOW_MATERIAL_PADDING_HIDE = true;
-}
-
 namespace Engine::ImGuiDrawer
 {
+	struct State
+	{
+		bool window_material_padding_hide = true;
+	};
+	
+	void Initialize();
 	void Update();
 
 	template< typename Type >
@@ -75,9 +75,11 @@ namespace Engine::ImGuiDrawer
 	{
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
+		const auto& style = ImGui::GetStyle();
+
 		if constexpr( std::is_same_v< Component, bool > )
 		{
-			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( " []" ).x + ( Size - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( " []" ).x + ( Size - 1 ) * style.ItemInnerSpacing.x );
 			if constexpr( Size >= 2 )
 			{
 				bool x = vector.X(), y = vector.Y();
@@ -96,7 +98,7 @@ namespace Engine::ImGuiDrawer
 		}
 		else
 		{
-			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( ".-999.99" ).x + ( Size - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( ".-999.99" ).x + ( Size - 1 ) * style.ItemInnerSpacing.x );
 			/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 			ImGui::InputScalarN( name, GetImGuiDataType< Component >(), const_cast< Component* >( vector.Data() ), Size, NULL, NULL, GetFormat< Component >(), ImGuiInputTextFlags_ReadOnly );
 		}
@@ -110,9 +112,11 @@ namespace Engine::ImGuiDrawer
 	{
 		bool is_modified = false;
 
+		const auto& style = ImGui::GetStyle();
+
 		if constexpr( std::is_same_v< Component, bool > )
 		{
-			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( " []" ).x + ( Size - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( " []" ).x + ( Size - 1 ) * style.ItemInnerSpacing.x );
 			if constexpr( Size >= 2 )
 			{
 				is_modified |= ImGui::Checkbox( "##x", &vector[ 0 ] ); ImGui::SameLine(); is_modified |= ImGui::Checkbox( "##y", &vector[ 1 ] );
@@ -128,7 +132,7 @@ namespace Engine::ImGuiDrawer
 		}
 		else
 		{
-			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( ".-999.99" ).x + ( Size - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+			ImGui::PushItemWidth( Size * ImGui::CalcTextSize( ".-999.99" ).x + ( Size - 1 ) * style.ItemInnerSpacing.x );
 			is_modified |= ImGui::DragScalarN( name, GetImGuiDataType< Component >(), vector.Data(), Size, 1.0f, NULL, NULL, GetFormat< Component >() );
 		}
 		ImGui::PopItemWidth();
@@ -143,7 +147,9 @@ namespace Engine::ImGuiDrawer
 		{
 			ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
-			ImGui::PushItemWidth( ColumnSize * ImGui::CalcTextSize( ".-999.99" ).x + ( ColumnSize - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+			const auto& style = ImGui::GetStyle();
+
+			ImGui::PushItemWidth( ColumnSize * ImGui::CalcTextSize( ".-999.99" ).x + ( ColumnSize - 1 ) * style.ItemInnerSpacing.x );
 			for( auto row_index = 0; row_index < RowSize; row_index++ )
 			{
 				const auto& row_vector = matrix.GetRow< ColumnSize >( row_index );
@@ -166,13 +172,15 @@ namespace Engine::ImGuiDrawer
 
 		if( ImGui::TreeNodeEx( name, 0 ) )
 		{
-			ImGui::PushItemWidth( ColumnSize * ImGui::CalcTextSize( ".-999.99" ).x + ( ColumnSize - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+			const auto& style = ImGui::GetStyle();
+
+			ImGui::PushItemWidth( ColumnSize * ImGui::CalcTextSize( ".-999.99" ).x + ( ColumnSize - 1 ) * style.ItemInnerSpacing.x );
 			auto& first_row_vector = matrix.GetRow< ColumnSize >();
 			is_modified |= Draw( first_row_vector );
 
 			if( name[ 0 ] != '#' || name[ 1 ] != '#' )
 			{
-				ImGui::SameLine( 0.0f, IMGUI_STYLE->ItemInnerSpacing.x );
+				ImGui::SameLine( 0.0f, style.ItemInnerSpacing.x );
 				ImGui::TextUnformatted( name );
 			}
 
@@ -199,7 +207,9 @@ namespace Engine::ImGuiDrawer
 		Math::Vector< Math::Degrees< Component >, 3 > euler;
 		Math::QuaternionToEuler( quaternion, euler );
 
-		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( ".-999.99" ).x + 2.0f * IMGUI_STYLE->ItemInnerSpacing.x );
+		const auto& style = ImGui::GetStyle();
+
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( ".-999.99" ).x + 2.0f * style.ItemInnerSpacing.x );
 		/* Since the read-only flag is passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::InputScalarN( name, GetImGuiDataType< Component >(), euler.Data(), euler.Dimension(), NULL, NULL, GetFormat< Component >(), ImGuiInputTextFlags_ReadOnly );
 		ImGui::PopItemWidth();
@@ -213,7 +223,9 @@ namespace Engine::ImGuiDrawer
 		Math::Vector< Math::Degrees< Component >, 3 > euler;
 		Math::QuaternionToEuler( quaternion, euler );
 
-		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( ".-999.99" ).x + 2.0f * IMGUI_STYLE->ItemInnerSpacing .x );
+		const auto& style = ImGui::GetStyle();
+
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( ".-999.99" ).x + 2.0f * style.ItemInnerSpacing .x );
 		const bool is_modified = ImGui::DragScalarN( name, GetImGuiDataType< Component >(), euler.Data(), euler.Dimension(), 1.0f, NULL, NULL, GetFormat< Component >() );
 		if( is_modified )
 			quaternion = Math::EulerToQuaternion( euler );
