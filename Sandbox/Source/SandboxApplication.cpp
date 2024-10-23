@@ -47,6 +47,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	phong_shader( "Phong" ),
 	phong_shader_instanced( "Phong (Instanced)" ),
 	phong_skybox_reflection_shader( "Phong (w/ Skybox Reflection)" ),
+	phong_skybox_reflection_shader_instanced( "Phong (w/ Skybox Reflection, Instanced)" ),
 	basic_color_shader( "Basic Color" ),
 	basic_textured_shader( "Basic Textured" ),
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
@@ -59,12 +60,11 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	meteorite_model_info{ .model_instance = {}, .shader = &phong_shader_instanced, .file_path = {} },
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT ),
+	cube_reflected_transform_array( CUBE_REFLECTED_COUNT ),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
 	camera_rotation_speed( 5.0f ),
 	camera_move_speed( 5.0f ),
 	camera_controller( &camera, camera_rotation_speed ),
-	auto_calculate_aspect_ratio( true ),
-	auto_calculate_vfov_based_on_90_hfov( true ),
 	ui_interaction_enabled( false ),
 	show_imgui_demo_window( false ),
 	draw_rear_view_cam_to_imgui( true )
@@ -125,6 +125,7 @@ void SandboxApplication::Initialize()
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
 	phong_shader_instanced.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "INSTANCING_ENABLED" } );
 	phong_skybox_reflection_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING" } );
+	phong_skybox_reflection_shader_instanced.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING", "INSTANCING_ENABLED" } );
 	basic_color_shader.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)", { "INSTANCING_ENABLED" } );
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
@@ -136,6 +137,7 @@ void SandboxApplication::Initialize()
 										  R"(Asset/Shader/VisualizeNormals.geom)" );
 
 	/* Register shaders not assigned to materials: */
+	renderer.RegisterShader( phong_skybox_reflection_shader );
 	renderer.RegisterShader( postprocess_grayscale_shader );
 	renderer.RegisterShader( postprocess_generic_shader );
 	renderer.RegisterShader( normal_visualization_shader );
@@ -165,13 +167,16 @@ void SandboxApplication::Initialize()
 		.SetTranslation( 0.0f, 7.5f, -30.0f );
 
 	/* Keep the first 10 the same as the ones from LOGL: */
-	for( auto cube_index = 0; cube_index < 10; cube_index++ )
+	for( auto cube_index = 0; cube_index < CUBE_REFLECTED_COUNT; cube_index++ )
 	{
 		Degrees angle( 20.0f * cube_index );
-		cube_transform_array[ cube_index ]
+		cube_reflected_transform_array[ cube_index ]
 			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
-			.SetTranslation( CUBE_POSITIONS_FIRST_10[ cube_index ] + Vector3::Up() * 5.0f );
+			.SetTranslation( CUBE_REFLECTED_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
 	}
+
+	for( auto cube_index = 0; cube_index < CUBE_REFLECTED_COUNT; cube_index++ )
+		cube_reflected_instance_data_array[ cube_index ] = cube_reflected_transform_array[ cube_index ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
 
 	/* The rest of the cubes: */
 	{
@@ -180,7 +185,7 @@ void SandboxApplication::Initialize()
 
 		const auto before = std::chrono::system_clock::now();
 
-		std::for_each_n( std::execution::par, cube_transform_array.begin() + 10, CUBE_COUNT - 10, [ & ]( auto&& cube_transform )
+		std::for_each_n( std::execution::par, cube_transform_array.begin(), CUBE_COUNT, [ & ]( auto&& cube_transform )
 		{
 			const int cube_index = ( int )( &cube_transform - cube_transform_array.data() );
 			Radians random_xz_angle( Engine::Math::Random::Generate( 0.0_rad, Engine::Constants< Radians >::Two_Pi() ) );
@@ -250,6 +255,14 @@ void SandboxApplication::Initialize()
 										reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
 										CUBE_COUNT,
 										GL_STATIC_DRAW );
+
+	cube_reflected_mesh_instanced = Engine::Mesh( cube_mesh,
+												  {
+													  Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+												  },
+												  reinterpret_cast< std::vector< float >& >( cube_reflected_instance_data_array ),
+												  CUBE_REFLECTED_COUNT,
+												  GL_STATIC_DRAW );
 
 	cube_mesh_instanced_with_color = Engine::Mesh( cube_mesh,
 												   {
@@ -368,6 +381,9 @@ void SandboxApplication::Initialize()
 
 	cube_drawable = Engine::Drawable( &cube_mesh_instanced, &cube_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
 	renderer.AddDrawable( &cube_drawable, render_group_id_outlined_mesh );
+
+	cube_reflected_drawable = Engine::Drawable( &cube_reflected_mesh_instanced, &cube_reflected_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	renderer.AddDrawable( &cube_reflected_drawable, render_group_id_outlined_mesh );
 
 	//cube_drawable_outline = Engine::Drawable( &cube_mesh_instanced, &outline_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
 	//renderer.AddDrawable( &cube_drawable_outline, render_group_id_outline );
@@ -495,12 +511,8 @@ void SandboxApplication::Update()
 
 	cube_mesh_instanced_with_color.UpdateInstanceData( light_source_instance_data_array.data() );
 
-	//for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
-	//	cube_instance_data_array[ cube_index ] = cube_transform_array[ cube_index ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
-	//cube_mesh_instanced.UpdateInstanceData( cube_instance_data_array.data() );
-
 	/* Camera transform: */
-	if( camera_is_animated )
+	if( camera_animation_is_enabled )
 	{
 		/* Orbit motion: */
 
@@ -509,7 +521,7 @@ void SandboxApplication::Update()
 		// Don't modify X & Z euler angles; Allow the user to modify them.
 		camera_transform.SetRotation( Engine::Math::EulerToQuaternion( -current_time_as_angle * 0.33f, old_euler_angles.X(), old_euler_angles.Z() ) );
 
-		auto new_pos = CAMERA_ROTATION_ORIGIN + -camera_transform.Forward() * 30.0f;
+		auto new_pos = CAMERA_ROTATION_ORIGIN + -camera_transform.Forward() * camera_animation_orbit_radius;
 		new_pos.SetY( camera_transform.GetTranslation().Y() ); // Don't modify Y position; Allow the user to modify it.
 		camera_transform.SetTranslation( new_pos );
 	}
@@ -703,6 +715,7 @@ void SandboxApplication::RenderImGui()
 	Engine::ImGuiDrawer::Draw( wall_material, renderer );
 	Engine::ImGuiDrawer::Draw( window_material, renderer );
 	Engine::ImGuiDrawer::Draw( cube_material, renderer );
+	Engine::ImGuiDrawer::Draw( cube_reflected_material, renderer );
 	for( auto& test_material : test_model_info.model_instance.Materials() )
 		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ), renderer );
 	for( auto& test_material : meteorite_model_info.model_instance.Materials() )
@@ -797,7 +810,7 @@ void SandboxApplication::RenderImGui()
 				}
 				ImGui::Checkbox( "Animate (Orbit) Point Lights", &light_point_array_is_animated );
 				if( light_point_array_is_animated )
-					ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
+					ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 30.0f );
 				Engine::ImGuiUtility::EndGroupPanel();
 
 				if( ImGui::TreeNodeEx( "Point Lights", ImGuiTreeNodeFlags_Framed ) )
@@ -844,77 +857,58 @@ void SandboxApplication::RenderImGui()
 		const float button_width( ImGui::CalcTextSize( ICON_FA_ARROWS_ROTATE " XXXXXX" ).x + style.ItemInnerSpacing.x );
 		ImGui::SetCursorPosX( button_width );
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Top" ) )
-			ResetCamera( CameraView::TOP );
+			SwitchCameraView( CameraView::TOP );
 
 	/* Row 2: */
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Left" ) )
-			ResetCamera( CameraView::LEFT );
+			SwitchCameraView( CameraView::LEFT );
 		ImGui::SameLine();
 		ImGui::SetCursorPosX( button_width );
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Front" ) )
-			ResetCamera( CameraView::FRONT );
+			SwitchCameraView( CameraView::FRONT );
 		ImGui::SameLine();
 		ImGui::SetCursorPosX( button_width * 2 );
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Right" ) )
-			ResetCamera( CameraView::RIGHT );
+			SwitchCameraView( CameraView::RIGHT );
 
 	/* Row 3: */
 		ImGui::SetCursorPosX( button_width );
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Back" ) )
-			ResetCamera( CameraView::BACK );
+			SwitchCameraView( CameraView::BACK );
 
 	/* Row 4: */
 		ImGui::SetCursorPosX( button_width );
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Bottom" ) )
-			ResetCamera( CameraView::BOTTOM );
+			SwitchCameraView( CameraView::BOTTOM );
 
 
 		ImGui::NewLine();
 
 	/* Row 5: */
 		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Custom (1)" ) )
-			ResetCamera( CameraView::CUSTOM_1 );
+			SwitchCameraView( CameraView::CUSTOM_1 );
+		if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset##Camera" ) )
+			ResetCamera();
 
-		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_is_animated );
+		ImGui::Checkbox( "Animate (Rotate) Camera", &camera_animation_is_enabled );
+		if( camera_animation_is_enabled )
+			ImGui::SliderFloat( "Camera Orbit Radius", &camera_animation_orbit_radius, 0.0f, 50.0f );
 		Engine::ImGuiDrawer::Draw( camera_transform, Engine::Transform::Mask::NoScale, "Main Camera" );
+	}
 
-		if( ImGui::CollapsingHeader( "Projection" ) )
+	ImGui::End();
+
+	if( ImGui::Begin( "Projection", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+	{
+		Engine::ImGuiUtility::BeginGroupPanel();
 		{
-			Engine::ImGuiUtility::BeginGroupPanel();
-			{
-				if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset" ) )
-				{
-					auto_calculate_aspect_ratio = true;
-					auto_calculate_vfov_based_on_90_hfov = true;
+			if( ImGui::Button( ICON_FA_ARROWS_ROTATE " Reset##Projection" ) )
+				ResetProjection();
 
-					camera.SetAspectRatio( Platform::GetAspectRatio() ); // If we don't do this, CalculateVerticalFieldOfView() below will work with possibly the old aspect ratio and produce incorrect results.
-					camera = Engine::Camera( &camera_transform, camera.GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
-				}
-				
-				bool modified = false;
-
-				modified |= Engine::ImGuiDrawer::Draw( camera, "Main Camera" );
-
-				float v_fov_radians = ( float )camera.GetVerticalFieldOfView();
-
-				modified |= ImGui::Checkbox( "Auto-calculate Aspect Ratio", &auto_calculate_aspect_ratio );
-				modified |= ImGui::Checkbox( "Auto-calculate Vertical FoV to match 90 degrees Horizontal FoV", &auto_calculate_vfov_based_on_90_hfov );
-
-				if( modified )
-				{
-					if( auto_calculate_aspect_ratio )
-						camera.SetAspectRatio( Platform::GetAspectRatio() );
-
-					if( auto_calculate_vfov_based_on_90_hfov )
-						camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
-					else
-						camera.SetVerticalFieldOfView( Radians( v_fov_radians ) );
-
-					renderer.OnProjectionParametersChange( camera );
-				}
-			}
-			Engine::ImGuiUtility::EndGroupPanel();
+			if( Engine::ImGuiDrawer::Draw( camera, "Main Camera", true ) )
+				RecalculateProjectionParameters();
 		}
+		Engine::ImGuiUtility::EndGroupPanel();
 	}
 
 	ImGui::End();
@@ -980,20 +974,13 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, const int height_new_pixels )
 {
 	/* Do nothing on minimize: */
-	if( width_new_pixels == 0 || height_new_pixels == 0 )
+	if( width_new_pixels == 0 || height_new_pixels == 0 || 
+		( editor_framebuffer_color_attachment && editor_framebuffer_color_attachment->Size() == Vector2I{ width_new_pixels, height_new_pixels } ) )
 		return;
 
 	renderer.OnFramebufferResize( width_new_pixels, height_new_pixels );
 
-	// Re-calculate the aspect ratio:
-	if( auto_calculate_aspect_ratio )
-	{
-		camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
-		if( auto_calculate_vfov_based_on_90_hfov )
-			camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
-
-		renderer.OnProjectionParametersChange( camera );
-	}
+	RecalculateProjectionParameters( width_new_pixels, height_new_pixels );
 
 	// Re-initialize:
 	InitializeFramebufferTextures( width_new_pixels, height_new_pixels );
@@ -1002,6 +989,11 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 
 	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
 	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
+}
+
+void SandboxApplication::OnFramebufferResizeEvent( const Vector2I new_size_pixels )
+{
+	OnFramebufferResizeEvent( new_size_pixels.X(), new_size_pixels.Y() );
 }
 
 void SandboxApplication::RenderImGui_Viewport()
@@ -1016,13 +1008,10 @@ void SandboxApplication::RenderImGui_Viewport()
 		const ImVec2   viewport_size_imvec2( ImGui::GetContentRegionAvail() );
 		const Vector2I viewport_size( ( int )viewport_size_imvec2.x, ( int )viewport_size_imvec2.y );
 
-		if( viewport_size != editor_framebuffer_color_attachment->Size() )
-		{
-			const auto& imgui_io = ImGui::GetIO();
-			if( (     imgui_io.WantCaptureMouse && imgui_io.MouseReleased[ 0 ] ) ||
-				( not imgui_io.WantCaptureMouse && Platform::IsMouseButtonReleased( Platform::MouseButton::Left ) ) )
-				OnFramebufferResizeEvent( viewport_size.X(), viewport_size.Y() );
-		}
+		const auto& imgui_io = ImGui::GetIO();
+		if( (     imgui_io.WantCaptureMouse && imgui_io.MouseReleased[ 0 ] ) ||
+			( not imgui_io.WantCaptureMouse && Platform::IsMouseButtonReleased( Platform::MouseButton::Left ) ) )
+			OnFramebufferResizeEvent( viewport_size.X(), viewport_size.Y() );
 
 		if( ImGui::IsWindowHovered() )
 		{
@@ -1054,21 +1043,22 @@ void SandboxApplication::ResetLightingData()
 
 	light_point_array_disable      = false;
 	light_point_array_is_animated  = true;
-	light_point_orbit_radius       = 13.25f;
+	light_point_orbit_radius       = 20.0f;
 
 	light_spot_array_disable = false;
 
 	light_point_array.resize( LIGHT_POINT_COUNT );
 	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
 	{
+		const auto random_color( Engine::Math::Random::Generate< Engine::Color3 >() );
 		light_point_array[ i ] =
 		{
 			.is_enabled = true,
 			.data =
 			{
-				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f },							.scalar = 0.075f	},
-				.diffuse_and_attenuation_linear   = {.color = Engine::Math::Random::Generate< Engine::Color3 >(),	.scalar = 0.0035f	},
-				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f		},
+				.ambient_and_attenuation_constant = { .color = { 0.05f, 0.05f, 0.05f },	.scalar = 0.06f		},
+				.diffuse_and_attenuation_linear   = { .color = random_color,			.scalar = 0.001f	},
+				.specular_attenuation_quadratic   = { .color = random_color,			.scalar = 0.0375f	},
 			},
 			.transform = &light_point_transform_array[ i ]
 		};
@@ -1098,15 +1088,14 @@ void SandboxApplication::ResetMaterialData()
 
 	light_source_material = Engine::Material( "Light Source", &basic_color_shader );
 	
-	// TODO: Get this reflected cube working again.
 	/* Set the first cube's material to Phong shader w/ skybox reflection: */
-	/*cube_material_array[ 0 ] = Engine::Material( "Cube #1", &phong_skybox_reflection_shader );
-	cube_material_array[ 0 ].SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
-	cube_material_array[ 0 ].SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
-	cube_material_array[ 0 ].SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
-	cube_material_array[ 0 ].SetTexture( "uniform_texture_skybox_slot", skybox_texture );
-	cube_material_array[ 0 ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
-	cube_material_array[ 0 ].Set( "uniform_reflectivity", 1.0f );*/
+	cube_reflected_material = Engine::Material( "Cube (Reflected)", &phong_skybox_reflection_shader_instanced );
+	cube_reflected_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
+	cube_reflected_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
+	cube_reflected_material.SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
+	cube_reflected_material.SetTexture( "uniform_texture_skybox_slot", skybox_texture );
+	cube_reflected_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+	cube_reflected_material.Set( "uniform_reflectivity", 1.0f );
 
 	cube_material = Engine::Material( "Cube", &phong_shader_instanced );
 	cube_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
@@ -1149,6 +1138,7 @@ void SandboxApplication::ResetMaterialData()
 	ground_material.Set( "PhongMaterialData", ground_quad_surface_data );
 	wall_material.Set( "PhongMaterialData", wall_surface_data );
 	cube_material.Set( "PhongMaterialData", cube_surface_data );
+	cube_reflected_material.Set( "PhongMaterialData", cube_surface_data );
 
 	outline_material.Set( "uniform_color", Engine::Color4::Orange() );
 	outline_material.Set( "uniform_outline_thickness", 0.1f );
@@ -1157,12 +1147,28 @@ void SandboxApplication::ResetMaterialData()
 void SandboxApplication::ResetInstanceData()
 {
 	cube_instance_data_array.resize( CUBE_COUNT );
+	cube_reflected_instance_data_array.resize( CUBE_REFLECTED_COUNT );
 	light_source_instance_data_array.resize( LIGHT_POINT_COUNT );
 }
 
-void SandboxApplication::ResetCamera( const CameraView view )
+void SandboxApplication::ResetCamera()
 {
-	camera_is_animated = false;
+	camera_animation_orbit_radius = 30.0f;
+
+	ResetProjection();
+
+	SwitchCameraView( CameraView::FRONT );
+}
+
+void SandboxApplication::ResetProjection()
+{
+	camera = Engine::Camera( &camera_transform, camera.GetAspectRatio(), camera.GetVerticalFieldOfView() ); // Keep current aspect ratio & v-fov.
+	renderer.OnProjectionParametersChange( camera );
+}
+
+void SandboxApplication::SwitchCameraView( const CameraView view )
+{
+	camera_animation_is_enabled = false;
 
 	switch( view )
 	{
@@ -1244,7 +1250,6 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 			for( auto& drawable_to_add : model_instance_to_load_into.Drawables( render_group_id ) )
 				renderer.AddDrawable( &drawable_to_add, render_group_id );
 
-		ResetCamera();
 		return true;
 	}
 
@@ -1347,4 +1352,22 @@ void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, con
 																offscreen_framebuffer_color_attachment_array[ 1 ],
 																&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
 	}
+}
+
+void SandboxApplication::RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels )
+{
+	camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
+	camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
+
+	renderer.OnProjectionParametersChange( camera );
+}
+
+void SandboxApplication::RecalculateProjectionParameters( const Vector2I new_size_pixels )
+{
+	RecalculateProjectionParameters( new_size_pixels.X(), new_size_pixels.Y() );
+}
+
+void SandboxApplication::RecalculateProjectionParameters()
+{
+	RecalculateProjectionParameters( editor_framebuffer_color_attachment->Size() );
 }

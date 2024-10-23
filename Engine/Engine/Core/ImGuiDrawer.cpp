@@ -437,7 +437,7 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
-	bool Draw( Camera& camera, const char* name )
+	bool Draw( Camera& camera, const char* name, const bool disable_aspect_ratio_and_fov )
 	{
 		bool is_modified = false;
 
@@ -448,15 +448,28 @@ namespace Engine::ImGuiDrawer
 			float aspect_ratio = camera.GetAspectRatio();
 			float vertical_fov = ( float )camera.GetVerticalFieldOfView();
 
-			/*																		Min Value:		Max Value:		Format: */
-			if( is_modified |= ImGui::SliderFloat( "Near Plane",	&near_plane,	0.0f,			far_plane						) )
+			/*																	Min Value:		Max Value: */
+			if( is_modified |= ImGui::SliderFloat( "Near Plane", &near_plane,	0.0f,			far_plane	) )
 				camera.SetNearPlaneOffset( near_plane );
-			if( is_modified |= ImGui::SliderFloat( "Far Plane",		&far_plane,		near_plane,		1000.0f							) )
+			if( is_modified |= ImGui::SliderFloat( "Far Plane",	 &far_plane,	near_plane,		1000.0f	) )
 				camera.SetFarPlaneOffset( far_plane );
-			if( is_modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,			5.0f							) )
-				camera.SetAspectRatio( aspect_ratio );
-			if( is_modified |= ImGui::SliderAngle( "Vertical FoV",	&vertical_fov,	1.0f,			180.0f,			"%.3f degrees"	) )
-				camera.SetVerticalFieldOfView( Radians( vertical_fov ) );
+
+			if( disable_aspect_ratio_and_fov )
+			{
+				ImGui::BeginDisabled();
+				/*													Min Value:	Max Value:	Format: */
+				ImGui::InputFloat( "Aspect Ratio",	&aspect_ratio,	0,			0,			"%.3f",			ImGuiInputTextFlags_ReadOnly );
+				ImGui::InputFloat( "Vertical FoV",	&vertical_fov,	0,			0,			"%.3f degrees",	ImGuiInputTextFlags_ReadOnly );
+				ImGui::EndDisabled();
+			}
+			else
+			{
+				/*																		Min Value:	Max Value:	Format: */
+				if( is_modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,		5.0f						) )
+					camera.SetAspectRatio( aspect_ratio );
+				if( is_modified |= ImGui::SliderAngle( "Vertical FoV",	&vertical_fov,	1.0f,		180.0f,		"%.3f degrees"	) )
+					camera.SetVerticalFieldOfView( Radians( vertical_fov ) );
+			}
 
 			ImGui::TreePop();
 		}
