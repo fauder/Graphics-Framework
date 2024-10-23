@@ -1,11 +1,11 @@
 #define POINT_LIGHT_MAX_COUNT 15
 #define SPOT_LIGHT_MAX_COUNT 15
 
- struct DirectionalLightData
- {
- 	vec4 ambient, diffuse, specular;
- 	vec4 direction_view_space;
- };
+struct DirectionalLightData
+{
+	vec4 ambient, diffuse, specular;
+	vec4 direction_view_space;
+};
 
 struct PointLightData
 {

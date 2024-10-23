@@ -1,7 +1,7 @@
 #pragma once
 
 // Engine Includes.
-#include "UniformBuffer.h"
+#include "Buffer.hpp"
 #include "Uniform.h"
 
 // std Includes.

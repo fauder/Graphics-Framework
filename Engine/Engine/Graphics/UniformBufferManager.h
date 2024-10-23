@@ -1,8 +1,8 @@
 #pragma once
 
 // Engine Includes.
+#include "Buffer.hpp"
 #include "Uniform.h"
-#include "UniformBuffer.h"
 
 // std Includes.
 #include <unordered_map>

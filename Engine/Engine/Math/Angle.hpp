@@ -229,4 +229,9 @@ namespace Engine
 		static constexpr RadiansD Pi_Over_Six()		{ return Pi() / 6.0;							}
 		static constexpr RadiansD Two_Pi()			{ return Pi() * 2.0;							}
 	};
+
+	namespace Concepts
+	{
+		template< typename T > concept Angular = std::is_same_v< T, Degrees > || std::is_same_v< T, DegreesD > || std::is_same_v< T, Radians > || std::is_same_v< T, RadiansD >;
+	}
 }

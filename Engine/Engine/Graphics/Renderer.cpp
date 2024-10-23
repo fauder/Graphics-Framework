@@ -147,12 +147,12 @@ namespace Engine
 		{
 			for( auto& [ render_group_id, render_group ] : render_group_map )
 			{
-				ImGui::PushID( render_group_id );
+				ImGui::PushID( ( int )render_group_id );
 				ImGui::Checkbox( "", &render_group.is_enabled );
 				ImGui::PopID();
 
 				ImGui::SameLine();
-				if( ImGui::TreeNodeEx( render_group.name.c_str(), 0, "Render Group [%d]: %s", render_group_id, render_group.name.c_str() ) )
+				if( ImGui::TreeNodeEx( render_group.name.c_str(), 0, "Render Group [%d]: %s", ( int )render_group_id, render_group.name.c_str() ) )
 				{
 					// TODO: Display RenderState info as a collapseable header.
 					ImGui::BeginDisabled( not render_group.is_enabled );
@@ -172,6 +172,11 @@ namespace Engine
 										ImGui::PopID();
 										ImGui::BeginDisabled( not drawable->is_enabled );
 										ImGui::SameLine(); ImGui::TextUnformatted( drawable->material->name.c_str() );
+										if( drawable->mesh->HasInstancing() )
+										{
+											int instance_Count = drawable->mesh->InstanceCount();
+											ImGui::SameLine(); ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "(Instance Count: %d)", instance_Count );
+										}
 										ImGui::EndDisabled();
 									}
 								}
@@ -561,9 +566,13 @@ namespace Engine
 
 	void Renderer::Render( const Mesh& mesh )
 	{
-		mesh.HasIndices()
-			? Render_Indexed( mesh )
-			: Render_NonIndexed( mesh );
+		mesh.HasInstancing()
+			? mesh.HasIndices()
+				? RenderInstanced_Indexed( mesh )
+				: RenderInstanced_NonIndexed( mesh )
+			: mesh.HasIndices()
+				? Render_Indexed( mesh )
+				: Render_NonIndexed( mesh );
 	}
 
 	void Renderer::Render_Indexed( const Mesh& mesh )
@@ -574,6 +583,23 @@ namespace Engine
 	void Renderer::Render_NonIndexed( const Mesh& mesh )
 	{
 		glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() );
+	}
+
+	void Renderer::RenderInstanced( const Mesh& mesh )
+	{
+		mesh.HasIndices()
+			? RenderInstanced_Indexed( mesh )
+			: RenderInstanced_NonIndexed( mesh );
+	}
+
+	void Renderer::RenderInstanced_Indexed( const Mesh& mesh )
+	{
+		glDrawElementsInstanced( ( GLint )mesh.Primitive(), mesh.IndexCount(), mesh.IndexType(), 0, mesh.InstanceCount() );
+	}
+
+	void Renderer::RenderInstanced_NonIndexed( const Mesh& mesh )
+	{
+		glDrawArraysInstanced( ( GLint )mesh.Primitive(), 0, mesh.VertexCount(), mesh.InstanceCount() );
 	}
 
 	void Renderer::UploadIntrinsics()
@@ -685,10 +711,10 @@ namespace Engine
 				/* Swap: */
 				{
 					Shader temp( std::move( *shader ) );
-					*shader = std::move( new_shader );
+					*shader    = std::move( new_shader );
 					new_shader = std::move( temp );
 
-					new_shader.program_id = 0; // To prevent double-deletion.
+					new_shader.program_id.Reset(); // To prevent double-deletion.
 				}
 
 				RegisterShader( *shader );

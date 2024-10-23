@@ -2,7 +2,8 @@
 
 // Engine Includes.
 #include "Graphics.h"
-#include "Macros.h"
+#include "GraphicsMacros.h"
+#include "ID.hpp"
 #include "Math/Vector.hpp"
 
 // std Includes.
@@ -27,7 +28,7 @@ namespace Engine
 	{
 	public:
 		struct CubeMapConstructorTag {};
-		static constexpr CubeMapConstructorTag CUBEMAP_CONSTRUCTOR;
+		static constexpr CubeMapConstructorTag CUBEMAP_CONSTRUCTOR = {};
 
 		enum class Wrapping
 		{
@@ -79,7 +80,7 @@ namespace Engine
 		ASSET_LOADER_CLASS_DECLARATION( Texture );
 
 	public:
-		using ID = unsigned int;
+		using ID = ID< Texture >;
 
 	public:
 		Texture();

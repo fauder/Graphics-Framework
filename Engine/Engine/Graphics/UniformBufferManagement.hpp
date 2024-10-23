@@ -1,9 +1,9 @@
 #pragma once
 
 // Engine Includes.
+#include "Buffer.hpp"
 #include "Std140StructTag.h"
 #include "Uniform.h"
-#include "UniformBuffer.h"
 #include "UniformBufferManager.h"
 #include "Core/DirtyBlob.h"
 

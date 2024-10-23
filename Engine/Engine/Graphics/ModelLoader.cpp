@@ -73,7 +73,7 @@ namespace Engine
                         return false;
 
                     sub_mesh_albedo_texture = textures[ fastgltf_texture.imageIndex.value() ];
-                    sub_mesh_albedo_texture->SetName( "Albedo" );
+                    sub_mesh_albedo_texture->SetName( ( "Albedo (" + gltf_mesh.name + ")" ).c_str() );
 
                     if( base_color_texture_info->transform && base_color_texture_info->transform->texCoordIndex.has_value() )
                         base_color_uv_index = base_color_texture_info->transform->texCoordIndex.value();
@@ -158,19 +158,11 @@ namespace Engine
                 return false;
             const std::uint32_t index_count = static_cast< std::uint32_t >( index_accessor.count );
 
-            std::vector< std::uint16_t > indices_u16;
             std::vector< std::uint32_t > indices_u32;
 
-            if( index_accessor.componentType == fastgltf::ComponentType::UnsignedByte || index_accessor.componentType == fastgltf::ComponentType::UnsignedShort )
-            {
-                indices_u16.resize( index_count );
-                fastgltf::copyFromAccessor< std::uint16_t >( gltf_asset, index_accessor, indices_u16.data() );
-            }
-            else
-            {
-                indices_u32.resize( index_count );
-                fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
-            }
+            // Ignore 16 bit indices (or any other format other than 32 bit for that matter).
+            indices_u32.resize( index_count );
+            fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
 
             std::string sub_mesh_name( mesh_group_to_load.name + "_" + std::to_string( std::distance( gltf_mesh.primitives.begin(), submesh_iterator ) ) );
 
@@ -180,7 +172,7 @@ namespace Engine
 																				   sub_mesh_name,
 																				   std::move( normals ),
 																				   std::move( uvs_0 ),
-																				   std::move( indices_u16 ), std::move( indices_u32 ) ) ),
+																				   std::move( indices_u32 ) ) ),
 														sub_mesh_albedo_texture,
                                                         std::move( sub_mesh_albedo_color ) );
 		}
@@ -212,7 +204,7 @@ namespace Engine
                         [ & ]( const fastgltf::sources::Array& vector )
                         {
                             texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ), vector.bytes.data(), static_cast< int >( vector.bytes.size() ),
-																					   texture_import_settings );
+																					           texture_import_settings );
                         },
                         [ & ]( const fastgltf::sources::BufferView& view )
                         {

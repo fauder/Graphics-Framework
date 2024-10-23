@@ -9,106 +9,109 @@ namespace Engine
 {
 	VertexArray::VertexArray( const std::string& name )
 		:
-		id( -1 ),
+		id( {} ),
 		name( name ),
-		vertex_buffer_id( -1 ),
-		index_buffer_id( -1 ),
+		vertex_buffer_id( {} ),
+		index_buffer_id( {} ),
+		instance_buffer_id( {} ),
 		vertex_count( 0 ),
-		index_count( 0 )
+		index_count( 0 ),
+		instance_count( 0 )
 	{
 	}
 
 	VertexArray::VertexArray( VertexArray&& donor )
 		:
-		id( std::exchange( donor.id, -1 ) ),
+		id( std::exchange( donor.id, {} ) ),
 		name( std::exchange( donor.name, {} ) ),
-		vertex_buffer_id( std::exchange( donor.vertex_buffer_id, -1 ) ),
-		index_buffer_id( std::exchange( donor.index_buffer_id, -1 ) ),
+		vertex_buffer_id( std::exchange( donor.vertex_buffer_id, {} ) ),
+		index_buffer_id( std::exchange( donor.index_buffer_id, {} ) ),
+		instance_buffer_id( std::exchange( donor.instance_buffer_id, {} ) ),
 		vertex_count( std::exchange( donor.vertex_count, 0 ) ),
-		index_count( std::exchange( donor.index_count, 0 ) )
+		index_count( std::exchange( donor.index_count, 0 ) ),
+		instance_count( std::exchange( donor.instance_count, 0 ) )
 	{
 	}
 
 	VertexArray& VertexArray::operator=( VertexArray&& donor )
 	{
-		id               = std::exchange( donor.id,					-1 );
-		name             = std::exchange( donor.name,				{} );
-		vertex_buffer_id = std::exchange( donor.vertex_buffer_id,	-1 );
-		index_buffer_id  = std::exchange( donor.index_buffer_id,	-1 );
-		vertex_count     = std::exchange( donor.vertex_count,		 0 );
-		index_count      = std::exchange( donor.index_count,		 0 );
+		id                  = std::exchange( donor.id,					{} );
+		name                = std::exchange( donor.name,				{} );
+		vertex_buffer_id    = std::exchange( donor.vertex_buffer_id,	{} );
+		index_buffer_id     = std::exchange( donor.index_buffer_id,		{} );
+		instance_buffer_id  = std::exchange( donor.instance_buffer_id,	{} );
+		vertex_count        = std::exchange( donor.vertex_count,		0 );
+		index_count         = std::exchange( donor.index_count,			0 );
+		instance_count      = std::exchange( donor.instance_count,		0 );
 
 		return *this;
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout, const std::string& name )
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer,
+							  const VertexLayout& vertex_buffer_layout, 
+							  const std::string& name )
 		:
-		id( -1 ),
+		id( {} ),
 		name( name ),
 		vertex_buffer_id( vertex_buffer.Id() ),
-		index_buffer_id( -1 ),
+		index_buffer_id( {} ),
+		instance_buffer_id( {} ),
 		vertex_count( vertex_buffer.Count() ),
-		index_count( 0 )
+		index_count( 0 ),
+		instance_count( 0 )
 	{
 		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
 
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}
 
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout, const IndexBuffer_U16& index_buffer, const std::string& name )
-		:
-		id( -1 ),
-		name( name ),
-		vertex_buffer_id( vertex_buffer.Id() ),
-		index_buffer_id( index_buffer.Id() ),
-		vertex_count( vertex_buffer.Count() ),
-		index_count( index_buffer.Count() )
-	{
-		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
-		index_buffer.Bind();
-
-		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
-	}
-
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout, const IndexBuffer_U32& index_buffer, const std::string& name )
-		:
-		id( -1 ),
-		name( name ),
-		vertex_buffer_id( vertex_buffer.Id() ),
-		index_buffer_id( index_buffer.Id() ),
-		vertex_count( vertex_buffer.Count() ),
-		index_count( index_buffer.Count() )
-	{
-		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
-		index_buffer.Bind();
-
-		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
-	}
-
-	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout,
-							  const std::optional< IndexBuffer_U16 >& index_buffer_u16, const std::optional< IndexBuffer_U32 >& index_buffer_u32,
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, 
+							  const VertexLayout& vertex_buffer_layout, 
+							  const std::optional< IndexBuffer >& index_buffer,
 							  const std::string& name )
 		:
 		id( -1 ),
 		name( name ),
 		vertex_buffer_id( vertex_buffer.Id() ),
-		index_buffer_id( index_buffer_u16
-							? index_buffer_u16->Id()
-							: index_buffer_u32
-								? index_buffer_u32->Id()
-								: -1 ),
+		index_buffer_id( index_buffer
+						 ? index_buffer->Id()
+						 : IndexBuffer::ID{} ),
+		instance_buffer_id( -1 ),
 		vertex_count( vertex_buffer.Count() ),
-		index_count( index_buffer_u16
-						? index_buffer_u16->Count()
-						: index_buffer_u32
-							? index_buffer_u32->Count()
-							: 0 )
+		index_count( index_buffer
+					 ? index_buffer->Count()
+					 : 0 ),
+		instance_count( 0 )
 	{
 		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, vertex_buffer_layout );
-		if( index_buffer_u16 )
-			index_buffer_u16->Bind();
-		else if( index_buffer_u32 )
-			index_buffer_u32->Bind();
+		if( index_buffer )
+			index_buffer->Bind();
+
+		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
+	}
+
+	VertexArray::VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout,
+							  const std::optional< IndexBuffer >& index_buffer,
+							  const VertexBuffer& instance_buffer,
+							  const std::string& name )
+		:
+		id( -1 ),
+		name( name ),
+		vertex_buffer_id( vertex_buffer.Id() ),
+		index_buffer_id( index_buffer
+							? index_buffer->Id()
+							: IndexBuffer::ID{} ),
+		instance_buffer_id( instance_buffer.Id() ),
+		vertex_count( vertex_buffer.Count() ),
+		index_count( index_buffer
+						? index_buffer->Count()
+						: 0 ),
+		instance_count( instance_buffer.Count() )
+	{
+		CreateArrayAndRegisterVertexBufferAndAttributes( vertex_buffer, instance_buffer, vertex_buffer_layout );
+
+		if( index_buffer )
+			index_buffer->Bind();
 
 		Unbind(); // To prevent unwanted register/unregister of buffers/layouts etc.
 	}
@@ -116,12 +119,15 @@ namespace Engine
 	VertexArray::~VertexArray()
 	{
 		if( IsValid() )
-			glDeleteVertexArrays( 1, &id );
+		{
+			glDeleteVertexArrays( 1, id.Address() );
+			id.Reset(); // OpenGL does not reset the id to zero.
+		}
 	}
 
 	void VertexArray::Bind() const
 	{
-		glBindVertexArray( id );
+		glBindVertexArray( id.Get() );
 	}
 
 	void VertexArray::Unbind() const
@@ -129,17 +135,33 @@ namespace Engine
 		glBindVertexArray( 0 );
 	}
 
-	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_buffer_layout )
+	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout )
 	{
-		glGenVertexArrays( 1, &id );
+		glGenVertexArrays( 1, id.Address() );
 		Bind();
 
 #ifdef _DEBUG
 		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_VERTEX_ARRAY, id, name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_VERTEX_ARRAY, id.Get(), name );
 #endif // _DEBUG
 
 		vertex_buffer.Bind();
-		vertex_buffer_layout.SetAndEnableAttributes();
+		vertex_layout.SetAndEnableAttributes_NonInstanced();
+	}
+
+	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const InstanceBuffer& instance_buffer, const VertexLayout& vertex_layout )
+	{
+		glGenVertexArrays( 1, id.Address() );
+		Bind();
+
+	#ifdef _DEBUG
+		if( not name.empty() )
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_VERTEX_ARRAY, id.Get(), name );
+	#endif // _DEBUG
+
+		vertex_buffer.Bind();
+		vertex_layout.SetAndEnableAttributes_NonInstanced();
+		instance_buffer.Bind();
+		vertex_layout.SetAndEnableAttributes_Instanced();
 	}
 }

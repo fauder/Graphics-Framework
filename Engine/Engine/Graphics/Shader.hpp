@@ -3,9 +3,10 @@
 // Engine Includes.
 #include "Graphics.h"
 #include "Color.hpp"
+#include "Id.hpp"
+#include "Lighting/Lighting.h"
 #include "Std140StructTag.h"
 #include "Uniform.h"
-#include "Lighting/Lighting.h"
 #include "VertexLayout.hpp"
 #include "Math/Concepts.h"
 #include "Math/Matrix.hpp"
@@ -54,12 +55,15 @@ namespace Engine
 		return shader_type_identifiers[ ( int )shader_type ];
 	}
 
+	/* Forward Declaration: */
+	class Renderer;
+
 	class Shader
 	{
 		friend class Renderer;
 
 	public:
-		using ID = unsigned int;
+		using ID = ID< Renderer >;
 
 		/* Features can be:
 		 *		Declared in shaders, via "#pragma feature <feature_name>" syntax. 
@@ -132,9 +136,10 @@ namespace Engine
 		inline std::size_t GetTotalUniformSize_ForMaterial()		const { return uniform_book_keeping_info.TotalSize_ForMaterialBlob();	}
 		inline std::size_t GetTotalUniformSize()					const { return uniform_book_keeping_info.total_size;					}
 
-		inline bool HasIntrinsicUniformBlocks()	const { return uniform_book_keeping_info.intrinsic_block_count;	}
-		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;	}
-		inline bool HasRegularUniformBlocks()	const { return uniform_book_keeping_info.regular_block_count;	}
+		inline bool HasDefaultUniforms()		const { return uniform_book_keeping_info.default_block_size > 0;	}
+		inline bool HasIntrinsicUniformBlocks()	const { return uniform_book_keeping_info.intrinsic_block_count;		}
+		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;		}
+		inline bool HasRegularUniformBlocks()	const { return uniform_book_keeping_info.regular_block_count;		}
 		
 		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasRegularUniformBlocks(); }
 
@@ -521,7 +526,7 @@ namespace Engine
 
 /* Queries: */
 
-		inline bool IsValid() const { return program_id > 0; }
+		inline bool IsValid() const { return program_id.IsValid(); }
 
 /* Compilation & Linkage: */
 

@@ -50,6 +50,7 @@ namespace Engine
 		std::cout << version << "\n\n";
 
 		ImGuiSetup::Initialize();
+		ImGuiDrawer::Initialize();
 
 		Platform::SetKeyboardEventCallback(
 			[ = ]( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods )

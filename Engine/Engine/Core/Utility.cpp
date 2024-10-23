@@ -71,7 +71,7 @@ namespace Engine
 				{
 					if( source[ char_index ] == delimiter )
 					{
-						splitted.push_back( { source.cbegin() + start, source.cbegin() + char_index } );
+						splitted.emplace_back( source.cbegin() + start, source.cbegin() + char_index );
 						start = char_index + 1; // Does not matter if out-of-bounds; Loop will end before this OoB value can be used.
 					}
 				}
@@ -79,7 +79,7 @@ namespace Engine
 				if( splitted.empty() )
 					splitted.push_back( source );
 				else if( start < source.size() ) // Add the last word.
-					splitted.push_back( { source.cbegin() + start, source.cend() } );
+					splitted.emplace_back( source.cbegin() + start, source.cend() );
 
 				return splitted;
 			}

@@ -44,6 +44,15 @@ namespace Engine::Math
 			}
 		}
 
+		template< Concepts::Angular AngleType >
+		static AngleType Generate( const AngleType min = AngleType( 0 ), const AngleType max = AngleType( 1 ) )
+		{
+			auto& instance = Instance();
+
+			std::uniform_real_distribution< AngleType::UnderlyingType > uniform_dist( min.Value(), max.Value() );
+			return AngleType( uniform_dist( instance.engine ) );
+		}
+
 		template< typename VectorType > requires( VectorType::Dimension() > 1 )
 		static VectorType Generate( const VectorType& min = VectorType::Zero(), 
 									const VectorType& max = VectorType::One() )

@@ -7,6 +7,7 @@
 
 // std Includes.
 #include <stdexcept>
+#include <unordered_map>
 #include <variant>
 
 namespace Engine::GL::Type
@@ -185,6 +186,64 @@ namespace Engine::GL::Type
 		}
 
 		throw std::runtime_error( "ERROR::SHADER_TYPE::CountOf() called with an unknown GL type!" );
+	}
+
+	inline std::pair< int, int > RowAndColumnCountOf( const GLenum type )
+	{
+		switch( type )
+		{
+			/* Scalars & vectors: */
+			case GL_FLOAT				: return  { 1, 1 };
+			case GL_FLOAT_VEC2			: return  { 1, 2 };
+			case GL_FLOAT_VEC3			: return  { 1, 3 };
+			case GL_FLOAT_VEC4			: return  { 1, 4 };
+
+			case GL_DOUBLE				: return  { 1, 1 };
+			case GL_DOUBLE_VEC2			: return  { 1, 2 };
+			case GL_DOUBLE_VEC3			: return  { 1, 3 };
+			case GL_DOUBLE_VEC4			: return  { 1, 4 };
+
+			case GL_INT					: return  { 1, 1 };
+			case GL_INT_VEC2			: return  { 1, 2 };
+			case GL_INT_VEC3			: return  { 1, 3 };
+			case GL_INT_VEC4			: return  { 1, 4 };
+
+			case GL_UNSIGNED_INT		: return  { 1, 1 };
+			case GL_UNSIGNED_INT_VEC2	: return  { 1, 2 };
+			case GL_UNSIGNED_INT_VEC3	: return  { 1, 3 };
+			case GL_UNSIGNED_INT_VEC4	: return  { 1, 4 };
+
+			case GL_BOOL				: return  { 1, 1 };
+			case GL_BOOL_VEC2			: return  { 1, 2 };
+			case GL_BOOL_VEC3			: return  { 1, 3 };
+			case GL_BOOL_VEC4			: return  { 1, 4 };
+
+			/* Float matrices: */
+			case GL_FLOAT_MAT2 			: return  { 2, 2 };
+			case GL_FLOAT_MAT3 			: return  { 3, 3 };
+			case GL_FLOAT_MAT4 			: return  { 4, 4 };
+
+			case GL_FLOAT_MAT2x3 		: return  { 2, 3 };
+			case GL_FLOAT_MAT2x4 		: return  { 2, 4 };
+			case GL_FLOAT_MAT3x2 		: return  { 3, 2 };
+			case GL_FLOAT_MAT3x4 		: return  { 3, 4 };
+			case GL_FLOAT_MAT4x2 		: return  { 4, 2 };
+			case GL_FLOAT_MAT4x3 		: return  { 4, 3 };
+
+			/* Double matrices: */
+			case GL_DOUBLE_MAT2 		: return  { 2, 2 };
+			case GL_DOUBLE_MAT3 		: return  { 3, 3 };
+			case GL_DOUBLE_MAT4 		: return  { 4, 4 };
+
+			case GL_DOUBLE_MAT2x3 		: return  { 2, 3 };
+			case GL_DOUBLE_MAT2x4 		: return  { 2, 4 };
+			case GL_DOUBLE_MAT3x2 		: return  { 3, 2 };
+			case GL_DOUBLE_MAT3x4 		: return  { 3, 4 };
+			case GL_DOUBLE_MAT4x2 		: return  { 4, 2 };
+			case GL_DOUBLE_MAT4x3 		: return  { 4, 3 };
+		}
+
+		throw std::runtime_error( "ERROR::SHADER_TYPE::RowAndColumnCountOf() called with an unknown GL type!" );
 	}
 
 	inline const char* NameOf( const GLenum type )
@@ -425,8 +484,6 @@ namespace Engine::GL::Type
 		};
 
 		return lookUp_table[ name ];
-
-		throw std::runtime_error( "ERROR::SHADER_TYPE::TypeOf() called with an unknown string!" );
 	}
 
 	inline GLenum ComponentTypeOf( const GLenum type )
@@ -484,7 +541,7 @@ namespace Engine::GL::Type
 			case GL_DOUBLE_MAT4x3 		: return GL_DOUBLE;
 		}
 
-		throw std::runtime_error( "ERROR::SHADER_TYPE::CountOf() called with an unknown GL type!" );
+		throw std::runtime_error( "ERROR::SHADER_TYPE::ComponentTypeOf() called with an unknown GL type!" );
 	}
 
 	inline void* AddressOf( const GLenum type, void* address, const int element_index )

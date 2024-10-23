@@ -149,7 +149,7 @@ namespace Engine
 			SortingMode sorting_mode = SortingMode::None;
 		};
 
-		using RenderGroupID = unsigned int;
+		enum class RenderGroupID : unsigned int {};
 
 	private:
 		struct RenderGroup
@@ -190,7 +190,7 @@ namespace Engine
 		void SetRenderGroupName( const RenderGroupID group_id_to_rename, const std::string_view new_name );
 		void ToggleRenderGroup( const RenderGroupID group_id_to_toggle, const bool enable );
 
-		void AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id = 0 );
+		void AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id = RenderGroupID{ 0 } );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
 		void RemoveDrawable( Drawable* drawable_to_remove );
 		void RemoveAllDrawables();
@@ -316,6 +316,10 @@ namespace Engine
 		void Render( const Mesh& mesh );
 		void Render_Indexed( const Mesh& mesh );
 		void Render_NonIndexed( const Mesh& mesh );
+
+		void RenderInstanced( const Mesh& mesh );
+		void RenderInstanced_Indexed( const Mesh& mesh );
+		void RenderInstanced_NonIndexed( const Mesh& mesh );
 	
 		void UploadIntrinsics();
 		void UploadGlobals();

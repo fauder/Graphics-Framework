@@ -11,15 +11,20 @@
 
 namespace Engine::ImGuiDrawer
 {
+	State STATE;
+
 	using namespace Engine::Math::Literals;
+
+	void Initialize()
+	{
+		ServiceLocator< State >::Register( &STATE );
+	}
 
 	void Update()
 	{
-		IMGUI_STYLE = &ImGui::GetStyle();
-
 		if( ImGui::Begin( ICON_FA_PAINTBRUSH " Materials", nullptr ) )
 		{
-			ImGui::Checkbox( "Hide padding parameters", &WINDOW_MATERIAL_PADDING_HIDE );
+			ImGui::Checkbox( "Hide padding parameters", &ServiceLocator< State >::Get().window_material_padding_hide );
 			ImGui::Separator();
 		}
 		ImGui::End();
@@ -185,14 +190,16 @@ namespace Engine::ImGuiDrawer
 
 	bool Draw( Color3& color, const char* name )
 	{
-		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		return ImGui::ColorEdit3( name, color.Data() );
 		ImGui::PopItemWidth();
 	}
 
 	void Draw( const Color3& color, const char* name )
 	{
-		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 3.0f * ImGui::CalcTextSize( "R:  255" ).x + 3.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::ColorEdit3( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
@@ -202,14 +209,16 @@ namespace Engine::ImGuiDrawer
 
 	bool Draw( Color4& color, const char* name )
 	{
-		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		return ImGui::ColorEdit4( name, color.Data() );
 		ImGui::PopItemWidth();
 	}
 
 	void Draw( const Color4& color, const char* name )
 	{
-		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * IMGUI_STYLE->ItemInnerSpacing.x + 2.0f * IMGUI_STYLE->FramePadding.x );
+		const auto& style = ImGui::GetStyle();
+		ImGui::PushItemWidth( 4.0f * ImGui::CalcTextSize( "R:  255" ).x + 4.0f * style.ItemInnerSpacing.x + 2.0f * style.FramePadding.x );
 		ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 		/* Since the no inputs & no picker flags are passed, the passed pointer will not be modified. So this hack is safe to use here. */
 		ImGui::ColorEdit4( name, const_cast< float* >( color.Data() ), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoPicker );
@@ -332,13 +341,14 @@ namespace Engine::ImGuiDrawer
 
 		if( texture )
 		{
-			ImGui::Image( ( void* )( intptr_t )texture->Id(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
 			ImGui::SameLine();
 			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
 		}
 		else
 		{
-			ImGui::Dummy( ImVec2( 24, 24 ) + IMGUI_STYLE->ItemInnerSpacing );
+			const auto& style = ImGui::GetStyle();
+			ImGui::Dummy( ImVec2( 24, 24 ) + style.ItemInnerSpacing );
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
 		}
@@ -352,13 +362,14 @@ namespace Engine::ImGuiDrawer
 
 		if( texture )
 		{
-			ImGui::Image( ( void* )( intptr_t )texture->Id(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
 		}
 		else
 		{
-			ImGui::Dummy( ImVec2( 24, 24 ) + IMGUI_STYLE->ItemInnerSpacing );
+			const auto& style = ImGui::GetStyle();
+			ImGui::Dummy( ImVec2( 24, 24 ) + style.ItemInnerSpacing );
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
 		}
@@ -374,7 +385,8 @@ namespace Engine::ImGuiDrawer
 		if( ImGui::Begin( ICON_FA_IMAGE " Textures" ) )
 		{
 			const ImVec2 region_available( ImGui::GetContentRegionAvail() );
-			const float separator_height( IMGUI_STYLE->ItemSpacing.y * 2.0f );
+			const auto& style = ImGui::GetStyle();
+			const float separator_height( style.ItemSpacing.y * 2.0f );
 			const float line_height( ImGui::CalcTextSize( "A" ).y );
 
 			const ImVec2 child_size( region_available.x, region_available.y / 2.0f - separator_height - line_height );
@@ -411,7 +423,7 @@ namespace Engine::ImGuiDrawer
 				const float padding_y = ( preview_area_size.y - image_height_fit ) / 2.0f;
 
 				ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( padding_x, padding_y ) );
-				ImGui::Image( ( void* )( intptr_t )selected_texture->Id(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
+				ImGui::Image( ( void* )( intptr_t )selected_texture->Id().Get(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
 
 				char info_line_buffer[ 255 ];
 				sprintf_s( info_line_buffer, 255, "%dx%d", ( int )image_width, ( int )image_height );
@@ -425,7 +437,7 @@ namespace Engine::ImGuiDrawer
 		ImGui::End();
 	}
 
-	bool Draw( Camera& camera, const char* name )
+	bool Draw( Camera& camera, const char* name, const bool disable_aspect_ratio_and_fov )
 	{
 		bool is_modified = false;
 
@@ -436,15 +448,28 @@ namespace Engine::ImGuiDrawer
 			float aspect_ratio = camera.GetAspectRatio();
 			float vertical_fov = ( float )camera.GetVerticalFieldOfView();
 
-			/*																		Min Value:		Max Value:		Format: */
-			if( is_modified |= ImGui::SliderFloat( "Near Plane",	&near_plane,	0.0f,			far_plane						) )
+			/*																	Min Value:		Max Value: */
+			if( is_modified |= ImGui::SliderFloat( "Near Plane", &near_plane,	0.0f,			far_plane	) )
 				camera.SetNearPlaneOffset( near_plane );
-			if( is_modified |= ImGui::SliderFloat( "Far Plane",		&far_plane,		near_plane,		1000.0f							) )
+			if( is_modified |= ImGui::SliderFloat( "Far Plane",	 &far_plane,	near_plane,		1000.0f	) )
 				camera.SetFarPlaneOffset( far_plane );
-			if( is_modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,			5.0f							) )
-				camera.SetAspectRatio( aspect_ratio );
-			if( is_modified |= ImGui::SliderAngle( "Vertical FoV",	&vertical_fov,	1.0f,			180.0f,			"%.3f degrees"	) )
-				camera.SetVerticalFieldOfView( Radians( vertical_fov ) );
+
+			if( disable_aspect_ratio_and_fov )
+			{
+				ImGui::BeginDisabled();
+				/*													Min Value:	Max Value:	Format: */
+				ImGui::InputFloat( "Aspect Ratio",	&aspect_ratio,	0,			0,			"%.3f",			ImGuiInputTextFlags_ReadOnly );
+				ImGui::InputFloat( "Vertical FoV",	&vertical_fov,	0,			0,			"%.3f degrees",	ImGuiInputTextFlags_ReadOnly );
+				ImGui::EndDisabled();
+			}
+			else
+			{
+				/*																		Min Value:	Max Value:	Format: */
+				if( is_modified |= ImGui::SliderFloat( "Aspect Ratio",	&aspect_ratio,	0.1f,		5.0f						) )
+					camera.SetAspectRatio( aspect_ratio );
+				if( is_modified |= ImGui::SliderAngle( "Vertical FoV",	&vertical_fov,	1.0f,		180.0f,		"%.3f degrees"	) )
+					camera.SetVerticalFieldOfView( Radians( vertical_fov ) );
+			}
 
 			ImGui::TreePop();
 		}
@@ -538,7 +563,9 @@ namespace Engine::ImGuiDrawer
 
 								void* address = material.Get( uniform_info );
 
-								ImGui::PushItemWidth( uniform_info.usage_hint_array_dimensions[ 1 ] * ImGui::CalcTextSize( " []" ).x + ( uniform_info.usage_hint_array_dimensions[ 1 ] - 1 ) * IMGUI_STYLE->ItemInnerSpacing.x );
+								const auto& style = ImGui::GetStyle();
+								ImGui::PushItemWidth( uniform_info.usage_hint_array_dimensions[ 1 ] * ImGui::CalcTextSize( " []" ).x + 
+													  ( uniform_info.usage_hint_array_dimensions[ 1 ] - 1 ) * style.ItemInnerSpacing.x );
 
 								for( int i = 0; i < uniform_info.usage_hint_array_dimensions[ 0 ]; i++ )
 								{
@@ -673,7 +700,7 @@ namespace Engine::ImGuiDrawer
 							{
 								const bool is_padding = uniform_buffer_member_info->editor_name.compare( 0, 8, "Padding", 8 ) == 0;
 
-								if( is_padding && WINDOW_MATERIAL_PADDING_HIDE )
+								if( is_padding && ServiceLocator< State >::Get().window_material_padding_hide )
 									continue;
 
 								ImGui::BeginDisabled( is_padding );
@@ -804,7 +831,7 @@ namespace Engine::ImGuiDrawer
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniforms" );
 
-				if( ImGui::BeginTable( "Uniforms", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+				if( shader.HasDefaultUniforms() && ImGui::BeginTable( "Uniforms", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 				{
 					ImGui::TableSetupColumn( "Name"		);
 					ImGui::TableSetupColumn( "Location" );
@@ -834,11 +861,13 @@ namespace Engine::ImGuiDrawer
 
 					ImGui::EndTable();
 				}
+				else
+					ImGui::TextDisabled( "(None)" );
 
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Uniform Buffers" );
 
-				if( ImGui::BeginTable( "Uniform Buffers", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+				if( shader.HasUniformBlocks() && ImGui::BeginTable( "Uniform Buffers", 5, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
 				{
 					ImGui::TableSetupColumn( "Name"				);
 					ImGui::TableSetupColumn( "Binding/Location" );
@@ -899,6 +928,8 @@ namespace Engine::ImGuiDrawer
 
 					ImGui::EndTable();
 				}
+				else
+					ImGui::TextDisabled( "(None)" );
 
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Features" );

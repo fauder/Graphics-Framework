@@ -1,5 +1,8 @@
 #pragma once
 
+// Engine Includes.
+#include "ID.hpp"
+
 // std Includes.
 #include <string>
 
@@ -8,7 +11,7 @@ namespace Engine
 	class Renderbuffer
 	{
 	public:
-		using ID = unsigned int;
+		using ID = ID< Renderbuffer >;
 
 	public:
 		Renderbuffer();

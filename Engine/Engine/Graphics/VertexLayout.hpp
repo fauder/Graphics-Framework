@@ -2,7 +2,8 @@
 
 // Engine Includes.
 #include "Graphics.h"
-#include "Macros.h"
+#include "GraphicsMacros.h"
+#include "ShaderTypeInformation.h"
 #include "Math/Concepts.h"
 
 // std Includes.
@@ -10,116 +11,85 @@
 
 namespace Engine
 {
-	struct VertexAttributeCountAndType
+	struct VertexAttribute
+	{
+		int count;
+		GLenum type;
+		bool is_instanced;
+		unsigned int location;
+
+		/* Comparison operators. */
+		constexpr bool operator ==( const VertexAttribute& other ) const = default;
+		constexpr bool operator !=( const VertexAttribute& other ) const = default;
+
+		inline bool Empty() const { return count == 0; }
+
+		/* Comparison operators. */
+
+		inline unsigned int Size() const { return count * GL::Type::SizeOf( type ); }
+	};
+
+	struct VertexInstanceAttribute
 	{
 		int count;
 		GLenum type;
 
 		/* Comparison operators. */
-		constexpr bool operator ==( const VertexAttributeCountAndType& ) const = default;
-		constexpr bool operator !=( const VertexAttributeCountAndType& ) const = default;
+		constexpr bool operator ==( const VertexInstanceAttribute& other ) const = default;
+		constexpr bool operator !=( const VertexInstanceAttribute& other ) const = default;
 
 		inline bool Empty() const { return count == 0; }
-	}; 
-	
-	struct VertexAttribute : VertexAttributeCountAndType
-	{
-		unsigned int location;
-		GLint normalize;
 
 		/* Comparison operators. */
-		constexpr bool operator ==( const VertexAttribute& ) const = default;
-		constexpr bool operator !=( const VertexAttribute& ) const = default;
 
-		inline unsigned int Size() const { return count * sizeof( type ); }
+		inline unsigned int Size() const { return count * GL::Type::SizeOf( type ); }
 	};
 
 	class VertexLayout
 	{
 	public:
-		VertexLayout()
-		{}
+		VertexLayout();
 
-		/* Prevent copying but allow moving: */
-		VertexLayout( const VertexLayout& )				= delete;
-		VertexLayout& operator =( const VertexLayout& ) = delete;
+		VertexLayout( const VertexLayout& )				= default;
+		VertexLayout& operator =( const VertexLayout& ) = default;
 		VertexLayout( VertexLayout&& )					= default;
 		VertexLayout& operator =( VertexLayout&& )		= default;
 
-		template< typename Collection > 
-		VertexLayout( Collection&& attribute_counts_and_types )
-		{
-			for( const auto& attribute : attribute_counts_and_types )
-				if( !attribute.Empty() )
-					attributes.push_back( { attribute.count, attribute.type, ( unsigned int )attributes.size(), GL_FALSE } );
-		}
+		// This makes it possible to pass all attribute lists together in Mesh constructor, even though some of them may not be present.
+		template< typename Collection >
+		VertexLayout( Collection&& attribute_counts_and_types );
+		// Definition is just below the class definition because this constructor calls Push(), and therefore, has to be defined after the Push() declaration.
 
-		~VertexLayout()
-		{}
+		~VertexLayout();
 
 		/* Comparison operators. */
 		constexpr bool operator ==( const VertexLayout& ) const = default;
 		constexpr bool operator !=( const VertexLayout& ) const = default;
 
-		template< typename Type >
-		void Push( const int count );
+		void Push( const GLenum type, const int count, const bool is_instanced = false );
+		void Push( const VertexInstanceAttribute& attribute );
 
-		template <>
-		void Push< int >( const int count )
-		{
-			attributes.push_back( { count, GL_INT, ( unsigned int )attributes.size(), GL_FALSE } );
-		}
+		void SetAndEnableAttributes_NonInstanced() const;
+		void SetAndEnableAttributes_Instanced() const;
 
-		template <>
-		void Push< bool >( const int count )
-		{
-			attributes.push_back( { count, GL_INT, ( unsigned int )attributes.size(), GL_FALSE } );
-		}
-
-		template <>
-		void Push< float >( const int count )
-		{
-			attributes.push_back( { count, GL_FLOAT, ( unsigned int )attributes.size(), GL_FALSE } );
-		}
-
-		inline void SetAndEnableAttributes() const
-		{
-			const unsigned int stride = Stride();
-			unsigned int offset = 0;
-
-			for( auto index = 0; index < attributes.size(); index++ )
-			{
-				const auto& attribute = attributes[ index ];
-				glVertexAttribPointer( attribute.location, attribute.count, attribute.type, attribute.normalize, stride, BUFFER_OFFSET( offset ) );
-				glEnableVertexAttribArray( attribute.location );
-				offset += attribute.Size();
-			}
-		}
-
-		inline unsigned int Stride() const
-		{
-			unsigned int stride = 0;
-			for( auto index = 0; index < attributes.size(); index++ )
-				stride += attributes[ index ].Size();
-
-			return stride;
-		}
-
+		unsigned int Stride_Total() const;
+		unsigned int Stride_NonInstanced() const;
+		unsigned int Stride_Instanced() const;
+		
 		inline unsigned int Count() const { return ( unsigned int )attributes.size(); }
 
-		inline bool IsCompatibleWith( const VertexLayout& other ) const
-		{
-			if( other.Count() != Count() )
-				return false;
-
-			for( auto i = 0; i < attributes.size(); i++ )
-				if( other.attributes[ i ] != attributes[ i ] )
-					return false;
-			
-			return true;
-		}
+		bool IsCompatibleWith( const VertexLayout& other ) const;
 
 	private:
 		std::vector< VertexAttribute > attributes;
 	};
+
+	// This makes it possible to pass all attribute lists together in Mesh constructor, even though some of them may not be present.
+	template< typename Collection >
+	VertexLayout::VertexLayout( Collection&& attribute_counts_and_types )
+	{
+		for( const auto& attribute : attribute_counts_and_types )
+			if( !attribute.Empty() )
+				Push( attribute.type, attribute.count, attribute.is_instanced );
+	}
 }

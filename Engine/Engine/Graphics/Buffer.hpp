@@ -3,10 +3,12 @@
 // Engine Includes.
 #include "GLLogger.h"
 #include "Graphics.h"
+#include "ID.hpp"
 #include "Core/ServiceLocator.h"
 #include "Core/Assertion.h"
 
 // std Includes.
+#include <map>
 #include <span>
 #include <string>
 #include <cstddef> // std::byte.
@@ -15,16 +17,16 @@
 
 namespace Engine
 {
-	template< GLenum TargetType, typename BufferElementType >
+	template< GLenum TargetType >
 	class Buffer
 	{
 	public:
-		using ID = unsigned int;
+		using ID = ID< Buffer >;
 
 	public:
 		Buffer()
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name(),
 			count( 0 ),
 			size( 0 )
@@ -34,7 +36,7 @@ namespace Engine
 		/* Only allocate memory.*/
 		Buffer( const unsigned int size, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name( name ),
 			count( 0 ),
 			size( size )
@@ -47,13 +49,14 @@ namespace Engine
 
 #ifdef _DEBUG
 			if( not name.empty() )
-				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id.Get(), name );
 #endif // _DEBUG
 		}
 
-		Buffer( const std::span< const BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
+		template< typename BufferElementType >
+		Buffer( const std::span< BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name( name ),
 			count( ( unsigned int )data_span.size() ),
 			size( ( unsigned int )data_span.size_bytes() )
@@ -66,16 +69,17 @@ namespace Engine
 
 #ifdef _DEBUG
 			if( not name.empty() )
-				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id.Get(), name );
 #endif // _DEBUG
 		}
 
 		/* To support cases where the count can not be deduced from the type alone;
 		 * For example consider a vertex buffer that is passed as std::span< float >, with the following vertex attributes: 3x floats position, 3x floats normal, 2x floats uv.
 		 * data_span.size() would give the actual vertex count times 8 (3 + 3 + 2) in this case. */
-		Buffer( const unsigned int count, const std::span< const BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
+		template< typename BufferElementType >
+		Buffer( const unsigned int count, const std::span< BufferElementType > data_span, const std::string& name = {}, const GLenum usage = GL_STATIC_DRAW )
 			:
-			id( -1 ),
+			id( ID( 0 ) ),
 			name( name ),
 			count( count ),
 			size( ( unsigned int )data_span.size_bytes() )
@@ -88,27 +92,45 @@ namespace Engine
 
 #ifdef _DEBUG
 			if( not name.empty() )
-				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id, name );
+				ServiceLocator< GLLogger >::Get().SetLabel( GL_BUFFER, id.Get(), name );
 #endif // _DEBUG
 		}
 
-		/* Prohibit copying; It does not make sense two have multiple Buffers with the same Id. */
-		Buffer( const Buffer& other )			  = delete;
-		Buffer& operator =( const Buffer& other ) = delete;
+		Buffer( const Buffer& other )
+			:
+			id( other.id ),
+			name( other.name ),
+			count( other.count ),
+			size( other.size )
+		{
+			CloneBuffer();
+		}
+
+		Buffer& operator=( const Buffer& other )
+		{
+			id    = other.id;
+			name  = other.name;
+			count = other.count;
+			size  = other.size;
+
+			CloneBuffer();
+
+			return *this;
+		}
 
 		/* Allow moving. */
 		Buffer( Buffer&& donor )
 			:
-			id( std::exchange( donor.id, -1 ) ),
+			id( std::exchange( donor.id, {} ) ),
 			name( std::exchange( donor.name, {} ) ),
 			count( std::exchange( donor.count, 0 ) ),
 			size( std::exchange( donor.size, 0 ) )
 		{
 		}
 		
-		Buffer& operator =( Buffer&& donor )
+		Buffer& operator=( Buffer&& donor )
 		{
-			id    = std::exchange( donor.id,	-1 );
+			id    = std::exchange( donor.id,	{} );
 			name  = std::exchange( donor.name,	{} );
 			count = std::exchange( donor.count,  0 );
 			size  = std::exchange( donor.size,	 0 );
@@ -126,7 +148,7 @@ namespace Engine
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "Attempting Bind() on Buffer with zero size!" );
 
-			glBindBuffer( TargetType, id );
+			glBindBuffer( TargetType, id.Get() );
 		}
 
 		void Update( const void* data, const GLenum usage = GL_STATIC_DRAW ) const
@@ -143,7 +165,7 @@ namespace Engine
 			glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() );
 		}
 		
-		ID				Id()	const { return id;		}
+		const ID&		Id()	const { return id;		}
 		unsigned int	Size()	const { return size;	}
 		unsigned int	Count()	const { return count;	}
 
@@ -152,12 +174,23 @@ namespace Engine
 
 		void CreateBuffer()
 		{
-			glGenBuffers( 1, &id );
+			glGenBuffers( 1, id.Address() );
+			REF_COUNT_MAP[ id ]++;
 		}
 
-		void DeleteBuffer()
+		void CloneBuffer()
 		{
-			glDeleteBuffers( 1, &id );
+			REF_COUNT_MAP[ id ]++;
+		}
+
+		void DeleteBuffer() 
+		{
+			if( --REF_COUNT_MAP[ id ] == 0 )
+			{
+				glDeleteBuffers( 1, id.Address() );
+				REF_COUNT_MAP.erase( id );
+				id.Reset(); // OpenGL does not reset the id to zero.
+			}
 		}
 
 	private:
@@ -165,5 +198,17 @@ namespace Engine
 		std::string name;
 		unsigned int count;
 		unsigned int size;
+
+		static std::map< ID, unsigned int > REF_COUNT_MAP;
 	};
+
+	using VertexBuffer   = Buffer< GL_ARRAY_BUFFER >;
+	using InstanceBuffer = Buffer< GL_ARRAY_BUFFER >;
+	using IndexBuffer    = Buffer< GL_ELEMENT_ARRAY_BUFFER >;
+	using UniformBuffer  = Buffer< GL_UNIFORM_BUFFER >;
+
+	/* Static member variable definitions: */
+
+	template< GLenum TargetType >
+	std::map< typename Buffer< TargetType >::ID, unsigned int > Buffer< TargetType >::REF_COUNT_MAP;
 }
