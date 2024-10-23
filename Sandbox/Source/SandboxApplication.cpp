@@ -178,8 +178,6 @@ void SandboxApplication::Initialize()
 		constexpr Vector3 minimum_offset( -1.0f, -0.4f, -1.0f );
 		constexpr Vector3 maximum_offset( +1.0f, +0.4f, +1.0f );
 
-		// TODO: Implement Random for angle types.
-
 		const auto before = std::chrono::system_clock::now();
 
 		std::for_each_n( std::execution::par, cube_transform_array.begin() + 10, CUBE_COUNT - 10, [ & ]( auto&& cube_transform )
