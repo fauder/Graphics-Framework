@@ -172,6 +172,11 @@ namespace Engine
 										ImGui::PopID();
 										ImGui::BeginDisabled( not drawable->is_enabled );
 										ImGui::SameLine(); ImGui::TextUnformatted( drawable->material->name.c_str() );
+										if( drawable->mesh->HasInstancing() )
+										{
+											int instance_Count = drawable->mesh->InstanceCount();
+											ImGui::SameLine(); ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "(Instance Count: %d)", instance_Count );
+										}
 										ImGui::EndDisabled();
 									}
 								}
