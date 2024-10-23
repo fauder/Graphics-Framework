@@ -8,7 +8,7 @@ namespace Engine
 {
 	Renderbuffer::Renderbuffer()
 		:
-		id( -1 ),
+		id( {} ),
 		width( 0 ),
 		height( 0 ),
 		name( "<unnamed RB>" )
@@ -17,18 +17,18 @@ namespace Engine
 
 	Renderbuffer::Renderbuffer( const std::string_view name, const int width, const int height )
 		:
-		id( -1 ),
+		id( {} ),
 		width( width ),
 		height( height ),
 		name( name )
 	{
-		glGenRenderbuffers( 1, &id );
+		glGenRenderbuffers( 1, id.Address() );
 		Bind();
 
-	#ifdef _DEBUG
+#ifdef _DEBUG
 		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_RENDERBUFFER, id, this->name );
-	#endif // _DEBUG
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_RENDERBUFFER, id.Get(), this->name );
+#endif // _DEBUG
 
 		glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height );
 		glBindRenderbuffer( GL_RENDERBUFFER, 0 );
@@ -36,7 +36,7 @@ namespace Engine
 
 	Renderbuffer::Renderbuffer( Renderbuffer&& donor )
 		:
-		id( std::exchange( donor.id, -1 ) ),
+		id( std::exchange( donor.id, {} ) ),
 		name( std::exchange( donor.name, {} ) ),
 		width( std::exchange( donor.width, 0 ) ),
 		height( std::exchange( donor.height, 0 ) )
@@ -45,10 +45,10 @@ namespace Engine
 
 	Renderbuffer& Renderbuffer::operator =( Renderbuffer&& donor )
 	{
-		id     = std::exchange( donor.id, -1 );
-		name   = std::exchange( donor.name, {} );
-		width  = std::exchange( donor.width, 0 );
-		height = std::exchange( donor.height, 0 );
+		id     = std::exchange( donor.id,		{} );
+		name   = std::exchange( donor.name,		{} );
+		width  = std::exchange( donor.width,	0 );
+		height = std::exchange( donor.height,	0 );
 
 		return *this;
 	}
@@ -56,7 +56,7 @@ namespace Engine
 	Renderbuffer::~Renderbuffer()
 	{
 		if( IsValid() )
-			glDeleteRenderbuffers( 1, &id );
+			glDeleteRenderbuffers( 1, id.Address() );
 	}
 
 	void Renderbuffer::SetName( const std::string& new_name )
@@ -66,6 +66,6 @@ namespace Engine
 
 	void Renderbuffer::Bind() const
 	{
-		glBindRenderbuffer( GL_RENDERBUFFER, id );
+		glBindRenderbuffer( GL_RENDERBUFFER, id.Get() );
 	}
 }
