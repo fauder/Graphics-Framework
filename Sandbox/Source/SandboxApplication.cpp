@@ -24,6 +24,7 @@
 #include <IconFontCppHeaders/IconsFontAwesome6.h>
 
 // std Includes.
+#include <execution>
 #include <fstream>
 
 using namespace Engine::Math::Literals;
@@ -177,24 +178,31 @@ void SandboxApplication::Initialize()
 		constexpr Vector3 minimum_offset( -1.0f, -0.4f, -1.0f );
 		constexpr Vector3 maximum_offset( +1.0f, +0.4f, +1.0f );
 
-		// TODO: Parallelize this.
-
 		// TODO: Implement Random for angle types.
 
-		for( auto cube_index = 10; cube_index < CUBE_COUNT; cube_index++ )
+		const auto before = std::chrono::system_clock::now();
+
+		std::for_each_n( std::execution::par, cube_transform_array.begin() + 10, CUBE_COUNT - 10, [ & ]( auto&& cube_transform )
 		{
+			const int cube_index = ( int )( &cube_transform - cube_transform_array.data() );
 			Radians random_xz_angle( Engine::Math::Random::Generate< float >( 0, Engine::Constants< float >::Two_Pi() ) );
 			constexpr Radians inclination_limit = 15.0_deg;
-			Degrees angle( 20.0f * cube_index );
+			const Radians inclination_angle( Engine::Math::Random::Generate< float >( 0.0f, +( float )inclination_limit ) );
+			Degrees angle( 20.0f * cube_index + inclination_angle );
 			cube_transform_array[ cube_index ]
 				.SetScaling( 0.3f )
 				.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
 				.SetTranslation( CUBES_ORIGIN + 
 								 Vector3( Engine::Math::Cos( random_xz_angle ), 
-										  Engine::Math::Sin( Radians( Engine::Math::Random::Generate< float >( 0.0f, +( float )inclination_limit ) ) ),
+										  Engine::Math::Sin( inclination_angle ),
 										  Engine::Math::Sin( random_xz_angle ) )
 								 * ( float )( ( cube_index % 90 ) + 10 ) );
-		}
+		} );
+
+		const auto after = std::chrono::system_clock::now();
+
+		Engine::ServiceLocator< Engine::GLLogger >::Get().Info( "Cube instance data gen. took " + std::to_string( std::chrono::duration_cast< std::chrono::milliseconds >( after - before ).count() ) +
+																" milliseconds.\n" );
 	}
 
 	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
