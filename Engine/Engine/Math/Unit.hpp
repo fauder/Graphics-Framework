@@ -15,7 +15,11 @@ namespace Engine
 			  template< class > class Derived > /* Explicitly restrict to template classes */
 	class Unit
 	{
+	private:
 		using DerivedType = Derived< Type >;
+
+	public:
+		using UnderlyingType = Type;
 
 	public:
 	/* Constructors. */
