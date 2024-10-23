@@ -83,7 +83,7 @@ private:
 
 	Engine::Drawable light_sources_drawable;
 
-	const static constexpr int CUBE_COUNT = 50'000;
+	const static constexpr int CUBE_COUNT = 200'000;
 	Engine::Drawable cube_drawable;
 	Engine::Drawable cube_drawable_outline;
 

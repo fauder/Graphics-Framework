@@ -187,11 +187,11 @@ void SandboxApplication::Initialize()
 			constexpr Radians inclination_limit = 15.0_deg;
 			Degrees angle( 20.0f * cube_index );
 			cube_transform_array[ cube_index ]
-				.SetScaling( 0.2f )
+				.SetScaling( 0.3f )
 				.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
 				.SetTranslation( CUBES_ORIGIN + 
 								 Vector3( Engine::Math::Cos( random_xz_angle ), 
-										  Engine::Math::Sin( Radians( Engine::Math::Random::Generate< float >( -( float )inclination_limit, +( float )inclination_limit ) ) ),
+										  Engine::Math::Sin( Radians( Engine::Math::Random::Generate< float >( 0.0f, +( float )inclination_limit ) ) ),
 										  Engine::Math::Sin( random_xz_angle ) )
 								 * ( float )( ( cube_index % 90 ) + 10 ) );
 		}
@@ -391,6 +391,11 @@ void SandboxApplication::Initialize()
 	renderer.AddDrawable( &mirror_quad_drawable, render_group_id_screen_size_quad );
 
 	mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
+
+	/* Disable some RenderGroups & Drawables on start-up to decrease clutter. */
+	renderer.ToggleRenderGroup( render_group_id_outline, false );
+	renderer.ToggleRenderGroup( render_group_id_transparent, false );
+	ground_drawable.ToggleOff();
 
 /* Camera: */
 	ResetCamera();
