@@ -73,7 +73,7 @@ namespace Engine
                         return false;
 
                     sub_mesh_albedo_texture = textures[ fastgltf_texture.imageIndex.value() ];
-                    sub_mesh_albedo_texture->SetName( "Albedo" );
+                    sub_mesh_albedo_texture->SetName( ( "Albedo (" + gltf_mesh.name + ")" ).c_str() );
 
                     if( base_color_texture_info->transform && base_color_texture_info->transform->texCoordIndex.has_value() )
                         base_color_uv_index = base_color_texture_info->transform->texCoordIndex.value();
@@ -204,7 +204,7 @@ namespace Engine
                         [ & ]( const fastgltf::sources::Array& vector )
                         {
                             texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ), vector.bytes.data(), static_cast< int >( vector.bytes.size() ),
-																					   texture_import_settings );
+																					           texture_import_settings );
                         },
                         [ & ]( const fastgltf::sources::BufferView& view )
                         {
