@@ -185,9 +185,9 @@ void SandboxApplication::Initialize()
 		std::for_each_n( std::execution::par, cube_transform_array.begin() + 10, CUBE_COUNT - 10, [ & ]( auto&& cube_transform )
 		{
 			const int cube_index = ( int )( &cube_transform - cube_transform_array.data() );
-			Radians random_xz_angle( Engine::Math::Random::Generate< float >( 0, Engine::Constants< float >::Two_Pi() ) );
+			Radians random_xz_angle( Engine::Math::Random::Generate( 0.0_rad, Engine::Constants< Radians >::Two_Pi() ) );
 			constexpr Radians inclination_limit = 15.0_deg;
-			const Radians inclination_angle( Engine::Math::Random::Generate< float >( 0.0f, +( float )inclination_limit ) );
+			const Radians inclination_angle( Engine::Math::Random::Generate( 0.0_rad,inclination_limit ) );
 			Degrees angle( 20.0f * cube_index + inclination_angle );
 			cube_transform_array[ cube_index ]
 				.SetScaling( 0.3f )
