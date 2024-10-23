@@ -47,9 +47,28 @@ namespace Engine
 			  std::vector< Vector2			>&& uvs_3			= {},
 			  std::vector< Color4			>&& colors_rgba		= {} );
 
+		Mesh( const Mesh& other,
+			  const std::initializer_list< VertexInstanceAttribute > instanced_attributes,
+			  const std::vector< float >& instance_data,
+			  const int instance_count,
+			  const GLenum usage = GL_STATIC_DRAW );
+
 		~Mesh();
 
-	/* Queries: */
+	/*
+	 * Usage:
+	 */
+
+		inline void Bind() const { vertex_array.Bind(); }
+		void Update( const void* data ) const;
+		void Update_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const;
+		void UpdateInstanceData( const void* data ) const;
+		void UpdateInstanceData_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const;
+
+	/*
+	 * Queries:
+	 */
+
 		inline const std::string& Name() const { return name; }
 
 		inline PrimitiveType Primitive() const { return primitive_type; }
@@ -59,14 +78,23 @@ namespace Engine
 
 		inline bool HasIndices() const { return IndexCount(); }
 
+		inline bool HasInstancing() const { return ( bool )instance_buffer; }
+		inline int InstanceCount() const { return instance_count; }
+
 		inline bool IsCompatibleWith( const VertexLayout& other_vertex_layout ) const { return vertex_layout.IsCompatibleWith( other_vertex_layout ); }
 
-	/* Index Data: */
+	/*
+	 * Index Data:
+	 */
+
 		inline const std::vector< std::uint32_t >&	Indices()		const { return indices; };
 		inline const std::uint32_t*					Indices_Raw()	const { return indices.data(); };
 		inline constexpr GLenum						IndexType()		const { return GL_UNSIGNED_INT; }
 
-	/* Vertex Data: */
+	/*
+	 * Vertex Data:
+	 */
+
 		inline const std::vector< Vector3 >& Positions()	const { return positions;	};
 		inline const std::vector< Vector3 >& Normals()		const { return normals;		};
 		inline const std::vector< Vector2 >& Uvs_0()		const { return uvs_0;		};
@@ -83,13 +111,11 @@ namespace Engine
 		inline const float* Uvs_3_Raw()			const { return reinterpret_cast< const float* >( uvs_3.data()		); };
 		inline const float* Colors_RGBA_Raw()	const { return reinterpret_cast< const float* >( colors_rgba.data()	); };
 
-		inline void Bind() const { vertex_array.Bind(); }
-
 	private:
-		static std::array< VertexAttributeCountAndType, 7 > AttributeCountsAndTypes( const std::vector< Vector3 >& positions, const std::vector< Vector3 >& normals,
-																					 const std::vector< Vector2 >& uvs_0, const std::vector< Vector2 >& uvs_1,
-																					 const std::vector< Vector2 >& uvs_2, const std::vector< Vector2 >& uvs_3,
-																					 const std::vector< Color4 >& colors_rgba );
+		static std::array< VertexAttribute, 7 > GatherAttributes( const std::vector< Vector3 >& positions, const std::vector< Vector3 >& normals,
+																  const std::vector< Vector2 >& uvs_0, const std::vector< Vector2 >& uvs_1,
+																  const std::vector< Vector2 >& uvs_2, const std::vector< Vector2 >& uvs_3,
+																  const std::vector< Color4 >& colors_rgba );
 
  	private:
 		std::string name;
@@ -106,9 +132,12 @@ namespace Engine
 		std::vector< Vector2 > uvs_3;
 		std::vector< Color4  > colors_rgba;
 
+		int instance_count;
+
 		VertexBuffer vertex_buffer;
 		VertexLayout vertex_layout;
 		std::optional< IndexBuffer > index_buffer;
+		std::optional< InstanceBuffer > instance_buffer;
 		VertexArray vertex_array;
 	};
 }

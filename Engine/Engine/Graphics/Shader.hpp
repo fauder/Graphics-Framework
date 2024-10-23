@@ -136,9 +136,10 @@ namespace Engine
 		inline std::size_t GetTotalUniformSize_ForMaterial()		const { return uniform_book_keeping_info.TotalSize_ForMaterialBlob();	}
 		inline std::size_t GetTotalUniformSize()					const { return uniform_book_keeping_info.total_size;					}
 
-		inline bool HasIntrinsicUniformBlocks()	const { return uniform_book_keeping_info.intrinsic_block_count;	}
-		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;	}
-		inline bool HasRegularUniformBlocks()	const { return uniform_book_keeping_info.regular_block_count;	}
+		inline bool HasDefaultUniforms()		const { return uniform_book_keeping_info.default_block_size > 0;	}
+		inline bool HasIntrinsicUniformBlocks()	const { return uniform_book_keeping_info.intrinsic_block_count;		}
+		inline bool HasGlobalUniformBlocks()	const { return uniform_book_keeping_info.global_block_count;		}
+		inline bool HasRegularUniformBlocks()	const { return uniform_book_keeping_info.regular_block_count;		}
 		
 		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasRegularUniformBlocks(); }
 

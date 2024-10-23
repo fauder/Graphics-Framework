@@ -561,9 +561,13 @@ namespace Engine
 
 	void Renderer::Render( const Mesh& mesh )
 	{
-		mesh.HasIndices()
-			? Render_Indexed( mesh )
-			: Render_NonIndexed( mesh );
+		mesh.HasInstancing()
+			? mesh.HasIndices()
+				? RenderInstanced_Indexed( mesh )
+				: RenderInstanced_NonIndexed( mesh )
+			: mesh.HasIndices()
+				? Render_Indexed( mesh )
+				: Render_NonIndexed( mesh );
 	}
 
 	void Renderer::Render_Indexed( const Mesh& mesh )
@@ -574,6 +578,23 @@ namespace Engine
 	void Renderer::Render_NonIndexed( const Mesh& mesh )
 	{
 		glDrawArrays( ( GLint )mesh.Primitive(), 0, mesh.VertexCount() );
+	}
+
+	void Renderer::RenderInstanced( const Mesh& mesh )
+	{
+		mesh.HasIndices()
+			? RenderInstanced_Indexed( mesh )
+			: RenderInstanced_NonIndexed( mesh );
+	}
+
+	void Renderer::RenderInstanced_Indexed( const Mesh& mesh )
+	{
+		glDrawElementsInstanced( ( GLint )mesh.Primitive(), mesh.IndexCount(), mesh.IndexType(), 0, mesh.InstanceCount() );
+	}
+
+	void Renderer::RenderInstanced_NonIndexed( const Mesh& mesh )
+	{
+		glDrawArraysInstanced( ( GLint )mesh.Primitive(), 0, mesh.VertexCount(), mesh.InstanceCount() );
 	}
 
 	void Renderer::UploadIntrinsics()

@@ -38,7 +38,8 @@ ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const 
 
 		for( auto i = 0; i < mesh_instance_count; i++ )
 		{
-			drawable_array[ i ] = Engine::Drawable( &meshes[ i ], ( render_group_material ? render_group_material : &node_material_array[ i ] ), &node_transform_array[ i ] );
+			drawable_array[ i ] = Engine::Drawable( &meshes[ i ], ( render_group_material ? render_group_material : &node_material_array[ i ] ),
+													node_material_array[ i ].HasUniform( "uniform_transform_world" ) ? &node_transform_array[ i ] : nullptr );
 		}
 	}
 
@@ -94,9 +95,9 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 				{
 					phong_material_data_array[ material_index ] =
 					{
-						.color_diffuse = {},
+						.color_diffuse       = {},
 						.has_texture_diffuse = 1,
-						.shininess = 32.0f
+						.shininess           = 32.0f
 					};
 
 					material.SetTexture( "uniform_diffuse_map_slot", diffuse_texture ? diffuse_texture : sub_mesh.texture_albedo );
@@ -105,9 +106,9 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 				{
 					phong_material_data_array[ material_index ] =
 					{
-						.color_diffuse = *sub_mesh.color_albedo,
+						.color_diffuse       = *sub_mesh.color_albedo,
 						.has_texture_diffuse = 0,
-						.shininess = 32.0f
+						.shininess           = 32.0f
 					};
 				}
 

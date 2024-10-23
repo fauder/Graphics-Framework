@@ -62,6 +62,11 @@ namespace Engine
 	{
 	}
 
+	Transform& Transform::SetScaling( const float& new_uniform_scale )
+	{
+		return SetScaling( new_uniform_scale, new_uniform_scale, new_uniform_scale );
+	}
+
 	Transform& Transform::SetScaling( const Vector3& new_scale )
 	{
 		this->scale = new_scale;

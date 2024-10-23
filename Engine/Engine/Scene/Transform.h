@@ -32,6 +32,7 @@ namespace Engine
 		~Transform();
 
 	/* Modification: */
+		Transform& SetScaling( const float& new_uniform_scale );
 		Transform& SetScaling( const Vector3& new_scale );
 		Transform& SetScaling( const float new_x_scale, const float new_y_scale, const float new_z_scale );
 		Transform& OffsetScaling( const Vector3& delta );

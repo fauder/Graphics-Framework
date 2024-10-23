@@ -8,6 +8,7 @@
 #include "Core/Assertion.h"
 
 // std Includes.
+#include <map>
 #include <span>
 #include <string>
 #include <cstddef> // std::byte.
@@ -95,9 +96,27 @@ namespace Engine
 #endif // _DEBUG
 		}
 
-		/* Prohibit copying; It does not make sense two have multiple Buffers with the same Id. */
-		Buffer( const Buffer& other )			  = delete;
-		Buffer& operator =( const Buffer& other ) = delete;
+		Buffer( const Buffer& other )
+			:
+			id( other.id ),
+			name( other.name ),
+			count( other.count ),
+			size( other.size )
+		{
+			CloneBuffer();
+		}
+
+		Buffer& operator=( const Buffer& other )
+		{
+			id    = other.id;
+			name  = other.name;
+			count = other.count;
+			size  = other.size;
+
+			CloneBuffer();
+
+			return *this;
+		}
 
 		/* Allow moving. */
 		Buffer( Buffer&& donor )
@@ -109,7 +128,7 @@ namespace Engine
 		{
 		}
 		
-		Buffer& operator =( Buffer&& donor )
+		Buffer& operator=( Buffer&& donor )
 		{
 			id    = std::exchange( donor.id,	{} );
 			name  = std::exchange( donor.name,	{} );
@@ -156,12 +175,22 @@ namespace Engine
 		void CreateBuffer()
 		{
 			glGenBuffers( 1, id.Address() );
+			REF_COUNT_MAP[ id ]++;
+		}
+
+		void CloneBuffer()
+		{
+			REF_COUNT_MAP[ id ]++;
 		}
 
 		void DeleteBuffer() 
 		{
-			glDeleteBuffers( 1, id.Address() );
-			id.Reset(); // OpenGL does not reset the id to zero.
+			if( --REF_COUNT_MAP[ id ] == 0 )
+			{
+				glDeleteBuffers( 1, id.Address() );
+				REF_COUNT_MAP.erase( id );
+				id.Reset(); // OpenGL does not reset the id to zero.
+			}
 		}
 
 	private:
@@ -169,10 +198,17 @@ namespace Engine
 		std::string name;
 		unsigned int count;
 		unsigned int size;
+
+		static std::map< ID, unsigned int > REF_COUNT_MAP;
 	};
 
 	using VertexBuffer   = Buffer< GL_ARRAY_BUFFER >;
 	using InstanceBuffer = Buffer< GL_ARRAY_BUFFER >;
 	using IndexBuffer    = Buffer< GL_ELEMENT_ARRAY_BUFFER >;
 	using UniformBuffer  = Buffer< GL_UNIFORM_BUFFER >;
+
+	/* Static member variable definitions: */
+
+	template< GLenum TargetType >
+	std::map< typename Buffer< TargetType >::ID, unsigned int > Buffer< TargetType >::REF_COUNT_MAP;
 }

@@ -316,6 +316,10 @@ namespace Engine
 		void Render( const Mesh& mesh );
 		void Render_Indexed( const Mesh& mesh );
 		void Render_NonIndexed( const Mesh& mesh );
+
+		void RenderInstanced( const Mesh& mesh );
+		void RenderInstanced_Indexed( const Mesh& mesh );
+		void RenderInstanced_NonIndexed( const Mesh& mesh );
 	
 		void UploadIntrinsics();
 		void UploadGlobals();

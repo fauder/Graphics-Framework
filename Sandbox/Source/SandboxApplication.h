@@ -35,6 +35,13 @@ class SandboxApplication : public Engine::Application
 		CUSTOM_1,
 	};
 
+	struct ModelInfo
+	{
+		ModelInstance model_instance;
+		Engine::Shader* shader;
+		std::string file_path;
+	};
+
 public:
 	SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > );
 	virtual ~SandboxApplication();
@@ -57,11 +64,14 @@ private:
 
 	void ResetLightingData();
 	void ResetMaterialData();
+	void ResetInstanceData();
 	void ResetCamera( const CameraView view = CameraView::FRONT );
 	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
 
-	void ReloadModel( const std::string& file_path );
-	void UnloadModel();
+	bool ReloadModel( ModelInfo& model_info_to_be_loaded, const std::string& file_path, const char* name );
+	void UnloadModel( ModelInfo& model_info_to_be_unloaded );
+
+	void ReplaceMeteoriteAndCubeDrawables( bool use_meteorites );
 
 	void InitializeFramebufferTextures( const int width_new_pixels, const int height_new_pixels );
 	void InitializeRenderbuffers( const int width_new_pixels, const int height_new_pixels );
@@ -71,11 +81,13 @@ private:
 /* Renderer: */
 	Engine::Renderer renderer;
 
-	std::vector< Engine::Drawable > light_source_drawable_array;
+	Engine::Drawable light_sources_drawable;
 
-	const static constexpr int CUBE_COUNT = 10;
-	std::vector< Engine::Drawable > cube_drawable_array;
-	std::vector< Engine::Drawable > cube_drawable_outline_array;
+	const static constexpr int CUBE_COUNT = 50'000;
+	Engine::Drawable cube_drawable;
+	Engine::Drawable cube_drawable_outline;
+
+	Engine::Drawable* meteorite_drawable;
 
 	Engine::Drawable skybox_drawable;
 
@@ -120,13 +132,13 @@ private:
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh, cube_mesh_fullscreen, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;
-
-/* Models: */
-	ModelInstance test_model_instance;
+	Engine::Mesh cube_mesh_instanced;
+	Engine::Mesh cube_mesh_instanced_with_color; // For light sources.
 
 /* Shaders: */
 	Engine::Shader skybox_shader;
 	Engine::Shader phong_shader;
+	Engine::Shader phong_shader_instanced;
 	Engine::Shader phong_skybox_reflection_shader;
 	Engine::Shader basic_color_shader;
 	Engine::Shader basic_textured_shader;
@@ -141,12 +153,16 @@ private:
 
 	Engine::Shader normal_visualization_shader;
 
+/* Models: */
+	ModelInfo test_model_info;
+	ModelInfo meteorite_model_info;
+
 /* Materials: */
 	Engine::Material skybox_material;
 
-	std::vector< Engine::Material > light_source_material_array;
+	Engine::Material light_source_material;
 
-	std::vector< Engine::Material > cube_material_array;
+	Engine::Material cube_material;
 
 	Engine::Material ground_material;
 	Engine::Material wall_material;
@@ -157,6 +173,17 @@ private:
 
 	Engine::Material offscreen_quad_material;
 	Engine::Material mirror_quad_material;
+
+/* Instancing Data: */
+
+	struct LightInstanceData
+	{
+		Matrix4x4 transform;
+		Engine::Color4 color;
+	};
+
+	std::vector< Matrix4x4 > cube_instance_data_array;
+	std::vector< LightInstanceData > light_source_instance_data_array;
 
 /* Scene: */
 	Engine::Transform camera_transform;
@@ -194,7 +221,7 @@ private:
 /* Lighting: */
 	const static constexpr int LIGHT_POINT_COUNT = 15;
 
-	std::vector< Engine::MaterialData::PhongMaterialData > cube_surface_data_array;
+	Engine::MaterialData::PhongMaterialData cube_surface_data;
 	Engine::MaterialData::PhongMaterialData ground_quad_surface_data;
 	Engine::MaterialData::PhongMaterialData wall_surface_data;
 	std::vector< Engine::MaterialData::PhongMaterialData > test_model_node_surface_data_array;
@@ -214,7 +241,7 @@ private:
 	Radians current_time_as_angle;
 
 /* Other: */
-	const static constexpr std::array< Vector3, CUBE_COUNT > CUBE_POSITIONS =
+	const static constexpr std::array< Vector3, 10 > CUBE_POSITIONS_FIRST_10 =
 	{ {
 		{  0.0f,  0.0f,  0.0f	},
 		{  2.0f,  5.0f, +15.0f	},
@@ -228,12 +255,11 @@ private:
 		{ -1.3f,  1.0f, +1.5f	}
 	} };
 
-	const static constexpr Vector3 CUBES_ORIGIN = std::accumulate( CUBE_POSITIONS.cbegin(), CUBE_POSITIONS.cend(), Vector3::Zero() ) / CUBE_COUNT;
+	const static constexpr Vector3 CUBES_ORIGIN = std::accumulate( CUBE_POSITIONS_FIRST_10.cbegin(), CUBE_POSITIONS_FIRST_10.cend(), Vector3::Zero() ) / CUBE_COUNT;
+	const static constexpr Vector3 CAMERA_ROTATION_ORIGIN = CUBES_ORIGIN;
 
 	bool ui_interaction_enabled;
 	bool show_imgui_demo_window;
-
-	std::string test_model_file_path;
 
 	bool draw_rear_view_cam_to_imgui;
 };

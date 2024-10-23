@@ -36,9 +36,6 @@ Engine::Application* Engine::CreateApplication( const Engine::BitFlags< Engine::
 SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > flags )
 	:
 	Engine::Application( flags ),
-	light_source_drawable_array( LIGHT_POINT_COUNT ),
-	cube_drawable_array( CUBE_COUNT ),
-	cube_drawable_outline_array( CUBE_COUNT ),
 	render_group_id_skybox( Engine::Renderer::RenderGroupID{ 999 } ),
 	render_group_id_regular( Engine::Renderer::RenderGroupID{ 0 } ),
 	render_group_id_outlined_mesh( Engine::Renderer::RenderGroupID{ 1 } ),
@@ -47,6 +44,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	render_group_id_screen_size_quad( Engine::Renderer::RenderGroupID{ 4 } ),
 	skybox_shader( "Skybox" ),
 	phong_shader( "Phong" ),
+	phong_shader_instanced( "Phong (Instanced)" ),
 	phong_skybox_reflection_shader( "Phong (w/ Skybox Reflection)" ),
 	basic_color_shader( "Basic Color" ),
 	basic_textured_shader( "Basic Textured" ),
@@ -56,8 +54,10 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	postprocess_grayscale_shader( "Post-process: Grayscale" ),
 	postprocess_generic_shader( "Post-process: Generic" ),
 	normal_visualization_shader( "Normal Visualization" ),
+	test_model_info{ .model_instance = {}, .shader = &phong_shader, .file_path = {} },
+	meteorite_model_info{ .model_instance = {}, .shader = &phong_shader_instanced, .file_path = {} },
 	light_point_transform_array( LIGHT_POINT_COUNT ),
-	cube_transform_array( CUBE_COUNT),
+	cube_transform_array( CUBE_COUNT ),
 	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
 	camera_rotation_speed( 5.0f ),
 	camera_move_speed( 5.0f ),
@@ -122,8 +122,9 @@ void SandboxApplication::Initialize()
 /* Shaders: */
 	skybox_shader.FromFile( R"(Asset/Shader/Skybox.vert)", R"(Asset/Shader/Skybox.frag)" );
 	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
+	phong_shader_instanced.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "INSTANCING_ENABLED" } );
 	phong_skybox_reflection_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING" } );
-	basic_color_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/BasicColor.frag)" );
+	basic_color_shader.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)", { "INSTANCING_ENABLED" } );
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
@@ -137,6 +138,9 @@ void SandboxApplication::Initialize()
 	renderer.RegisterShader( postprocess_grayscale_shader );
 	renderer.RegisterShader( postprocess_generic_shader );
 	renderer.RegisterShader( normal_visualization_shader );
+
+/* Instancing Data: */
+	ResetInstanceData();
 
 /* Initial transforms: */
 	ground_transform
@@ -159,13 +163,42 @@ void SandboxApplication::Initialize()
 		.SetRotation( 180.0_deg, 0.0_deg, 0.0_deg )
 		.SetTranslation( 0.0f, 7.5f, -30.0f );
 
-	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
+	/* Keep the first 10 the same as the ones from LOGL: */
+	for( auto cube_index = 0; cube_index < 10; cube_index++ )
 	{
 		Degrees angle( 20.0f * cube_index );
 		cube_transform_array[ cube_index ]
 			.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
-			.SetTranslation( CUBE_POSITIONS[ cube_index ] + Vector3::Up() * 5.0f );
+			.SetTranslation( CUBE_POSITIONS_FIRST_10[ cube_index ] + Vector3::Up() * 5.0f );
 	}
+
+	/* The rest of the cubes: */
+	{
+		constexpr Vector3 minimum_offset( -1.0f, -0.4f, -1.0f );
+		constexpr Vector3 maximum_offset( +1.0f, +0.4f, +1.0f );
+
+		// TODO: Parallelize this.
+
+		// TODO: Implement Random for angle types.
+
+		for( auto cube_index = 10; cube_index < CUBE_COUNT; cube_index++ )
+		{
+			Radians random_xz_angle( Engine::Math::Random::Generate< float >( 0, Engine::Constants< float >::Two_Pi() ) );
+			constexpr Radians inclination_limit = 15.0_deg;
+			Degrees angle( 20.0f * cube_index );
+			cube_transform_array[ cube_index ]
+				.SetScaling( 0.2f )
+				.SetRotation( Quaternion( angle, Vector3{ 1.0f, 0.3f, 0.5f }.Normalized() ) )
+				.SetTranslation( CUBES_ORIGIN + 
+								 Vector3( Engine::Math::Cos( random_xz_angle ), 
+										  Engine::Math::Sin( Radians( Engine::Math::Random::Generate< float >( -( float )inclination_limit, +( float )inclination_limit ) ) ),
+										  Engine::Math::Sin( random_xz_angle ) )
+								 * ( float )( ( cube_index % 90 ) + 10 ) );
+		}
+	}
+
+	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
+		cube_instance_data_array[ cube_index ] = cube_transform_array[ cube_index ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
 
 	window_transform_array[ 0 ].SetTranslation( Vector3( -1.5f,	5.0f, -0.48f ) );
 	window_transform_array[ 1 ].SetTranslation( Vector3(  1.5f,	5.0f,  0.51f ) );
@@ -203,6 +236,23 @@ void SandboxApplication::Initialize()
 										 { /* No normals. */ },
 										 std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::UVs.cend() ),
 										 { /* No indices. */ } );
+
+	cube_mesh_instanced = Engine::Mesh( cube_mesh,
+										{
+											Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+										},
+										reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
+										CUBE_COUNT,
+										GL_STATIC_DRAW );
+
+	cube_mesh_instanced_with_color = Engine::Mesh( cube_mesh,
+												   {
+													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }, // Transform.
+													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_VEC4 }	// Color.
+												   },
+												   reinterpret_cast< std::vector< float >& >( light_source_instance_data_array ),
+												   LIGHT_POINT_COUNT,
+												   GL_DYNAMIC_DRAW );
 
 
 	constexpr std::array< Vector3, 6 > quad_mesh_positions_ndc
@@ -307,20 +357,14 @@ void SandboxApplication::Initialize()
 	skybox_drawable = Engine::Drawable( &cube_mesh_fullscreen, &skybox_material );
 	renderer.AddDrawable( &skybox_drawable, render_group_id_skybox );
 
-	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-	{
-		light_source_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &light_source_material_array[ i ], &light_point_transform_array[ i ] );
-		renderer.AddDrawable( &light_source_drawable_array[ i ], render_group_id_regular );
-	}
+	light_sources_drawable = Engine::Drawable( &cube_mesh_instanced_with_color, &light_source_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	renderer.AddDrawable( &light_sources_drawable, render_group_id_regular );
 
-	for( auto i = 0; i < CUBE_COUNT; i++ )
-	{
-		cube_drawable_array[ i ] = Engine::Drawable( &cube_mesh, &cube_material_array[ i ], &cube_transform_array[ i ] );
-		renderer.AddDrawable( &cube_drawable_array[ i ], render_group_id_outlined_mesh );
+	cube_drawable = Engine::Drawable( &cube_mesh_instanced, &cube_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	renderer.AddDrawable( &cube_drawable, render_group_id_outlined_mesh );
 
-		cube_drawable_outline_array[ i ] = Engine::Drawable( &cube_mesh, &outline_material, &cube_transform_array[ i ] );
-		renderer.AddDrawable( &cube_drawable_outline_array[ i ], render_group_id_outline );
-	}
+	//cube_drawable_outline = Engine::Drawable( &cube_mesh_instanced, &outline_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	//renderer.AddDrawable( &cube_drawable_outline, render_group_id_outline );
 
 	ground_drawable = Engine::Drawable( &quad_mesh, &ground_material, &ground_transform );
 	renderer.AddDrawable( &ground_drawable, render_group_id_regular );
@@ -361,14 +405,22 @@ void SandboxApplication::Initialize()
 /* Models: */
 	if( auto config_file = std::ifstream( "config.ini" ) )
 	{
-		std::string ignore;
-		config_file >> ignore;
-		if( ignore == "test_model_path" )
+		std::string token;
+		config_file >> token;
+		if( token == "test_model_path" )
 		{
-			config_file >> ignore /* '=' */ >> test_model_file_path;
+			config_file >> token /* '=' */ >> token;
+			if( not token.empty() && std::filesystem::exists( token ) )
+				ReloadModel( test_model_info, token, "Test Model" );
+		}
 
-			if( !test_model_file_path.empty() )
-				ReloadModel( test_model_file_path );
+		config_file >> token;
+		if( token == "meteorite_model_path" )
+		{
+			config_file >> token /* '=' */ >> token;
+			if( not token.empty() && std::filesystem::exists( token ) )
+				if( ReloadModel( meteorite_model_info, token, "Meteorite" ) )
+					ReplaceMeteoriteAndCubeDrawables( true );
 		}
 	}
 }
@@ -377,7 +429,8 @@ void SandboxApplication::Shutdown()
 {
 	if( auto config_file = std::ofstream( "config.ini" ) )
 	{
-		config_file << "test_model_path = " << test_model_file_path;
+		config_file << "test_model_path = "			<< test_model_info.file_path		<< "\n";
+		config_file << "meteorite_model_path = "	<< meteorite_model_info.file_path	<< "\n";
 	}
 }
 
@@ -404,7 +457,7 @@ void SandboxApplication::Update()
 
 		if( light_point_array_is_animated )
 		{
-			const auto old_rotation( light_point_transform_array[ i ].GetRotation() );
+			const auto& old_rotation( light_point_transform_array[ i ].GetRotation() );
 			Radians old_heading, old_pitch, bank;
 			Engine::Math::QuaternionToEuler( old_rotation, old_heading, old_pitch, bank );
 
@@ -417,14 +470,23 @@ void SandboxApplication::Update()
 																		  float( !heading_instead_of_pitching ) * ( new_angle_mod_two_pi - 3.0f * Engine::Constants< Radians >::Pi_Over_Two() ), bank ) );
 
 			point_light_position_world_space = ( ( ( heading_instead_of_pitching ? Vector4::Forward() : Vector4::Up() ) * light_point_orbit_radius ) *
-												 ( point_light_rotation * Engine::Matrix::Translation( CUBES_ORIGIN ) ) ).XYZ();
+												 ( point_light_rotation * Engine::Matrix::Translation( CAMERA_ROTATION_ORIGIN ) ) ).XYZ();
 			point_light_position_world_space.SetY( point_light_position_world_space.Y() + 2.0f );
 
 			light_point_transform_array[ i ].SetRotation( Engine::Math::MatrixToQuaternion( point_light_rotation ) );
 		}
 
 		light_point_transform_array[ i ].SetTranslation( point_light_position_world_space );
+
+		light_source_instance_data_array[ i ].transform = light_point_transform_array[ i ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
+		light_source_instance_data_array[ i ].color     = Engine::Color4( light_point_array[ i ].data.diffuse_and_attenuation_linear.color, 1.0f );
 	}
+
+	cube_mesh_instanced_with_color.UpdateInstanceData( light_source_instance_data_array.data() );
+
+	//for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
+	//	cube_instance_data_array[ cube_index ] = cube_transform_array[ cube_index ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
+	//cube_mesh_instanced.UpdateInstanceData( cube_instance_data_array.data() );
 
 	/* Camera transform: */
 	if( camera_is_animated )
@@ -436,7 +498,7 @@ void SandboxApplication::Update()
 		// Don't modify X & Z euler angles; Allow the user to modify them.
 		camera_transform.SetRotation( Engine::Math::EulerToQuaternion( -current_time_as_angle * 0.33f, old_euler_angles.X(), old_euler_angles.Z() ) );
 
-		auto new_pos = CUBES_ORIGIN + -camera_transform.Forward() * 30.0f;
+		auto new_pos = CAMERA_ROTATION_ORIGIN + -camera_transform.Forward() * 30.0f;
 		new_pos.SetY( camera_transform.GetTranslation().Y() ); // Don't modify Y position; Allow the user to modify it.
 		camera_transform.SetTranslation( new_pos );
 	}
@@ -475,7 +537,7 @@ void SandboxApplication::Render()
 
 		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 0 ] );
 
-		renderer.Render( camera, { render_group_id_skybox, render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent } );
+		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
 
 		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		offscreen_framebuffer_color_attachment_array[ 0 ]->GenerateMipmaps();
@@ -546,63 +608,140 @@ void SandboxApplication::RenderImGui()
 
 	if( ImGui::Begin( ICON_FA_CUBES " Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		bool load_button_is_clicked = false;
-
-		if( not test_model_file_path.empty() )
+		enum ModelLoadActionResult
 		{
-			static char buffer[ 260 ];
-			strncpy_s( buffer, test_model_file_path.c_str(), test_model_file_path.size());
-			ImGui::BeginDisabled();
-			ImGui::InputText( "Loaded Model Path", buffer, ( int )test_model_file_path.size(), ImGuiInputTextFlags_ReadOnly);
-			ImGui::EndDisabled();
+			Loaded, Unloaded, None
+		};
 
-			if( ImGui::Button( ICON_FA_FOLDER_OPEN " Reload" ) )
+		auto DrawModelLine = [ & ]( ModelInfo& model_info, const char* model_name ) -> ModelLoadActionResult
+		{
+			ModelLoadActionResult action = ModelLoadActionResult::None;
+
+			ImGui::SeparatorText( model_name );
+
+			ImGui::PushID( model_name );
+
+			if( not model_info.file_path.empty() )
 			{
-				if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
-																		"Standard glTF (*.gltf)",	"*.gltf",
-																		"Binary glTF (*.glb)",		"*.glb" },
-																	 "Choose a Model to Load" );
-					maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
+				static char buffer[ 260 ];
+				strncpy_s( buffer, model_info.file_path.c_str(), model_info.file_path.size() );
+				ImGui::BeginDisabled();
+				ImGui::InputText( "Loaded Model Path", buffer, ( int )model_info.file_path.size(), ImGuiInputTextFlags_ReadOnly );
+				ImGui::EndDisabled();
+
+				if( ImGui::Button( ICON_FA_FOLDER_OPEN " Reload" ) )
 				{
-					ReloadModel( *maybe_file_name );
+					if( auto maybe_file_name = Platform::BrowseFileName( { "glTF (*.gltf;*.glb)",		"*.gltf;*.glb",
+																			"Standard glTF (*.gltf)",	"*.gltf",
+																			"Binary glTF (*.glb)",		"*.glb" },
+																		 "Choose a Model to Load" );
+						maybe_file_name.has_value() && *maybe_file_name != model_info.file_path )
+					{
+						if( ReloadModel( model_info, *maybe_file_name, model_name ) )
+							action = ModelLoadActionResult::Loaded;
+					}
+				}
+				ImGui::SameLine();
+				if( ImGui::Button( ICON_FA_XMARK " Unload" ) )
+				{
+					UnloadModel( model_info );
+					action = ModelLoadActionResult::Unloaded;
 				}
 			}
-			ImGui::SameLine();
-			if( ImGui::Button( ICON_FA_XMARK " Unload" ) )
-				UnloadModel();
-		}
-		else
-		{
-			const auto button_size( ImGui::CalcTextSize( ICON_FA_CUBES " Models   " ) + style.ItemInnerSpacing );
-			if( ImGui::Button( ICON_FA_FOLDER_OPEN " Load", button_size ) )
+			else
 			{
-				if( auto maybe_file_name = Platform::BrowseFileName( {	"glTF (*.gltf;*.glb)",		"*.gltf;*.glb",	
-																		"Standard glTF (*.gltf)",	"*.gltf",
-																		"Binary glTF (*.glb)",		"*.glb" },
-																	 "Choose a Model to Load" );
-					maybe_file_name.has_value() && *maybe_file_name != test_model_file_path )
+				const auto button_size( ImGui::CalcTextSize( ICON_FA_CUBES " Models   " ) + style.ItemInnerSpacing );
+				if( ImGui::Button( ICON_FA_FOLDER_OPEN " Load", button_size ) )
 				{
-					ReloadModel( *maybe_file_name );
+					if( auto maybe_file_name = Platform::BrowseFileName( { "glTF (*.gltf;*.glb)",		"*.gltf;*.glb",
+																			"Standard glTF (*.gltf)",	"*.gltf",
+																			"Binary glTF (*.glb)",		"*.glb" },
+																		 "Choose a Model to Load" );
+						maybe_file_name.has_value() && *maybe_file_name != model_info.file_path )
+					{
+						if( ReloadModel( model_info, *maybe_file_name, model_name ) )
+							action = ModelLoadActionResult::Loaded;
+					}
 				}
 			}
+
+			ImGui::PopID();
+
+			return action;
+		};
+
+		DrawModelLine( test_model_info, "Test Model" );
+		switch( DrawModelLine( meteorite_model_info, "Meteorite" ) )
+		{
+			case ModelLoadActionResult::Loaded:
+				ReplaceMeteoriteAndCubeDrawables( true );
+				break;
+			case ModelLoadActionResult::Unloaded:
+				ReplaceMeteoriteAndCubeDrawables( false );
+				break;
+			default:
+				break;
 		}
 	}
 
 	ImGui::End();
 
 	Engine::ImGuiDrawer::Draw( skybox_material, renderer );
-	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		Engine::ImGuiDrawer::Draw( light_source_material_array[ i ], renderer );
+	Engine::ImGuiDrawer::Draw( light_source_material, renderer );
 	Engine::ImGuiDrawer::Draw( ground_material, renderer );
 	Engine::ImGuiDrawer::Draw( wall_material, renderer );
 	Engine::ImGuiDrawer::Draw( window_material, renderer );
-	for( auto& cube_material : cube_material_array )
-		Engine::ImGuiDrawer::Draw( cube_material, renderer );
-	for( auto& test_material : test_model_instance.Materials() )
+	Engine::ImGuiDrawer::Draw( cube_material, renderer );
+	for( auto& test_material : test_model_info.model_instance.Materials() )
+		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ), renderer );
+	for( auto& test_material : meteorite_model_info.model_instance.Materials() )
 		Engine::ImGuiDrawer::Draw( const_cast< Engine::Material& >( test_material ), renderer );
 	Engine::ImGuiDrawer::Draw( outline_material, renderer );
 	Engine::ImGuiDrawer::Draw( offscreen_quad_material, renderer );
 	Engine::ImGuiDrawer::Draw( mirror_quad_material, renderer );
+
+	if( ImGui::Begin( "Instance Data" ) )
+	{
+		ImGui::SeparatorText( "Light Sources" );
+
+		if( ImGui::BeginTable( "Light Sources", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PreciseWidths ) )
+		{
+			ImGui::TableSetupColumn( "#" );
+			ImGui::TableSetupColumn( "Color" );
+			ImGui::TableSetupColumn( "Transform" );
+
+			ImGui::TableHeadersRow();
+			ImGui::TableNextRow();
+
+			const auto first_column_width = ImGui::CalcTextSize( " 999" ).x + style.ItemInnerSpacing.x * 2;
+
+			for( auto index = 0; index < LIGHT_POINT_COUNT; index++ )
+			{
+				const auto& instance_data = light_source_instance_data_array[ index ];
+
+				ImGui::PushID( index );
+
+				ImGui::TableNextColumn();
+				int no = index + 1;
+				ImGui::PushItemWidth( first_column_width );
+				ImGui::InputInt( "", &no, 0, 0, ImGuiInputTextFlags_ReadOnly );
+				ImGui::PopItemWidth();
+
+				ImGui::TableNextColumn();
+				Engine::ImGuiDrawer::Draw( instance_data.color );
+				
+				ImGui::TableNextColumn();
+				Engine::ImGuiDrawer::Draw( instance_data.transform );
+
+
+				ImGui::PopID();
+			}
+
+			ImGui::EndTable();
+		}
+	}
+
+	ImGui::End();
 
 	if( ImGui::Begin( ICON_FA_LIGHTBULB " Lighting", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
@@ -611,7 +750,10 @@ void SandboxApplication::RenderImGui()
 			light_directional.is_enabled = light_is_enabled;
 
 			for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-				light_source_drawable_array[ i ].ToggleOnOrOff( light_point_array[ i ].is_enabled = light_is_enabled && not light_point_array_disable );
+			{
+				light_point_array[ i ].is_enabled = light_is_enabled && not light_point_array_disable;
+				light_source_instance_data_array[ i ].color.SetW( 1.0f - light_source_instance_data_array[ i ].color.W() );
+			}
 
 			light_spot.is_enabled = light_is_enabled;
 		}
@@ -635,8 +777,13 @@ void SandboxApplication::RenderImGui()
 			{
 				Engine::ImGuiUtility::BeginGroupPanel( "Options" );
 				if( ImGui::Checkbox( "Disable All", &light_point_array_disable ) )
+				{
 					for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-						light_source_drawable_array[ i ].ToggleOnOrOff( light_point_array[ i ].is_enabled = light_is_enabled && not light_point_array_disable );
+					{
+						light_point_array[ i ].is_enabled = light_is_enabled && not light_point_array_disable;
+						light_source_instance_data_array[ i ].color.SetW( 1.0f - light_source_instance_data_array[ i ].color.W() );
+					}
+				}
 				ImGui::Checkbox( "Animate (Orbit) Point Lights", &light_point_array_is_animated );
 				if( light_point_array_is_animated )
 					ImGui::SliderFloat( "Light Orbit Radius", &light_point_orbit_radius, 0.0f, 15.0f );
@@ -650,9 +797,9 @@ void SandboxApplication::RenderImGui()
 						const bool was_enabled = light_point_array[ i ].is_enabled;
 						if( Engine::ImGuiDrawer::Draw( light_point_array[ i ], name.c_str(), light_point_array_is_animated /* hide position. */ ) )
 						{
-							light_source_material_array[ i ].Set( "uniform_color", Engine::Color4( light_point_array[ i ].data.diffuse_and_attenuation_linear.color, 1.0f ) );
+							light_source_instance_data_array[ i ].color = Engine::Color4( light_point_array[ i ].data.diffuse_and_attenuation_linear.color, 1.0f );
 							if( was_enabled != light_point_array[ i ].is_enabled )
-								light_source_drawable_array[ i ].ToggleOnOrOff();
+								light_source_instance_data_array[ i ].color.SetW( 1.0f - light_source_instance_data_array[ i ].color.W() );
 						}
 					}
 
@@ -910,7 +1057,7 @@ void SandboxApplication::ResetLightingData()
 			{
 				.ambient_and_attenuation_constant = {.color = {  0.05f,  0.05f,  0.05f },							.scalar = 0.075f	},
 				.diffuse_and_attenuation_linear   = {.color = Engine::Math::Random::Generate< Engine::Color3 >(),	.scalar = 0.0035f	},
-				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f },
+				.specular_attenuation_quadratic   = {.color = {  1.0f,   1.0f,   1.0f  },							.scalar = 0.09f		},
 			},
 			.transform = &light_point_transform_array[ i ]
 		};
@@ -938,29 +1085,22 @@ void SandboxApplication::ResetMaterialData()
 	skybox_material = Engine::Material( "Skybox", &skybox_shader );
 	skybox_material.SetTexture( "uniform_texture_slot", skybox_texture );
 
-	light_source_material_array.resize( LIGHT_POINT_COUNT );
-	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ] = Engine::Material( "Light Source #" + std::to_string( i + 1 ), &basic_color_shader );
+	light_source_material = Engine::Material( "Light Source", &basic_color_shader );
 	
-	cube_material_array.resize( CUBE_COUNT );
-
+	// TODO: Get this reflected cube working again.
 	/* Set the first cube's material to Phong shader w/ skybox reflection: */
-	cube_material_array[ 0 ] = Engine::Material( "Cube #1", &phong_skybox_reflection_shader );
+	/*cube_material_array[ 0 ] = Engine::Material( "Cube #1", &phong_skybox_reflection_shader );
 	cube_material_array[ 0 ].SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_material_array[ 0 ].SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 	cube_material_array[ 0 ].SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
 	cube_material_array[ 0 ].SetTexture( "uniform_texture_skybox_slot", skybox_texture );
 	cube_material_array[ 0 ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
-	cube_material_array[ 0 ].Set( "uniform_reflectivity", 1.0f );
+	cube_material_array[ 0 ].Set( "uniform_reflectivity", 1.0f );*/
 
-	/* The rest of the cubes use the regular (not reflected) Phong shader: */
-	for( auto i = 1; i < CUBE_COUNT; i++ )
-	{
-		cube_material_array[ i ] = Engine::Material( "Cube #" + std::to_string( i + 1 ), &phong_shader );
-		cube_material_array[ i ].SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
-		cube_material_array[ i ].SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
-		cube_material_array[ i ].Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
-	}
+	cube_material = Engine::Material( "Cube", &phong_shader_instanced );
+	cube_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
+	cube_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
+	cube_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	ground_material = Engine::Material( "Ground", &phong_shader );
 	ground_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
@@ -988,24 +1128,25 @@ void SandboxApplication::ResetMaterialData()
 	offscreen_quad_material = Engine::Material( "Offscreen Quad", &fullscreen_blit_shader );
 	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
 
-	ground_quad_surface_data = wall_surface_data =
+	ground_quad_surface_data = wall_surface_data = cube_surface_data =
 	{
 		.color_diffuse       = {},
 		.has_texture_diffuse = 1,
 		.shininess           = 32.0f
 	};
 
-	cube_surface_data_array = std::vector< Engine::MaterialData::PhongMaterialData >( CUBE_COUNT, ground_quad_surface_data );
-
 	ground_material.Set( "PhongMaterialData", ground_quad_surface_data );
 	wall_material.Set( "PhongMaterialData", wall_surface_data );
-	for( auto i = 0; i < CUBE_COUNT; i++ )
-		cube_material_array[ i ].Set( "PhongMaterialData", cube_surface_data_array[ i ] );
-	for( auto i = 0; i < LIGHT_POINT_COUNT; i++ )
-		light_source_material_array[ i ].Set( "uniform_color", Engine::Color4( light_point_array[ i ].data.diffuse_and_attenuation_linear.color, 1.0f ) );
+	cube_material.Set( "PhongMaterialData", cube_surface_data );
 
 	outline_material.Set( "uniform_color", Engine::Color4::Orange() );
 	outline_material.Set( "uniform_outline_thickness", 0.1f );
+}
+
+void SandboxApplication::ResetInstanceData()
+{
+	cube_instance_data_array.resize( CUBE_COUNT );
+	light_source_instance_data_array.resize( LIGHT_POINT_COUNT );
 }
 
 void SandboxApplication::ResetCamera( const CameraView view )
@@ -1058,51 +1199,86 @@ SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( co
 	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), camera.GetAspectRatio() );
 }
 
-void SandboxApplication::ReloadModel( const std::string& file_path )
+bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const std::string& file_path, const char* name )
 {
 	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
-	auto new_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( "Test Model",
+	auto new_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( name,
 																				  file_path,
 																				  model_import_settings );
-
+	
 	if( new_model )
 	{
-		test_model_file_path = file_path;
+		model_info_to_be_loaded.file_path = file_path;
 
-		for( auto& [ render_group_id, drawables_array ] : test_model_instance.DrawablesMap() )
+		auto& model_instance_to_load_into = model_info_to_be_loaded.model_instance;
+
+		for( auto& [ render_group_id, drawables_array ] : model_instance_to_load_into.DrawablesMap() )
 			for( auto& drawable_to_remove : drawables_array )
 				renderer.RemoveDrawable( &drawable_to_remove );
 
-		test_model_instance = ModelInstance( new_model,
-											 &phong_shader,
-											 Vector3::One(),
-											 Quaternion(),
-											 Vector3::Up() * 8.0f,
-											 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
-											 /* Specular texture: */ checker_pattern_texture,
-											 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f },
-											 {
-												{ render_group_id_outlined_mesh,	nullptr },
-												{ render_group_id_outline,			&outline_material }
-											 } );
+		model_instance_to_load_into = ModelInstance( new_model,
+													 model_info_to_be_loaded.shader,
+													 Vector3::One(),
+													 Quaternion(),
+													 Vector3::Up() * 8.0f,
+													 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
+													 /* Specular texture: */ checker_pattern_texture,
+													 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f },
+													 {
+														{ render_group_id_outlined_mesh,	nullptr },
+														{ render_group_id_outline,			&outline_material }
+													 } );
 
-		for( const auto& [ render_group_id, drawables_array ] : test_model_instance.DrawablesMap() )
-			for( auto& drawable_to_add : test_model_instance.Drawables( render_group_id ) )
+		for( const auto& [ render_group_id, drawables_array ] : model_instance_to_load_into.DrawablesMap() )
+			for( auto& drawable_to_add : model_instance_to_load_into.Drawables( render_group_id ) )
 				renderer.AddDrawable( &drawable_to_add, render_group_id );
 
 		ResetCamera();
+		return true;
 	}
+
+	return false;
 }
 
-void SandboxApplication::UnloadModel()
+void SandboxApplication::UnloadModel( ModelInfo& model_info_to_be_loaded )
 {
-	test_model_file_path = "";
+	model_info_to_be_loaded.file_path = "";
 
-	for( auto& [ id, drawables_array ] : test_model_instance.DrawablesMap() )
+	for( auto& [ id, drawables_array ] : model_info_to_be_loaded.model_instance.DrawablesMap() )
 		for( auto& drawable_to_remove : drawables_array )
 			renderer.RemoveDrawable( &drawable_to_remove );
 
-	test_model_instance = {};
+	model_info_to_be_loaded.model_instance = {};
+}
+
+void SandboxApplication::ReplaceMeteoriteAndCubeDrawables( bool use_meteorites )
+{
+	if( use_meteorites )
+	{
+		meteorite_drawable = &meteorite_model_info.model_instance.Drawables( render_group_id_outlined_mesh ).front();
+		cube_mesh_instanced = Engine::Mesh( *meteorite_drawable->GetMesh(),
+											{
+												Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+											},
+											reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
+											CUBE_COUNT,
+											GL_STATIC_DRAW );
+		meteorite_drawable->SetMesh( &cube_mesh_instanced );
+		renderer.RemoveDrawable( &cube_drawable );
+	}
+	else
+	{
+		renderer.RemoveDrawable( meteorite_drawable );
+		meteorite_drawable = nullptr;
+		cube_mesh_instanced = Engine::Mesh( cube_mesh,
+											{
+												Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+											},
+											reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
+											CUBE_COUNT,
+											GL_STATIC_DRAW );
+		renderer.AddDrawable( &cube_drawable );
+	}
 }
 
 void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixels, const int height_new_pixels )

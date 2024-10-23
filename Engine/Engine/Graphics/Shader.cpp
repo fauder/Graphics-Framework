@@ -754,7 +754,9 @@ namespace Engine
 				  location_name.length() != 0 && matches[ 3 ].matched )
 			{
 				const GLenum type( GL::Type::TypeOf( location_type.c_str() ) );
-				attributes.push_back( { GL::Type::CountOf( type ), GL::Type::ComponentTypeOf( type ), ( unsigned int )std::stoi( location_string ), false } );
+				/* Source attributes */
+				attributes.emplace_back( GL::Type::CountOf( type ), GL::Type::ComponentTypeOf( type ), false /* => instance info does not matter. */,
+										( unsigned int )std::stoi( location_string ) );
 			}
 
 			shader_source = matches.suffix();
@@ -774,7 +776,8 @@ namespace Engine
 
 		static char attribute_name[ 255 ];
 
-		std::vector< VertexAttribute > attributes( active_attribute_count );
+		std::vector< VertexAttribute > attributes;
+		attributes.reserve( active_attribute_count );
 		for( auto attribute_index = 0; attribute_index < active_attribute_count; attribute_index++ )
 		{
 			int attribute_name_length, attribute_size;
@@ -782,7 +785,11 @@ namespace Engine
 			glGetActiveAttrib( program_id.Get(), attribute_index, 255, &attribute_name_length, &attribute_size, &attribute_vector_type, attribute_name );
 			const unsigned int attribute_location = glGetAttribLocation( program_id.Get(), attribute_name );
 
-			attributes[ attribute_index ] = { GL::Type::CountOf( attribute_vector_type ), GL::Type::ComponentTypeOf( attribute_vector_type ), attribute_location, false };
+			GLint divisor_data;
+			glGetIntegeri_v( GL_VERTEX_BINDING_DIVISOR, attribute_location, &divisor_data );
+			const bool is_instanced = divisor_data >= 1;
+
+			attributes.emplace_back( GL::Type::CountOf( attribute_vector_type ), GL::Type::ComponentTypeOf( attribute_vector_type ), is_instanced, attribute_location );
 		}
 
 		std::sort( attributes.begin(), attributes.end(), []( const VertexAttribute& left, const VertexAttribute& right ) { return left.location < right.location; } );
@@ -947,6 +954,7 @@ namespace Engine
 		{
 			using BufferInfoPair = std::pair< const std::string, Uniform::Information* >;
 			std::vector< BufferInfoPair* > uniform_buffer_info_sorted_by_offset;
+			uniform_buffer_info_sorted_by_offset.reserve( uniform_buffer_info.members_map.size() );
 			for( auto& pair : uniform_buffer_info.members_map )
 				uniform_buffer_info_sorted_by_offset.push_back( &pair );
 
