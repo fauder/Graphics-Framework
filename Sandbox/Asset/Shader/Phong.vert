@@ -3,14 +3,14 @@
 
 #include "_Intrinsic_Other.glsl"
 
+#pragma feature INSTANCING_ENABLED
+
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
 layout (location = 2) in vec2 tex_coords;
 #ifdef INSTANCING_ENABLED
 layout (location = 3) in mat4 world_transform;
 #endif
-
-#pragma feature INSTANCING_ENABLED
 
 out vec4 varying_position_view_space;
 out vec4 varying_normal_view_space;
