@@ -43,9 +43,7 @@ namespace Engine
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "'size' parameter passed to Buffer::Buffer( const unsigned int size, const GLenum usage ) is empty!" );
 
-			CreateBuffer();
-			Bind();
-			Update( nullptr, usage );
+			Create( nullptr, usage );
 
 #ifdef _DEBUG
 			if( not name.empty() )
@@ -63,9 +61,7 @@ namespace Engine
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const GLenum usage ) is empty!" );
 
-			CreateBuffer();
-			Bind();
-			Update( ( void* )data_span.data(), usage );
+			Create( ( void* )data_span.data(), usage );
 
 #ifdef _DEBUG
 			if( not name.empty() )
@@ -86,9 +82,7 @@ namespace Engine
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const GLenum usage ) is empty!" );
 
-			CreateBuffer();
-			Bind();
-			Update( ( void* )data_span.data(), usage );
+			Create( ( void* )data_span.data(), usage );
 
 #ifdef _DEBUG
 			if( not name.empty() )
@@ -151,17 +145,15 @@ namespace Engine
 			glBindBuffer( TargetType, id.Get() );
 		}
 
-		void Update( const void* data, const GLenum usage = GL_STATIC_DRAW ) const
+		void Update( const void* data ) const
 		{
 			Bind();
-
-			glBufferData( TargetType, size, data, usage );
+			glBufferSubData( TargetType, 0, size, data );
 		}
 
 		void Update_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const
 		{
 			Bind();
-
 			glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() );
 		}
 		
@@ -172,10 +164,13 @@ namespace Engine
 	private:
 		bool IsValid() const { return size;	} // Use the size to implicitly define validness state.
 
-		void CreateBuffer()
+		void Create( const void* data, const GLenum usage = GL_STATIC_DRAW )
 		{
 			glGenBuffers( 1, id.Address() );
 			REF_COUNT_MAP[ id ]++;
+
+			Bind();
+			glBufferData( TargetType, size, data, usage );
 		}
 
 		void CloneBuffer()

@@ -76,7 +76,7 @@ namespace Engine
 
 	void Mesh::Update( const void* data ) const
 	{
-		vertex_buffer.Update( data, GL_DYNAMIC_DRAW );
+		vertex_buffer.Update( data );
 	}
 
 	void Mesh::Update_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const
@@ -88,7 +88,7 @@ namespace Engine
 	{
 		ASSERT_DEBUG_ONLY( instance_buffer && "UpdateInstanceData() called on non-instanced Mesh!" );
 
-		instance_buffer->Update( data, GL_DYNAMIC_DRAW );
+		instance_buffer->Update( data );
 	}
 
 	void Mesh::UpdateInstanceData_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const
