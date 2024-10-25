@@ -43,6 +43,7 @@ namespace Engine
 	private:
 		ID id;
 		int width, height;
+		//int padding;
 		std::string name;
 	};
 

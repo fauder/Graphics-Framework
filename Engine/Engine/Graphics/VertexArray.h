@@ -45,6 +45,7 @@ namespace Engine
 
 	private:
 		ID id;
+		//int padding;
 
 		std::string name;
 

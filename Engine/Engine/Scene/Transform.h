@@ -109,5 +109,6 @@ namespace Engine
 		 * Once set, it remains set until the beginning of the next frame. Therefore, it reliably tells whether this Transform was modified this frame.
 		 * It is only reset by the ResetDirtyFlag(), which is ideally called at the beginning of every frame. */
 		bool is_dirty;
+		//bool padding[ 3 ];
 	};
 }

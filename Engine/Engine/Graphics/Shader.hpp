@@ -72,8 +72,9 @@ namespace Engine
 		 */
 		struct Feature
 		{
-			bool is_set; // This means that the feature was either directly #define'd or is set by client code & will effectively be #define'd in the final shader source.
 			std::optional< std::string > value;
+			bool is_set; // This means that the feature was either directly #define'd or is set by client code & will effectively be #define'd in the final shader source.
+			// bool padding[ 7 ];
 		};
 
 	public:
@@ -578,6 +579,7 @@ namespace Engine
 
 	private:
 		ID program_id;
+		//int padding;
 		std::string name;
 
 		std::string vertex_source_path;

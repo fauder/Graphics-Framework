@@ -147,8 +147,8 @@ namespace Engine
 		:
 		id( {} ),
 		size( ZERO_INITIALIZATION ),
-		name( "<unnamed>" ),
-		type( TextureType::None )
+		type( TextureType::None ),
+		name( "<unnamed>" )
 	{}
 
 	/* Allocate-only constructor (no data). */
@@ -160,8 +160,8 @@ namespace Engine
 		:
 		id( {} ),
 		size( width, height ),
-		name( name ),
-		type( TextureType::Texture2D )
+		type( TextureType::Texture2D ),
+		name( name )
 	{
 		glGenTextures( 1, id.Address() );
 		Bind();
@@ -191,8 +191,8 @@ namespace Engine
 		:
 		id( {} ),
 		size( width, height ),
-		name( name ),
-		type( TextureType::Cubemap )
+		type( TextureType::Cubemap ),
+		name( name )
 	{
 		glGenTextures( 1, id.Address() );
 		Bind();
@@ -216,18 +216,18 @@ namespace Engine
 	Texture::Texture( Texture&& donor )
 		:
 		id( std::exchange( donor.id, {} ) ),
-		name( std::exchange( donor.name, {} ) ),
 		size( std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } ) ),
-		type( std::exchange( donor.type, TextureType::None ) )
+		type( std::exchange( donor.type, TextureType::None ) ),
+		name( std::exchange( donor.name, {} ) )
 	{
 	}
 
 	Texture& Texture::operator =( Texture&& donor )
 	{
 		id   = std::exchange( donor.id,		{} );
-		name = std::exchange( donor.name,	{} );
 		size = std::exchange( donor.size,	Vector2I{ ZERO_INITIALIZATION } );
 		type = std::exchange( donor.type,	TextureType::None );
+		name = std::exchange( donor.name,	{} );
 
 		return *this;
 	}
@@ -271,8 +271,8 @@ namespace Engine
 		:
 		id( {} ),
 		size( width, height ),
-		name( name ),
-		type( TextureType::Texture2D )
+		type( TextureType::Texture2D ),
+		name( name )
 	{
 		glGenTextures( 1, id.Address() );
 		Bind();
@@ -301,8 +301,8 @@ namespace Engine
 		:
 		id( {} ),
 		size( width, height ),
-		name( name ),
-		type( TextureType::Cubemap )
+		type( TextureType::Cubemap ),
+		name( name )
 	{
 		glGenTextures( 1, id.Address() );
 		Bind();

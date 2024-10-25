@@ -43,5 +43,6 @@ namespace Engine
 		Material* material;
 
 		bool is_enabled;
+		//bool padding[ 7 ];
 	};
 }

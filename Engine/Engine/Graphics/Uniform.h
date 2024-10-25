@@ -70,6 +70,7 @@ namespace Engine
 			int offset;
 			int stride;
 			int element_count;
+			// int padding;
 
 			std::string editor_name;
 
@@ -116,6 +117,7 @@ namespace Engine
 			std::size_t regular_total_size, global_total_size, intrinsic_total_size;
 			std::size_t total_size;
 			int intrinsic_block_count, global_block_count, regular_block_count;
+			//int padding;
 
 			inline std::size_t TotalSize_ForMaterialBlob() const { return default_block_size + regular_total_size; }
 			inline std::size_t TotalSize_Blocks() const { return regular_total_size + global_total_size + intrinsic_total_size; }
@@ -166,6 +168,7 @@ namespace Engine
 			unsigned int in_use = 0;
 			unsigned int start_offset;
 			unsigned int maximum_allowed;
+			//unsigned int padding;
 		};
 	};
 }

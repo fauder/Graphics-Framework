@@ -246,6 +246,7 @@ namespace Engine
 		bool									autoScroll;
 
 		bool									group; // Group same logs under 1 line.
+		//bool[ 6 ]								padding;
 		std::unordered_map< std::size_t, int >	line_counts_by_hash_map;
 
 		std::vector< Type >						lineTypes;
@@ -253,4 +254,7 @@ namespace Engine
 		//std::array< const char*,				Size > typeNames;
 		//std::array< bool,						Size > enabledTypes;
 	};
+
+	static const std::size_t align = alignof( ImGuiTextBuffer );
+	static const std::size_t size = sizeof( ImGuiTextBuffer );
 }

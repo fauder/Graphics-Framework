@@ -113,19 +113,16 @@ namespace Engine
 		struct RenderState
 		{
 		/* Face-culling & winding-order: */
-			bool face_culling_enable                = true; // Differing from GL here; Back face culling is the default, to save perf.
+
 			Face face_culling_face_to_cull          = Face::Back;
 			WindingOrder face_culling_winding_order = WindingOrder::CounterClockwise;
 
 		/* Depth: */
 
-			bool depth_test_enable                       = true;
-			bool depth_write_enable                      = true;
 			ComparisonFunction depth_comparison_function = ComparisonFunction::Less;
 
 		/* Stencil: */
 
-			bool stencil_test_enable                       = false;
 			unsigned int stencil_write_mask                = true;
 			ComparisonFunction stencil_comparison_function = ComparisonFunction::Always;
 			unsigned int stencil_ref                       = 0;
@@ -136,7 +133,7 @@ namespace Engine
 			StencilTestResponse stencil_test_response_both_pass               = StencilTestResponse::Keep;
 
 		/* Blending: */
-			bool blending_enable = false;
+
 
 			BlendingFactor blending_source_color_factor      = BlendingFactor::One;
 			BlendingFactor blending_destination_color_factor = BlendingFactor::Zero;
@@ -146,7 +143,17 @@ namespace Engine
 			BlendingFunction blending_function = BlendingFunction::Add;
 
 		/* Other: */
+
 			SortingMode sorting_mode = SortingMode::None;
+
+		/* Enable flags (kept together for optimal memory alignment): */
+
+			bool face_culling_enable = true; // Differing from GL here; Back face culling is the default, to save perf.
+			bool depth_test_enable   = true;
+			bool depth_write_enable  = true;
+			bool stencil_test_enable = false;
+			bool blending_enable     = false;
+			//bool padding[ 3 ];
 		};
 
 		enum class RenderGroupID : unsigned int {};
@@ -156,8 +163,6 @@ namespace Engine
 		{
 			using ReferenceCount = unsigned int;
 
-			bool is_enabled = true;
-
 			std::string name = "<unnamed>";
 
 			RenderState render_state;
@@ -166,6 +171,11 @@ namespace Engine
 
 			std::unordered_map< Shader*, ReferenceCount > shaders_in_flight;
 			std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
+			
+			bool is_enabled = true;
+
+		private:
+			bool reserved[ 3 ]; // Padding.
 		};
 
 	public:
@@ -364,6 +374,7 @@ namespace Engine
 
 		Color4 clear_color;
 		BitFlags< ClearTarget > clear_targets;
+		// int padding;
 
 		/*
 		 * Lighting:
@@ -395,5 +406,6 @@ namespace Engine
 
 		bool update_uniform_buffer_lighting;
 		bool update_uniform_buffer_other;
+		// bool padding[ 6 ];
 	};
 }

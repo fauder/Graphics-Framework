@@ -52,13 +52,15 @@ namespace Engine
 		struct ImportSettings
 		{
 			int format;
-			bool flip_vertically;
 
 			Wrapping wrap_u;
 			Wrapping wrap_v;
 			Wrapping wrap_w;
 			Filtering min_filter;
 			Filtering mag_filter;
+
+			bool flip_vertically;
+			//bool padding[ 3 ];
 
 			ImportSettings( const int format = GL_RGBA, const bool flip_vertically = true,
 							const Wrapping  wrap_u     = Wrapping::ClampToEdge,			 const Wrapping  wrap_v     = Wrapping::ClampToEdge,	const Wrapping wrap_w = Wrapping::ClampToEdge,
@@ -115,8 +117,8 @@ namespace Engine
 		inline const Vector2I&		Size()		const { return size;		}
 		inline const int			Width()		const { return size.X();	}
 		inline const int			Height()	const { return size.Y();	}
-		inline const std::string&	Name()		const { return name;		}
 		inline const TextureType	Type()		const { return type;		}
+		inline const std::string&	Name()		const { return name;		}
 
 	/* Usage: */
 		void SetName( const std::string& new_name );
@@ -150,7 +152,7 @@ namespace Engine
 	private:
 		ID id;
 		Vector2I size;
-		std::string name;
 		TextureType type;
+		std::string name;
 	};
 };

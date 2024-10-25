@@ -49,9 +49,13 @@ namespace Engine
 
 	protected:
 		bool display_frame_statistics;
+		bool show_imgui;
+		bool show_gl_logger;
+		//bool padding[ 1 ]; // Makes up 8 bits, combined with the float below.
 
 		float time_delta;
 		float time_current;
+
 		float time_multiplier;
 
 		float time_sin;
@@ -61,9 +65,6 @@ namespace Engine
 
 		long long frame_count;
 
-		bool show_imgui;
-
-		bool show_gl_logger;
 		GLLogger gl_logger;
 
 	private:

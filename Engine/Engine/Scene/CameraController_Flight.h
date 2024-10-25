@@ -42,6 +42,7 @@ namespace Engine
 
 	private:
 		Math::Polar3_Spherical_Game orientation_spherical; // Spherical coordinates are more natural & convenient to work with for this camera type.
+		//int padding;
 		Camera* camera;
 	};
 }

@@ -22,7 +22,6 @@ namespace Engine
 				std::vector< Color4 >&&			colors_rgba )
 		:
 		name( name ),
-		primitive_type( primitive_type ),
 		indices( indices ),
 		positions( positions ),
 		normals( normals ),
@@ -31,6 +30,7 @@ namespace Engine
 		uvs_2( uvs_2 ),
 		uvs_3( uvs_3 ),
 		colors_rgba( colors_rgba ),
+		primitive_type( primitive_type ),
 		instance_count( 1 )
 	{
 		unsigned int vertex_count_interleaved;
@@ -49,7 +49,6 @@ namespace Engine
 				const GLenum instance_buffer_usage )
 		:
 		name( other.name + " (instanced)" ),
-		primitive_type( other.primitive_type ),
 		indices( other.indices ),
 		positions( other.positions ),
 		normals( other.normals ),
@@ -58,6 +57,7 @@ namespace Engine
 		uvs_2( other.uvs_2 ),
 		uvs_3( other.uvs_3 ),
 		colors_rgba( other.colors_rgba ),
+		primitive_type( other.primitive_type ),
 		instance_count( instance_count ),
 		vertex_buffer( other.vertex_buffer ),
 		vertex_layout( other.vertex_layout ),

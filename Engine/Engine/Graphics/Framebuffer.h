@@ -77,9 +77,9 @@ namespace Engine
 	private:
 		ID id;
 		int width, height;
-		std::string name;
-
 		Usage usage;
+
+		std::string name;
 
 		std::variant< const Texture*, const Renderbuffer* > color_attachment;
 
@@ -87,5 +87,4 @@ namespace Engine
 		std::variant< std::monostate, const Texture*, const Renderbuffer* > depth_attachment;
 		std::variant< std::monostate, const Texture*, const Renderbuffer* > stencil_attachment;
 	};
-
 }

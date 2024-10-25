@@ -49,6 +49,7 @@ namespace Engine
 
 	private:
 		unsigned int binding_point_max_count;
+		//int padding;
 
 		Uniform::BindingPointBookKeeping binding_point_book_keeping_intrinsic;
 		Uniform::BindingPointBookKeeping binding_point_book_keeping_global;

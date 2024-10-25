@@ -59,5 +59,6 @@ namespace Engine
 		//bool view_matrix_needs_update;
 		bool projection_matrix_needs_update;
 		bool view_projection_matrix_needs_update;
+		//bool padding[ 6 ];
 	};
 }

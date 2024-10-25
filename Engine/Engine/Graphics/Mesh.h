@@ -120,8 +120,6 @@ namespace Engine
  	private:
 		std::string name;
 
-		PrimitiveType primitive_type;
-
 		std::vector< std::uint32_t > indices;
 
 		std::vector< Vector3 > positions;
@@ -131,6 +129,8 @@ namespace Engine
 		std::vector< Vector2 > uvs_2;
 		std::vector< Vector2 > uvs_3;
 		std::vector< Color4  > colors_rgba;
+
+		PrimitiveType primitive_type;
 
 		int instance_count;
 

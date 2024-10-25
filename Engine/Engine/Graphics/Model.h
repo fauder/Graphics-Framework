@@ -111,5 +111,6 @@ namespace Engine
 		std::vector< std::size_t > node_indices_top_level;
 
 		int mesh_istance_count;
+		//int padding;
 	};
 }

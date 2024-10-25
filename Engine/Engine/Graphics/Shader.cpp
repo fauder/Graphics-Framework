@@ -442,7 +442,7 @@ namespace Engine
 				{
 					const auto& match_feature_name = matches[ 1 ]; /* First match is the pattern itself. */
 					if( match_feature_name.length() != 0 && match_feature_name.matched )
-						features.try_emplace( match_feature_name, false, std::nullopt );
+						features.try_emplace( match_feature_name, std::nullopt, false );
 
 					shader_source = matches.suffix();
 				}
@@ -465,10 +465,10 @@ namespace Engine
 						if( matches.size() > 2 && matches[ 2 ].length() != 0 && matches[ 2 ].matched )
 						{
 							const auto& match_feature_value = matches[ 2 ];
-							features.try_emplace( match_feature_name, true, match_feature_value );
+							features.try_emplace( match_feature_name, match_feature_value, true );
 						}
 						else
-							features.try_emplace( match_feature_name, true, std::nullopt );
+							features.try_emplace( match_feature_name, std::nullopt, true );
 					}
 
 					shader_source = matches.suffix();
