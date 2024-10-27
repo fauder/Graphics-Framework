@@ -419,7 +419,12 @@ namespace Engine
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_global.UnregisterBuffer( uniform_buffer_name );
+				{
+					// Check if this buffer is still used by other reigstered Shaders:
+					if( std::find_if( shaders_registered.cbegin(), shaders_registered.cend(),
+										[ &uniform_buffer_name ]( const Shader* shader ) { return shader->HasGlobalUniformBlock( uniform_buffer_name ); } ) == shaders_registered.cend() )
+						uniform_buffer_management_global.UnregisterBuffer( uniform_buffer_name );
+				}
 			}
 
 			if( shader.HasIntrinsicUniformBlocks() )
@@ -427,7 +432,12 @@ namespace Engine
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_intrinsic.UnregisterBuffer( uniform_buffer_name );
+				{
+					// Check if this buffer is still used by other reigstered Shaders:
+					if( std::find_if( shaders_registered.cbegin(), shaders_registered.cend(),
+										[ &uniform_buffer_name ]( const Shader* shader ) { return shader->HasIntrinsicUniformBlock( uniform_buffer_name ); } ) == shaders_registered.cend() )
+						uniform_buffer_management_intrinsic.UnregisterBuffer( uniform_buffer_name );
+				}
 			}
 		}
 
