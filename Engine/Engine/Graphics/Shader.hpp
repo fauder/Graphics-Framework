@@ -144,6 +144,10 @@ namespace Engine
 		
 		inline bool HasUniformBlocks() const { return HasIntrinsicUniformBlocks() || HasGlobalUniformBlocks() || HasRegularUniformBlocks(); }
 
+		inline bool HasIntrinsicUniformBlock( const std::string& block_name )	const { return uniform_buffer_info_map_intrinsic.contains( block_name ); }
+		inline bool HasGlobalUniformBlock( const std::string& block_name )		const { return uniform_buffer_info_map_global.contains( block_name ); }
+		inline bool HasRegularUniformBlock( const std::string& block_name )		const { return uniform_buffer_info_map_regular.contains( block_name ); }
+
 /* Uniform Upload; Non-array types: */
 
 		template< typename UniformType >
