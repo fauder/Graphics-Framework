@@ -70,9 +70,12 @@ namespace Engine
 		inline bool HasDepthStencilTexture()			const { return std::holds_alternative< const Texture*		>( depth_and_stencil_attachment ); }
 		inline bool HasDepthStencilRenderbuffer()		const { return std::holds_alternative< const Renderbuffer*  >( depth_and_stencil_attachment ); }
 
+
 	/* Usage: */
 		void Bind() const;
+		void Unbind() const;
 		void SetName( const std::string& new_name );
+		static void Blit( const Framebuffer& source, const Framebuffer& destination );
 
 	private:
 

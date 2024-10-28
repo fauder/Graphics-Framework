@@ -73,6 +73,15 @@ namespace Engine
 		name = new_name;
 	}
 
+	void Framebuffer::Blit( const Framebuffer& source, const Framebuffer& destination )
+	{
+		glBindFramebuffer( GL_READ_FRAMEBUFFER, source.Id().Get() );
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, destination.Id().Get() );
+		glBlitFramebuffer( 0, 0, source.Width(), source.Height(),
+						   0, 0, destination.Width(), destination.Height(),
+						   GL_COLOR_BUFFER_BIT, GL_NEAREST );
+	}
+
 	void Framebuffer::Create()
 	{
 		glGenFramebuffers( 1, id.Address() );
@@ -134,11 +143,16 @@ namespace Engine
 		if( glCheckFramebufferStatus( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
 			std::cerr << "ERROR::FRAMEBUFFER::Framebuffer is not complete!\n";
 
-		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		Unbind();
 	}
 
 	void Framebuffer::Bind() const
 	{
 		glBindFramebuffer( ( GLenum )target, id.Get() );
+	}
+
+	void Framebuffer::Unbind() const
+	{
+		glBindFramebuffer( ( GLenum )target, 0 );
 	}
 }

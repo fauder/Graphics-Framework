@@ -551,9 +551,9 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	/* Pass 1 - Rear-cam view: Invert camera direction, draw everything to the off-screen frame-buffer 1. */
+	/* Pass 1 - Rear-cam view: Invert camera direction, draw everything to the off-screen frame-buffer 0. */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 1 (Rear view)" ) );
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 0 (Rear view)" ) );
 
 		camera_controller.Invert();
 		renderer.Update( camera );
@@ -566,9 +566,9 @@ void SandboxApplication::Render()
 		offscreen_framebuffer_color_attachment_array[ 0 ]->GenerateMipmaps();
 	}
 
-	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), draw everything to the off-screen frame-buffer 2. */
+	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), draw everything to the off-screen frame-buffer 1. */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 2 (Default view)" ) );
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 1 (Default view)" ) );
 		
 		camera_controller.Invert();
 		renderer.Update( camera );
@@ -586,11 +586,16 @@ void SandboxApplication::Render()
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Blit Offscreen FB(s) to Main FB" ) );
 
 		if( show_imgui )
+		{
 			renderer.SetCurrentFramebuffer( &editor_framebuffer );
+			Engine::Framebuffer::Blit( offscreen_framebuffer_array[ 0 ], editor_framebuffer );
+			Engine::Framebuffer::Blit( offscreen_framebuffer_array[ 1 ], editor_framebuffer );
+		}
 		else
+		{
 			renderer.ResetToDefaultFramebuffer();
-
-		renderer.Render( camera, { render_group_id_screen_size_quad } );
+			renderer.Render( camera, { render_group_id_screen_size_quad } );
+		}
 
 		/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		editor_framebuffer_color_attachment->GenerateMipmaps();
@@ -960,7 +965,11 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 			break;
 		case Platform::KeyCode::KEY_I:
 			if( key_action == Platform::KeyAction::PRESS )
+			{
 				show_imgui = !show_imgui;
+				if( not show_imgui )
+					OnFramebufferResizeEvent( Platform::GetFramebufferSizeInPixels() );
+			}
 			break;
 		case Platform::KeyCode::KEY_O:
 			if( key_action == Platform::KeyAction::PRESS )
