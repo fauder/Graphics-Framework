@@ -1,5 +1,8 @@
 #pragma once
 
+// Engine Includes.
+#include "Math/Vector.hpp"
+
 // std Includes.
 #include <functional>
 #include <optional>
@@ -174,7 +177,7 @@ namespace Platform
 	void RestoreWindow();
 	void SetFramebufferResizeCallback( std::function< void( const int width_new_pixels, const int height_new_pixels ) > callback = {} );
 
-	std::pair< int, int > GetFramebufferSizeInPixels();
+	Engine::Vector2I GetFramebufferSizeInPixels();
 	int GetFramebufferWidthInPixels();
 	int GetFramebufferHeightInPixels();
 	float GetAspectRatio();

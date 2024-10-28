@@ -215,21 +215,21 @@ namespace Platform
 		ImGui_ImplGlfw_InstallCallbacks( WINDOW );
 	}
 
-	std::pair< int, int > GetFramebufferSizeInPixels()
+	Engine::Vector2I GetFramebufferSizeInPixels()
 	{
 		int width, height;
 		glfwGetFramebufferSize( WINDOW, &width, &height );
-		return { width, height };
+		return Engine::Vector2I( width, height );
 	}
 
 	int GetFramebufferWidthInPixels()
 	{
-		return GetFramebufferSizeInPixels().first;
+		return GetFramebufferSizeInPixels().X();
 	}
 
 	int GetFramebufferHeightInPixels()
 	{
-		return GetFramebufferSizeInPixels().second;
+		return GetFramebufferSizeInPixels().Y();
 	}
 
 	float GetAspectRatio()

@@ -612,8 +612,8 @@ void SandboxApplication::RenderImGui()
 	const auto& style = ImGui::GetStyle();
 
 	{
-		const auto [ width, height ] = Platform::GetFramebufferSizeInPixels();
-		ImGui::SetNextWindowSize( ImVec2( width / 4.0f, height / 4.0f ), ImGuiCond_FirstUseEver );
+		const auto initial_window_size = Platform::GetFramebufferSizeInPixels() / 4;
+		ImGui::SetNextWindowSize( reinterpret_cast< const ImVec2& >( initial_window_size ), ImGuiCond_Appearing );
 	}
 	if( ImGui::Begin( "Rear-view Camera", nullptr, ImGuiWindowFlags_NoScrollbar ) )
 	{
@@ -999,8 +999,8 @@ void SandboxApplication::OnFramebufferResizeEvent( const Vector2I new_size_pixel
 void SandboxApplication::RenderImGui_Viewport()
 {
 	{
-		const auto [ width, height ] = Platform::GetFramebufferSizeInPixels();
-		ImGui::SetNextWindowSize( ImVec2( ( float )width, ( float )height ), ImGuiCond_Appearing );
+		const auto framebuffer_size = Platform::GetFramebufferSizeInPixels();
+		ImGui::SetNextWindowSize( reinterpret_cast< const ImVec2& >( framebuffer_size ), ImGuiCond_Appearing );
 	}
 
 	if( ImGui::Begin( "Viewport" ) )
