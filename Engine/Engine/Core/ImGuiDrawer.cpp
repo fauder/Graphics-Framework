@@ -35,40 +35,41 @@ namespace Engine::ImGuiDrawer
 		switch( type )
 		{
 			/* Scalars & vectors: */
-			case GL_FLOAT				: return Draw( *reinterpret_cast< float*		>( value_pointer ), name );
-			case GL_FLOAT_VEC2			: return Draw( *reinterpret_cast< Vector2*		>( value_pointer ), name );
-			case GL_FLOAT_VEC3			: return Draw( *reinterpret_cast< Vector3*		>( value_pointer ), name );
-			case GL_FLOAT_VEC4			: return Draw( *reinterpret_cast< Vector4*		>( value_pointer ), name );
-			case GL_DOUBLE				: return Draw( *reinterpret_cast< double*		>( value_pointer ), name );
-			case GL_INT					: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
-			case GL_INT_VEC2			: return Draw( *reinterpret_cast< Vector2I*		>( value_pointer ), name );
-			case GL_INT_VEC3			: return Draw( *reinterpret_cast< Vector3I*		>( value_pointer ), name );
-			case GL_INT_VEC4			: return Draw( *reinterpret_cast< Vector4I*		>( value_pointer ), name );
-			case GL_UNSIGNED_INT		: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
-			case GL_UNSIGNED_INT_VEC2	: return Draw( *reinterpret_cast< Vector2U*		>( value_pointer ), name );
-			case GL_UNSIGNED_INT_VEC3	: return Draw( *reinterpret_cast< Vector3U*		>( value_pointer ), name );
-			case GL_UNSIGNED_INT_VEC4	: return Draw( *reinterpret_cast< Vector4U*		>( value_pointer ), name );
-			case GL_BOOL				: return Draw( *reinterpret_cast< bool*			>( value_pointer ), name );
-			case GL_BOOL_VEC2			: return Draw( *reinterpret_cast< Vector2B*		>( value_pointer ), name );
-			case GL_BOOL_VEC3			: return Draw( *reinterpret_cast< Vector3B*		>( value_pointer ), name );
-			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< Vector4B*		>( value_pointer ), name );
+			case GL_FLOAT					: return Draw( *reinterpret_cast< float*		>( value_pointer ), name );
+			case GL_FLOAT_VEC2				: return Draw( *reinterpret_cast< Vector2*		>( value_pointer ), name );
+			case GL_FLOAT_VEC3				: return Draw( *reinterpret_cast< Vector3*		>( value_pointer ), name );
+			case GL_FLOAT_VEC4				: return Draw( *reinterpret_cast< Vector4*		>( value_pointer ), name );
+			case GL_DOUBLE					: return Draw( *reinterpret_cast< double*		>( value_pointer ), name );
+			case GL_INT						: return Draw( *reinterpret_cast< int*			>( value_pointer ), name );
+			case GL_INT_VEC2				: return Draw( *reinterpret_cast< Vector2I*		>( value_pointer ), name );
+			case GL_INT_VEC3				: return Draw( *reinterpret_cast< Vector3I*		>( value_pointer ), name );
+			case GL_INT_VEC4				: return Draw( *reinterpret_cast< Vector4I*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC2		: return Draw( *reinterpret_cast< Vector2U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC3		: return Draw( *reinterpret_cast< Vector3U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC4		: return Draw( *reinterpret_cast< Vector4U*		>( value_pointer ), name );
+			case GL_BOOL					: return Draw( *reinterpret_cast< bool*			>( value_pointer ), name );
+			case GL_BOOL_VEC2				: return Draw( *reinterpret_cast< Vector2B*		>( value_pointer ), name );
+			case GL_BOOL_VEC3				: return Draw( *reinterpret_cast< Vector3B*		>( value_pointer ), name );
+			case GL_BOOL_VEC4				: return Draw( *reinterpret_cast< Vector4B*		>( value_pointer ), name );
 			
 			/* Matrices: */
-			case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< Matrix2x2*	>( value_pointer ), name );
-			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< Matrix3x3*	>( value_pointer ), name );
-			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< Matrix4x4*	>( value_pointer ), name );
-			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< Matrix2x3*	>( value_pointer ), name );
-			case GL_FLOAT_MAT2x4 		: return Draw( *reinterpret_cast< Matrix2x4*	>( value_pointer ), name );
-			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< Matrix3x2*	>( value_pointer ), name );
-			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< Matrix3x4*	>( value_pointer ), name );
-			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< Matrix4x2*	>( value_pointer ), name );
-			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );
+			case GL_FLOAT_MAT2 				: return Draw( *reinterpret_cast< Matrix2x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT3 				: return Draw( *reinterpret_cast< Matrix3x3*	>( value_pointer ), name );
+			case GL_FLOAT_MAT4 				: return Draw( *reinterpret_cast< Matrix4x4*	>( value_pointer ), name );
+			case GL_FLOAT_MAT2x3 			: return Draw( *reinterpret_cast< Matrix2x3*	>( value_pointer ), name );
+			case GL_FLOAT_MAT2x4 			: return Draw( *reinterpret_cast< Matrix2x4*	>( value_pointer ), name );
+			case GL_FLOAT_MAT3x2 			: return Draw( *reinterpret_cast< Matrix3x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT3x4 			: return Draw( *reinterpret_cast< Matrix3x4*	>( value_pointer ), name );
+			case GL_FLOAT_MAT4x2 			: return Draw( *reinterpret_cast< Matrix4x2*	>( value_pointer ), name );
+			case GL_FLOAT_MAT4x3 			: return Draw( *reinterpret_cast< Matrix4x3*	>( value_pointer ), name );
 
 			/* Other: */
-			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
-			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
-			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
-			case GL_SAMPLER_CUBE		: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_1D 				: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D_MULTISAMPLE 	: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D 				: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_3D 				: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_CUBE			: return Draw( *reinterpret_cast< unsigned int*	>( value_pointer ), name );
 		}
 
 		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, void* value_pointer ) called for an undefined GL type!" );
@@ -79,40 +80,41 @@ namespace Engine::ImGuiDrawer
 		switch( type )
 		{
 			/* Scalars & vectors: */
-			case GL_FLOAT				: return Draw( *reinterpret_cast< const float*			>( value_pointer ), name );
-			case GL_FLOAT_VEC2			: return Draw( *reinterpret_cast< const Vector2*		>( value_pointer ), name );
-			case GL_FLOAT_VEC3			: return Draw( *reinterpret_cast< const Vector3*		>( value_pointer ), name );
-			case GL_FLOAT_VEC4			: return Draw( *reinterpret_cast< const Vector4*		>( value_pointer ), name );
-			case GL_DOUBLE				: return Draw( *reinterpret_cast< const double*			>( value_pointer ), name );
-			case GL_INT					: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
-			case GL_INT_VEC2			: return Draw( *reinterpret_cast< const Vector2I*		>( value_pointer ), name );
-			case GL_INT_VEC3			: return Draw( *reinterpret_cast< const Vector3I*		>( value_pointer ), name );
-			case GL_INT_VEC4			: return Draw( *reinterpret_cast< const Vector4I*		>( value_pointer ), name );
-			case GL_UNSIGNED_INT		: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
-			case GL_UNSIGNED_INT_VEC2	: return Draw( *reinterpret_cast< const Vector2U*		>( value_pointer ), name );
-			case GL_UNSIGNED_INT_VEC3	: return Draw( *reinterpret_cast< const Vector3U*		>( value_pointer ), name );
-			case GL_UNSIGNED_INT_VEC4	: return Draw( *reinterpret_cast< const Vector4U*		>( value_pointer ), name );
-			case GL_BOOL				: return Draw( *reinterpret_cast< const bool*			>( value_pointer ), name );
-			case GL_BOOL_VEC2			: return Draw( *reinterpret_cast< const Vector2B*		>( value_pointer ), name );
-			case GL_BOOL_VEC3			: return Draw( *reinterpret_cast< const Vector3B*		>( value_pointer ), name );
-			case GL_BOOL_VEC4			: return Draw( *reinterpret_cast< const Vector4B*		>( value_pointer ), name );
+			case GL_FLOAT					: return Draw( *reinterpret_cast< const float*			>( value_pointer ), name );
+			case GL_FLOAT_VEC2				: return Draw( *reinterpret_cast< const Vector2*		>( value_pointer ), name );
+			case GL_FLOAT_VEC3				: return Draw( *reinterpret_cast< const Vector3*		>( value_pointer ), name );
+			case GL_FLOAT_VEC4				: return Draw( *reinterpret_cast< const Vector4*		>( value_pointer ), name );
+			case GL_DOUBLE					: return Draw( *reinterpret_cast< const double*			>( value_pointer ), name );
+			case GL_INT						: return Draw( *reinterpret_cast< const int*			>( value_pointer ), name );
+			case GL_INT_VEC2				: return Draw( *reinterpret_cast< const Vector2I*		>( value_pointer ), name );
+			case GL_INT_VEC3				: return Draw( *reinterpret_cast< const Vector3I*		>( value_pointer ), name );
+			case GL_INT_VEC4				: return Draw( *reinterpret_cast< const Vector4I*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC2		: return Draw( *reinterpret_cast< const Vector2U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC3		: return Draw( *reinterpret_cast< const Vector3U*		>( value_pointer ), name );
+			case GL_UNSIGNED_INT_VEC4		: return Draw( *reinterpret_cast< const Vector4U*		>( value_pointer ), name );
+			case GL_BOOL					: return Draw( *reinterpret_cast< const bool*			>( value_pointer ), name );
+			case GL_BOOL_VEC2				: return Draw( *reinterpret_cast< const Vector2B*		>( value_pointer ), name );
+			case GL_BOOL_VEC3				: return Draw( *reinterpret_cast< const Vector3B*		>( value_pointer ), name );
+			case GL_BOOL_VEC4				: return Draw( *reinterpret_cast< const Vector4B*		>( value_pointer ), name );
 
 			/* Matrices: */
-			case GL_FLOAT_MAT2 			: return Draw( *reinterpret_cast< const Matrix2x2*		>( value_pointer ), name );
-			case GL_FLOAT_MAT3 			: return Draw( *reinterpret_cast< const Matrix3x3*		>( value_pointer ), name );
-			case GL_FLOAT_MAT4 			: return Draw( *reinterpret_cast< const Matrix4x4*		>( value_pointer ), name );
-			case GL_FLOAT_MAT2x3 		: return Draw( *reinterpret_cast< const Matrix2x3*		>( value_pointer ), name );
-			case GL_FLOAT_MAT2x4 		: return Draw( *reinterpret_cast< const Matrix2x4*		>( value_pointer ), name );
-			case GL_FLOAT_MAT3x2 		: return Draw( *reinterpret_cast< const Matrix3x2*		>( value_pointer ), name );
-			case GL_FLOAT_MAT3x4 		: return Draw( *reinterpret_cast< const Matrix3x4*		>( value_pointer ), name );
-			case GL_FLOAT_MAT4x2 		: return Draw( *reinterpret_cast< const Matrix4x2*		>( value_pointer ), name );
-			case GL_FLOAT_MAT4x3 		: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );
+			case GL_FLOAT_MAT2 				: return Draw( *reinterpret_cast< const Matrix2x2*		>( value_pointer ), name );
+			case GL_FLOAT_MAT3 				: return Draw( *reinterpret_cast< const Matrix3x3*		>( value_pointer ), name );
+			case GL_FLOAT_MAT4 				: return Draw( *reinterpret_cast< const Matrix4x4*		>( value_pointer ), name );
+			case GL_FLOAT_MAT2x3 			: return Draw( *reinterpret_cast< const Matrix2x3*		>( value_pointer ), name );
+			case GL_FLOAT_MAT2x4 			: return Draw( *reinterpret_cast< const Matrix2x4*		>( value_pointer ), name );
+			case GL_FLOAT_MAT3x2 			: return Draw( *reinterpret_cast< const Matrix3x2*		>( value_pointer ), name );
+			case GL_FLOAT_MAT3x4 			: return Draw( *reinterpret_cast< const Matrix3x4*		>( value_pointer ), name );
+			case GL_FLOAT_MAT4x2 			: return Draw( *reinterpret_cast< const Matrix4x2*		>( value_pointer ), name );
+			case GL_FLOAT_MAT4x3 			: return Draw( *reinterpret_cast< const Matrix4x3*		>( value_pointer ), name );
 
 			/* Other: */
-			case GL_SAMPLER_1D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
-			case GL_SAMPLER_2D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
-			case GL_SAMPLER_3D 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
-			case GL_SAMPLER_CUBE 		: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_1D 				: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D_MULTISAMPLE 	: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_2D 				: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_3D 				: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
+			case GL_SAMPLER_CUBE 			: return Draw( *reinterpret_cast< const unsigned int*	>( value_pointer ), name );
 		}
 
 		throw std::runtime_error( "ERROR::IMGUIDRAWER::DRAW( type, const void* value_pointer ) called for an undefined GL type!" );
