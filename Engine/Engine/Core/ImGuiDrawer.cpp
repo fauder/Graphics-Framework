@@ -448,7 +448,7 @@ namespace Engine::ImGuiDrawer
 			float near_plane   = camera.GetNearPlaneOffset();
 			float far_plane    = camera.GetFarPlaneOffset();
 			float aspect_ratio = camera.GetAspectRatio();
-			float vertical_fov = ( float )camera.GetVerticalFieldOfView();
+			float vertical_fov = ( float )Degrees( camera.GetVerticalFieldOfView() );
 
 			/*																	Min Value:		Max Value: */
 			if( is_modified |= ImGui::SliderFloat( "Near Plane", &near_plane,	0.0f,			far_plane	) )
