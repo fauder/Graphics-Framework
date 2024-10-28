@@ -307,7 +307,7 @@ namespace Engine
 		 */
 
 		void SetCurrentFramebuffer( const Framebuffer* framebuffer );
-		void ResetToDefaultFramebuffer( const Framebuffer::Usage usage = Framebuffer::Usage::Both );
+		void ResetToDefaultFramebuffer( const Framebuffer::Target target = Framebuffer::Target::Both );
 		bool DefaultFramebufferIsBound() const;
 		const Framebuffer* CurrentFramebuffer() const;
 

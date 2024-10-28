@@ -12,6 +12,7 @@ namespace Engine
 		id( {} ),
 		width( 0 ),
 		height( 0 ),
+		target( Target::Invalid ),
 		name( "<unnamed FB>" )
 	{
 	}
@@ -21,13 +22,13 @@ namespace Engine
 							  const std::variant< std::monostate, const Texture*, const Renderbuffer* > depth_and_stencil_attachment,
 							  const std::variant< std::monostate, const Texture*, const Renderbuffer* > depth_attachment,
 							  const std::variant< std::monostate, const Texture*, const Renderbuffer* > stencil_attachment,
-							  const Usage usage )
+							  const Target target )
 		:
 		id( {} ),
 		width( width ),
 		height( height ),
+		target( target ),
 		name( name ),
-		usage( usage ),
 		color_attachment( color_attachment ),
 		depth_and_stencil_attachment( depth_and_stencil_attachment ),
 		depth_attachment( depth_attachment ),
@@ -41,8 +42,8 @@ namespace Engine
 		id( std::exchange( donor.id, {} ) ),
 		width( std::exchange( donor.width, 0 ) ),
 		height( std::exchange( donor.height, 0 ) ),
+		target( std::exchange( donor.target, Target::Invalid ) ),
 		name( std::exchange( donor.name, {} ) ),
-		usage( std::exchange( donor.usage, Usage::Invalid ) ),
 		color_attachment( std::exchange( donor.color_attachment, {} ) ),
 		depth_and_stencil_attachment( std::exchange( donor.depth_and_stencil_attachment, std::monostate{} ) ),
 		depth_attachment( std::exchange( donor.depth_attachment, std::monostate{} ) ),
@@ -55,8 +56,8 @@ namespace Engine
 		id                           = std::exchange( donor.id,								{} );
 		width                        = std::exchange( donor.width,							0 );
 		height                       = std::exchange( donor.height,							0 );
+		target                       = std::exchange( donor.target,							Target::Invalid );
 		name                         = std::exchange( donor.name,							{} );
-		usage                        = std::exchange( donor.usage,							Usage::Invalid );
 		color_attachment             = std::exchange( donor.color_attachment,				{} );
 		depth_and_stencil_attachment = std::exchange( donor.depth_and_stencil_attachment,	std::monostate{} );
 		depth_attachment             = std::exchange( donor.depth_attachment,				std::monostate{} );
@@ -94,9 +95,9 @@ namespace Engine
             using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )usage, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
-				glFramebufferRenderbuffer( ( GLenum )usage, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, attachment->Id().Get() );
+				glFramebufferRenderbuffer( ( GLenum )target, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, attachment->Id().Get() );
 			else
 				static_assert( false, "non-exhaustive visitor!" );
         }, color_attachment );
@@ -106,31 +107,31 @@ namespace Engine
             using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )usage, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
-				glFramebufferRenderbuffer( ( GLenum )usage, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
+				glFramebufferRenderbuffer( ( GLenum )target, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
 			// else -> std::monostate.
-        }, depth_attachment );
+		}, depth_attachment );
 
 		std::visit( [ & ]( auto&& attachment )
-        {
-            using T = std::decay_t< decltype( attachment ) >;
+		{
+			using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )usage, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
-				glFramebufferRenderbuffer( ( GLenum )usage, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
+				glFramebufferRenderbuffer( ( GLenum )target, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
 			// else -> std::monostate.
-        }, stencil_attachment );
+		}, stencil_attachment );
 
 		std::visit( [ & ]( auto&& attachment )
-        {
-            using T = std::decay_t< decltype( attachment ) >;
+		{
+			using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )usage, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
-				glFramebufferRenderbuffer( ( GLenum )usage, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
+				glFramebufferRenderbuffer( ( GLenum )target, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
 			// else -> std::monostate.
         }, depth_and_stencil_attachment );
 
@@ -142,6 +143,6 @@ namespace Engine
 
 	void Framebuffer::Bind() const
 	{
-		glBindFramebuffer( ( GLenum )usage, id.Get() );
+		glBindFramebuffer( ( GLenum )target, id.Get() );
 	}
 }

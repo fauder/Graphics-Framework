@@ -553,10 +553,10 @@ namespace Engine
 		framebuffer_current->Bind();
 	}
 
-	void Renderer::ResetToDefaultFramebuffer( const Framebuffer::Usage usage )
+	void Renderer::ResetToDefaultFramebuffer( const Framebuffer::Target target )
 	{
 		framebuffer_current = nullptr;
-		glBindFramebuffer( ( GLenum )usage, 0 );
+		glBindFramebuffer( ( GLenum )target, 0 );
 	}
 
 	bool Renderer::DefaultFramebufferIsBound() const

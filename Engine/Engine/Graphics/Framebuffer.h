@@ -15,7 +15,7 @@ namespace Engine
 	public:
 		using ID = ID< Framebuffer >;
 
-		enum class Usage
+		enum class Target
 		{
 			Invalid  = 0,
 			Both     = GL_FRAMEBUFFER,
@@ -31,7 +31,7 @@ namespace Engine
 					 const std::variant< std::monostate, const Texture*, const Renderbuffer* > depth_and_stencil_attachment = std::monostate{},
 					 const std::variant< std::monostate, const Texture*, const Renderbuffer* > depth_attachment             = std::monostate{},
 					 const std::variant< std::monostate, const Texture*, const Renderbuffer* > stencil_attachment           = std::monostate{},
-					 const Usage usage = Usage::Both );
+					 const Target usage = Target::Both );
 
 		/* Prevent copying for now: */
 		Framebuffer( const Framebuffer& )				= delete;
@@ -77,7 +77,7 @@ namespace Engine
 	private:
 		ID id;
 		int width, height;
-		Usage usage;
+		Target target;
 
 		std::string name;
 
