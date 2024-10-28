@@ -1307,10 +1307,18 @@ void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixe
 
 	/* Offscreen: */
 	{
-		std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width_new_pixels, height_new_pixels ) );
-		name[ strlen( "Offscreen FB " ) ] = '2';
-		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width_new_pixels, height_new_pixels ) );
+		{
+			std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels / 4 ) + "x" + std::to_string( height_new_pixels / 4 ) );
+			offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA,
+																																					 width_new_pixels / 4, 
+																																					 height_new_pixels / 4 ) );
+		}
+		{
+			std::string name( "Offscreen FB 2 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+			offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, 
+																																					 width_new_pixels,
+																																					 height_new_pixels ) );
+		}
 	}
 }
 
@@ -1324,10 +1332,14 @@ void SandboxApplication::InitializeRenderbuffers( const int width_new_pixels, co
 
 	/* Offscreen: */
 	{
-		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
-		name[ strlen( "Offscreen FB " ) ] = '2';
-		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
+		{
+			std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels / 4 ) + "x" + std::to_string( height_new_pixels / 4 ) );
+			offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, width_new_pixels / 4, height_new_pixels / 4 );
+		}
+		{
+			std::string name( "Offscreen FB 2 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+			offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
+		}
 	}
 }
 
@@ -1343,14 +1355,18 @@ void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, con
 
 	/* Offscreen: */
 	{
-		std::string name( "Offscreen FB 1 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
-																offscreen_framebuffer_color_attachment_array[ 0 ],
-																&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
-		name[ strlen( "Offscreen FB " ) ] = '2';
-		offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
-																offscreen_framebuffer_color_attachment_array[ 1 ],
-																&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
+		{
+			std::string name( "Offscreen FB 1 " + std::to_string( width_new_pixels / 4 ) + "x" + std::to_string( height_new_pixels / 4 ) );
+			offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, width_new_pixels / 4, height_new_pixels / 4,
+																	offscreen_framebuffer_color_attachment_array[ 0 ],
+																	&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
+		}
+		{
+			std::string name( "Offscreen FB 2 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+			offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
+																	offscreen_framebuffer_color_attachment_array[ 1 ],
+																	&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
+		}
 	}
 }
 
