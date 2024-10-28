@@ -3,6 +3,7 @@
 // Engine Includes.
 #include "Texture.h"
 #include "Renderbuffer.h"
+#include "Math/Vector.hpp"
 
 // std Includes.
 #include <string>
@@ -44,8 +45,14 @@ namespace Engine
 		~Framebuffer();
 
 	/* Queries: */
-		inline const ID				Id()	const { return id;	 }
-		inline const std::string&	Name()	const { return name; }
+		inline const ID				Id()				const { return id;	 }
+		
+		inline const Vector2I&		Size()				const { return size; }
+		inline int					Width()				const { return size.X(); }
+		inline int					Height()			const { return size.Y(); }
+
+
+		inline const std::string&	Name()				const { return name; }
 
 		inline bool HasSeparateDepthAttachment()		const { return not std::holds_alternative< std::monostate >( depth_attachment ); }
 		inline bool HasSeparateStencilAttachment()		const { return not std::holds_alternative< std::monostate >( stencil_attachment ); }
@@ -72,11 +79,11 @@ namespace Engine
 		void Create();
 
 	/* Queries: */
-		bool IsValid() const { return width > 0 && height > 0; } // Use the width & height to implicitly define validness state.
+		bool IsValid() const { return size.X() > 0 && size.Y() > 0; } // Use the width & height to implicitly define validness state.
 
 	private:
 		ID id;
-		int width, height;
+		Vector2I size;
 		Target target;
 
 		std::string name;

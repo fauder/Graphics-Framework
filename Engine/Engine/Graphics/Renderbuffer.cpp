@@ -9,8 +9,7 @@ namespace Engine
 	Renderbuffer::Renderbuffer()
 		:
 		id( {} ),
-		width( 0 ),
-		height( 0 ),
+		size( ZERO_INITIALIZATION ),
 		name( "<unnamed RB>" )
 	{
 	}
@@ -18,8 +17,7 @@ namespace Engine
 	Renderbuffer::Renderbuffer( const std::string_view name, const int width, const int height )
 		:
 		id( {} ),
-		width( width ),
-		height( height ),
+		size( width, height ),
 		name( name )
 	{
 		glGenRenderbuffers( 1, id.Address() );
@@ -37,18 +35,16 @@ namespace Engine
 	Renderbuffer::Renderbuffer( Renderbuffer&& donor )
 		:
 		id( std::exchange( donor.id, {} ) ),
-		name( std::exchange( donor.name, {} ) ),
-		width( std::exchange( donor.width, 0 ) ),
-		height( std::exchange( donor.height, 0 ) )
+		size( std::exchange( donor.size, ZERO_INITIALIZATION ) ),
+		name( std::exchange( donor.name, {} ) )
 	{
 	}
 
 	Renderbuffer& Renderbuffer::operator =( Renderbuffer&& donor )
 	{
-		id     = std::exchange( donor.id,		{} );
-		name   = std::exchange( donor.name,		{} );
-		width  = std::exchange( donor.width,	0 );
-		height = std::exchange( donor.height,	0 );
+		id   = std::exchange( donor.id,		{} );
+		size = std::exchange( donor.size,	ZERO_INITIALIZATION );
+		name = std::exchange( donor.name,	{} );
 
 		return *this;
 	}

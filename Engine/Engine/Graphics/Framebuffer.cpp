@@ -10,8 +10,7 @@ namespace Engine
 	Framebuffer::Framebuffer()
 		:
 		id( {} ),
-		width( 0 ),
-		height( 0 ),
+		size( ZERO_INITIALIZATION ),
 		target( Target::Invalid ),
 		name( "<unnamed FB>" )
 	{
@@ -25,8 +24,7 @@ namespace Engine
 							  const Target target )
 		:
 		id( {} ),
-		width( width ),
-		height( height ),
+		size( width, height ),
 		target( target ),
 		name( name ),
 		color_attachment( color_attachment ),
@@ -40,8 +38,7 @@ namespace Engine
 	Framebuffer::Framebuffer( Framebuffer&& donor )
 		:
 		id( std::exchange( donor.id, {} ) ),
-		width( std::exchange( donor.width, 0 ) ),
-		height( std::exchange( donor.height, 0 ) ),
+		size( std::exchange( donor.size, ZERO_INITIALIZATION ) ),
 		target( std::exchange( donor.target, Target::Invalid ) ),
 		name( std::exchange( donor.name, {} ) ),
 		color_attachment( std::exchange( donor.color_attachment, {} ) ),
@@ -54,8 +51,7 @@ namespace Engine
 	Framebuffer& Framebuffer::operator =( Framebuffer&& donor )
 	{
 		id                           = std::exchange( donor.id,								{} );
-		width                        = std::exchange( donor.width,							0 );
-		height                       = std::exchange( donor.height,							0 );
+		size                         = std::exchange( donor.size,							ZERO_INITIALIZATION );
 		target                       = std::exchange( donor.target,							Target::Invalid );
 		name                         = std::exchange( donor.name,							{} );
 		color_attachment             = std::exchange( donor.color_attachment,				{} );

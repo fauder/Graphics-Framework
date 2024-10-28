@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "ID.hpp"
+#include "Math/Vector.hpp"
 
 // std Includes.
 #include <string>
@@ -28,22 +29,25 @@ namespace Engine
 		~Renderbuffer();
 
 	/* Queries: */
-		inline const ID				Id()	const { return id; }
-		inline const std::string& Name()	const { return name; }
+		inline const ID				Id()				const { return id; }
+		inline const Vector2I&		Size()				const { return size; }
+		inline int					Width()				const { return size.X(); }
+		inline int					Height()			const { return size.Y(); }
 		void SetName( const std::string& new_name );
 
 	/* Usage: */
 		void Bind() const;
+		inline const std::string&	Name()				const { return name; }
 
 	private:
 
 	/* Queries: */
-		bool IsValid() const { return width > 0 && height > 0; } // Use the width & height to implicitly define validness state.
+		bool IsValid() const { return size.X() > 0 && size.Y() > 0; } // Use the width & height to implicitly define validness state.
 
 	private:
 		ID id;
-		int width, height;
 		//int padding;
+		Vector2I size;
 		std::string name;
 	};
 
