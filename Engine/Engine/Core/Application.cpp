@@ -19,11 +19,13 @@
 
 namespace Engine
 {
-	Application::Application( const BitFlags< CreationFlags > flags )
+	Application::Application( const BitFlags< CreationFlags > flags, const bool enable_msaa, const int msaa_sample_count )
 		:
 		display_frame_statistics( true ),
 		show_imgui( not flags.IsSet( CreationFlags::OnStart_DisableImGui ) ),
 		show_gl_logger( true ),
+		msaa_is_enabled( enable_msaa ),
+		msaa_sample_count( msaa_sample_count ),
 		time_current( 0.0f ),
 		time_multiplier( 1.0f ),
 		time_previous( 0.0f ),
@@ -43,7 +45,7 @@ namespace Engine
 
 	void Application::Initialize()
 	{
-		Platform::InitializeAndCreateWindow( 800, 600 );
+		Platform::InitializeAndCreateWindow( 800, 600, msaa_is_enabled, msaa_sample_count );
 		Platform::ChangeTitle( "Graphics Framework" );
 
 		const auto version = glGetString( GL_VERSION );

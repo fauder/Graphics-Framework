@@ -165,7 +165,7 @@ namespace Platform
 	};
 
 	/* Initialization. */
-	void InitializeAndCreateWindow( const int width_pixels = 800, const int height_pixels = 600 );
+	void InitializeAndCreateWindow( const int width_pixels = 800, const int height_pixels = 600, const bool enable_msaa = false, const int msaa_sample_count = 1 );
 
 	/* Window/Framebuffer. */
 	void ResizeWindow( const int width_pixels, const int height_pixels );

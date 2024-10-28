@@ -18,7 +18,7 @@ namespace Engine
 	class Application
 	{
 	public:
-		Application( const BitFlags< CreationFlags > );
+		Application( const BitFlags< CreationFlags >, const bool enable_msaa = false, const int msaa_sample_count = 4 );
 		virtual ~Application();
 
 		virtual void Initialize();
@@ -51,7 +51,7 @@ namespace Engine
 		bool display_frame_statistics;
 		bool show_imgui;
 		bool show_gl_logger;
-		//bool padding[ 1 ]; // Makes up 8 bits, combined with the float below.
+		bool msaa_is_enabled;
 
 		float time_delta;
 		float time_current;
@@ -64,6 +64,9 @@ namespace Engine
 		float time_mod_2_pi;
 
 		long long frame_count;
+
+		int msaa_sample_count;
+		// int padding;
 
 		GLLogger gl_logger;
 

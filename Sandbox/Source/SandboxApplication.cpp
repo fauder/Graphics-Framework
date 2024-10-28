@@ -36,7 +36,7 @@ Engine::Application* Engine::CreateApplication( const Engine::BitFlags< Engine::
 
 SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > flags )
 	:
-	Engine::Application( flags ),
+	Engine::Application( flags, true, 4 ),
 	render_group_id_skybox( Engine::Renderer::RenderGroupID{ 999 } ),
 	render_group_id_regular( Engine::Renderer::RenderGroupID{ 0 } ),
 	render_group_id_outlined_mesh( Engine::Renderer::RenderGroupID{ 1 } ),
