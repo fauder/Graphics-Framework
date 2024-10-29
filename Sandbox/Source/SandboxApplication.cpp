@@ -560,6 +560,8 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
+	renderer.DisablesRGBEncoding();
+
 	/* Pass 1 - Rear-cam view: Invert camera direction, draw everything to the off-screen frame-buffer 0. */
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 0 (Rear view)" ) );
@@ -593,23 +595,35 @@ void SandboxApplication::Render()
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Blit Offscreen FB(s) to Main FB" ) );
 
+		renderer.EnablesRGBEncoding(); /* Finalization of colors : Need to convert from linear color space to sRGB color space. */
+
 		if( show_imgui )
+		{
 			renderer.SetCurrentFramebuffer( &editor_framebuffer );
+
+			renderer.Render( camera, { render_group_id_screen_size_quad } );
+
+			/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+			editor_framebuffer_color_attachment->GenerateMipmaps();
+
+			/* Now this editor_framebuffer's color attachment will be passed to ImGui to be displayed inside an ImGui window. */
+		}
 		else
+		{
 			renderer.ResetToDefaultFramebuffer();
 
-		renderer.Render( camera, { render_group_id_screen_size_quad } );
-
-		/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-		editor_framebuffer_color_attachment->GenerateMipmaps();
+			renderer.Render( camera, { render_group_id_screen_size_quad } );
+		}
 	}
 
-	if( show_imgui )
-		renderer.ResetToDefaultFramebuffer();
+	/* CAUTION: The rest of the rendering code (namely, ImGui) will be working in sRGB for the remainder of this frame. */
 }
 
 void SandboxApplication::RenderImGui()
 {
+	/* Need to switch to the default framebuffer, so ImGui can render onto it. */
+	renderer.ResetToDefaultFramebuffer();
+
 	Application::RenderImGui();
 
 	if( show_imgui_demo_window )
@@ -1051,7 +1065,7 @@ void SandboxApplication::ResetLightingData()
 	light_is_enabled = true;
 
 	light_point_array_disable      = false;
-	light_point_array_is_animated  = true;
+	//light_point_array_is_animated  = true;
 	light_point_orbit_radius       = 20.0f;
 
 	light_spot_array_disable = false;
