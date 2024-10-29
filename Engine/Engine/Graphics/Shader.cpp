@@ -383,7 +383,7 @@ namespace Engine
 			source )
 			return *source;
 
-		ServiceLocator< GLLogger >::Get().Error( error_prompt );
+		LogErrors( error_prompt );
 
 		return std::nullopt;
 	}
