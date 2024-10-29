@@ -311,6 +311,10 @@ namespace Engine
 		bool DefaultFramebufferIsBound() const;
 		const Framebuffer* CurrentFramebuffer() const;
 
+		/* Color Space: */
+		void EnablesRGBEncoding();
+		void DisablesRGBEncoding();
+
 		/*
 		 * Other:
 		 */

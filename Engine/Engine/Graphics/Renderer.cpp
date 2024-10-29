@@ -569,6 +569,16 @@ namespace Engine
 		return framebuffer_current;
 	}
 
+	void Renderer::EnablesRGBEncoding()
+	{
+		glEnable( GL_FRAMEBUFFER_SRGB );
+	}
+
+	void Renderer::DisablesRGBEncoding()
+	{
+		glDisable( GL_FRAMEBUFFER_SRGB );
+	}
+
 	void Renderer::SetPolygonMode( const PolygonMode mode )
 	{
 		glPolygonMode( GL_FRONT_AND_BACK, ( GLenum )mode );
