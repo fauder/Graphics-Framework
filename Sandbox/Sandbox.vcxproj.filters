@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="Source\SandboxApplication.h" />
-    <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
     <ClInclude Include="Source\ModelInstance.h" />
     <ClInclude Include="Source\KernelData.h" />
   </ItemGroup>
@@ -22,7 +21,7 @@
     <None Include="Asset\Shader\VisualizeDepth.frag" />
     <None Include="Asset\Shader\_Depth.glsl" />
     <None Include="Asset\Shader\Outline.vert" />
-    <None Include="Asset\Shader\FullScreenBlit.vert" />
+    <None Include="Asset\Shader\PassThrough.vert" />
     <None Include="Asset\Shader\Grayscale.frag" />
     <None Include="Asset\Shader\GenericPostprocess.frag" />
     <None Include="Asset\Shader\Skybox.vert" />
@@ -30,5 +29,9 @@
     <None Include="Asset\Shader\VisualizeNormals.geom" />
     <None Include="Asset\Shader\VisualizeNormals.vert" />
     <None Include="Asset\Shader\BasicColor.vert" />
+    <None Include="Asset\Shader\BasicTextured_Mixed.frag" />
+    <None Include="Asset\Shader\FullScreenBlit.frag" />
+    <None Include="Asset\Shader\FullScreenBlit_Resolve.frag" />
+    <None Include="Asset\Shader\PassThrough_UVs.vert" />
   </ItemGroup>
 </Project>

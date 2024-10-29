@@ -115,12 +115,21 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Asset\Shader\BasicTextured_Mixed.frag" />
+    <None Include="Asset\Shader\BasicTextured_Mixed.frag">
+      <FileType>Document</FileType>
+    </None>
     <ClInclude Include="Source\KernelData.h" />
     <ClInclude Include="Source\ModelInstance.h" />
     <ClInclude Include="Source\SandboxApplication.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Asset\Shader\FullScreenBlit_Resolve.frag" />
+    <None Include="Asset\Shader\FullScreenBlit.frag">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="Asset\Shader\PassThrough_UVs.vert">
+      <FileType>CppCode</FileType>
+    </None>
     <ClCompile Include="Source\ModelInstance.cpp" />
     <ClCompile Include="Source\SandboxApplication.cpp" />
   </ItemGroup>
@@ -136,7 +145,7 @@
     <None Include="Asset\Shader\GenericPostprocess.frag" />
     <None Include="Asset\Shader\Grayscale.frag" />
     <None Include="Asset\Shader\Outline.vert" />
-    <None Include="Asset\Shader\FullScreenBlit.vert" />
+    <None Include="Asset\Shader\PassThrough.vert" />
     <None Include="Asset\Shader\VisualizeNormals.geom" />
     <None Include="Asset\Shader\Skybox.frag" />
     <None Include="Asset\Shader\Skybox.vert" />

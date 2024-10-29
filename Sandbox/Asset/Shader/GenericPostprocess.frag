@@ -3,8 +3,6 @@
 
 #include "_Intrinsic_Other.glsl"
 
-in vec2 varying_tex_coords;
-
 out vec4 out_color;
 
 uniform sampler2D uniform_texture_slot;
@@ -32,8 +30,8 @@ void main()
         for( int column_index = 0; column_index < KERNEL_WIDTH; column_index++ )
         {
             int kernel_index_horizontal = column_index - kernel_to_texel_index_offset_horizontal;
-            samples[ row_index * KERNEL_WIDTH + column_index ] = texture( uniform_texture_slot, varying_tex_coords + vec2( float( kernel_index_horizontal ) / _INTRINSIC_VIEWPORT_SIZE.x, 
-                                                                                                                           float( kernel_index_vertical   ) / _INTRINSIC_VIEWPORT_SIZE.y ) );
+            samples[ row_index * KERNEL_WIDTH + column_index ] = texture( uniform_texture_slot, gl_FragCoord.xy + vec2( float( kernel_index_horizontal ) / _INTRINSIC_VIEWPORT_SIZE.x, 
+                                                                                                                        float( kernel_index_vertical   ) / _INTRINSIC_VIEWPORT_SIZE.y ) );
         }
     }
 	

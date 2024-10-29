@@ -51,6 +51,8 @@ namespace Engine
 		inline int					Width()				const { return size.X(); }
 		inline int					Height()			const { return size.Y(); }
 
+		inline bool					SampleCount()		const { return sample_count; }
+		inline bool					IsMultiSampled()	const { return sample_count; }
 
 		inline const std::string&	Name()				const { return name; }
 
@@ -87,6 +89,8 @@ namespace Engine
 	private:
 		ID id;
 		Vector2I size;
+		int sample_count;
+		//int padding;
 		Target target;
 
 		std::string name;

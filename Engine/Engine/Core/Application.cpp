@@ -35,6 +35,8 @@ namespace Engine
 	{
 		NatVis::ForceIncludeInBuild();
 
+		ASSERT_DEBUG_ONLY( enable_msaa == ( bool )msaa_sample_count );
+
 		Initialize();
 	}
 

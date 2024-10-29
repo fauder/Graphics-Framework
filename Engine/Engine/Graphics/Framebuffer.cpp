@@ -11,6 +11,7 @@ namespace Engine
 		:
 		id( {} ),
 		size( ZERO_INITIALIZATION ),
+		sample_count( 0 ),
 		target( Target::Invalid ),
 		name( "<unnamed FB>" )
 	{
@@ -25,6 +26,7 @@ namespace Engine
 		:
 		id( {} ),
 		size( width, height ),
+		// sample_count is not initialized here because it will be set in Create() below.
 		target( target ),
 		name( name ),
 		color_attachment( color_attachment ),
@@ -39,6 +41,7 @@ namespace Engine
 		:
 		id( std::exchange( donor.id, {} ) ),
 		size( std::exchange( donor.size, ZERO_INITIALIZATION ) ),
+		sample_count( std::exchange( donor.sample_count, 0 ) ),
 		target( std::exchange( donor.target, Target::Invalid ) ),
 		name( std::exchange( donor.name, {} ) ),
 		color_attachment( std::exchange( donor.color_attachment, {} ) ),
@@ -52,6 +55,7 @@ namespace Engine
 	{
 		id                           = std::exchange( donor.id,								{} );
 		size                         = std::exchange( donor.size,							ZERO_INITIALIZATION );
+		sample_count                 = std::exchange( donor.sample_count,					0 );
 		target                       = std::exchange( donor.target,							Target::Invalid );
 		name                         = std::exchange( donor.name,							{} );
 		color_attachment             = std::exchange( donor.color_attachment,				{} );
@@ -79,7 +83,7 @@ namespace Engine
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, destination.Id().Get() );
 		glBlitFramebuffer( 0, 0, source.Width(), source.Height(),
 						   0, 0, destination.Width(), destination.Height(),
-						   GL_COLOR_BUFFER_BIT, GL_NEAREST );
+						   GL_COLOR_BUFFER_BIT, GL_LINEAR );
 	}
 
 	void Framebuffer::Create()
@@ -87,10 +91,7 @@ namespace Engine
 		glGenFramebuffers( 1, id.Address() );
 		Bind();
 
-#ifdef _DEBUG
-		if( not name.empty() )
-			ServiceLocator< GLLogger >::Get().SetLabel( GL_FRAMEBUFFER, id.Get(), this->name );
-		
+#ifdef _DEBUG		
 		ASSERT( not( HasCombinedDepthStencilAttachment() && ( HasSeparateDepthAttachment() || HasSeparateStencilAttachment() ) ) &&
 				"A Framebuffer can not use separate depth/stencil attachment together a combined Depth Stencil attachment!" );
 #endif // _DEBUG
@@ -100,19 +101,21 @@ namespace Engine
             using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )target, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_COLOR_ATTACHMENT0, attachment->IsMultiSampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
 				glFramebufferRenderbuffer( ( GLenum )target, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, attachment->Id().Get() );
 			else
 				static_assert( false, "non-exhaustive visitor!" );
-        }, color_attachment );
 
+			sample_count = attachment->SampleCount();
+        }, color_attachment );
+		
 		std::visit( [ & ]( auto&& attachment )
         {
             using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )target, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_DEPTH_ATTACHMENT, attachment->IsMultiSampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
 				glFramebufferRenderbuffer( ( GLenum )target, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
 			// else -> std::monostate.
@@ -123,7 +126,7 @@ namespace Engine
 			using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )target, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_STENCIL_ATTACHMENT, attachment->IsMultiSampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
 				glFramebufferRenderbuffer( ( GLenum )target, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
 			// else -> std::monostate.
@@ -134,7 +137,7 @@ namespace Engine
 			using T = std::decay_t< decltype( attachment ) >;
 
 			if constexpr( std::is_same_v< T, const Texture* > )
-				glFramebufferTexture2D( ( GLenum )target, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, attachment->Id().Get(), 0 );
+				glFramebufferTexture2D( ( GLenum )target, GL_DEPTH_STENCIL_ATTACHMENT, attachment->IsMultiSampled() ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, attachment->Id().Get(), 0 );
 			else if constexpr( std::is_same_v< T, const Renderbuffer* > )
 				glFramebufferRenderbuffer( ( GLenum )target, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, attachment->Id().Get() );
 			// else -> std::monostate.
@@ -142,6 +145,16 @@ namespace Engine
 
 		if( glCheckFramebufferStatus( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
 			std::cerr << "ERROR::FRAMEBUFFER::Framebuffer is not complete!\n";
+
+
+#ifdef _DEBUG
+		// This block is intentionally placed after attachments, as the sample_count is set there.
+		if( not name.empty() )
+		{
+			const std::string name( IsMultiSampled() ? this->name + " (" + std::to_string( sample_count ) + " samples)" : this->name );
+			ServiceLocator< GLLogger >::Get().SetLabel( GL_FRAMEBUFFER, id.Get(), name );
+		}
+#endif // _DEBUG
 
 		Unbind();
 	}

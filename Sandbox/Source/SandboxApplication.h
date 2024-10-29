@@ -157,7 +157,7 @@ private:
 	Engine::Shader basic_textured_transparent_discard_shader;
 	Engine::Shader outline_shader;
 
-	Engine::Shader fullscreen_blit_shader;
+	Engine::Shader texture_blit_shader, fullscreen_blit_shader, fullscreen_blit_resolve_shader;
 
 	Engine::Shader postprocess_grayscale_shader;
 
@@ -274,4 +274,7 @@ private:
 	bool show_imgui_demo_window;
 
 	bool draw_rear_view_cam_to_imgui;
+
+	bool msaa_for_offscreen_framebuffers_is_enabled;
+	int msaa_for_offscreen_framebuffers_sample_count;
 };

@@ -20,15 +20,19 @@ namespace Engine
 	{
 		None,
 
-		Texture2D = GL_TEXTURE_2D,
-		Cubemap   = GL_TEXTURE_CUBE_MAP
+		Texture2D             = GL_TEXTURE_2D,
+		Texture2D_MultiSample = GL_TEXTURE_2D_MULTISAMPLE,
+		Cubemap               = GL_TEXTURE_CUBE_MAP
 	};
 
 	class Texture
 	{
-	public:
 		struct CubeMapConstructorTag {};
+		struct Texture2DMultiSampleConstructorTag {};
+
+	public:
 		static constexpr CubeMapConstructorTag CUBEMAP_CONSTRUCTOR = {};
+		static constexpr Texture2DMultiSampleConstructorTag TEXTURE_2D_MULTISAMPLE_CONSTRUCTOR = {};
 
 		enum class Wrapping
 		{
@@ -94,8 +98,16 @@ namespace Engine
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
+		/* Multi-sampled allocate-only constructor (no data). */
+		Texture( const int sample_count,
+				 const std::string_view multi_sample_texture_name,
+				 //const std::byte* data, This is omitted from this public constructor.
+				 const int format,
+				 const int width, const int height );
+
 		/* Cubemap allocate-only constructor (no data). */
-		Texture( CubeMapConstructorTag tag, const std::string_view name,
+		Texture( CubeMapConstructorTag tag,
+				 const std::string_view name,
 				 //const std::byte* data, This is omitted from this public constructor.
 				 const int format,
 				 const int width, const int height,
@@ -113,12 +125,14 @@ namespace Engine
 		~Texture();
 
 	/* Queries: */
-		inline const ID				Id()		const { return id;			}
-		inline const Vector2I&		Size()		const { return size;		}
-		inline const int			Width()		const { return size.X();	}
-		inline const int			Height()	const { return size.Y();	}
-		inline const TextureType	Type()		const { return type;		}
-		inline const std::string&	Name()		const { return name;		}
+		inline ID					Id()				const { return id;				}
+		inline const Vector2I&		Size()				const { return size;			}
+		inline int					Width()				const { return size.X();		}
+		inline int					Height()			const { return size.Y();		}
+		inline TextureType			Type()				const { return type;			}
+		inline const std::string&	Name()				const { return name;			}
+		inline int					SampleCount()		const { return sample_count;	}
+		inline bool					IsMultiSampled()	const { return sample_count;	}
 
 	/* Usage: */
 		void SetName( const std::string& new_name );
@@ -148,11 +162,14 @@ namespace Engine
 
 	/* Usage: */
 		void Bind() const;
+		void Unbind() const;
 
 	private:
 		ID id;
 		Vector2I size;
 		TextureType type;
 		std::string name;
+		int sample_count;
+		//int padding;
 	};
 };

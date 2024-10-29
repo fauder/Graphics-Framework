@@ -12,6 +12,6 @@ void main()
 	out_color = texture( uniform_texture_slot, varying_tex_coords );
 #ifdef DISCARD_TRANSPARENT_FRAGMENTS
 	if( out_color.a < 0.1 )
-			discard;
+		discard;
 #endif
 }

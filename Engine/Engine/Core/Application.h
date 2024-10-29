@@ -18,7 +18,7 @@ namespace Engine
 	class Application
 	{
 	public:
-		Application( const BitFlags< CreationFlags >, const bool enable_msaa = false, const int msaa_sample_count = 4 );
+		Application( const BitFlags< CreationFlags >, const bool enable_msaa = false, const int msaa_sample_count = 0 );
 		virtual ~Application();
 
 		virtual void Initialize();

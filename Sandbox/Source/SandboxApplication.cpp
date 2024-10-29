@@ -19,6 +19,7 @@
 #include "Engine/Math/Math.hpp"
 #include "Engine/Math/Matrix.h"
 #include "Engine/Math/Random.hpp"
+#include "Engine/Math/VectorConversion.hpp"
 
 // Vendor Includes.
 #include <IconFontCppHeaders/IconsFontAwesome6.h>
@@ -36,7 +37,7 @@ Engine::Application* Engine::CreateApplication( const Engine::BitFlags< Engine::
 
 SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > flags )
 	:
-	Engine::Application( flags, true, 4 ),
+	Engine::Application( flags ),
 	render_group_id_skybox( Engine::Renderer::RenderGroupID{ 999 } ),
 	render_group_id_regular( Engine::Renderer::RenderGroupID{ 0 } ),
 	render_group_id_outlined_mesh( Engine::Renderer::RenderGroupID{ 1 } ),
@@ -52,7 +53,9 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	basic_textured_shader( "Basic Textured" ),
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
 	outline_shader( "Outline" ),
+	texture_blit_shader( "Texture Blit" ),
 	fullscreen_blit_shader( "Fullscreen Blit" ),
+	fullscreen_blit_resolve_shader( "Fullscreen Blit (Resolve)" ),
 	postprocess_grayscale_shader( "Post-process: Grayscale" ),
 	postprocess_generic_shader( "Post-process: Generic" ),
 	normal_visualization_shader( "Normal Visualization" ),
@@ -67,7 +70,9 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	camera_controller( &camera, camera_rotation_speed ),
 	ui_interaction_enabled( false ),
 	show_imgui_demo_window( false ),
-	draw_rear_view_cam_to_imgui( true )
+	draw_rear_view_cam_to_imgui( true ),
+	msaa_for_offscreen_framebuffers_is_enabled( true ),
+	msaa_for_offscreen_framebuffers_sample_count( 4 )
 {
 	Initialize();
 }
@@ -130,9 +135,11 @@ void SandboxApplication::Initialize()
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
-	fullscreen_blit_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/BasicTextured.frag)" );
-	postprocess_grayscale_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/Grayscale.frag)" );
-	postprocess_generic_shader.FromFile( R"(Asset/Shader/FullScreenBlit.vert)", R"(Asset/Shader/GenericPostprocess.frag)" );
+	texture_blit_shader.FromFile( R"(Asset/Shader/PassThrough_UVs.vert)", R"(Asset/Shader/BasicTextured.frag)" );
+	fullscreen_blit_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/FullScreenBlit.frag)" );
+	fullscreen_blit_resolve_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/FullScreenBlit_Resolve.frag)" );
+	postprocess_grayscale_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/Grayscale.frag)" );
+	postprocess_generic_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/GenericPostprocess.frag)" );
 	normal_visualization_shader.FromFile( R"(Asset/Shader/VisualizeNormals.vert)", R"(Asset/Shader/BasicColor.frag)", { /* No features defined. */ },
 										  R"(Asset/Shader/VisualizeNormals.geom)" );
 
@@ -141,6 +148,8 @@ void SandboxApplication::Initialize()
 	renderer.RegisterShader( postprocess_grayscale_shader );
 	renderer.RegisterShader( postprocess_generic_shader );
 	renderer.RegisterShader( normal_visualization_shader );
+	renderer.RegisterShader( fullscreen_blit_shader );
+	renderer.RegisterShader( fullscreen_blit_resolve_shader );
 
 /* Instancing Data: */
 	ResetInstanceData();
@@ -577,8 +586,7 @@ void SandboxApplication::Render()
 
 		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
 
-		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-		offscreen_framebuffer_color_attachment_array[ 1 ]->GenerateMipmaps();
+		/* This framebuffer is multisampled => no mipmaps. */
 	}
 
 	/* Pass 3: Blit both off-screen frame-buffers to quads on the editor frame-buffer. */
@@ -586,16 +594,11 @@ void SandboxApplication::Render()
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Blit Offscreen FB(s) to Main FB" ) );
 
 		if( show_imgui )
-		{
 			renderer.SetCurrentFramebuffer( &editor_framebuffer );
-			Engine::Framebuffer::Blit( offscreen_framebuffer_array[ 0 ], editor_framebuffer );
-			Engine::Framebuffer::Blit( offscreen_framebuffer_array[ 1 ], editor_framebuffer );
-		}
 		else
-		{
 			renderer.ResetToDefaultFramebuffer();
-			renderer.Render( camera, { render_group_id_screen_size_quad } );
-		}
+
+		renderer.Render( camera, { render_group_id_screen_size_quad } );
 
 		/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		editor_framebuffer_color_attachment->GenerateMipmaps();
@@ -618,7 +621,7 @@ void SandboxApplication::RenderImGui()
 
 	{
 		const auto initial_window_size = Platform::GetFramebufferSizeInPixels() / 4;
-		ImGui::SetNextWindowSize( reinterpret_cast< const ImVec2& >( initial_window_size ), ImGuiCond_Appearing );
+		ImGui::SetNextWindowSize( Engine::Math::CopyToImVec2( initial_window_size ), ImGuiCond_Appearing );
 	}
 	if( ImGui::Begin( "Rear-view Camera", nullptr, ImGuiWindowFlags_NoScrollbar ) )
 	{
@@ -626,17 +629,14 @@ void SandboxApplication::RenderImGui()
 			mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
 		if( draw_rear_view_cam_to_imgui )
-		{
-			const ImVec2 negative_size_offset( style.WindowPadding * 2 );
 			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_color_attachment_array[ 0 ]->Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
-		}
 	}
 
 	ImGui::End();
 
 	if( ImGui::Begin( ICON_FA_CUBES " Models", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 	{
-		enum ModelLoadActionResult
+		enum class ModelLoadActionResult
 		{
 			Loaded, Unloaded, None
 		};
@@ -984,13 +984,13 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 {
 	/* Do nothing on minimize: */
 	if( width_new_pixels == 0 || height_new_pixels == 0 || 
-		( editor_framebuffer_color_attachment && editor_framebuffer_color_attachment->Size() == Vector2I{ width_new_pixels, height_new_pixels } ) )
+		( editor_framebuffer.Size() == Vector2I{ width_new_pixels, height_new_pixels } ) )
 		return;
 
 	renderer.OnFramebufferResize( width_new_pixels, height_new_pixels );
 
 	RecalculateProjectionParameters( width_new_pixels, height_new_pixels );
-
+	
 	// Re-initialize:
 	InitializeFramebufferTextures( width_new_pixels, height_new_pixels );
 	InitializeRenderbuffers( width_new_pixels, height_new_pixels );
@@ -1009,7 +1009,7 @@ void SandboxApplication::RenderImGui_Viewport()
 {
 	{
 		const auto framebuffer_size = Platform::GetFramebufferSizeInPixels();
-		ImGui::SetNextWindowSize( reinterpret_cast< const ImVec2& >( framebuffer_size ), ImGuiCond_Appearing );
+		ImGui::SetNextWindowSize( Engine::Math::CopyToImVec2( framebuffer_size ), ImGuiCond_Appearing );
 	}
 
 	if( ImGui::Begin( "Viewport" ) )
@@ -1131,11 +1131,16 @@ void SandboxApplication::ResetMaterialData()
 
 	outline_material = Engine::Material( "Outline", &outline_shader );
 
-	mirror_quad_material = Engine::Material( "Rear-view Mirror", &fullscreen_blit_shader );
+	mirror_quad_material = Engine::Material( "Rear-view Mirror", &texture_blit_shader );
 	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
 
-	offscreen_quad_material = Engine::Material( "Offscreen Quad", &fullscreen_blit_shader );
-	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
+	{
+		const auto offscreen_blit_shader_to_use = msaa_for_offscreen_framebuffers_is_enabled ? &fullscreen_blit_resolve_shader : &fullscreen_blit_shader;
+		offscreen_quad_material = Engine::Material( "Offscreen Quad", offscreen_blit_shader_to_use );
+		offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
+		if( msaa_for_offscreen_framebuffers_is_enabled )
+			offscreen_quad_material.Set( "uniform_sample_count", msaa_for_offscreen_framebuffers_sample_count );
+	}
 
 	ground_quad_surface_data = wall_surface_data = cube_surface_data =
 	{
@@ -1311,23 +1316,36 @@ void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixe
 	/* Main: */
 	{
 		std::string name( "Editor FB Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		editor_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, width_new_pixels, height_new_pixels ) );
+		editor_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, 
+																																   width_new_pixels, height_new_pixels ) );
 	}
 
 	/* Offscreen: */
 	{
-		{
-			std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels / 4 ) + "x" + std::to_string( height_new_pixels / 4 ) );
-			offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA,
-																																					 width_new_pixels / 4, 
-																																					 height_new_pixels / 4 ) );
-		}
-		{
-			std::string name( "Offscreen FB 2 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-			offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, 
-																																					 width_new_pixels,
-																																					 height_new_pixels ) );
-		}
+		/* Don't use MSAA for the rear-view as it is:
+		 *	A) not needed,
+		 *  B) needs resolve into a non-sampled texture (which means another FBO) to be used inside an ImGui window. */
+		std::string name( "Offscreen FB 0 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA,
+																																				 width_new_pixels,
+																																				 height_new_pixels ) );
+	}
+
+	if( msaa_for_offscreen_framebuffers_is_enabled )
+	{
+		std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) +
+						  " (" + std::to_string( msaa_for_offscreen_framebuffers_sample_count ) + " samples)" );
+		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( msaa_for_offscreen_framebuffers_sample_count,
+																																				 name, GL_RGBA,
+																																				 width_new_pixels,
+																																				 height_new_pixels ) );
+	}
+	else
+	{
+		std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA,
+																																				 width_new_pixels,
+																																				 height_new_pixels ) );
 	}
 }
 
@@ -1341,14 +1359,25 @@ void SandboxApplication::InitializeRenderbuffers( const int width_new_pixels, co
 
 	/* Offscreen: */
 	{
-		{
-			std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels / 4 ) + "x" + std::to_string( height_new_pixels / 4 ) );
-			offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, width_new_pixels / 4, height_new_pixels / 4 );
-		}
-		{
-			std::string name( "Offscreen FB 2 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-			offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
-		}
+		/* Don't use MSAA for the rear-view as it is:
+		 *	A) not needed,
+		 *  B) needs resolve into a non-sampled texture (which means another FBO) to be used inside an ImGui window. */
+		std::string name( "Offscreen FB 0 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
+	}
+	
+	if( msaa_for_offscreen_framebuffers_is_enabled )
+	{
+		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) + 
+						  " (" + std::to_string( msaa_for_offscreen_framebuffers_sample_count ) + " samples)" );
+		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( msaa_for_offscreen_framebuffers_sample_count,
+																							  name,
+																							  width_new_pixels, height_new_pixels );
+	}
+	else
+	{
+		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
 	}
 }
 
@@ -1365,13 +1394,13 @@ void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, con
 	/* Offscreen: */
 	{
 		{
-			std::string name( "Offscreen FB 1 " + std::to_string( width_new_pixels / 4 ) + "x" + std::to_string( height_new_pixels / 4 ) );
-			offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, width_new_pixels / 4, height_new_pixels / 4,
+			std::string name( "Offscreen FB 0 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+			offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
 																	offscreen_framebuffer_color_attachment_array[ 0 ],
 																	&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
 		}
 		{
-			std::string name( "Offscreen FB 2 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
+			std::string name( "Offscreen FB 1 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
 			offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
 																	offscreen_framebuffer_color_attachment_array[ 1 ],
 																	&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
@@ -1394,5 +1423,5 @@ void SandboxApplication::RecalculateProjectionParameters( const Vector2I new_siz
 
 void SandboxApplication::RecalculateProjectionParameters()
 {
-	RecalculateProjectionParameters( editor_framebuffer_color_attachment->Size() );
+	RecalculateProjectionParameters( editor_framebuffer.Size() );
 }
