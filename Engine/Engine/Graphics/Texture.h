@@ -7,7 +7,6 @@
 #include "Math/Vector.hpp"
 
 // std Includes.
-#include <optional>
 #include <string>
 #include <string_view>
 
