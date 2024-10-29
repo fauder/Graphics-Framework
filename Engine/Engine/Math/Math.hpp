@@ -30,6 +30,8 @@ namespace Engine
 	using Matrix4x4 = Math::Matrix< float, 4, 4 >;
 }
 
+// TODO: Make suitable functions constexpr.
+
 namespace Engine::Math
 {
 /* Arithmetic. */
@@ -47,6 +49,12 @@ namespace Engine::Math
 
 	template< std::floating_point Value >
 	Value Sqrt( const Value value ) { return std::sqrt( value ); }
+
+	template< std::floating_point Value >
+	Value Pow( const Value value, const Value exponent ) { return std::pow( value, exponent ); }
+
+	template< std::floating_point Value >
+	Value Exp( const Value exponent ) { return std::exp( exponent ); }
 
 	template< typename Value, std::floating_point PercentType >
 	Value Lerp( const Value value_a, const Value value_b, const PercentType t ) { return ( PercentType( 1 ) - t ) * value_a + t * value_b; }
