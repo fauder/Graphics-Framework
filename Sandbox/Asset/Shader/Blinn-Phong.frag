@@ -9,7 +9,7 @@ in vec2 varying_tex_coords;
 
 out vec4 out_color;
 
-layout ( std140 ) uniform PhongMaterialData
+layout ( std140 ) uniform BlinnPhongMaterialData
 {
 /* These 2 are combined into a vec4 on cpu side. */
 	vec3 color_diffuse;
@@ -18,7 +18,7 @@ layout ( std140 ) uniform PhongMaterialData
 	float shininess;
 
 	vec3 padding;
-} uniform_phong_material_data;
+} uniform_blinn_phong_material_data;
 
 uniform sampler2D uniform_diffuse_map_slot, uniform_specular_map_slot;
 
@@ -43,10 +43,9 @@ vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_di
 	vec3 diffuse               = diffuse_sample * _INTRINSIC_DIRECTIONAL_LIGHT.diffuse.rgb * diffuse_contribution;
 
 /* Specular term: */
-	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
-	vec4 reflected_light_direction_view_space = reflect( -to_light_view_space, normal_view_space );
+	vec4 halfway_angle_view_space = normalize( to_light_view_space + viewing_direction_view_space );
 
-	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_phong_material_data.shininess );
+	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0 ), uniform_blinn_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_DIRECTIONAL_LIGHT.specular.rgb * specular_contribution;
 
 	return ambient + diffuse + specular;
@@ -74,10 +73,9 @@ vec3 CalculateColorFromPointLight( const int point_light_index,
 	vec3 diffuse               = diffuse_sample * _INTRINSIC_POINT_LIGHTS[ point_light_index ].diffuse_and_attenuation_linear.rgb * diffuse_contribution;
 
 /* Specular term: */
-	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
-	vec4 reflected_light_direction_view_space = reflect( -to_light_view_space, normal_view_space );
+	vec4 halfway_angle_view_space = normalize( to_light_view_space + viewing_direction_view_space );
 
-	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_phong_material_data.shininess );
+	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0 ), uniform_blinn_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_POINT_LIGHTS[ point_light_index ].specular_and_attenuation_quadratic.rgb * specular_contribution;
 
 /* Attenuation: */
@@ -116,10 +114,9 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 	vec3 diffuse               = diffuse_sample * _INTRINSIC_SPOT_LIGHTS[ spot_light_index ].diffuse.rgb * diffuse_contribution;
 
 /* Specular term: */
-	// reflect() expects the first argument to be the vector FROM the light source to the fragment pos.
-	vec4 reflected_light_direction_view_space = reflect( from_light_view_space, normal_view_space );
+	vec4 halfway_angle_view_space = normalize( to_light_view_space + viewing_direction_view_space );
 
-	float specular_contribution = pow( max( dot( reflected_light_direction_view_space, viewing_direction_view_space ), 0.0 ), uniform_phong_material_data.shininess );
+	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0 ), uniform_blinn_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_SPOT_LIGHTS[ spot_light_index ].specular.rgb * specular_contribution;
 
 	return ambient + cut_off_intensity * ( diffuse + specular );
@@ -131,9 +128,9 @@ void main()
 	// No need to subtract from the camera position since the camera is positioned at the origin in view space.
 	vec4 viewing_direction_view_space = normalize( -varying_position_view_space ); 
 
-	vec3 diffuse_sample  = uniform_phong_material_data.has_texture_diffuse
+	vec3 diffuse_sample  = uniform_blinn_phong_material_data.has_texture_diffuse
 							? vec3( texture( uniform_diffuse_map_slot,  varying_tex_coords ) )
-							: uniform_phong_material_data.color_diffuse;
+							: uniform_blinn_phong_material_data.color_diffuse;
 	vec3 specular_sample = vec3( texture( uniform_specular_map_slot, varying_tex_coords ) );
 
 	vec3 from_directional_light = _INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE * 

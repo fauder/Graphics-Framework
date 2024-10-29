@@ -12,8 +12,8 @@
   <ItemGroup>
     <None Include="Asset\Shader\BasicTextured.vert" />
     <None Include="Asset\Shader\BasicTextured.frag" />
-    <None Include="Asset\Shader\Phong.frag" />
-    <None Include="Asset\Shader\Phong.vert" />
+    <None Include="Asset\Shader\Blinn-Phong.frag" />
+    <None Include="Asset\Shader\Blinn-Phong.vert" />
     <None Include="Asset\Shader\BasicColor.frag" />
     <None Include="Asset\Shader\_Intrinsic_Lighting.glsl" />
     <None Include="Asset\Shader\_Intrinsic_Other.glsl" />

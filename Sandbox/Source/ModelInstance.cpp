@@ -76,7 +76,7 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 	int material_index = 0;
 
 	node_material_array.resize( model->MeshInstanceCount() );
-	phong_material_data_array.resize( model->MeshInstanceCount() );
+	blinn_phong_material_data_array.resize( model->MeshInstanceCount() );
 
 	const auto node_count = model->NodeCount();
 	const auto& nodes = model->Nodes();
@@ -93,7 +93,7 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 
 				if( diffuse_texture || sub_mesh.texture_albedo )
 				{
-					phong_material_data_array[ material_index ] =
+					blinn_phong_material_data_array[ material_index ] =
 					{
 						.color_diffuse       = {},
 						.has_texture_diffuse = 1,
@@ -104,7 +104,7 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 				}
 				else if( sub_mesh.color_albedo )
 				{
-					phong_material_data_array[ material_index ] =
+					blinn_phong_material_data_array[ material_index ] =
 					{
 						.color_diffuse       = *sub_mesh.color_albedo,
 						.has_texture_diffuse = 0,
@@ -122,6 +122,6 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 		}
 	}
 
-	for( auto i = 0; i < phong_material_data_array.size(); i++ )
-		node_material_array[ i ].Set( "PhongMaterialData", phong_material_data_array[ i ] );
+	for( auto i = 0; i < blinn_phong_material_data_array.size(); i++ )
+		node_material_array[ i ].Set( "BlinnPhongMaterialData", blinn_phong_material_data_array[ i ] );
 }

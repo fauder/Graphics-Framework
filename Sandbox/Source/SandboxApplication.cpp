@@ -45,10 +45,10 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	render_group_id_transparent( Engine::Renderer::RenderGroupID{ 3 } ),
 	render_group_id_screen_size_quad( Engine::Renderer::RenderGroupID{ 4 } ),
 	skybox_shader( "Skybox" ),
-	phong_shader( "Phong" ),
-	phong_shader_instanced( "Phong (Instanced)" ),
-	phong_skybox_reflection_shader( "Phong (w/ Skybox Reflection)" ),
-	phong_skybox_reflection_shader_instanced( "Phong (w/ Skybox Reflection, Instanced)" ),
+	blinn_phong_shader( "Blinn-Phong" ),
+	blinn_phong_shader_instanced( "Blinn-Phong (Instanced)" ),
+	blinn_phong_skybox_reflection_shader( "Blinn-Phong (w/ Skybox Reflection)" ),
+	blinn_phong_skybox_reflection_shader_instanced( "Blinn-Phong (w/ Skybox Reflection, Instanced)" ),
 	basic_color_shader( "Basic Color" ),
 	basic_textured_shader( "Basic Textured" ),
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
@@ -59,8 +59,8 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	postprocess_grayscale_shader( "Post-process: Grayscale" ),
 	postprocess_generic_shader( "Post-process: Generic" ),
 	normal_visualization_shader( "Normal Visualization" ),
-	test_model_info{ .model_instance = {}, .shader = &phong_shader, .file_path = {} },
-	meteorite_model_info{ .model_instance = {}, .shader = &phong_shader_instanced, .file_path = {} },
+	test_model_info{ .model_instance = {}, .shader = &blinn_phong_shader, .file_path = {} },
+	meteorite_model_info{ .model_instance = {}, .shader = &blinn_phong_shader_instanced, .file_path = {} },
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT ),
 	cube_reflected_transform_array( CUBE_REFLECTED_COUNT ),
@@ -127,10 +127,10 @@ void SandboxApplication::Initialize()
 
 /* Shaders: */
 	skybox_shader.FromFile( R"(Asset/Shader/Skybox.vert)", R"(Asset/Shader/Skybox.frag)" );
-	phong_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)" );
-	phong_shader_instanced.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "INSTANCING_ENABLED" } );
-	phong_skybox_reflection_shader.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING" } );
-	phong_skybox_reflection_shader_instanced.FromFile( R"(Asset/Shader/Phong.vert)", R"(Asset/Shader/Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING", "INSTANCING_ENABLED" } );
+	blinn_phong_shader.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)" );
+	blinn_phong_shader_instanced.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "INSTANCING_ENABLED" } );
+	blinn_phong_skybox_reflection_shader.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING" } );
+	blinn_phong_skybox_reflection_shader_instanced.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING", "INSTANCING_ENABLED" } );
 	basic_color_shader.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)", { "INSTANCING_ENABLED" } );
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
@@ -144,7 +144,7 @@ void SandboxApplication::Initialize()
 										  R"(Asset/Shader/VisualizeNormals.geom)" );
 
 	/* Register shaders not assigned to materials: */
-	renderer.RegisterShader( phong_skybox_reflection_shader );
+	renderer.RegisterShader( blinn_phong_skybox_reflection_shader );
 	renderer.RegisterShader( postprocess_grayscale_shader );
 	renderer.RegisterShader( postprocess_generic_shader );
 	renderer.RegisterShader( normal_visualization_shader );
@@ -1097,8 +1097,8 @@ void SandboxApplication::ResetMaterialData()
 
 	light_source_material = Engine::Material( "Light Source", &basic_color_shader );
 	
-	/* Set the first cube's material to Phong shader w/ skybox reflection: */
-	cube_reflected_material = Engine::Material( "Cube (Reflected)", &phong_skybox_reflection_shader_instanced );
+	/* Set the first cube's material to Blinn-Phong shader w/ skybox reflection: */
+	cube_reflected_material = Engine::Material( "Cube (Reflected)", &blinn_phong_skybox_reflection_shader_instanced );
 	cube_reflected_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_reflected_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 	cube_reflected_material.SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
@@ -1106,19 +1106,19 @@ void SandboxApplication::ResetMaterialData()
 	cube_reflected_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	cube_reflected_material.Set( "uniform_reflectivity", 1.0f );
 
-	cube_material = Engine::Material( "Cube", &phong_shader_instanced );
+	cube_material = Engine::Material( "Cube", &blinn_phong_shader_instanced );
 	cube_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 	cube_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
-	ground_material = Engine::Material( "Ground", &phong_shader );
+	ground_material = Engine::Material( "Ground", &blinn_phong_shader );
 	ground_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
 	ground_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& ground_quad_scale( ground_transform.GetScaling() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
-	wall_material = Engine::Material( "Front Wall", &phong_shader );
+	wall_material = Engine::Material( "Front Wall", &blinn_phong_shader );
 	wall_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
 	wall_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& front_wall_quad_scale( wall_front_transform.GetScaling() );
@@ -1149,10 +1149,10 @@ void SandboxApplication::ResetMaterialData()
 		.shininess           = 32.0f
 	};
 
-	ground_material.Set( "PhongMaterialData", ground_quad_surface_data );
-	wall_material.Set( "PhongMaterialData", wall_surface_data );
-	cube_material.Set( "PhongMaterialData", cube_surface_data );
-	cube_reflected_material.Set( "PhongMaterialData", cube_surface_data );
+	ground_material.Set( "BlinnPhongMaterialData", ground_quad_surface_data );
+	wall_material.Set( "BlinnPhongMaterialData", wall_surface_data );
+	cube_material.Set( "BlinnPhongMaterialData", cube_surface_data );
+	cube_reflected_material.Set( "BlinnPhongMaterialData", cube_surface_data );
 
 	outline_material.Set( "uniform_color", Engine::Color4::Orange() );
 	outline_material.Set( "uniform_outline_thickness", 0.1f );

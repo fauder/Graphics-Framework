@@ -44,5 +44,5 @@ private:
 	std::map< Engine::Renderer::RenderGroupID, std::vector< Engine::Drawable > > node_drawable_array_map;
 	std::vector< Engine::Material > node_material_array;
 	std::vector< Engine::Transform > node_transform_array;
-	std::vector< Engine::MaterialData::PhongMaterialData > phong_material_data_array;
+	std::vector< Engine::MaterialData::BlinnPhongMaterialData > blinn_phong_material_data_array;
 };

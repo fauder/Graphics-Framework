@@ -148,10 +148,10 @@ private:
 
 /* Shaders: */
 	Engine::Shader skybox_shader;
-	Engine::Shader phong_shader;
-	Engine::Shader phong_shader_instanced;
-	Engine::Shader phong_skybox_reflection_shader;
-	Engine::Shader phong_skybox_reflection_shader_instanced;
+	Engine::Shader blinn_phong_shader;
+	Engine::Shader blinn_phong_shader_instanced;
+	Engine::Shader blinn_phong_skybox_reflection_shader;
+	Engine::Shader blinn_phong_skybox_reflection_shader_instanced;
 	Engine::Shader basic_color_shader;
 	Engine::Shader basic_textured_shader;
 	Engine::Shader basic_textured_transparent_discard_shader;
@@ -233,10 +233,10 @@ private:
 /* Lighting: */
 	const static constexpr int LIGHT_POINT_COUNT = 15;
 
-	Engine::MaterialData::PhongMaterialData cube_surface_data;
-	Engine::MaterialData::PhongMaterialData ground_quad_surface_data;
-	Engine::MaterialData::PhongMaterialData wall_surface_data;
-	std::vector< Engine::MaterialData::PhongMaterialData > test_model_node_surface_data_array;
+	Engine::MaterialData::BlinnPhongMaterialData cube_surface_data;
+	Engine::MaterialData::BlinnPhongMaterialData ground_quad_surface_data;
+	Engine::MaterialData::BlinnPhongMaterialData wall_surface_data;
+	std::vector< Engine::MaterialData::BlinnPhongMaterialData > test_model_node_surface_data_array;
 
 	Engine::DirectionalLight light_directional;
 	std::vector< Engine::PointLight > light_point_array;

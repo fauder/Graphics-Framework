@@ -7,7 +7,7 @@
 
 namespace Engine::MaterialData
 {
-	struct PhongMaterialData : public Std140StructTag
+	struct BlinnPhongMaterialData : public Std140StructTag
 	{
 		Color3 color_diffuse;
 		int has_texture_diffuse;
