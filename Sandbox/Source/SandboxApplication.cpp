@@ -1065,7 +1065,7 @@ void SandboxApplication::ResetLightingData()
 	light_is_enabled = true;
 
 	light_point_array_disable      = false;
-	//light_point_array_is_animated  = true;
+	light_point_array_is_animated  = true;
 	light_point_orbit_radius       = 20.0f;
 
 	light_spot_array_disable = false;
