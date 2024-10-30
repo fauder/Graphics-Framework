@@ -1329,6 +1329,9 @@ void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixe
 {
 	/* Main: */
 	{
+		if( editor_framebuffer_color_attachment ) // Remove the previous color attachment.
+			Engine::AssetDatabase< Engine::Texture >::RemoveAsset( editor_framebuffer_color_attachment->Name() );
+
 		std::string name( "Editor FB Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
 		editor_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, 
 																																   width_new_pixels, height_new_pixels ) );
@@ -1336,6 +1339,9 @@ void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixe
 
 	/* Offscreen: */
 	{
+		if( offscreen_framebuffer_color_attachment_array[ 0 ] ) // Remove the previous color attachment.
+			Engine::AssetDatabase< Engine::Texture >::RemoveAsset( offscreen_framebuffer_color_attachment_array[ 0 ]->Name() );
+
 		/* Don't use MSAA for the rear-view as it is:
 		 *	A) not needed,
 		 *  B) needs resolve into a non-sampled texture (which means another FBO) to be used inside an ImGui window. */
@@ -1344,6 +1350,9 @@ void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixe
 																																				 width_new_pixels,
 																																				 height_new_pixels ) );
 	}
+
+	if( offscreen_framebuffer_color_attachment_array[ 1 ] ) // Remove the previous color attachment.
+		Engine::AssetDatabase< Engine::Texture >::RemoveAsset( offscreen_framebuffer_color_attachment_array[ 1 ]->Name() );
 
 	if( msaa_for_offscreen_framebuffers_is_enabled )
 	{
