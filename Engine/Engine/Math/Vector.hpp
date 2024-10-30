@@ -32,7 +32,7 @@ namespace Engine::Math
 		{
 		} // Same as the default constructor.
 
-		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Vector );
+		CONSTEXPR_DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Vector );
 
 		constexpr ~Vector() = default;
 

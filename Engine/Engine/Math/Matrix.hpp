@@ -20,7 +20,7 @@ namespace Engine::Math
 	public:
 	/* Constructors & Destructors: */
 
-		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Matrix );
+		CONSTEXPR_DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Matrix );
 
 		constexpr ~Matrix() = default;
 
