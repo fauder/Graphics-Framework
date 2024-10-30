@@ -13,7 +13,6 @@
 #include "Engine/DefineMathTypes.h"
 
 // Project Includes.
-#include "KernelData.h"
 #include "ModelInstance.h"
 
 // std Includes.
