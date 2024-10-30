@@ -136,6 +136,8 @@ namespace Engine
 		~Texture();
 
 	/* Queries: */
+		bool IsValid() const { return id.Get(); }
+
 		inline ID					Id()				const { return id;				}
 		inline const Vector2I&		Size()				const { return size;			}
 		inline int					Width()				const { return size.X();		}
@@ -173,9 +175,6 @@ namespace Engine
 				 const bool is_sRGB = true,
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge, const Wrapping wrap_w = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
-
-	/* Queries: */
-		bool IsValid() const { return size.X() > 0 && size.Y() > 0; } // Use the width & height to implicitly define validness state.
 
 	/* Usage: */
 		void Bind() const;

@@ -45,6 +45,8 @@ namespace Engine
 		~Framebuffer();
 
 	/* Queries: */
+		bool IsValid() const { return id.IsValid(); }
+
 		inline const ID				Id()				const { return id;	 }
 		
 		inline const Vector2I&		Size()				const { return size; }
@@ -72,7 +74,6 @@ namespace Engine
 		inline bool HasDepthStencilTexture()			const { return std::holds_alternative< const Texture*		>( depth_and_stencil_attachment ); }
 		inline bool HasDepthStencilRenderbuffer()		const { return std::holds_alternative< const Renderbuffer*  >( depth_and_stencil_attachment ); }
 
-
 	/* Usage: */
 		void Bind() const;
 		void Unbind() const;
@@ -82,9 +83,6 @@ namespace Engine
 	private:
 
 		void Create();
-
-	/* Queries: */
-		bool IsValid() const { return size.X() > 0 && size.Y() > 0; } // Use the width & height to implicitly define validness state.
 
 	private:
 		ID id;

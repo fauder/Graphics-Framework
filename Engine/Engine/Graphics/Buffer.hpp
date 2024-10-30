@@ -41,7 +41,7 @@ namespace Engine
 			count( 0 ),
 			size( size )
 		{
-			ASSERT_DEBUG_ONLY( IsValid() && "'size' parameter passed to Buffer::Buffer( const unsigned int size, const GLenum usage ) is empty!" );
+			ASSERT_DEBUG_ONLY( IsValid() && "'size' parameter passed to Buffer::Buffer( const unsigned int size, const std::string& name, const GLenum usage ) is empty!" );
 
 			Create( nullptr, usage );
 
@@ -59,7 +59,8 @@ namespace Engine
 			count( ( unsigned int )data_span.size() ),
 			size( ( unsigned int )data_span.size_bytes() )
 		{
-			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const GLenum usage ) is empty!" );
+			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to "
+							   "Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const std::string& name, const GLenum usage ) is empty!" );
 
 			Create( ( void* )data_span.data(), usage );
 
@@ -80,7 +81,9 @@ namespace Engine
 			count( count ),
 			size( ( unsigned int )data_span.size_bytes() )
 		{
-			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const GLenum usage ) is empty!" );
+			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to "
+							   "Buffer::Buffer< BufferElementType >( const unsigned int count, const std::span< BufferElementType > data_span, const std::string& name, const GLenum usage )"
+							   "is empty!" );
 
 			Create( ( void* )data_span.data(), usage );
 
@@ -138,6 +141,8 @@ namespace Engine
 				DeleteBuffer();
 		}
 
+	/* Usage: */
+
 		void Bind() const
 		{
 			ASSERT_DEBUG_ONLY( IsValid() && "Attempting Bind() on Buffer with zero size!" );
@@ -156,14 +161,16 @@ namespace Engine
 			Bind();
 			glBufferSubData( TargetType, ( GLintptr )offset_from_buffer_start, ( GLsizeiptr )data_span.size_bytes(), ( void* )data_span.data() );
 		}
+
+	/* Queries: */
+
+		bool IsValid() const { return id.IsValid(); } // Use the size to implicitly define validness state.
 		
 		const ID&		Id()	const { return id;		}
 		unsigned int	Size()	const { return size;	}
 		unsigned int	Count()	const { return count;	}
 
 	private:
-		bool IsValid() const { return size;	} // Use the size to implicitly define validness state.
-
 		void Create( const void* data, const GLenum usage = GL_STATIC_DRAW )
 		{
 			glGenBuffers( 1, id.Address() );
