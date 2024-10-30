@@ -22,7 +22,6 @@ namespace Engine
 
 	VertexArray::VertexArray( VertexArray&& donor )
 		:
-		id( std::exchange( donor.id, {} ) ),
 		name( std::exchange( donor.name, {} ) ),
 		vertex_buffer_id( std::exchange( donor.vertex_buffer_id, {} ) ),
 		index_buffer_id( std::exchange( donor.index_buffer_id, {} ) ),
@@ -31,10 +30,15 @@ namespace Engine
 		index_count( std::exchange( donor.index_count, 0 ) ),
 		instance_count( std::exchange( donor.instance_count, 0 ) )
 	{
+		Delete();
+
+		id = std::exchange( donor.id, {} );
 	}
 
 	VertexArray& VertexArray::operator=( VertexArray&& donor )
 	{
+		Delete();
+
 		id                  = std::exchange( donor.id,					{} );
 		name                = std::exchange( donor.name,				{} );
 		vertex_buffer_id    = std::exchange( donor.vertex_buffer_id,	{} );
@@ -118,11 +122,7 @@ namespace Engine
 
 	VertexArray::~VertexArray()
 	{
-		if( IsValid() )
-		{
-			glDeleteVertexArrays( 1, id.Address() );
-			id.Reset(); // OpenGL does not reset the id to zero.
-		}
+		Delete();
 	}
 
 	void VertexArray::Bind() const
@@ -133,6 +133,15 @@ namespace Engine
 	void VertexArray::Unbind() const
 	{
 		glBindVertexArray( 0 );
+	}
+
+	void VertexArray::Delete()
+	{
+		if( IsValid() )
+		{
+			glDeleteVertexArrays( 1, id.Address() );
+			id.Reset(); // OpenGL does not reset the id to zero.
+		}
 	}
 
 	void VertexArray::CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout )

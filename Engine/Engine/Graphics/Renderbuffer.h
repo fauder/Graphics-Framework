@@ -41,6 +41,8 @@ namespace Engine
 
 	private:
 
+		void Delete();
+
 	/* Usage: */
 		void Bind() const;
 		void Unbind() const;

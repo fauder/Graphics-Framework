@@ -174,6 +174,8 @@ namespace Engine
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge, const Wrapping wrap_w = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
+		void Delete();
+
 	/* Usage: */
 		void Bind() const;
 		void Unbind() const;

@@ -56,15 +56,19 @@ namespace Engine
 
 	Renderbuffer::Renderbuffer( Renderbuffer&& donor )
 		:
-		id( std::exchange( donor.id, {} ) ),
 		size( std::exchange( donor.size, ZERO_INITIALIZATION ) ),
 		sample_count( std::exchange( donor.sample_count, 0 ) ),
 		name( std::exchange( donor.name, {} ) )
 	{
+		Delete();
+
+		id = std::exchange( donor.id, {} );
 	}
 
 	Renderbuffer& Renderbuffer::operator =( Renderbuffer&& donor )
 	{
+		Delete();
+
 		id           = std::exchange( donor.id,				{} );
 		size         = std::exchange( donor.size,			ZERO_INITIALIZATION );
 		sample_count = std::exchange( donor.sample_count,	0 );
@@ -75,13 +79,21 @@ namespace Engine
 
 	Renderbuffer::~Renderbuffer()
 	{
-		if( IsValid() )
-			glDeleteRenderbuffers( 1, id.Address() );
+		Delete();
 	}
 
 	void Renderbuffer::SetName( const std::string& new_name )
 	{
 		name = new_name;
+	}
+
+	void Renderbuffer::Delete()
+	{
+		if( id.IsValid() )
+		{
+			glDeleteRenderbuffers( 1, id.Address() );
+			id.Reset(); // OpenGL does not reset the id to zero.
+		}
 	}
 
 	void Renderbuffer::Bind() const

@@ -528,6 +528,8 @@ namespace Engine
 		/* Private, for shader recompilation only, called by the Renderer alone. */
 		Shader& operator=( Shader&& );
 
+		void Delete();
+
 /* Queries: */
 
 		inline bool IsValid() const { return program_id.IsValid(); }

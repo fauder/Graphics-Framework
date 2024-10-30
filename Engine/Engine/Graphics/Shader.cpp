@@ -44,11 +44,7 @@ namespace Engine
 
 	Shader::~Shader()
 	{
-		if( IsValid() )
-		{
-			glDeleteProgram( program_id.Get() );
-			program_id.Reset();
-		}
+		Delete();
 	}
 
 	bool Shader::FromFile( const char* vertex_shader_source_file_path,
@@ -313,7 +309,6 @@ namespace Engine
 	/* Private, for shader recompilation only, called by the Renderer alone. */
 	Shader::Shader( Shader&& donor )
 		:
-		program_id( std::exchange( donor.program_id, {} ) ),
 		name( std::exchange( donor.name, "<scheduled-for-deletion>" ) ),
 
 		vertex_source_path( std::move( donor.vertex_source_path ) ),
@@ -340,11 +335,16 @@ namespace Engine
 		vertex_layout_source( std::move( donor.vertex_layout_source ) ),
 		vertex_layout_active( std::move( donor.vertex_layout_active ) )
 	{
+		Delete();
+
+		program_id = std::exchange( donor.program_id, {} );
 	}
 
 	/* Private, for shader recompilation only, called by the Renderer alone. */
 	Shader& Shader::operator=( Shader&& donor )
 	{
+		Delete();
+
 		program_id = std::exchange( donor.program_id, {} );
 		name       = std::exchange( donor.name, "<scheduled-for-deletion>" );
 
@@ -373,6 +373,15 @@ namespace Engine
 		vertex_layout_active = std::move( donor.vertex_layout_active );
 
 		return *this;
+	}
+
+	void Shader::Delete()
+	{
+		if( IsValid() )
+		{
+			glDeleteProgram( program_id.Get() );
+			program_id.Reset(); // OpenGL does not reset the id to zero.
+		}
 	}
 
 	std::optional< std::string > Shader::ParseShaderFromFile( const char* file_path, const ShaderType shader_type )

@@ -118,15 +118,19 @@ namespace Engine
 		/* Allow moving. */
 		Buffer( Buffer&& donor )
 			:
-			id( std::exchange( donor.id, {} ) ),
 			name( std::exchange( donor.name, {} ) ),
 			count( std::exchange( donor.count, 0 ) ),
 			size( std::exchange( donor.size, 0 ) )
 		{
+			Delete();
+
+			id = std::exchange( donor.id, {} );
 		}
 		
 		Buffer& operator=( Buffer&& donor )
 		{
+			Delete();
+
 			id    = std::exchange( donor.id,	{} );
 			name  = std::exchange( donor.name,	{} );
 			count = std::exchange( donor.count,  0 );
@@ -137,8 +141,7 @@ namespace Engine
 		
 		~Buffer()
 		{
-			if( IsValid() )
-				DeleteBuffer();
+			Delete();
 		}
 
 	/* Usage: */
@@ -185,9 +188,9 @@ namespace Engine
 			REF_COUNT_MAP[ id ]++;
 		}
 
-		void DeleteBuffer() 
+		void Delete() 
 		{
-			if( --REF_COUNT_MAP[ id ] == 0 )
+			if( IsValid() && --REF_COUNT_MAP[ id ] == 0 )
 			{
 				glDeleteBuffers( 1, id.Address() );
 				REF_COUNT_MAP.erase( id );

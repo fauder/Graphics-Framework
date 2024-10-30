@@ -48,6 +48,8 @@ namespace Engine
 
 	private:
 
+		void Delete();
+
 		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout );
 		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const InstanceBuffer& instance_buffer, const VertexLayout& vertex_layout );
 

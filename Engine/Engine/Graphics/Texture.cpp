@@ -145,17 +145,21 @@ namespace Engine
 
 	Texture::Texture( Texture&& donor )
 		:
-		id( std::exchange( donor.id, {} ) ),
 		size( std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } ) ),
 		type( std::exchange( donor.type, TextureType::None ) ),
 		name( std::exchange( donor.name, {} ) ),
 		sample_count( std::exchange( donor.sample_count, 0 ) )
 		/* sRGB state does not matter. */
 	{
+		Delete();
+	
+		id = std::exchange( donor.id, {} );
 	}
 
 	Texture& Texture::operator =( Texture&& donor )
 	{
+		Delete();
+
 		id           = std::exchange( donor.id,				{} );
 		size         = std::exchange( donor.size,			Vector2I{ ZERO_INITIALIZATION } );
 		type         = std::exchange( donor.type,			TextureType::None );
@@ -168,11 +172,7 @@ namespace Engine
 
 	Texture::~Texture()
 	{
-		if( IsValid() )
-		{
-			glDeleteTextures( 1, id.Address() );
-			id.Reset(); // OpenGL does not reset the id to zero.
-		}
+		Delete();
 	}
 
 	void Texture::SetName( const std::string& new_name )
@@ -271,6 +271,15 @@ namespace Engine
 		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R,	 ( GLenum )wrap_w );
 
 		Unbind();
+	}
+
+	void Texture::Delete()
+	{
+		if( IsValid() )
+		{
+			glDeleteTextures( 1, id.Address() );
+			id.Reset(); // OpenGL does not reset the id to zero.
+		}
 	}
 
 	void Texture::Bind() const
