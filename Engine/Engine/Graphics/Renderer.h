@@ -180,6 +180,9 @@ namespace Engine
 
 	public:
 		Renderer();
+
+		DELETE_COPY_AND_MOVE_CONSTRUCTORS( Renderer );
+
 		~Renderer();
 
 		/* 

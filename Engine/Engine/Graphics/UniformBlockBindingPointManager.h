@@ -16,8 +16,7 @@ namespace Engine
 	class UniformBlockBindingPointManager
 	{
 	public:
-		UniformBlockBindingPointManager( UniformBlockBindingPointManager const& )				= delete;
-		UniformBlockBindingPointManager& operator = ( UniformBlockBindingPointManager const& )	= delete;
+		DELETE_COPY_AND_MOVE_CONSTRUCTORS( UniformBlockBindingPointManager );
 
 	/* Block registering API: */
 		static Uniform::BindingPoint RegisterUniformBlock( const Shader& shader, const std::string& block_name, Uniform::BufferInformation& uniform_buffer_info );

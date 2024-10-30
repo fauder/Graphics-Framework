@@ -1,5 +1,8 @@
 #pragma once
 
+// Engine Includes.
+#include "Macros.h"
+
 // std Includes.
 #include <cstddef> // std::byte.
 #include <vector>
@@ -12,13 +15,8 @@ namespace Engine
 		Blob() = default;
 		Blob( const std::size_t size );
 
-		/* Prohibit copying. */
-		Blob( const Blob& rhs )				= delete;
-		Blob& operator=( const Blob& rhs )	= delete;
-
-		/* Allow moving. */
-		Blob( Blob&& donor )				= default;
-		Blob& operator=( Blob&& donor )		= default;
+		DELETE_COPY_CONSTRUCTORS( Blob );
+		DEFAULT_MOVE_CONSTRUCTORS( Blob );
 
 		~Blob() = default;
 

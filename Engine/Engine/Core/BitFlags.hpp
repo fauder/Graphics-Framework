@@ -1,6 +1,7 @@
 #pragma once
 
 // Engine Includes.
+#include "Macros.h"
 #include "Math/Concepts.h"
 
 // std Includes.
@@ -32,11 +33,7 @@ namespace Engine
 		{
 		}
 
-		/* Allow both copying & moving: */
-		constexpr BitFlags( const BitFlags& other )				= default;
-		constexpr BitFlags& operator= ( const BitFlags& other ) = default;
-		constexpr BitFlags( BitFlags&& donor )					= default;
-		constexpr BitFlags& operator= ( BitFlags&& donor )		= default;
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( BitFlags );
 
 		constexpr ~BitFlags() = default;
 

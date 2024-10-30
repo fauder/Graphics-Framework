@@ -84,8 +84,7 @@ namespace Engine
 				const std::vector< std::string >& = {}, 
 				const char* geometry_shader_source_file_path = nullptr );
 
-		Shader( const Shader& )			   = delete;
-		Shader& operator=( const Shader& ) = delete;
+		DELETE_COPY_CONSTRUCTORS( Shader );
 
 		// Move constructors are private, for shader recompilation use only. Renderer (a friend class) is the only caller.
 

@@ -34,11 +34,8 @@ namespace Engine
 					 const std::variant< std::monostate, const Texture*, const Renderbuffer* > stencil_attachment           = std::monostate{},
 					 const Target usage = Target::Both );
 
-		/* Prevent copying for now: */
-		Framebuffer( const Framebuffer& )				= delete;
-		Framebuffer& operator =( const Framebuffer& )	= delete;
+		DELETE_COPY_CONSTRUCTORS( Framebuffer );
 
-		/* Allow moving: */
 		Framebuffer( Framebuffer&& );
 		Framebuffer& operator =( Framebuffer&& );
 

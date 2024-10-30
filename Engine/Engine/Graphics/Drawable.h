@@ -17,11 +17,7 @@ namespace Engine
 		Drawable();
 		Drawable( const Mesh* mesh, Material* material, Transform* transform = nullptr );
 
-		Drawable( const Drawable& other )				= default;
-		Drawable& operator = ( const Drawable& other )	= default;
-
-		Drawable( Drawable&& donor )					= default;
-		Drawable& operator = ( Drawable&& donor )		= default;
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Drawable );
 
 		~Drawable();
 

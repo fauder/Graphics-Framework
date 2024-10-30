@@ -1,5 +1,8 @@
 #pragma once
 
+// Engine Includes.
+#include "Macros.h"
+
 // std Includes.
 #include <map>
 #include <string>
@@ -11,8 +14,7 @@ namespace Engine
 	class AssetDatabase
 	{
 	public:
-		AssetDatabase( AssetDatabase const& )			  = delete;
-		AssetDatabase& operator =( AssetDatabase const& ) = delete;
+		DELETE_COPY_AND_MOVE_CONSTRUCTORS( AssetDatabase );
 
 		static AssetType* CreateAssetFromFile( const std::string& name, const std::string& file_path, const typename AssetType::ImportSettings& import_settings )
 		{

@@ -50,10 +50,7 @@ namespace Engine
 	public:
 		VertexLayout();
 
-		VertexLayout( const VertexLayout& )				= default;
-		VertexLayout& operator =( const VertexLayout& ) = default;
-		VertexLayout( VertexLayout&& )					= default;
-		VertexLayout& operator =( VertexLayout&& )		= default;
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( VertexLayout );
 
 		// This makes it possible to pass all attribute lists together in Mesh constructor, even though some of them may not be present.
 		template< typename Collection >

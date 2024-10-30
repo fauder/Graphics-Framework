@@ -18,13 +18,9 @@ namespace Engine
 	public:
 		UniformBufferManagement() = default;
 
-		/* Prevent copying. */
-		UniformBufferManagement( const UniformBufferManagement& other )				= delete;
-		UniformBufferManagement& operator=( const UniformBufferManagement& other )	= delete;
+		DELETE_COPY_CONSTRUCTORS( UniformBufferManagement );
 
-		/* Allow moving. */
-		UniformBufferManagement( UniformBufferManagement&& donor )					= default;
-		UniformBufferManagement& operator=( UniformBufferManagement&& donor )		= default;
+		DEFAULT_MOVE_CONSTRUCTORS( UniformBufferManagement );
 
 		~UniformBufferManagement() = default;
 

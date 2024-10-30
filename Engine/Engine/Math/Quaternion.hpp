@@ -37,10 +37,7 @@ namespace Engine::Math
 			w( 1 )
 		{}
 
-		constexpr Quaternion( const Quaternion& other )					 = default;
-		constexpr Quaternion( Quaternion && donor )	noexcept			 = default;
-		constexpr Quaternion& operator= ( const Quaternion& other )		 = default;
-		constexpr Quaternion& operator= ( Quaternion && donor )	noexcept = default;
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Quaternion );
 
 		constexpr ~Quaternion() = default;
 

@@ -23,6 +23,8 @@ namespace Engine::Math
 			theta( theta )
 		{}
 
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Polar2 );
+
 	/* Getters & Setters. */
 		constexpr float Radius() const { return radius; }
 		float& Radius() { return radius; }
@@ -57,6 +59,8 @@ namespace Engine::Math
 			heading( heading ),
 			pitch( pitch )
 		{}
+
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Polar3_Spherical_Game );
 
 	/* Getters & Setters. */
 		constexpr float Radius() const { return radius; }

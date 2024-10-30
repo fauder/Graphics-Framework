@@ -3,6 +3,7 @@
 // Engine Includes.
 #include "Camera.h"
 #include "Math/Polar.h"
+#include "Core/Macros.h"
 
 namespace Engine
 {
@@ -11,10 +12,7 @@ namespace Engine
 	public:
 		CameraController_Flight( Camera* camera, const float move_speed );
 
-		CameraController_Flight( const CameraController_Flight& rhs )              = default;
-		CameraController_Flight( CameraController_Flight&& donor )                 = default;
-		CameraController_Flight& operator = ( const CameraController_Flight& rhs ) = default;
-		CameraController_Flight& operator = ( CameraController_Flight&& donor )    = default;
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( CameraController_Flight );
 
 		CameraController_Flight& Invert();
 

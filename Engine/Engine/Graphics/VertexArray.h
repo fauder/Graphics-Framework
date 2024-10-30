@@ -16,10 +16,12 @@ namespace Engine
 
 	public:
 		VertexArray( const std::string& name = {} );
-		VertexArray( const VertexArray& right_hand_side )				= delete;
-		VertexArray& operator =( const VertexArray& right_hand_side )	= delete;
+
+		DELETE_COPY_CONSTRUCTORS( VertexArray );
+		
 		VertexArray( VertexArray&& donor );
 		VertexArray& operator =( VertexArray&& donor );
+
 		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, const std::string& name = {} );
 		VertexArray( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout, 
 					 const std::optional< IndexBuffer >& index_buffer,

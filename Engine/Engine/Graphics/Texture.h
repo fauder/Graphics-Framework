@@ -125,9 +125,7 @@ namespace Engine
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v	 = Wrapping::ClampToEdge,	const Wrapping wrap_w = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
-		/* Prevent copying for now: */
-		Texture( const Texture& )				= delete;
-		Texture& operator =( const Texture& )	= delete;
+		DELETE_COPY_CONSTRUCTORS( Texture );
 
 		/* Allow moving: */
 		Texture( Texture&& );
