@@ -117,6 +117,18 @@ namespace Engine
 			return &( instance.asset_map[ asset_name ] = std::move( asset ) );
 		}
 
+		static bool RemoveAsset( const std::string& name )
+		{
+			auto& instance = Instance();
+
+			bool found_asset = false;
+
+			found_asset |= instance.asset_path_map.erase( name ) > 1;
+			found_asset |= instance.asset_map.erase( name ) > 1;
+
+			return found_asset;
+		}
+
 		static const std::map< std::string, AssetType >& Assets()
 		{
 			auto& instance = Instance();
