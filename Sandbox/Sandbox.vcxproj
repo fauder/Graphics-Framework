@@ -118,7 +118,6 @@
     <None Include="Asset\Shader\BasicTextured_Mixed.frag">
       <FileType>Document</FileType>
     </None>
-    <ClInclude Include="Source\KernelData.h" />
     <ClInclude Include="Source\ModelInstance.h" />
     <ClInclude Include="Source\SandboxApplication.h" />
   </ItemGroup>
