@@ -32,6 +32,7 @@ namespace Engine
 	/* Queries: */
 		
 		bool				IsValid() const { return id > 0;	}
+
 		unsigned int		Get()	  const { return id;		}
 		const unsigned int* Address() const { return &id;		}
 			  unsigned int* Address()		{ return &id;		}

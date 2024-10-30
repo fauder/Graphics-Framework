@@ -30,8 +30,14 @@ namespace Engine
 					 const std::string& name = {} );
 		~VertexArray();
 
+	/* Usage: */
+
 		void Bind() const;
 		void Unbind() const;
+
+	/* Queries: */
+
+		inline bool IsValid() const { return id.IsValid(); }
 
 		inline ID			Id()			const { return id;				}
 		inline unsigned int VertexCount()	const { return vertex_count;	}
@@ -39,7 +45,7 @@ namespace Engine
 		inline unsigned int InstanceCount()	const { return instance_count;  }
 
 	private:
-		inline bool IsValid() const { return vertex_count; } // Use the vertex count to implicitly define validness state.
+
 		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const VertexLayout& vertex_layout );
 		void CreateArrayAndRegisterVertexBufferAndAttributes( const VertexBuffer& vertex_buffer, const InstanceBuffer& instance_buffer, const VertexLayout& vertex_layout );
 

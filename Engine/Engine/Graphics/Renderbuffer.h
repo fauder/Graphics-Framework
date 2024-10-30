@@ -30,6 +30,8 @@ namespace Engine
 		~Renderbuffer();
 
 	/* Queries: */
+		bool IsValid() const { return id.IsValid(); } // Use the width & height to implicitly define validness state.
+
 		inline const ID				Id()				const { return id; }
 		inline const Vector2I&		Size()				const { return size; }
 		inline int					Width()				const { return size.X(); }
@@ -41,12 +43,9 @@ namespace Engine
 
 	private:
 
-		/* Usage: */
+	/* Usage: */
 		void Bind() const;
 		void Unbind() const;
-
-	/* Queries: */
-		bool IsValid() const { return size.X() > 0 && size.Y() > 0; } // Use the width & height to implicitly define validness state.
 
 	private:
 		ID id;
