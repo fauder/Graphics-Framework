@@ -818,7 +818,7 @@ namespace Engine::ImGuiDrawer
 		{
 			const auto& uniform_info_map = shader.GetUniformInfoMap();
 
-			if( ImGui::TreeNodeEx( shader.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+			if( ImGui::TreeNodeEx( shader.Name().c_str(), 0 /*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/, "%s (ID: %d)", shader.Name().c_str(), shader.Id().Get() ) )
 			{
 				ImGuiUtility::BeginGroupPanel();
 
