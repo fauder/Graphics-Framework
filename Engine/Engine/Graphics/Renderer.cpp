@@ -688,8 +688,11 @@ namespace Engine
 				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
 						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
 							{
-								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) <
-										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+								if( drawable_1->GetTransform() && drawable_2->GetTransform() )
+									return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) <
+										   Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+
+								return drawable_1 < drawable_2; // Does not matter;
 							} );
 				break;
 
@@ -697,8 +700,11 @@ namespace Engine
 				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
 						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
 							{
-								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) >
-										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+								if( drawable_1->GetTransform() && drawable_2->GetTransform() )
+									return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) >
+										   Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+							
+								return drawable_1 < drawable_2; // Does not matter;
 							} );
 				break;
 
