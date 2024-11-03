@@ -148,8 +148,8 @@ namespace Engine
 		size( std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } ) ),
 		type( std::exchange( donor.type, TextureType::None ) ),
 		name( std::exchange( donor.name, {} ) ),
-		sample_count( std::exchange( donor.sample_count, 0 ) )
-		/* sRGB state does not matter. */
+		sample_count( std::exchange( donor.sample_count, 0 ) ),
+		is_sRGB( std::exchange( donor.is_sRGB, false ) )
 	{
 		Delete();
 	
@@ -165,7 +165,7 @@ namespace Engine
 		type         = std::exchange( donor.type,			TextureType::None );
 		name         = std::exchange( donor.name,			{} );
 		sample_count = std::exchange( donor.sample_count,	0 );
-		/* sRGB state does not matter. */
+		is_sRGB      = std::exchange( donor.is_sRGB,		false );
 
 		return *this;
 	}
