@@ -145,27 +145,33 @@ namespace Engine
 
 	Texture::Texture( Texture&& donor )
 		:
-		size( std::exchange( donor.size, Vector2I{ ZERO_INITIALIZATION } ) ),
-		type( std::exchange( donor.type, TextureType::None ) ),
-		name( std::exchange( donor.name, {} ) ),
-		sample_count( std::exchange( donor.sample_count, 0 ) ),
-		is_sRGB( std::exchange( donor.is_sRGB, false ) )
+		id( std::exchange( donor.id, {} ) ),
+		size( std::move( donor.size ) ),
+		type( std::move( donor.type ) ),
+#ifdef _DEBUG
+		name( std::exchange( donor.name, "<moved-from>" ) ),
+	#else
+		name( std::move( donor.name ) ),
+#endif // _DEBUG
+		sample_count( std::move( donor.sample_count ) ),
+		is_sRGB( std::move( donor.is_sRGB ) )
 	{
-		Delete();
-	
-		id = std::exchange( donor.id, {} );
 	}
 
-	Texture& Texture::operator =( Texture&& donor )
+	Texture& Texture::operator=( Texture&& donor )
 	{
 		Delete();
 
-		id           = std::exchange( donor.id,				{} );
-		size         = std::exchange( donor.size,			Vector2I{ ZERO_INITIALIZATION } );
-		type         = std::exchange( donor.type,			TextureType::None );
-		name         = std::exchange( donor.name,			{} );
-		sample_count = std::exchange( donor.sample_count,	0 );
-		is_sRGB      = std::exchange( donor.is_sRGB,		false );
+		id   = std::exchange( donor.id, {} );
+		size = std::move( donor.size );
+		type = std::move( donor.type );
+#ifdef _DEBUG
+		name = std::exchange( donor.name, "<moved-from>" );
+	#else
+		name = std::move( donor.name );
+#endif // _DEBUG
+		sample_count = std::move( donor.sample_count );
+		is_sRGB      = std::move( donor.is_sRGB );
 
 		return *this;
 	}
