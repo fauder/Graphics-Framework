@@ -203,11 +203,20 @@ namespace Engine
 	{
 		for( auto& [ source, last_write_time ] : last_write_time_map )
 		{
-			if( const auto new_last_write_time = std::filesystem::last_write_time( source );
-				new_last_write_time != last_write_time )
+			std::error_code error_code;
+			if( const auto new_last_write_time = std::filesystem::last_write_time( source, error_code );
+				not error_code )
 			{
-				last_write_time = new_last_write_time;
-				return true;
+				if( new_last_write_time != last_write_time )
+				{
+					last_write_time = new_last_write_time;
+					return true;
+				}
+			}
+			else
+			{
+				std::cerr << "Shader::SourceFilesAreModified() (Category: " << error_code.category().name() << "): " << error_code << ".\n";
+				throw std::runtime_error( "Shader::SourceFilesAreModified() (Category: " + std::string( error_code.category().name() ) + "): " + error_code.message() + ".\n" );
 			}
 		}
 
