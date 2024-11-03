@@ -100,27 +100,30 @@ namespace Engine
 			}
 		}
 
-		static AssetType* AddExistingAsset( AssetType&& asset, const std::string& file_path = "<not-on-disk>" )
+		static AssetType* AddAsset( AssetType&& asset,
+									const std::string& file_path = "<not-on-disk>" )
 		{
 			auto& instance = Instance();
 
 			const auto& asset_name = asset.Name();
 
+			/* If the asset is already loaded, return the existing one. */
 			if( instance.asset_map.contains( asset_name ) )
-				return nullptr;
+				return &instance.asset_map[ asset_name ];
 
-			instance.asset_path_map[ asset_name ] = file_path;
-			return &( instance.asset_map[ asset_name ] = std::move( asset ) );
+			instance.asset_path_map.emplace( asset_name, file_path );
+			return &( instance.asset_map.emplace( asset_name, std::move( asset ) ).first->second );
 		}
 
-		static AssetType* AddOrUpdateExistingAsset( AssetType&& asset, const std::string& file_path = "<not-on-disk>" )
+		static AssetType* AddOrUpdateAsset( AssetType&& asset,
+											const std::string& file_path = "<not-on-disk>" )
 		{
 			auto& instance = Instance();
 
 			const auto& asset_name = asset.Name();
 
-			instance.asset_path_map[ asset_name ] = file_path;
-			return &( instance.asset_map[ asset_name ] = std::move( asset ) );
+			instance.asset_path_map.try_emplace( asset_name, file_path );
+			return &( instance.asset_map.try_emplace( asset_name, std::move( asset ) ).first->second );
 		}
 
 		static bool RemoveAsset( const std::string& name )
@@ -129,8 +132,8 @@ namespace Engine
 
 			bool found_asset = false;
 
-			found_asset |= instance.asset_path_map.erase( name ) > 1;
-			found_asset |= instance.asset_map.erase( name ) > 1;
+			found_asset |= instance.asset_path_map.erase( name ) > 0;
+			found_asset |= instance.asset_map.erase( name ) > 0;
 
 			return found_asset;
 		}

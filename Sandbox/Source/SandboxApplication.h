@@ -75,8 +75,6 @@ private:
 
 	void ReplaceMeteoriteAndCubeDrawables( bool use_meteorites );
 
-	void InitializeFramebufferTextures( const int width_new_pixels, const int height_new_pixels );
-	void InitializeRenderbuffers( const int width_new_pixels, const int height_new_pixels );
 	void InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels );
 
 	void RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels );
@@ -123,17 +121,10 @@ private:
 /* Textures: */
 	Engine::Texture* skybox_texture;
 
-	std::array< Engine::Texture*, 2 > offscreen_framebuffer_color_attachment_array;
-	Engine::Texture* editor_framebuffer_color_attachment;
-
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
 	Engine::Texture* checker_pattern_texture;
 	Engine::Texture* transparent_window_texture;
-
-/* Renderbuffers: */
-	std::array< Engine::Renderbuffer, 2 > offscreen_framebuffer_depth_and_stencil_attachment_array;
-	Engine::Renderbuffer editor_framebuffer_depth_and_stencil_attachment;
 
 /* Framebuffers: */
 	std::array< Engine::Framebuffer, 2 > offscreen_framebuffer_array;
@@ -274,6 +265,5 @@ private:
 
 	bool draw_rear_view_cam_to_imgui;
 
-	bool msaa_for_offscreen_framebuffers_is_enabled;
-	int msaa_for_offscreen_framebuffers_sample_count;
+	std::optional< int > msaa_for_offscreen_framebuffers_sample_count;
 };

@@ -91,6 +91,7 @@ namespace Engine
 	{
 		if( id.IsValid() )
 		{
+			std::cout << "Removing " << name << " (Id: " << id.Get() << ").\n";
 			glDeleteRenderbuffers( 1, id.Address() );
 			id.Reset(); // OpenGL does not reset the id to zero.
 		}

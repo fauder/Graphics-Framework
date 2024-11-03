@@ -18,7 +18,7 @@ namespace Engine
 	class Application
 	{
 	public:
-		Application( const BitFlags< CreationFlags >, const bool enable_msaa = false, const int msaa_sample_count = 0 );
+		Application( const BitFlags< CreationFlags >, const std::optional< int > msaa_sample_count = std::nullopt );
 		virtual ~Application();
 
 		virtual void Initialize();
@@ -35,9 +35,11 @@ namespace Engine
 		virtual void RenderImGui();
 
 	protected:
-		void FreezeTime()   { time_multiplier = 0.0f; }
-		void UnfreezeTime() { time_multiplier = 1.0f; }
-		bool TimeIsFrozen() { return Math::IsZero( time_multiplier ); }
+		inline void FreezeTime()   { time_multiplier = 0.0f; }
+		inline void UnfreezeTime() { time_multiplier = 1.0f; }
+		inline bool TimeIsFrozen() { return Math::IsZero( time_multiplier ); }
+
+		inline bool MSAAIsEnabled() { return msaa_sample_count.has_value(); }
 
 	private:
 		void OnKeyboardEventInternal( const Platform::KeyCode key_code, const Platform::KeyAction key_action, const Platform::KeyMods key_mods );
@@ -51,7 +53,7 @@ namespace Engine
 		bool display_frame_statistics;
 		bool show_imgui;
 		bool show_gl_logger;
-		bool msaa_is_enabled;
+		// bool padding;
 
 		float time_delta;
 		float time_current;
@@ -65,8 +67,7 @@ namespace Engine
 
 		long long frame_count;
 
-		int msaa_sample_count;
-		// int padding;
+		std::optional< int > msaa_sample_count;
 
 		GLLogger gl_logger;
 

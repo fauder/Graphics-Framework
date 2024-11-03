@@ -127,7 +127,7 @@ namespace Platform
 	 * Initialization:
 	 */
 
-	void InitializeAndCreateWindow( const int width_pixels, const int height_pixels, const bool enable_msaa, const int msaa_sample_count )
+	void InitializeAndCreateWindow( const int width_pixels, const int height_pixels, const std::optional< int > msaa_sample_count )
 	{
 		glfwInit();
 
@@ -141,8 +141,8 @@ namespace Platform
 		//glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE ); // Needed for Mac OS X.
 
 		glfwWindowHint( GLFW_VISIBLE, GLFW_FALSE ); // Start hidden as we will move it shortly.
-		if( enable_msaa )
-			glfwWindowHint( GLFW_SAMPLES, msaa_sample_count );
+		if( msaa_sample_count.has_value() )
+			glfwWindowHint( GLFW_SAMPLES, *msaa_sample_count );
 
 		WINDOW = glfwCreateWindow( width_pixels, height_pixels, "TODO: CHANGE PROGRAM TITLE BY CALLING Platform::ChangeTitle()", nullptr, nullptr );
 		if( WINDOW == nullptr )
@@ -160,7 +160,7 @@ namespace Platform
 		// GLAD needs the created window's context made current BEFORE it is initialized.
 		InitializeGLAD();
 
-		if( enable_msaa )
+		if( msaa_sample_count.has_value() )
 			glEnable( GL_MULTISAMPLE );
 
 #ifdef _DEBUG

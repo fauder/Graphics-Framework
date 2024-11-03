@@ -192,6 +192,17 @@ namespace Engine
 		{
 			if( IsValid() && --REF_COUNT_MAP[ id ] == 0 )
 			{
+#ifdef _DEBUG
+				switch( TargetType )
+				{
+					case GL_ARRAY_BUFFER:			std::cout << "Deleting Vertex (or Instance) Buffer "; break;
+					case GL_ELEMENT_ARRAY_BUFFER:	std::cout << "Deleting Index Buffer "; break;
+					case GL_UNIFORM_BUFFER:			std::cout << "Deleting Uniform Buffer "; break;
+				}
+
+				std::cout << id.Get() << ".\n";
+#endif // _DEBUG
+
 				glDeleteBuffers( 1, id.Address() );
 				REF_COUNT_MAP.erase( id );
 				id.Reset(); // OpenGL does not reset the id to zero.

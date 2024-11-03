@@ -136,7 +136,7 @@ namespace Engine
 	/* Usage: */
 		void SetName( const std::string& new_name );
 		void Activate( const int slot ) const;
-		void GenerateMipmaps();
+		void GenerateMipmaps() const;
 
 	private:
 		/* Private regular constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with data.

@@ -71,7 +71,6 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	ui_interaction_enabled( false ),
 	show_imgui_demo_window( false ),
 	draw_rear_view_cam_to_imgui( true ),
-	msaa_for_offscreen_framebuffers_is_enabled( true ),
 	msaa_for_offscreen_framebuffers_sample_count( 4 )
 {
 	Initialize();
@@ -575,7 +574,7 @@ void SandboxApplication::Render()
 		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
 
 		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-		offscreen_framebuffer_color_attachment_array[ 0 ]->GenerateMipmaps();
+		offscreen_framebuffer_array[ 0 ].ColorAttachment().GenerateMipmaps();
 	}
 
 	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), draw everything to the off-screen frame-buffer 1. */
@@ -589,7 +588,8 @@ void SandboxApplication::Render()
 
 		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
 
-		/* This framebuffer is multisampled => no mipmaps. */
+		if( not offscreen_framebuffer_array[ 1 ].IsMultiSampled() )
+			offscreen_framebuffer_array[ 1 ].ColorAttachment().GenerateMipmaps();
 	}
 
 	/* Pass 3: Blit both off-screen frame-buffers to quads on the editor frame-buffer. */
@@ -605,7 +605,7 @@ void SandboxApplication::Render()
 			renderer.Render( camera, { render_group_id_screen_size_quad } );
 
 			/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-			editor_framebuffer_color_attachment->GenerateMipmaps();
+			editor_framebuffer.ColorAttachment().GenerateMipmaps();
 
 			/* Now this editor_framebuffer's color attachment will be passed to ImGui to be displayed inside an ImGui window. */
 		}
@@ -644,7 +644,7 @@ void SandboxApplication::RenderImGui()
 			mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
 		if( draw_rear_view_cam_to_imgui )
-			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_color_attachment_array[ 0 ]->Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_array[ 0 ].ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
 	}
 
 	ImGui::End();
@@ -1007,12 +1007,10 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	RecalculateProjectionParameters( width_new_pixels, height_new_pixels );
 	
 	// Re-initialize:
-	InitializeFramebufferTextures( width_new_pixels, height_new_pixels );
-	InitializeRenderbuffers( width_new_pixels, height_new_pixels );
 	InitializeFramebuffers( width_new_pixels, height_new_pixels );
 
-	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
-	offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
+	mirror_quad_material.SetTexture( "uniform_texture_slot", &offscreen_framebuffer_array[ 0 ].ColorAttachment() );
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", &offscreen_framebuffer_array[ 1 ].ColorAttachment() );
 }
 
 void SandboxApplication::OnFramebufferResizeEvent( const Vector2I new_size_pixels )
@@ -1043,7 +1041,7 @@ void SandboxApplication::RenderImGui_Viewport()
 			ImGui::SetNextFrameWantCaptureKeyboard( false );
 		}
 
-		ImGui::Image( ( void* )( intptr_t )editor_framebuffer_color_attachment->Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+		ImGui::Image( ( void* )( intptr_t )editor_framebuffer.ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
 	}
 
 	ImGui::End();
@@ -1147,14 +1145,12 @@ void SandboxApplication::ResetMaterialData()
 	outline_material = Engine::Material( "Outline", &outline_shader );
 
 	mirror_quad_material = Engine::Material( "Rear-view Mirror", &texture_blit_shader );
-	mirror_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 0 ] );
 
 	{
-		const auto offscreen_blit_shader_to_use = msaa_for_offscreen_framebuffers_is_enabled ? &fullscreen_blit_resolve_shader : &fullscreen_blit_shader;
+		const auto offscreen_blit_shader_to_use = msaa_for_offscreen_framebuffers_sample_count ? &fullscreen_blit_resolve_shader : &fullscreen_blit_shader;
 		offscreen_quad_material = Engine::Material( "Offscreen Quad", offscreen_blit_shader_to_use );
-		offscreen_quad_material.SetTexture( "uniform_texture_slot", offscreen_framebuffer_color_attachment_array[ 1 ] );
-		if( msaa_for_offscreen_framebuffers_is_enabled )
-			offscreen_quad_material.Set( "uniform_sample_count", msaa_for_offscreen_framebuffers_sample_count );
+		if( msaa_for_offscreen_framebuffers_sample_count )
+			offscreen_quad_material.Set( "uniform_sample_count", *msaa_for_offscreen_framebuffers_sample_count );
 	}
 
 	ground_quad_surface_data = wall_surface_data = cube_surface_data =
@@ -1322,110 +1318,15 @@ void SandboxApplication::ReplaceMeteoriteAndCubeDrawables( bool use_meteorites )
 	}
 }
 
-void SandboxApplication::InitializeFramebufferTextures( const int width_new_pixels, const int height_new_pixels )
-{
-	/* Main: */
-	{
-		if( editor_framebuffer_color_attachment ) // Remove the previous color attachment.
-			Engine::AssetDatabase< Engine::Texture >::RemoveAsset( editor_framebuffer_color_attachment->Name() );
-
-		std::string name( "Editor FB Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		editor_framebuffer_color_attachment = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA, 
-																																   width_new_pixels, height_new_pixels ) );
-	}
-
-	/* Offscreen: */
-	{
-		if( offscreen_framebuffer_color_attachment_array[ 0 ] ) // Remove the previous color attachment.
-			Engine::AssetDatabase< Engine::Texture >::RemoveAsset( offscreen_framebuffer_color_attachment_array[ 0 ]->Name() );
-
-		/* Don't use MSAA for the rear-view as it is:
-		 *	A) not needed,
-		 *  B) needs resolve into a non-sampled texture (which means another FBO) to be used inside an ImGui window. */
-		std::string name( "Offscreen FB 0 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		offscreen_framebuffer_color_attachment_array[ 0 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA,
-																																				 width_new_pixels,
-																																				 height_new_pixels ) );
-	}
-
-	if( offscreen_framebuffer_color_attachment_array[ 1 ] ) // Remove the previous color attachment.
-		Engine::AssetDatabase< Engine::Texture >::RemoveAsset( offscreen_framebuffer_color_attachment_array[ 1 ]->Name() );
-
-	if( msaa_for_offscreen_framebuffers_is_enabled )
-	{
-		std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) +
-						  " (" + std::to_string( msaa_for_offscreen_framebuffers_sample_count ) + " samples)" );
-		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( msaa_for_offscreen_framebuffers_sample_count,
-																																				 name, GL_RGBA,
-																																				 width_new_pixels,
-																																				 height_new_pixels ) );
-	}
-	else
-	{
-		std::string name( "Offscreen FB 1 Color Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		offscreen_framebuffer_color_attachment_array[ 1 ] = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateExistingAsset( Engine::Texture( name, GL_RGBA,
-																																				 width_new_pixels,
-																																				 height_new_pixels ) );
-	}
-}
-
-void SandboxApplication::InitializeRenderbuffers( const int width_new_pixels, const int height_new_pixels )
-{
-	/* Main: */
-	{
-		std::string name( "Editor FB D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		editor_framebuffer_depth_and_stencil_attachment = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
-	}
-
-	/* Offscreen: */
-	{
-		/* Don't use MSAA for the rear-view as it is:
-		 *	A) not needed,
-		 *  B) needs resolve into a non-sampled texture (which means another FBO) to be used inside an ImGui window. */
-		std::string name( "Offscreen FB 0 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
-	}
-	
-	if( msaa_for_offscreen_framebuffers_is_enabled )
-	{
-		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) + 
-						  " (" + std::to_string( msaa_for_offscreen_framebuffers_sample_count ) + " samples)" );
-		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( msaa_for_offscreen_framebuffers_sample_count,
-																							  name,
-																							  width_new_pixels, height_new_pixels );
-	}
-	else
-	{
-		std::string name( "Offscreen FB 1 D/S Tex " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] = Engine::Renderbuffer( name, width_new_pixels, height_new_pixels );
-	}
-}
-
 void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels )
 {
 	/* Main: */
-	{
-		std::string name( "Editor FB " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-		editor_framebuffer = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
-												  editor_framebuffer_color_attachment,
-												  &editor_framebuffer_depth_and_stencil_attachment );
-	}
+	editor_framebuffer = Engine::Framebuffer( "Editor FB", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined );
 
 	/* Offscreen: */
-	{
-		{
-			std::string name( "Offscreen FB 0 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-			offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
-																	offscreen_framebuffer_color_attachment_array[ 0 ],
-																	&offscreen_framebuffer_depth_and_stencil_attachment_array[ 0 ] );
-		}
-		{
-			std::string name( "Offscreen FB 1 " + std::to_string( width_new_pixels ) + "x" + std::to_string( height_new_pixels ) );
-			offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( name, width_new_pixels, height_new_pixels,
-																	offscreen_framebuffer_color_attachment_array[ 1 ],
-																	&offscreen_framebuffer_depth_and_stencil_attachment_array[ 1 ] );
-		}
-	}
+	offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( "Offscreen FB 0", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined );
+	offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( "Offscreen FB 1", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined,
+															msaa_for_offscreen_framebuffers_sample_count );
 }
 
 void SandboxApplication::RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels )

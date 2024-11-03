@@ -217,7 +217,7 @@ namespace Engine
 		Bind();
 	}
 
-	void Texture::GenerateMipmaps()
+	void Texture::GenerateMipmaps() const
 	{
 		Bind();
 		ASSERT_DEBUG_ONLY( type == TextureType::Texture2D );
