@@ -241,35 +241,30 @@ namespace Engine
 		render_group.materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
 	}
 
+	void Renderer::AddDrawable( Drawable* drawable_to_add, const std::initializer_list< RenderGroupID > multiple_render_group_ids )
+	{
+		for( const auto render_group_id : multiple_render_group_ids )
+			AddDrawable( drawable_to_add, render_group_id );
+	}
+
 	void Renderer::RemoveDrawable( Drawable* drawable_to_remove )
 	{
-		if( auto render_group_found = GetRenderGroup( drawable_to_remove ) )
+		auto& render_groups_found = GetRenderGroups( drawable_to_remove );
+		for( auto& render_group_found : render_groups_found )
 		{
-			auto& render_group_to_remove_from = *render_group_found;
-
 			// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
-			std::erase( render_group_to_remove_from.drawable_list, drawable_to_remove );
+			std::erase( render_group_found.drawable_list, drawable_to_remove );
 
 			const auto& shader = drawable_to_remove->material->shader;
 
-			if( --render_group_to_remove_from.shaders_in_flight[ shader ] == 0 )
+			if( --render_group_found.shaders_in_flight[ shader ] == 0 )
 			{
-				render_group_to_remove_from.shaders_in_flight.erase( shader );
-				if( shaders_registered.contains( shader ) )
+				render_group_found.shaders_in_flight.erase( shader );
+				if( --shaders_registered_reference_count_map[ shader ] == 0 )
 					UnregisterShader( *shader );
 			}
 
-			render_group_to_remove_from.materials_in_flight.erase( drawable_to_remove->material->Name() );
-		}
-	}
-
-	void Renderer::RemoveAllDrawables()
-	{
-		for( auto& [ render_group_id, render_group ] : render_group_map )
-		{
-			render_group.drawable_list.clear();
-			render_group.shaders_in_flight.clear();
-			render_group.materials_in_flight.clear();
+			render_group_found.materials_in_flight.erase( drawable_to_remove->material->Name() );
 		}
 	}
 
@@ -404,7 +399,8 @@ namespace Engine
 			update_uniform_buffer_other = true;
 		}
 
-		shaders_registered.insert( &shader );
+		if( shaders_registered_reference_count_map[ &shader ]++ == 1 )
+			shaders_registered.insert( &shader );
 	}
 
 	void Renderer::UnregisterShader( Shader& shader )
@@ -420,7 +416,7 @@ namespace Engine
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
-					// Check if this buffer is still used by other reigstered Shaders:
+					// Check if this buffer is still used by other registered Shaders:
 					if( std::find_if( shaders_registered.cbegin(), shaders_registered.cend(),
 										[ &uniform_buffer_name ]( const Shader* shader ) { return shader->HasGlobalUniformBlock( uniform_buffer_name ); } ) == shaders_registered.cend() )
 						uniform_buffer_management_global.UnregisterBuffer( uniform_buffer_name );
@@ -433,7 +429,7 @@ namespace Engine
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
-					// Check if this buffer is still used by other reigstered Shaders:
+					// Check if this buffer is still used by other registered Shaders:
 					if( std::find_if( shaders_registered.cbegin(), shaders_registered.cend(),
 										[ &uniform_buffer_name ]( const Shader* shader ) { return shader->HasIntrinsicUniformBlock( uniform_buffer_name ); } ) == shaders_registered.cend() )
 						uniform_buffer_management_intrinsic.UnregisterBuffer( uniform_buffer_name );
@@ -456,6 +452,7 @@ namespace Engine
 		}
 
 		shaders_registered.erase( &shader );
+		shaders_registered_reference_count_map.erase( &shader );
 	}
 
 	void Renderer::SetClearColor( const Color3& new_clear_color )
@@ -632,13 +629,16 @@ namespace Engine
 		uniform_buffer_management_global.UploadAll();
 	}
 
-	Renderer::RenderGroup* Renderer::GetRenderGroup( const Drawable* drawable_of_interest )
+	std::vector< Renderer::RenderGroup >& Renderer::GetRenderGroups( const Drawable* drawable_of_interest )
 	{
-		for( auto& [ render_group_id, render_group ] : render_group_map )
-			if( std::find( render_group.drawable_list.cbegin(), render_group.drawable_list.cend(), drawable_of_interest ) != render_group.drawable_list.cend() )
-				return &render_group;
+		static std::vector< Renderer::RenderGroup > render_groups;
+		render_groups.clear();
 
-		return nullptr;
+		for( const auto&  [render_group_id, render_group ] : render_group_map )
+			if( std::find( render_group.drawable_list.cbegin(), render_group.drawable_list.cend(), drawable_of_interest ) != render_group.drawable_list.cend() )
+				render_groups.push_back( render_group );
+
+		return render_groups;
 	}
 
 	void Renderer::SetRenderState( const RenderState& render_state_to_set )
@@ -734,16 +734,7 @@ namespace Engine
 			{
 				UnregisterShader( *shader );
 
-				/* Swap: */
-				{
-					*shader = std::move( new_shader );
-
-					//Shader temp( std::move( *shader ) );
-					//*shader    = std::move( new_shader );
-					//new_shader = std::move( temp );
-
-					//new_shader.program_id.Reset(); // To prevent double-deletion.
-				}
+				*shader = std::move( new_shader );
 
 				RegisterShader( *shader );
 

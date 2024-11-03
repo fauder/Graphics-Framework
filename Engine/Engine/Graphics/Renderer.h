@@ -161,8 +161,10 @@ namespace Engine
 	private:
 		struct RenderGroup
 		{
+		private:
 			using ReferenceCount = unsigned int;
 
+		public:
 			std::string name = "<unnamed>";
 
 			RenderState render_state;
@@ -204,9 +206,9 @@ namespace Engine
 		void ToggleRenderGroup( const RenderGroupID group_id_to_toggle, const bool enable );
 
 		void AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id = RenderGroupID{ 0 } );
+		void AddDrawable( Drawable* drawable_to_add, const std::initializer_list< RenderGroupID > multiple_render_group_ids );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
 		void RemoveDrawable( Drawable* drawable_to_remove );
-		void RemoveAllDrawables();
 
 		void OnShaderReassign( Shader* previous_shader, const std::string& name_of_material_whose_shader_changed );
 
@@ -345,7 +347,7 @@ namespace Engine
 		 * RenderGroup & Drawable:
 		 */
 
-		RenderGroup* GetRenderGroup( const Drawable* drawable_of_interest );
+		std::vector< RenderGroup >& GetRenderGroups( const Drawable* drawable_of_interest );
 		void SetRenderState( const RenderState& render_state_to_set );
 		void SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode );
 
@@ -400,6 +402,7 @@ namespace Engine
 		std::map< RenderGroupID, RenderGroup > render_group_map;
 
 		std::unordered_set< Shader* > shaders_registered;
+		std::unordered_map< Shader*, Shader::ReferenceCount > shaders_registered_reference_count_map;
 
 		/*
 		 * Uniform Management:

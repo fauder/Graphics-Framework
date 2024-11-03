@@ -62,6 +62,8 @@ namespace Engine
 	{
 		friend class Renderer;
 
+		using ReferenceCount = unsigned int;
+
 	public:
 		using ID = ID< Renderer >;
 
