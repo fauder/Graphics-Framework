@@ -98,10 +98,6 @@ void SandboxApplication::Initialize()
 	auto log_group( gl_logger.TemporaryLogGroup( "Sandbox GL Init." ) );
 
 /* Textures: */
-	Engine::Texture::ImportSettings texture_import_settings;
-	texture_import_settings.format          = GL_RGB;
-	texture_import_settings.min_filter      = Engine::Texture::Filtering::Linear;
-	texture_import_settings.flip_vertically = false;
 	skybox_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Skybox", 
 																					{
 																						R"(Asset/Texture/Skybox/right.jpg)",
@@ -110,20 +106,25 @@ void SandboxApplication::Initialize()
 																						R"(Asset/Texture/Skybox/bottom.jpg)",
 																						R"(Asset/Texture/Skybox/front.jpg)",
 																						R"(Asset/Texture/Skybox/back.jpg)"
-																					}, texture_import_settings );
+																					},
+																					Engine::Texture::ImportSettings
+																					{
+																						.format          = GL_RGB,
+																						.min_filter      = Engine::Texture::Filtering::Linear,
+																						.flip_vertically = false,
+																						.is_sRGB         = false // TODO: DELETE DEBUG.
+																					} );
 
-	texture_import_settings.format          = GL_RGBA;
-	texture_import_settings.min_filter      = Engine::Texture::Filtering::Linear_MipmapLinear;
-	texture_import_settings.flip_vertically = true;
-
-	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)",					texture_import_settings );
-	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map",	R"(Asset/Texture/container2_specular.png)",			texture_import_settings );
-	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)",	texture_import_settings );
+	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)" );
+	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)" );
+	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)" );
 	
-	texture_import_settings.wrap_u = Engine::Texture::Wrapping::Repeat;
-	texture_import_settings.wrap_v = Engine::Texture::Wrapping::Repeat;
-
-	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", texture_import_settings );
+	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", 
+																							 Engine::Texture::ImportSettings
+																							 {
+																								 .wrap_u = Engine::Texture::Wrapping::Repeat,
+																								 .wrap_v = Engine::Texture::Wrapping::Repeat
+																							 } );
 
 /* Shaders: */
 	skybox_shader.FromFile( R"(Asset/Shader/Skybox.vert)", R"(Asset/Shader/Skybox.frag)" );
@@ -1246,12 +1247,8 @@ SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( co
 
 bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const std::string& file_path, const char* name )
 {
-	Engine::Model::ImportSettings model_import_settings( GL_STATIC_DRAW );
-	auto new_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( name,
-																				  file_path,
-																				  model_import_settings );
-	
-	if( new_model )
+	if( auto new_model = Engine::AssetDatabase< Engine::Model >::CreateAssetFromFile( name, file_path ); 
+		new_model )
 	{
 		model_info_to_be_loaded.file_path = file_path;
 

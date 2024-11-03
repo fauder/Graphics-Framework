@@ -16,7 +16,9 @@ namespace Engine
 	public:
 		DELETE_COPY_AND_MOVE_CONSTRUCTORS( AssetDatabase );
 
-		static AssetType* CreateAssetFromFile( const std::string& name, const std::string& file_path, const typename AssetType::ImportSettings& import_settings )
+		static AssetType* CreateAssetFromFile( const std::string& name,
+											   const std::string& file_path,
+											   const typename AssetType::ImportSettings& import_settings = AssetType::DEFAULT_IMPORT_SETTINGS )
 		{
 			auto& instance = Instance();
 
@@ -37,8 +39,9 @@ namespace Engine
 		}
 
 		/* For assets with mulitple source-assets, such as cubemaps. */
-		static AssetType* CreateAssetFromFile( const std::string& name, const std::initializer_list< std::string > file_paths,
-											   const typename AssetType::ImportSettings& import_settings )
+		static AssetType* CreateAssetFromFile( const std::string& name,
+											   const std::initializer_list< std::string > file_paths,
+											   const typename AssetType::ImportSettings& import_settings = AssetType::DEFAULT_IMPORT_SETTINGS )
 		{
 			auto& instance = Instance();
 
@@ -58,7 +61,10 @@ namespace Engine
 			return &instance.asset_map[ name ];
 		}
 
-		static AssetType* CreateAssetFromMemory( const std::string& name, const std::byte* data, const int size, const typename AssetType::ImportSettings& import_settings )
+		static AssetType* CreateAssetFromMemory( const std::string& name,
+												 const std::byte* data,
+												 const int size,
+												 const typename AssetType::ImportSettings& import_settings = AssetType::DEFAULT_IMPORT_SETTINGS )
 		{
 			auto& instance = Instance();
 
