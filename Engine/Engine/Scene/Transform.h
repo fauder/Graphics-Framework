@@ -5,6 +5,7 @@
 #include "Math/Matrix.hpp"
 #include "Math/Quaternion.hpp"
 #include "Math/Vector.hpp"
+#include "Core/Macros.h"
 
 namespace Engine
 {
@@ -29,6 +30,9 @@ namespace Engine
 		Transform( const Vector3& scale );
 		Transform( const Vector3& scale, const Vector3& translation );
 		Transform( const Vector3& scale, const Quaternion& rotation, const Vector3& translation );
+
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Transform );
+
 		~Transform();
 
 	/* Modification: */

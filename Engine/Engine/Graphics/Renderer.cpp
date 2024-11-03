@@ -380,7 +380,7 @@ namespace Engine
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Global();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_global.RegisterBuffer( uniform_buffer_name, uniform_buffer_info );
+					uniform_buffer_management_global.RegisterBuffer_ForceUpdateBufferInfoIfBufferExists( uniform_buffer_name, uniform_buffer_info );
 			}
 
 			if( shader.HasIntrinsicUniformBlocks() )
@@ -388,7 +388,7 @@ namespace Engine
 				const auto& uniform_buffer_info_map = shader.GetUniformBufferInfoMap_Intrinsic();
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
-					uniform_buffer_management_intrinsic.RegisterBuffer( uniform_buffer_name, uniform_buffer_info );
+					uniform_buffer_management_intrinsic.RegisterBuffer_ForceUpdateBufferInfoIfBufferExists( uniform_buffer_name, uniform_buffer_info );
 			}
 		}
 
@@ -730,11 +730,13 @@ namespace Engine
 
 				/* Swap: */
 				{
-					Shader temp( std::move( *shader ) );
-					*shader    = std::move( new_shader );
-					new_shader = std::move( temp );
+					*shader = std::move( new_shader );
 
-					new_shader.program_id.Reset(); // To prevent double-deletion.
+					//Shader temp( std::move( *shader ) );
+					//*shader    = std::move( new_shader );
+					//new_shader = std::move( temp );
+
+					//new_shader.program_id.Reset(); // To prevent double-deletion.
 				}
 
 				RegisterShader( *shader );

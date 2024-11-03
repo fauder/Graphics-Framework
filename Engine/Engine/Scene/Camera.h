@@ -10,10 +10,7 @@ namespace Engine
 	public:
 		Camera( Transform* const transform, float aspect_ratio, Radians vertical_field_of_view, const float near_plane = 0.1f, const float far_plane = 100.0f );
 
-		Camera( const Camera& rhs )              = default;
-		Camera( Camera&& donor )                 = default;
-		Camera& operator = ( const Camera& rhs ) = default;
-		Camera& operator = ( Camera&& donor )    = default;
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Camera );
 
 		inline const Matrix4x4& GetViewMatrix();
 		inline const Matrix4x4& GetProjectionMatrix();

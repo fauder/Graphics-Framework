@@ -343,7 +343,8 @@ namespace Engine::ImGuiDrawer
 
 		if( texture )
 		{
-			ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			if( texture->Type() == TextureType::Texture2D )
+				ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
 			ImGui::SameLine();
 			ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
 		}
@@ -364,7 +365,8 @@ namespace Engine::ImGuiDrawer
 
 		if( texture )
 		{
-			ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
+			if( texture->Type() == TextureType::Texture2D )
+				ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
 		}
@@ -395,14 +397,14 @@ namespace Engine::ImGuiDrawer
 
 			if( ImGui::BeginChild( "Textures", child_size ) )
 			{
-				for( const auto& [ asset_name, asset ] : texture_map )
+				for( const auto& [ texture_asset_name, texture ] : texture_map )
 				{
-					ImGui::PushID( asset_name.c_str() );
+					ImGui::PushID( texture_asset_name.c_str() );
 					if( ImGui::Selectable( "" ) )
-						selected_texture = &asset;
+						selected_texture = &texture;
 					ImGui::PopID();
 					ImGui::SameLine();
-					Engine::ImGuiDrawer::Draw( &asset, asset_name.c_str() );
+					Engine::ImGuiDrawer::Draw( &texture, texture_asset_name.c_str() );
 				}
 			}
 
@@ -424,8 +426,34 @@ namespace Engine::ImGuiDrawer
 				const float padding_x = ( preview_area_size.x - image_width_fit ) / 2.0f;
 				const float padding_y = ( preview_area_size.y - image_height_fit ) / 2.0f;
 
-				ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( padding_x, padding_y ) );
-				ImGui::Image( ( void* )( intptr_t )selected_texture->Id().Get(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
+				auto DisplayPreviewUnavailableTextInsteadOfImage = [ & ]( const char* text )
+				{
+					const auto indent = ( preview_area_size.x - ImGui::CalcTextSize( text ).x ) / 2.0f;
+					ImGui::Dummy( preview_area_size - ImVec2( 0.0f, line_height ) );
+					ImGui::Indent( indent );
+					ImGui::TextUnformatted( text );
+					ImGui::Unindent( indent );
+				};
+
+				switch( selected_texture->Type() )
+				{
+					case TextureType::Texture2D:
+						ImGui::SetCursorPos( ImGui::GetCursorPos() + ImVec2( padding_x, padding_y ) );
+						ImGui::Image( ( void* )( intptr_t )selected_texture->Id().Get(), ImVec2( image_width_fit, image_height_fit ), { 0, 1 }, { 1, 0 } );
+						break;
+
+					case TextureType::Texture2D_MultiSample:
+						DisplayPreviewUnavailableTextInsteadOfImage( ICON_FA_NOTDEF " 2D Texture (Multisampled) Preview Unavailable" );
+						break;
+
+					case TextureType::Cubemap:
+						DisplayPreviewUnavailableTextInsteadOfImage( ICON_FA_NOTDEF " Cubemap Texture Preview Unavailable" );
+						break;
+
+					default:
+						DisplayPreviewUnavailableTextInsteadOfImage( ICON_FA_XMARK " Unknown texture type encountered!" );
+						break;
+				}
 
 				char info_line_buffer[ 255 ];
 				sprintf_s( info_line_buffer, 255, "%dx%d", ( int )image_width, ( int )image_height );
@@ -790,7 +818,7 @@ namespace Engine::ImGuiDrawer
 		{
 			const auto& uniform_info_map = shader.GetUniformInfoMap();
 
-			if( ImGui::TreeNodeEx( shader.Name().c_str()/*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/ ) )
+			if( ImGui::TreeNodeEx( shader.Name().c_str(), 0 /*, ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed*/, "%s (ID: %d)", shader.Name().c_str(), shader.Id().Get() ) )
 			{
 				ImGuiUtility::BeginGroupPanel();
 

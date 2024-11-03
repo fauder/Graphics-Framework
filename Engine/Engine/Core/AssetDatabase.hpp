@@ -1,5 +1,8 @@
 #pragma once
 
+// Engine Includes.
+#include "Macros.h"
+
 // std Includes.
 #include <map>
 #include <string>
@@ -11,10 +14,11 @@ namespace Engine
 	class AssetDatabase
 	{
 	public:
-		AssetDatabase( AssetDatabase const& )			  = delete;
-		AssetDatabase& operator =( AssetDatabase const& ) = delete;
+		DELETE_COPY_AND_MOVE_CONSTRUCTORS( AssetDatabase );
 
-		static AssetType* CreateAssetFromFile( const std::string& name, const std::string& file_path, const typename AssetType::ImportSettings& import_settings )
+		static AssetType* CreateAssetFromFile( const std::string& name,
+											   const std::string& file_path,
+											   const typename AssetType::ImportSettings& import_settings = AssetType::DEFAULT_IMPORT_SETTINGS )
 		{
 			auto& instance = Instance();
 
@@ -35,8 +39,9 @@ namespace Engine
 		}
 
 		/* For assets with mulitple source-assets, such as cubemaps. */
-		static AssetType* CreateAssetFromFile( const std::string& name, const std::initializer_list< std::string > file_paths,
-											   const typename AssetType::ImportSettings& import_settings )
+		static AssetType* CreateAssetFromFile( const std::string& name,
+											   const std::initializer_list< std::string > file_paths,
+											   const typename AssetType::ImportSettings& import_settings = AssetType::DEFAULT_IMPORT_SETTINGS )
 		{
 			auto& instance = Instance();
 
@@ -56,7 +61,10 @@ namespace Engine
 			return &instance.asset_map[ name ];
 		}
 
-		static AssetType* CreateAssetFromMemory( const std::string& name, const std::byte* data, const int size, const typename AssetType::ImportSettings& import_settings )
+		static AssetType* CreateAssetFromMemory( const std::string& name,
+												 const std::byte* data,
+												 const int size,
+												 const typename AssetType::ImportSettings& import_settings = AssetType::DEFAULT_IMPORT_SETTINGS )
 		{
 			auto& instance = Instance();
 
@@ -92,27 +100,42 @@ namespace Engine
 			}
 		}
 
-		static AssetType* AddExistingAsset( AssetType&& asset, const std::string& file_path = "<not-on-disk>" )
+		static AssetType* AddAsset( AssetType&& asset,
+									const std::string& file_path = "<not-on-disk>" )
 		{
 			auto& instance = Instance();
 
 			const auto& asset_name = asset.Name();
 
+			/* If the asset is already loaded, return the existing one. */
 			if( instance.asset_map.contains( asset_name ) )
-				return nullptr;
+				return &instance.asset_map[ asset_name ];
 
-			instance.asset_path_map[ asset_name ] = file_path;
-			return &( instance.asset_map[ asset_name ] = std::move( asset ) );
+			instance.asset_path_map.emplace( asset_name, file_path );
+			return &( instance.asset_map.emplace( asset_name, std::move( asset ) ).first->second );
 		}
 
-		static AssetType* AddOrUpdateExistingAsset( AssetType&& asset, const std::string& file_path = "<not-on-disk>" )
+		static AssetType* AddOrUpdateAsset( AssetType&& asset,
+											const std::string& file_path = "<not-on-disk>" )
 		{
 			auto& instance = Instance();
 
 			const auto& asset_name = asset.Name();
 
-			instance.asset_path_map[ asset_name ] = file_path;
-			return &( instance.asset_map[ asset_name ] = std::move( asset ) );
+			instance.asset_path_map.try_emplace( asset_name, file_path );
+			return &( instance.asset_map.try_emplace( asset_name, std::move( asset ) ).first->second );
+		}
+
+		static bool RemoveAsset( const std::string& name )
+		{
+			auto& instance = Instance();
+
+			bool found_asset = false;
+
+			found_asset |= instance.asset_path_map.erase( name ) > 0;
+			found_asset |= instance.asset_map.erase( name ) > 0;
+
+			return found_asset;
 		}
 
 		static const std::map< std::string, AssetType >& Assets()

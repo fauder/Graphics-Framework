@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "GLLogType.h"
+#include "Core/Macros.h"
 #include "Core/ImGuiLog.hpp"
 
 // std Includes.
@@ -18,8 +19,7 @@ namespace Engine
 		{
 			GLLogGroup( GLLogger* logger, const char* group_name );
 
-			GLLogGroup( const GLLogGroup& other )            = delete;
-			GLLogGroup& operator=( const GLLogGroup& other ) = delete;
+			DELETE_COPY_CONSTRUCTORS( GLLogGroup );
 
 			GLLogGroup( GLLogGroup&& donor );
 			GLLogGroup& operator=( GLLogGroup&& donor );
@@ -38,6 +38,9 @@ namespace Engine
 
 	public:
 		GLLogger();
+
+		DELETE_COPY_AND_MOVE_CONSTRUCTORS( GLLogger );
+
 		~GLLogger();
 
 	/* Custom messages: */

@@ -19,9 +19,7 @@ namespace Engine
 		Renderbuffer( const std::string_view name, const int width, const int height );
 		Renderbuffer( const int sample_count, const std::string_view multi_sampled_renderbuffer_name, const int width, const int height );
 
-		/* Prevent copying for now: */
-		Renderbuffer( const Renderbuffer& ) = delete;
-		Renderbuffer& operator =( const Renderbuffer& ) = delete;
+		DELETE_COPY_CONSTRUCTORS( Renderbuffer );
 
 		/* Allow moving: */
 		Renderbuffer( Renderbuffer&& );
@@ -42,6 +40,8 @@ namespace Engine
 		inline int					SampleCount()		const { return sample_count; }
 
 	private:
+
+		void Delete();
 
 	/* Usage: */
 		void Bind() const;

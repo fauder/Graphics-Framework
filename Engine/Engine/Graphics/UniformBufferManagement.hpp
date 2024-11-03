@@ -18,13 +18,9 @@ namespace Engine
 	public:
 		UniformBufferManagement() = default;
 
-		/* Prevent copying. */
-		UniformBufferManagement( const UniformBufferManagement& other )				= delete;
-		UniformBufferManagement& operator=( const UniformBufferManagement& other )	= delete;
+		DELETE_COPY_CONSTRUCTORS( UniformBufferManagement );
 
-		/* Allow moving. */
-		UniformBufferManagement( UniformBufferManagement&& donor )					= default;
-		UniformBufferManagement& operator=( UniformBufferManagement&& donor )		= default;
+		DEFAULT_MOVE_CONSTRUCTORS( UniformBufferManagement );
 
 		~UniformBufferManagement() = default;
 
@@ -40,6 +36,19 @@ namespace Engine
 
 				blob_map.emplace( buffer_name, buffer_info.size );
 			}
+		}
+
+		/* This is used by the Renderer, for Intrinsics/Globals:
+		 * Since Uniform::BufferInformation holds pointers to Shader data, it is effectively lost/corrupted when the host Shader is destroyed (upon recompilation). */
+		void RegisterBuffer_ForceUpdateBufferInfoIfBufferExists( const std::string& buffer_name, const Uniform::BufferInformation buffer_info )
+		{
+			if( buffer_info_map.contains( buffer_name ) )
+			{
+				buffer_info_map.erase( buffer_name );
+				buffer_info_map.emplace( buffer_name, buffer_info );
+			}
+			else
+				RegisterBuffer( buffer_name, buffer_info );
 		}
 
 		void UnregisterBuffer( const std::string& buffer_name )

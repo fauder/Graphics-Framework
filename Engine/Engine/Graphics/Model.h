@@ -19,13 +19,10 @@ namespace Engine
 	public:
 		struct ImportSettings
 		{
-			GLenum usage;
-
-			ImportSettings( const GLenum usage )
-				:
-				usage( usage )
-			{}
+			GLenum usage = GL_STATIC_DRAW;
 		};
+
+		static constexpr ImportSettings DEFAULT_IMPORT_SETTINGS = {};
 
 		/* Maps to a glTF "primitive".
 		 * It is a mesh with a unique material, i.e., a distinct draw call (unique in local MeshGroup, or glTF "mesh", not the whole model). */
@@ -53,9 +50,8 @@ namespace Engine
 			Node() = default;
 			Node( const std::string& name, const Matrix4x4& transform_local, MeshGroup* mesh_group );
 
-			/* Prevent copying but allow moving: */
-			Node( const Node& )				= delete;
-			Node& operator =( const Node& ) = delete;
+			DELETE_COPY_CONSTRUCTORS( Node );
+
 			Node( Node&& );
 			Node& operator =( Node&& );
 
@@ -76,13 +72,8 @@ namespace Engine
 		Model();
 		Model( const std::string& name );
 
-		/* Prevent copying for now: */
-		Model( const Model& )			  = delete;
-		Model& operator =( const Model& ) = delete;
-
-		/* Allow moving: */
-		Model( Model&& )			 = default;
-		Model& operator =( Model&& ) = default;
+		DELETE_COPY_CONSTRUCTORS( Model );
+		DEFAULT_MOVE_CONSTRUCTORS( Model );
 
 		~Model();
 

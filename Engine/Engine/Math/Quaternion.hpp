@@ -37,10 +37,7 @@ namespace Engine::Math
 			w( 1 )
 		{}
 
-		constexpr Quaternion( const Quaternion& other )					 = default;
-		constexpr Quaternion( Quaternion && donor )	noexcept			 = default;
-		constexpr Quaternion& operator= ( const Quaternion& other )		 = default;
-		constexpr Quaternion& operator= ( Quaternion && donor )	noexcept = default;
+		CONSTEXPR_DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Quaternion );
 
 		constexpr ~Quaternion() = default;
 
@@ -74,8 +71,6 @@ namespace Engine::Math
 		}
 
 	/* Comparison Operators. */
-		//constexpr auto operator<=>( const Quaternion& ) const = default;
-
 		bool operator==( const Quaternion & right_hand_side ) const
 		{
 			return Math::IsEqual( w, right_hand_side.w ) && xyz == right_hand_side.xyz;

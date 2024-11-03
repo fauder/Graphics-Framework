@@ -23,9 +23,8 @@ public:
 				   const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ),
 				   const std::initializer_list< std::pair< Engine::Renderer::RenderGroupID, Engine::Material* > > render_group_material_info_list = {} );
 
-	/* Permit moving, but not copying for now. */
-	ModelInstance( ModelInstance&& donor )				= default;
-	ModelInstance& operator=( ModelInstance && donor )	= default;
+	DELETE_COPY_CONSTRUCTORS( ModelInstance );
+	DEFAULT_MOVE_CONSTRUCTORS( ModelInstance );
 
 	~ModelInstance();
 

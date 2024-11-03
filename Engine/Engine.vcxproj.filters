@@ -216,9 +216,6 @@
     <ClInclude Include="Engine\Graphics\Framebuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\Renderbuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad_FullScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -312,9 +309,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\Framebuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Engine\Graphics\Renderbuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\Primitive\Primitive_Cube_FullScreen.h">

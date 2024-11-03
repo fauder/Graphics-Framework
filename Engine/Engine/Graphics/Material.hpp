@@ -25,9 +25,8 @@ namespace Engine
 		Material( const std::string& name );
 		Material( const std::string& name, Shader* const shader );
 
-		/* Permit moving, but not copying for now. */
-		Material( Material&& donor )			= default; 
-		Material& operator=( Material&& donor )	= default;
+		DELETE_COPY_CONSTRUCTORS( Material );
+		DEFAULT_MOVE_CONSTRUCTORS( Material );
 
 		~Material();
 

@@ -2,6 +2,7 @@
 
 // Engine Includes.
 #include "Core/Initialization.h"
+#include "Core/Macros.h"
 #include "Math/Concepts.h"
 #include "Math/Math.hpp"
 #include "Math/TypeTraits.h"
@@ -31,10 +32,7 @@ namespace Engine::Math
 		{
 		} // Same as the default constructor.
 
-		constexpr Vector( const Vector& other )						= default;
-		constexpr Vector( Vector&& donor ) noexcept					= default;
-		constexpr Vector& operator = ( const Vector& other )		= default;
-		constexpr Vector& operator = ( Vector&& donor ) noexcept	= default;
+		CONSTEXPR_DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Vector );
 
 		constexpr ~Vector() = default;
 

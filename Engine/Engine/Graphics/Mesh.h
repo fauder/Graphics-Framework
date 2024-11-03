@@ -28,11 +28,8 @@ namespace Engine
 	public:
 		Mesh();
 
-		/* Prevent copying but allow moving: */
-		Mesh( const Mesh& other )				= delete;
-		Mesh& operator = ( const Mesh& other )	= delete;
-		Mesh( Mesh&& donor )					= default;
-		Mesh& operator = ( Mesh&& donor )		= default;
+		DELETE_COPY_CONSTRUCTORS( Mesh );
+		DEFAULT_MOVE_CONSTRUCTORS( Mesh );
 
 		Mesh( std::vector< Vector3			>&& positions, 
 			  const std::string&				name			= {},

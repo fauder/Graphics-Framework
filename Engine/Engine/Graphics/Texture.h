@@ -33,7 +33,7 @@ namespace Engine
 		static constexpr CubeMapConstructorTag CUBEMAP_CONSTRUCTOR = {};
 		static constexpr Texture2DMultiSampleConstructorTag TEXTURE_2D_MULTISAMPLE_CONSTRUCTOR = {};
 
-		enum class Wrapping
+		enum class Wrapping // Has to be a default enum (4 bytes), because the GLenums are all over the place...
 		{
 			ClampToEdge       = GL_CLAMP_TO_EDGE,
 			ClampToBorder     = GL_CLAMP_TO_BORDER,
@@ -42,7 +42,7 @@ namespace Engine
 			MirrorClampToEdge = GL_MIRROR_CLAMP_TO_EDGE
 		};
 
-		enum class Filtering
+		enum class Filtering // Has to be a default enum (4 bytes), because the GLenums are all over the place...
 		{
 			Nearest				  = GL_NEAREST,
 			Linear			      = GL_LINEAR,
@@ -54,33 +54,21 @@ namespace Engine
 
 		struct ImportSettings
 		{
-			int format;
+			int format = GL_RGBA;
 
-			Wrapping wrap_u;
-			Wrapping wrap_v;
-			Wrapping wrap_w;
-			Filtering min_filter;
-			Filtering mag_filter;
+			Wrapping wrap_u = Wrapping::ClampToEdge;
+			Wrapping wrap_v = Wrapping::ClampToEdge;
+			Wrapping wrap_w = Wrapping::ClampToEdge;
 
-			bool flip_vertically;
-			bool is_sRGB;
+			Filtering min_filter = Filtering::Linear_MipmapLinear;
+			Filtering mag_filter = Filtering::Linear;
+
+			bool flip_vertically = true;
+			bool is_sRGB         = true;
 			//bool padding[ 2 ];
-
-			ImportSettings( const int format = GL_RGBA, const bool flip_vertically = true,
-							const bool is_sRGB = true,
-							const Wrapping  wrap_u     = Wrapping::ClampToEdge,			 const Wrapping  wrap_v     = Wrapping::ClampToEdge,	const Wrapping wrap_w = Wrapping::ClampToEdge,
-							const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear )
-				:
-				format( format ),
-				wrap_u( wrap_u ),
-				wrap_v( wrap_v ),
-				wrap_w( wrap_w ),
-				min_filter( min_filter ),
-				mag_filter( mag_filter ),
-				flip_vertically( flip_vertically ),
-				is_sRGB( is_sRGB )
-			{}
 		};
+
+		static constexpr ImportSettings DEFAULT_IMPORT_SETTINGS = {};
 
 	private:
 		friend class AssetDatabase< Texture >;
@@ -100,7 +88,7 @@ namespace Engine
 				 const int format,
 				 const int width, const int height,
 				 const bool is_sRGB = true,
-				 const Wrapping  wrap_u = Wrapping::ClampToEdge, const Wrapping  wrap_v = Wrapping::ClampToEdge,
+				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v	 = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 		/* Multi-sampled allocate-only constructor (no data).
@@ -125,9 +113,7 @@ namespace Engine
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v	 = Wrapping::ClampToEdge,	const Wrapping wrap_w = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
-		/* Prevent copying for now: */
-		Texture( const Texture& )				= delete;
-		Texture& operator =( const Texture& )	= delete;
+		DELETE_COPY_CONSTRUCTORS( Texture );
 
 		/* Allow moving: */
 		Texture( Texture&& );
@@ -150,7 +136,7 @@ namespace Engine
 	/* Usage: */
 		void SetName( const std::string& new_name );
 		void Activate( const int slot ) const;
-		void GenerateMipmaps();
+		void GenerateMipmaps() const;
 
 	private:
 		/* Private regular constructor: Only the AssetDatabase< Texture > should be able to construct a Texture with data.
@@ -175,6 +161,8 @@ namespace Engine
 				 const bool is_sRGB = true,
 				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge, const Wrapping wrap_w = Wrapping::ClampToEdge,
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
+
+		void Delete();
 
 	/* Usage: */
 		void Bind() const;

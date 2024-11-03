@@ -18,11 +18,9 @@ namespace Engine::Math
 		friend class Matrix;
 
 	public:
-	/* Constructors. */
-		constexpr Matrix( const Matrix& other )					= default;
-		constexpr Matrix( Matrix&& donor ) noexcept				= default;
-		constexpr Matrix& operator= ( const Matrix& other )		= default;
-		constexpr Matrix& operator= ( Matrix&& donor ) noexcept	= default;
+	/* Constructors & Destructors: */
+
+		CONSTEXPR_DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Matrix );
 
 		constexpr ~Matrix() = default;
 

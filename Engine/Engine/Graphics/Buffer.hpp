@@ -41,7 +41,7 @@ namespace Engine
 			count( 0 ),
 			size( size )
 		{
-			ASSERT_DEBUG_ONLY( IsValid() && "'size' parameter passed to Buffer::Buffer( const unsigned int size, const std::string& name, const GLenum usage ) is empty!" );
+			ASSERT_DEBUG_ONLY( size > 0 && "'size' parameter passed to Buffer::Buffer( const unsigned int size, const std::string& name, const GLenum usage ) is empty!" );
 
 			Create( nullptr, usage );
 
@@ -59,7 +59,7 @@ namespace Engine
 			count( ( unsigned int )data_span.size() ),
 			size( ( unsigned int )data_span.size_bytes() )
 		{
-			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to "
+			ASSERT_DEBUG_ONLY( size > 0 && count > 0 && "'data_span' parameter passed to "
 							   "Buffer::Buffer< BufferElementType >( const std::span< BufferElementType > data_span, const std::string& name, const GLenum usage ) is empty!" );
 
 			Create( ( void* )data_span.data(), usage );
@@ -81,7 +81,7 @@ namespace Engine
 			count( count ),
 			size( ( unsigned int )data_span.size_bytes() )
 		{
-			ASSERT_DEBUG_ONLY( IsValid() && "'data_span' parameter passed to "
+			ASSERT_DEBUG_ONLY( size > 0 && count > 0 && "'data_span' parameter passed to "
 							   "Buffer::Buffer< BufferElementType >( const unsigned int count, const std::span< BufferElementType > data_span, const std::string& name, const GLenum usage )"
 							   "is empty!" );
 
@@ -118,15 +118,19 @@ namespace Engine
 		/* Allow moving. */
 		Buffer( Buffer&& donor )
 			:
-			id( std::exchange( donor.id, {} ) ),
 			name( std::exchange( donor.name, {} ) ),
 			count( std::exchange( donor.count, 0 ) ),
 			size( std::exchange( donor.size, 0 ) )
 		{
+			Delete();
+
+			id = std::exchange( donor.id, {} );
 		}
 		
 		Buffer& operator=( Buffer&& donor )
 		{
+			Delete();
+
 			id    = std::exchange( donor.id,	{} );
 			name  = std::exchange( donor.name,	{} );
 			count = std::exchange( donor.count,  0 );
@@ -137,8 +141,7 @@ namespace Engine
 		
 		~Buffer()
 		{
-			if( IsValid() )
-				DeleteBuffer();
+			Delete();
 		}
 
 	/* Usage: */
@@ -185,10 +188,21 @@ namespace Engine
 			REF_COUNT_MAP[ id ]++;
 		}
 
-		void DeleteBuffer() 
+		void Delete() 
 		{
-			if( --REF_COUNT_MAP[ id ] == 0 )
+			if( IsValid() && --REF_COUNT_MAP[ id ] == 0 )
 			{
+#ifdef _DEBUG
+				switch( TargetType )
+				{
+					case GL_ARRAY_BUFFER:			std::cout << "Deleting Vertex (or Instance) Buffer "; break;
+					case GL_ELEMENT_ARRAY_BUFFER:	std::cout << "Deleting Index Buffer "; break;
+					case GL_UNIFORM_BUFFER:			std::cout << "Deleting Uniform Buffer "; break;
+				}
+
+				std::cout << id.Get() << ".\n";
+#endif // _DEBUG
+
 				glDeleteBuffers( 1, id.Address() );
 				REF_COUNT_MAP.erase( id );
 				id.Reset(); // OpenGL does not reset the id to zero.

@@ -22,13 +22,8 @@ namespace Engine
 		DirtyBlob() = default;
 		DirtyBlob( const std::size_t size );
 
-		/* Prohibit copying. */
-		DirtyBlob( const DirtyBlob& rhs )				= delete;
-		DirtyBlob& operator=( const DirtyBlob& rhs )	= delete;
-
-		/* Allow moving. */
-		DirtyBlob( DirtyBlob&& donor )				= default;
-		DirtyBlob& operator=( DirtyBlob&& donor )	= default;
+		DELETE_COPY_CONSTRUCTORS( DirtyBlob );
+		DEFAULT_MOVE_CONSTRUCTORS( DirtyBlob );
 
 		~DirtyBlob() = default;
 
