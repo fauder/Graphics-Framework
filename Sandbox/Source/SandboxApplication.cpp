@@ -111,7 +111,6 @@ void SandboxApplication::Initialize()
 																						.format          = GL_RGB,
 																						.min_filter      = Engine::Texture::Filtering::Linear,
 																						.flip_vertically = false,
-																						.is_sRGB         = false // TODO: DELETE DEBUG.
 																					} );
 
 	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)" );
