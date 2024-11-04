@@ -1314,7 +1314,8 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 													 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f },
 													 {
 														{ render_group_id_outlined_mesh,	nullptr },
-														{ render_group_id_outline,			&outline_material }
+														{ render_group_id_outline,			&outline_material },
+														{ render_group_id_shadow_mapping,	nullptr }
 													 } );
 
 		for( const auto& [ render_group_id, drawables_array ] : model_instance_to_load_into.DrawablesMap() )
