@@ -124,6 +124,8 @@ namespace Engine
 
 		glTexImage2DMultisample( GL_TEXTURE_2D_MULTISAMPLE, sample_count, InternalFormat( format, is_sRGB ), width, height, GL_TRUE );
 
+		/* Multi-sampled textures do not support setting of any sampler state, including filtering & wrapping modes. */
+
 		Unbind();
 	}
 

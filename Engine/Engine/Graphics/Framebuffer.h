@@ -43,6 +43,8 @@ namespace Engine
 					 const BitFlags< AttachmentType > attachment_bits,
 					 const bool is_sRGB = false,
 					 const std::optional< int > multi_sample_count = std::nullopt,
+					 const Texture::Wrapping  wrap_u     = Texture::Wrapping::ClampToEdge,			const Texture::Wrapping  wrap_v		= Texture::Wrapping::ClampToEdge,
+					 const Texture::Filtering min_filter = Texture::Filtering::Linear_MipmapLinear, const Texture::Filtering mag_filter = Texture::Filtering::Linear,
 					 const Target target = Target::Both );
 
 		DELETE_COPY_CONSTRUCTORS( Framebuffer );

@@ -22,6 +22,8 @@ namespace Engine
 							  const BitFlags< AttachmentType > attachment_bits,
 							  const bool is_sRGB,
 							  const std::optional< int > multi_sample_count,
+							  const Texture::Wrapping  wrap_u,	   const Texture::Wrapping  wrap_v,
+							  const Texture::Filtering min_filter, const Texture::Filtering mag_filter,
 							  const Target target )
 		:
 		id( {} ),
@@ -69,7 +71,9 @@ namespace Engine
 				attachment_texture = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateAsset( Engine::Texture( full_name, format,
 																												  width_in_pixels,
 																												  height_in_pixels,
-																												  use_sRGB ) );
+																												  use_sRGB,
+																												  wrap_u, wrap_v,
+																												  min_filter, mag_filter ) );
 			}
 
 			glFramebufferTexture2D( ( GLenum )target, attachment_type_enum, multi_sample_count ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, attachment_texture.value()->Id().Get(), 0 );
