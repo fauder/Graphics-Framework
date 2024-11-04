@@ -559,7 +559,7 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	renderer.DisablesRGBEncoding();
+	renderer.Disable_sRGBEncoding();
 
 	/* Pass 1 - Rear-cam view: Invert camera direction, draw everything to the off-screen frame-buffer 0. */
 	{
@@ -595,7 +595,7 @@ void SandboxApplication::Render()
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Blit Offscreen FB(s) to Main FB" ) );
 
-		renderer.EnablesRGBEncoding(); /* Finalization of colors : Need to convert from linear color space to sRGB color space. */
+		renderer.Enable_sRGBEncoding(); /* Finalization of colors : Need to convert from linear color space to sRGB color space. */
 
 		if( show_imgui )
 		{

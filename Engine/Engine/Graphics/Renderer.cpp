@@ -566,12 +566,12 @@ namespace Engine
 		return framebuffer_current;
 	}
 
-	void Renderer::EnablesRGBEncoding()
+	void Renderer::Enable_sRGBEncoding()
 	{
 		glEnable( GL_FRAMEBUFFER_SRGB );
 	}
 
-	void Renderer::DisablesRGBEncoding()
+	void Renderer::Disable_sRGBEncoding()
 	{
 		glDisable( GL_FRAMEBUFFER_SRGB );
 	}

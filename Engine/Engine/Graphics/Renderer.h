@@ -317,8 +317,8 @@ namespace Engine
 		const Framebuffer* CurrentFramebuffer() const;
 
 		/* Color Space: */
-		void EnablesRGBEncoding();
-		void DisablesRGBEncoding();
+		void Enable_sRGBEncoding();
+		void Disable_sRGBEncoding();
 
 		/*
 		 * Other:
