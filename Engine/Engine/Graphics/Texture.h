@@ -132,6 +132,7 @@ namespace Engine
 		inline const std::string&	Name()				const { return name;			}
 		inline int					SampleCount()		const { return sample_count;	}
 		inline bool					IsMultiSampled()	const { return sample_count;	}
+		inline bool					IssRGB()			const { return is_sRGB;			}
 
 	/* Usage: */
 		void SetName( const std::string& new_name );
