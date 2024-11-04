@@ -38,12 +38,13 @@ Engine::Application* Engine::CreateApplication( const Engine::BitFlags< Engine::
 SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > flags )
 	:
 	Engine::Application( flags ),
-	render_group_id_skybox( Engine::Renderer::RenderGroupID{ 999 } ),
 	render_group_id_regular( Engine::Renderer::RenderGroupID{ 0 } ),
 	render_group_id_outlined_mesh( Engine::Renderer::RenderGroupID{ 1 } ),
 	render_group_id_outline( Engine::Renderer::RenderGroupID{ 2 } ),
 	render_group_id_transparent( Engine::Renderer::RenderGroupID{ 3 } ),
-	render_group_id_screen_size_quad( Engine::Renderer::RenderGroupID{ 4 } ),
+	render_group_id_shadow_mapping( Engine::Renderer::RenderGroupID{ 4 } ),
+	render_group_id_screen_size_quad( Engine::Renderer::RenderGroupID{ 5 } ),
+	render_group_id_skybox( Engine::Renderer::RenderGroupID{ 999 } ),
 	skybox_shader( "Skybox" ),
 	blinn_phong_shader( "Blinn-Phong" ),
 	blinn_phong_shader_instanced( "Blinn-Phong (Instanced)" ),
@@ -118,12 +119,19 @@ void SandboxApplication::Initialize()
 	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)" );
 	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)" );
 	
-	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern (09)", R"(Asset/Texture/kenney_prototype/texture_09.png)", 
+	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern 09", R"(Asset/Texture/kenney_prototype/texture_09.png)", 
 																							 Engine::Texture::ImportSettings
 																							 {
 																								 .wrap_u = Engine::Texture::Wrapping::Repeat,
 																								 .wrap_v = Engine::Texture::Wrapping::Repeat
 																							 } );
+
+	half_gray_srgb_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "%50 Gray", R"(Asset/Texture/half_gray.png)",
+																							Engine::Texture::ImportSettings
+																							{
+																								.wrap_u = Engine::Texture::Wrapping::Repeat,
+																								.wrap_v = Engine::Texture::Wrapping::Repeat
+																							} );
 
 /* Shaders: */
 	skybox_shader.FromFile( R"(Asset/Shader/Skybox.vert)", R"(Asset/Shader/Skybox.frag)" );
@@ -317,21 +325,12 @@ void SandboxApplication::Initialize()
 
 /* Renderer (Drawables, RenderStates etc.): */
 	{
-		renderer.SetRenderGroupName( render_group_id_skybox, "Skybox" );
-		auto& render_state_skybox = renderer.GetRenderState( render_group_id_skybox ); // Keep default settings except for back face culling.
-
-		render_state_skybox.depth_comparison_function = Engine::Renderer::ComparisonFunction::LessOrEqual;
-
-		render_state_skybox.face_culling_enable = false;
-	}
-
-	{
 		renderer.SetRenderGroupName( render_group_id_regular, "Default" );
-		auto& render_state_regular_meshes = renderer.GetRenderState( render_group_id_regular ); // Keep default settings.
+		//auto& render_state_regular_meshes = renderer.GetRenderState( render_group_id_regular ); // Keep default settings.
 	}
 	
 	{
-		/* This pass draws the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is drawn at. */
+		/* This pass renders the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is rendered at. */
 		renderer.SetRenderGroupName( render_group_id_outlined_mesh, "Outlined Meshes" );
 		auto& render_state_outline_meshes = renderer.GetRenderState( render_group_id_outlined_mesh );
 
@@ -347,7 +346,7 @@ void SandboxApplication::Initialize()
 	}
 
 	{
-		/* This pass draws the outlines only; It does this by rendering the mesh at everywhere the stencil buffer is NOT 1. */
+		/* This pass renders the outlines only; It does this by rendering the mesh at everywhere the stencil buffer is NOT 1. */
 		renderer.SetRenderGroupName( render_group_id_outline, "Outlines" );
 		auto& render_state_outlines = renderer.GetRenderState( render_group_id_outline );
 
@@ -362,7 +361,7 @@ void SandboxApplication::Initialize()
 	}
 
 	{
-		/* This pass draws the transparent meshes. */
+		/* This pass renders the transparent meshes. */
 		renderer.SetRenderGroupName( render_group_id_transparent, "Transparent Meshes" );
 		auto& render_state_transparent = renderer.GetRenderState( render_group_id_transparent );
 
@@ -379,38 +378,54 @@ void SandboxApplication::Initialize()
 	}
 
 	{
+		/* This pass renders to shadow-maps. */
+		renderer.SetRenderGroupName( render_group_id_shadow_mapping, "Shadow Mapping" );
+		auto& render_state_transparent = renderer.GetRenderState( render_group_id_shadow_mapping );
+
+		/* Omitted settings are left to defaults. */
+
+		render_state_transparent.sorting_mode = Engine::Renderer::SortingMode::DepthNearestToFarthest;
+	}
+
+	{
 		renderer.SetRenderGroupName( render_group_id_screen_size_quad, "Screen-size Quad" );
-		auto& render_state_screen_size_quad = renderer.GetRenderState( render_group_id_screen_size_quad ); // Keep default settings.
+		//auto& render_state_screen_size_quad = renderer.GetRenderState( render_group_id_screen_size_quad ); // Keep default settings.
+	}
+
+	{
+		renderer.SetRenderGroupName( render_group_id_skybox, "Skybox" );
+		auto& render_state_skybox = renderer.GetRenderState( render_group_id_skybox ); // Keep default settings except for back face culling.
+
+		render_state_skybox.depth_comparison_function = Engine::Renderer::ComparisonFunction::LessOrEqual;
+
+		render_state_skybox.face_culling_enable = false;
 	}
 
 	/* Create Drawables and assign them RenderGroups: */
-
-	skybox_drawable = Engine::Drawable( &cube_mesh_fullscreen, &skybox_material );
-	renderer.AddDrawable( &skybox_drawable, render_group_id_skybox );
 
 	light_sources_drawable = Engine::Drawable( &cube_mesh_instanced_with_color, &light_source_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
 	renderer.AddDrawable( &light_sources_drawable, render_group_id_regular );
 
 	cube_drawable = Engine::Drawable( &cube_mesh_instanced, &cube_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddDrawable( &cube_drawable, render_group_id_outlined_mesh );
+	renderer.AddDrawable( &cube_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
 	cube_reflected_drawable = Engine::Drawable( &cube_reflected_mesh_instanced, &cube_reflected_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddDrawable( &cube_reflected_drawable, render_group_id_outlined_mesh );
+	renderer.AddDrawable( &cube_reflected_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
 	//cube_drawable_outline = Engine::Drawable( &cube_mesh_instanced, &outline_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
 	//renderer.AddDrawable( &cube_drawable_outline, render_group_id_outline );
 
 	ground_drawable = Engine::Drawable( &quad_mesh, &ground_material, &ground_transform );
-	renderer.AddDrawable( &ground_drawable, render_group_id_regular );
+	renderer.AddDrawable( &ground_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
 	wall_front_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_front_transform );
 	wall_left_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_left_transform );
 	wall_right_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_right_transform );
 	wall_back_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_back_transform );
-	/*renderer.AddDrawable( &wall_front_drawable, render_group_id_regular );
-	renderer.AddDrawable( &wall_left_drawable, render_group_id_regular );
-	renderer.AddDrawable( &wall_right_drawable, render_group_id_regular );
-	renderer.AddDrawable( &wall_back_drawable, render_group_id_regular );*/
+	renderer.AddDrawable( &wall_front_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	renderer.AddDrawable( &wall_left_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	renderer.AddDrawable( &wall_right_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	renderer.AddDrawable( &wall_back_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
 	for( auto i = 0; i < WINDOW_COUNT; i++ )
 	{
@@ -426,9 +441,16 @@ void SandboxApplication::Initialize()
 
 	mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
+	skybox_drawable = Engine::Drawable( &cube_mesh_fullscreen, &skybox_material );
+	renderer.AddDrawable( &skybox_drawable, render_group_id_skybox );
+
 	/* Disable some RenderGroups & Drawables on start-up to decrease clutter. */
 	renderer.ToggleRenderGroup( render_group_id_outline, false );
 	renderer.ToggleRenderGroup( render_group_id_transparent, false );
+	wall_front_drawable.ToggleOff();
+	wall_left_drawable.ToggleOff();
+	wall_right_drawable.ToggleOff();
+	wall_back_drawable.ToggleOff();
 	ground_drawable.ToggleOff();
 
 /* Camera: */
@@ -565,7 +587,9 @@ void SandboxApplication::Render()
 
 	renderer.Disable_sRGBEncoding();
 
-	/* Pass 1 - Rear-cam view: Invert camera direction, draw everything to the off-screen frame-buffer 0. */
+	const auto original_camera_orientation = camera_transform.GetRotation();
+
+	/* Pass 1 - Rear-cam view: Invert camera direction, render everything to the off-screen framebuffer 0: */
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 0 (Rear view)" ) );
 
@@ -576,11 +600,11 @@ void SandboxApplication::Render()
 
 		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
 
-		/* Now that the off-screen frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+		/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		offscreen_framebuffer_array[ 0 ].ColorAttachment().GenerateMipmaps();
 	}
 
-	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), draw everything to the off-screen frame-buffer 1. */
+	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), render everything to the off-screen framebuffer 1: */
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 1 (Default view)" ) );
 		
@@ -592,10 +616,29 @@ void SandboxApplication::Render()
 		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
 
 		if( not offscreen_framebuffer_array[ 1 ].IsMultiSampled() )
+		{
+			/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 			offscreen_framebuffer_array[ 1 ].ColorAttachment().GenerateMipmaps();
+		}
 	}
 
-	/* Pass 3: Blit both off-screen frame-buffers to quads on the editor frame-buffer. */
+	/* Pass 3 - Shadow maps: Render everything from the view of light sources, to shadow-map framebuffers: */
+	{
+		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Shadow Maps." ) );
+
+		camera_transform.LookAt( light_directional.transform->Forward(), light_directional.transform->Up() );
+		camera_controller.ResetToTransform();
+		renderer.Update( camera );
+
+		renderer.SetCurrentFramebuffer( &light_directional_shadow_map_framebuffer );
+
+		renderer.Render( camera, { render_group_id_shadow_mapping } );
+
+		/* Now that the shadow-map framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+		//light_directional_shadow_map_framebuffer.DepthAttachment().GenerateMipmaps();
+	}
+
+	/* Pass 4: Blit off-screen framebuffers to quads on the editor framebuffer to actually display them: */
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Blit Offscreen FB(s) to Main FB" ) );
 
@@ -607,7 +650,7 @@ void SandboxApplication::Render()
 
 			renderer.Render( camera, { render_group_id_screen_size_quad } );
 
-			/* Now that the editor frame-buffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
+			/* Now that the editor framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 			editor_framebuffer.ColorAttachment().GenerateMipmaps();
 
 			/* Now this editor_framebuffer's color attachment will be passed to ImGui to be displayed inside an ImGui window. */
@@ -619,6 +662,10 @@ void SandboxApplication::Render()
 			renderer.Render( camera, { render_group_id_screen_size_quad } );
 		}
 	}
+
+	/* Revert camera back to original orientation: */
+	camera_transform.SetRotation( original_camera_orientation );
+	camera_controller.ResetToTransform();
 
 	/* CAUTION: The rest of the rendering code (namely, ImGui) will be working in sRGB for the remainder of this frame. */
 }
@@ -643,7 +690,7 @@ void SandboxApplication::RenderImGui()
 	}
 	if( ImGui::Begin( "Rear-view Camera", nullptr, ImGuiWindowFlags_NoScrollbar ) )
 	{
-		if( ImGui::Checkbox( "Draw to this window instead of default Framebuffer", &draw_rear_view_cam_to_imgui ) )
+		if( ImGui::Checkbox( "Render to this window instead of default Framebuffer", &draw_rear_view_cam_to_imgui ) )
 			mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
 		if( draw_rear_view_cam_to_imgui )
@@ -1331,6 +1378,12 @@ void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, con
 	offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( "Offscreen FB 0", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined );
 	offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( "Offscreen FB 1", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined,
 															/* No sRGB for intermediate steps => */ false, msaa_for_offscreen_framebuffers_sample_count );
+
+	/* Shadow maps: */
+	light_directional_shadow_map_framebuffer = Engine::Framebuffer( "Shadow Map: Dir. Light", width_new_pixels / 2, height_new_pixels / 2, Engine::Framebuffer::AttachmentType::Depth,
+																	/* No sRGB needed for a depth map. => */ false, std::nullopt,
+																	Engine::Texture::Wrapping::Repeat, Engine::Texture::Wrapping::Repeat,
+																	Engine::Texture::Filtering::Nearest, Engine::Texture::Filtering::Nearest );
 }
 
 void SandboxApplication::RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels )

@@ -111,24 +111,31 @@ private:
 
 	Engine::Drawable mirror_quad_drawable;
 
-	const Engine::Renderer::RenderGroupID render_group_id_skybox;
 	const Engine::Renderer::RenderGroupID render_group_id_regular;
 	const Engine::Renderer::RenderGroupID render_group_id_outlined_mesh;
 	const Engine::Renderer::RenderGroupID render_group_id_outline;
 	const Engine::Renderer::RenderGroupID render_group_id_transparent;
+	const Engine::Renderer::RenderGroupID render_group_id_shadow_mapping;
 	const Engine::Renderer::RenderGroupID render_group_id_screen_size_quad;
+
+	const Engine::Renderer::RenderGroupID render_group_id_skybox;
 
 /* Textures: */
 	Engine::Texture* skybox_texture;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
+
+	Engine::Texture* half_gray_srgb_texture;
+
 	Engine::Texture* checker_pattern_texture;
 	Engine::Texture* transparent_window_texture;
 
 /* Framebuffers: */
 	std::array< Engine::Framebuffer, 2 > offscreen_framebuffer_array;
 	Engine::Framebuffer editor_framebuffer; // Not to be confused with the default frame-buffer.
+
+	Engine::Framebuffer light_directional_shadow_map_framebuffer;
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh, cube_mesh_fullscreen, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;
