@@ -143,6 +143,7 @@ private:
 	Engine::Shader blinn_phong_skybox_reflection_shader;
 	Engine::Shader blinn_phong_skybox_reflection_shader_instanced;
 	Engine::Shader basic_color_shader;
+	Engine::Shader basic_color_shader_instanced;
 	Engine::Shader basic_textured_shader;
 	Engine::Shader basic_textured_transparent_discard_shader;
 	Engine::Shader outline_shader;

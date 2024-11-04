@@ -50,6 +50,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	blinn_phong_skybox_reflection_shader( "Blinn-Phong (w/ Skybox Reflection)" ),
 	blinn_phong_skybox_reflection_shader_instanced( "Blinn-Phong (w/ Skybox Reflection, Instanced)" ),
 	basic_color_shader( "Basic Color" ),
+	basic_color_shader_instanced( "Basic Color (Instanced)" ),
 	basic_textured_shader( "Basic Textured" ),
 	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
 	outline_shader( "Outline" ),
@@ -130,7 +131,8 @@ void SandboxApplication::Initialize()
 	blinn_phong_shader_instanced.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "INSTANCING_ENABLED" } );
 	blinn_phong_skybox_reflection_shader.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING" } );
 	blinn_phong_skybox_reflection_shader_instanced.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING", "INSTANCING_ENABLED" } );
-	basic_color_shader.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)", { "INSTANCING_ENABLED" } );
+	basic_color_shader.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)" );
+	basic_color_shader_instanced.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)", { "INSTANCING_ENABLED" } );
 	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
 	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
 	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
@@ -143,6 +145,8 @@ void SandboxApplication::Initialize()
 										  R"(Asset/Shader/VisualizeNormals.geom)" );
 
 	/* Register shaders not assigned to materials: */
+	renderer.RegisterShader( basic_color_shader );
+	renderer.RegisterShader( basic_color_shader_instanced );
 	renderer.RegisterShader( blinn_phong_skybox_reflection_shader );
 	renderer.RegisterShader( postprocess_grayscale_shader );
 	renderer.RegisterShader( postprocess_generic_shader );
@@ -1107,7 +1111,7 @@ void SandboxApplication::ResetMaterialData()
 	skybox_material = Engine::Material( "Skybox", &skybox_shader );
 	skybox_material.SetTexture( "uniform_texture_slot", skybox_texture );
 
-	light_source_material = Engine::Material( "Light Source", &basic_color_shader );
+	light_source_material = Engine::Material( "Light Source", &basic_color_shader_instanced );
 	
 	/* Set the first cube's material to Blinn-Phong shader w/ skybox reflection: */
 	cube_reflected_material = Engine::Material( "Cube (Reflected)", &blinn_phong_skybox_reflection_shader_instanced );
