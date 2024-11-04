@@ -20,6 +20,7 @@ namespace Engine
 
 	Framebuffer::Framebuffer( const std::string& name, const int width_in_pixels, const int height_in_pixels,
 							  const BitFlags< AttachmentType > attachment_bits,
+							  const bool is_sRGB,
 							  const std::optional< int > multi_sample_count,
 							  const Target target )
 		:
@@ -27,6 +28,7 @@ namespace Engine
 		size( width_in_pixels, height_in_pixels ),
 		sample_count( multi_sample_count ),
 		target( target ),
+		is_sRGB( is_sRGB ),
 		name( name )
 	{
 		glGenFramebuffers( 1, id.Address() );
@@ -43,7 +45,8 @@ namespace Engine
 		auto CreateTextureAndAttachToFramebuffer = [ & ]( std::optional< const Texture* >& attachment_texture, 
 														  const char* attachment_type_name, 
 														  const GLenum attachment_type_enum,
-														  const GLenum format )
+														  const GLenum format,
+														  const bool use_sRGB )
 		{
 			ASSERT_DEBUG_ONLY( ( ( attachment_type_enum >= GL_COLOR_ATTACHMENT0 && attachment_type_enum <= GL_DEPTH_ATTACHMENT ) ||
 								 attachment_type_enum == GL_STENCIL_ATTACHMENT ||
@@ -57,30 +60,32 @@ namespace Engine
 				attachment_texture = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateAsset( Engine::Texture( *multi_sample_count,
 																												  full_name, format,
 																												  width_in_pixels,
-																												  height_in_pixels ) );
+																												  height_in_pixels,
+																												  use_sRGB ) );
 			}
 			else
 			{
 				std::string full_name( this->name + attachment_type_name + std::to_string( width_in_pixels ) + "x" + std::to_string( height_in_pixels ) );
 				attachment_texture = Engine::AssetDatabase< Engine::Texture >::AddOrUpdateAsset( Engine::Texture( full_name, format,
 																												  width_in_pixels,
-																												  height_in_pixels ) );
+																												  height_in_pixels,
+																												  use_sRGB ) );
 			}
 
 			glFramebufferTexture2D( ( GLenum )target, attachment_type_enum, multi_sample_count ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D, attachment_texture.value()->Id().Get(), 0 );
 		};
 
 		if( attachment_bits.IsSet( AttachmentType::Color ) )
-			CreateTextureAndAttachToFramebuffer( color_attachment, " Color Tex. ", GL_COLOR_ATTACHMENT0, GL_RGBA );
+			CreateTextureAndAttachToFramebuffer( color_attachment, " Color Tex. ", GL_COLOR_ATTACHMENT0, GL_RGBA, is_sRGB );
 
 		if( attachment_bits.IsSet( AttachmentType::DepthStencilCombined ) )
-			CreateTextureAndAttachToFramebuffer( depth_stencil_attachment, " D/S Tex. ", GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL );
+			CreateTextureAndAttachToFramebuffer( depth_stencil_attachment, " D/S Tex. ", GL_DEPTH_STENCIL_ATTACHMENT, GL_DEPTH_STENCIL, false /* do not use sRGB. */ );
 		else
 		{
 			if( attachment_bits.IsSet( AttachmentType::Depth ) )
-				CreateTextureAndAttachToFramebuffer( depth_attachment, " Depth Tex. ", GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT );
+				CreateTextureAndAttachToFramebuffer( depth_attachment, " Depth Tex. ", GL_DEPTH_ATTACHMENT, GL_DEPTH_COMPONENT, false /* do not use sRGB. */ );
 			if( attachment_bits.IsSet( AttachmentType::Stencil ) )
-				CreateTextureAndAttachToFramebuffer( stencil_attachment, " Stencil Tex. ", GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX );
+				CreateTextureAndAttachToFramebuffer( stencil_attachment, " Stencil Tex. ", GL_STENCIL_ATTACHMENT, GL_STENCIL_INDEX, false /* do not use sRGB. */ );
 		}
 
 		if( not HasColorAttachment() )
@@ -103,6 +108,7 @@ namespace Engine
 		size( std::exchange( donor.size, ZERO_INITIALIZATION ) ),
 		sample_count( std::exchange( donor.sample_count, std::nullopt ) ),
 		target( std::exchange( donor.target, Target::Invalid ) ),
+		is_sRGB( std::exchange( donor.is_sRGB, {} ) ),
 		name( std::exchange( donor.name, "<moved-from>" ) ),
 		color_attachment( std::exchange( donor.color_attachment, std::nullopt ) ),
 		depth_stencil_attachment( std::exchange( donor.depth_stencil_attachment, std::nullopt ) ),
@@ -119,6 +125,7 @@ namespace Engine
 		size                     = std::exchange( donor.size,						ZERO_INITIALIZATION );
 		sample_count             = std::exchange( donor.sample_count,				std::nullopt );
 		target                   = std::exchange( donor.target,						Target::Invalid );
+		is_sRGB                  = std::exchange( donor.is_sRGB,					{} );
 		name                     = std::exchange( donor.name,						"<moved-from>" );
 		color_attachment         = std::exchange( donor.color_attachment,			std::nullopt );
 		depth_stencil_attachment = std::exchange( donor.depth_stencil_attachment,	std::nullopt );

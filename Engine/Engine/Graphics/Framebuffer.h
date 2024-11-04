@@ -41,6 +41,7 @@ namespace Engine
 		Framebuffer( const std::string& name,
 					 const int width_in_pixels, const int height_in_pixels,
 					 const BitFlags< AttachmentType > attachment_bits,
+					 const bool is_sRGB = false,
 					 const std::optional< int > multi_sample_count = std::nullopt,
 					 const Target target = Target::Both );
 
@@ -62,6 +63,8 @@ namespace Engine
 
 		inline bool					SampleCount()		const { return sample_count.value(); }
 		inline bool					IsMultiSampled()	const { return sample_count.has_value(); }
+
+		inline bool					IssRGB()			const { return is_sRGB; }
 
 		inline const std::string&	Name()				const { return name; }
 
@@ -92,6 +95,8 @@ namespace Engine
 		Vector2I size;
 		std::optional< int > sample_count;
 		Target target;
+		bool is_sRGB;
+		// bool padding[ 3 ];
 
 		std::string name;
 

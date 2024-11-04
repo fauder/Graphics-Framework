@@ -1320,12 +1320,13 @@ void SandboxApplication::ReplaceMeteoriteAndCubeDrawables( bool use_meteorites )
 void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels )
 {
 	/* Main: */
-	editor_framebuffer = Engine::Framebuffer( "Editor FB", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined );
+	editor_framebuffer = Engine::Framebuffer( "Editor FB", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined,
+											  /* This is the final step, so sRGB encoding should be on => */ true );
 
 	/* Offscreen: */
 	offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( "Offscreen FB 0", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined );
 	offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( "Offscreen FB 1", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined,
-															msaa_for_offscreen_framebuffers_sample_count );
+															/* No sRGB for intermediate steps => */ false, msaa_for_offscreen_framebuffers_sample_count );
 }
 
 void SandboxApplication::RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels )
