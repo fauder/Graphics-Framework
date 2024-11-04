@@ -546,8 +546,13 @@ namespace Engine
 
 	void Renderer::SetCurrentFramebuffer( const Framebuffer* framebuffer )
 	{
+		const Vector2I old_framebuffer_size = framebuffer_current ? framebuffer_current->Size() : Vector2I{};
+		
 		framebuffer_current = framebuffer;
 		framebuffer_current->Bind();
+
+		if( framebuffer->Size() != old_framebuffer_size )
+			glViewport( 0, 0, framebuffer->Width(), framebuffer->Height() );
 	}
 
 	void Renderer::ResetToDefaultFramebuffer( const Framebuffer::Target target )
