@@ -72,7 +72,7 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	camera_controller( &camera, camera_rotation_speed ),
 	ui_interaction_enabled( false ),
 	show_imgui_demo_window( false ),
-	draw_rear_view_cam_to_imgui( true ),
+	render_rear_view_cam_to_imgui( true ),
 	msaa_for_offscreen_framebuffers_sample_count( 4 )
 {
 	Initialize();
@@ -439,7 +439,7 @@ void SandboxApplication::Initialize()
 	mirror_quad_renderable = Engine::Renderable( &quad_mesh_mirror, &mirror_quad_material );
 	renderer.AddRenderable( &mirror_quad_renderable, render_group_id_screen_size_quad );
 
-	mirror_quad_renderable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
+	mirror_quad_renderable.ToggleOnOrOff( not render_rear_view_cam_to_imgui );
 
 	skybox_renderable = Engine::Renderable( &cube_mesh_fullscreen, &skybox_material );
 	renderer.AddRenderable( &skybox_renderable, render_group_id_skybox );
@@ -690,10 +690,10 @@ void SandboxApplication::RenderImGui()
 	}
 	if( ImGui::Begin( "Rear-view Camera", nullptr, ImGuiWindowFlags_NoScrollbar ) )
 	{
-		if( ImGui::Checkbox( "Render to this window instead of default Framebuffer", &draw_rear_view_cam_to_imgui ) )
-			mirror_quad_renderable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
+		if( ImGui::Checkbox( "Render to this window instead of default Framebuffer", &render_rear_view_cam_to_imgui ) )
+			mirror_quad_renderable.ToggleOnOrOff( not render_rear_view_cam_to_imgui );
 
-		if( draw_rear_view_cam_to_imgui )
+		if( render_rear_view_cam_to_imgui )
 			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_array[ 0 ].ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
 	}
 

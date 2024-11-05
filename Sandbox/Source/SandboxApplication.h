@@ -271,7 +271,7 @@ private:
 	bool ui_interaction_enabled;
 	bool show_imgui_demo_window;
 
-	bool draw_rear_view_cam_to_imgui;
+	bool render_rear_view_cam_to_imgui;
 
 	std::optional< int > msaa_for_offscreen_framebuffers_sample_count;
 };

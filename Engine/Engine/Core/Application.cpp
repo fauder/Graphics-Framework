@@ -168,7 +168,7 @@ namespace Engine
 		RenderImGui_FrameStatistics();
 
 		if( show_gl_logger )
-			gl_logger.Draw( &show_gl_logger );
+			gl_logger.Render( &show_gl_logger );
 	}
 
 	void Application::RenderImGui_FrameStatistics()

@@ -73,7 +73,7 @@ namespace Engine
 		static void DontIgnoreID( const unsigned int id_to_restore );
 
 	/* Main: */
-		void Draw( bool* show = nullptr );
+		void Render( bool* show = nullptr );
 
 	/* Queries: */
 		CallbackType GetCallback();
