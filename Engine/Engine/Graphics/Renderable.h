@@ -9,17 +9,17 @@ namespace Engine
 {
 	class Renderer;
 
-	class Drawable
+	class Renderable
 	{
 		friend class Renderer;
 
 	public:
-		Drawable();
-		Drawable( const Mesh* mesh, Material* material, Transform* transform = nullptr );
+		Renderable();
+		Renderable( const Mesh* mesh, Material* material, Transform* transform = nullptr );
 
-		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Drawable );
+		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Renderable );
 
-		~Drawable();
+		~Renderable();
 
 		const Transform*	GetTransform()	const { return transform;	}
 		const Mesh*			GetMesh()		const { return mesh;		}

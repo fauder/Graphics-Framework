@@ -73,7 +73,7 @@ private:
 	bool ReloadModel( ModelInfo& model_info_to_be_loaded, const std::string& file_path, const char* name );
 	void UnloadModel( ModelInfo& model_info_to_be_unloaded );
 
-	void ReplaceMeteoriteAndCubeDrawables( bool use_meteorites );
+	void ReplaceMeteoriteAndCubeRenderables( bool use_meteorites );
 
 	void InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels );
 
@@ -85,31 +85,31 @@ private:
 /* Renderer: */
 	Engine::Renderer renderer;
 
-	Engine::Drawable light_sources_drawable;
+	Engine::Renderable light_sources_renderable;
 
 	const static constexpr int CUBE_COUNT           = 200'000;
 	const static constexpr int CUBE_REFLECTED_COUNT = 10;
-	Engine::Drawable cube_drawable;
-	Engine::Drawable cube_drawable_outline;
+	Engine::Renderable cube_renderable;
+	Engine::Renderable cube_renderable_outline;
 
-	Engine::Drawable cube_reflected_drawable;
+	Engine::Renderable cube_reflected_renderable;
 
-	Engine::Drawable* meteorite_drawable;
+	Engine::Renderable* meteorite_renderable;
 
-	Engine::Drawable skybox_drawable;
+	Engine::Renderable skybox_renderable;
 
-	Engine::Drawable ground_drawable;
-	Engine::Drawable wall_front_drawable;
-	Engine::Drawable wall_left_drawable;
-	Engine::Drawable wall_right_drawable;
-	Engine::Drawable wall_back_drawable;
+	Engine::Renderable ground_renderable;
+	Engine::Renderable wall_front_renderable;
+	Engine::Renderable wall_left_renderable;
+	Engine::Renderable wall_right_renderable;
+	Engine::Renderable wall_back_renderable;
 
 	const static constexpr int WINDOW_COUNT = 5;
-	std::array< Engine::Drawable, WINDOW_COUNT > window_drawable_array;
+	std::array< Engine::Renderable, WINDOW_COUNT > window_renderable_array;
 
-	Engine::Drawable offscreen_quad_drawable;
+	Engine::Renderable offscreen_quad_renderable;
 
-	Engine::Drawable mirror_quad_drawable;
+	Engine::Renderable mirror_quad_renderable;
 
 	const Engine::Renderer::RenderGroupID render_group_id_regular;
 	const Engine::Renderer::RenderGroupID render_group_id_outlined_mesh;

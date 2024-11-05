@@ -129,7 +129,7 @@
     <ClInclude Include="Engine\Graphics\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\Drawable.h">
+    <ClInclude Include="Engine\Graphics\Renderable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\Renderer.h">
@@ -275,7 +275,7 @@
     <ClCompile Include="Engine\Graphics\Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\Drawable.cpp">
+    <ClCompile Include="Engine\Graphics\Renderable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\Renderer.cpp">

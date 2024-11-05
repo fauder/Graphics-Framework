@@ -19,7 +19,7 @@ ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const 
 
 	SetMaterialData( shader, diffuse_texture, specular_texture, texture_scale_and_offset );
 
-	/* Initialize Transforms, Materials & Drawables of Nodes: */
+	/* Initialize Transforms, Materials & Renderables of Nodes: */
 
 	const auto mesh_instance_count = model->MeshInstanceCount();
 	const auto& meshes             = model->Meshes();
@@ -33,12 +33,12 @@ ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const 
 	{
 		const auto& [ render_group_id, render_group_material ] = *( render_group_material_info_list.begin() + render_group_index );
 
-		node_drawable_array_map[ render_group_id ].resize( mesh_instance_count );
-		auto& drawable_array = node_drawable_array_map[ render_group_id ];
+		node_renderable_array_map[ render_group_id ].resize( mesh_instance_count );
+		auto& renderable_array = node_renderable_array_map[ render_group_id ];
 
 		for( auto i = 0; i < mesh_instance_count; i++ )
 		{
-			drawable_array[ i ] = Engine::Drawable( &meshes[ i ], ( render_group_material ? render_group_material : &node_material_array[ i ] ),
+			renderable_array[ i ] = Engine::Renderable( &meshes[ i ], ( render_group_material ? render_group_material : &node_material_array[ i ] ),
 													node_material_array[ i ].HasUniform( "uniform_transform_world" ) ? &node_transform_array[ i ] : nullptr );
 		}
 	}

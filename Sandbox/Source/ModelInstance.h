@@ -34,13 +34,13 @@ public:
 						  const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 /* Queries: */
-	inline std::map < Engine::Renderer::RenderGroupID, std::vector< Engine::Drawable > >& DrawablesMap() { return node_drawable_array_map; }
-	inline std::vector< Engine::Drawable >& Drawables( const Engine::Renderer::RenderGroupID render_group_id ) { return node_drawable_array_map[ render_group_id ]; }
+	inline std::map < Engine::Renderer::RenderGroupID, std::vector< Engine::Renderable > >& RenderablesMap() { return node_renderable_array_map; }
+	inline std::vector< Engine::Renderable >& Renderables( const Engine::Renderer::RenderGroupID render_group_id ) { return node_renderable_array_map[ render_group_id ]; }
 	inline const std::vector< Engine::Material >& Materials() const { return node_material_array; }
 
 private:
 	const Engine::Model* model;
-	std::map< Engine::Renderer::RenderGroupID, std::vector< Engine::Drawable > > node_drawable_array_map;
+	std::map< Engine::Renderer::RenderGroupID, std::vector< Engine::Renderable > > node_renderable_array_map;
 	std::vector< Engine::Material > node_material_array;
 	std::vector< Engine::Transform > node_transform_array;
 	std::vector< Engine::MaterialData::BlinnPhongMaterialData > blinn_phong_material_data_array;

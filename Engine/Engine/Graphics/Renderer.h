@@ -1,7 +1,7 @@
 #pragma once
 
 // Engine Includes.
-#include "Drawable.h"
+#include "Renderable.h"
 #include "Framebuffer.h"
 #include "Core/BitFlags.hpp"
 #include "Core/DirtyBlob.h"
@@ -169,7 +169,7 @@ namespace Engine
 
 			RenderState render_state;
 
-			std::vector< Drawable* > drawable_list;
+			std::vector< Renderable* > renderable_list;
 
 			std::unordered_map< Shader*, ReferenceCount > shaders_in_flight;
 			std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
@@ -198,17 +198,17 @@ namespace Engine
 		void OnFramebufferResize( const int new_width_in_pixels, const int new_height_in_pixels );
 
 		/* 
-		 * RenderGroup & Drawable:
+		 * RenderGroup & Renderable:
 		 */
 
 		RenderState& GetRenderState( const RenderGroupID group_id_to_fetch );
 		void SetRenderGroupName( const RenderGroupID group_id_to_rename, const std::string_view new_name );
 		void ToggleRenderGroup( const RenderGroupID group_id_to_toggle, const bool enable );
 
-		void AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id = RenderGroupID{ 0 } );
-		void AddDrawable( Drawable* drawable_to_add, const std::initializer_list< RenderGroupID > multiple_render_group_ids );
+		void AddRenderable( Renderable* renderable_to_add, const RenderGroupID render_group_id = RenderGroupID{ 0 } );
+		void AddRenderable( Renderable* renderable_to_add, const std::initializer_list< RenderGroupID > multiple_render_group_ids );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
-		void RemoveDrawable( Drawable* drawable_to_remove );
+		void RemoveRenderable( Renderable* renderable_to_remove );
 
 		void OnShaderReassign( Shader* previous_shader, const std::string& name_of_material_whose_shader_changed );
 
@@ -344,12 +344,12 @@ namespace Engine
 		void UploadGlobals();
 
 		/*
-		 * RenderGroup & Drawable:
+		 * RenderGroup & Renderable:
 		 */
 
-		std::vector< RenderGroup >& GetRenderGroups( const Drawable* drawable_of_interest );
+		std::vector< RenderGroup >& GetRenderGroups( const Renderable* renderable_of_interest );
 		void SetRenderState( const RenderState& render_state_to_set );
-		void SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode );
+		void SortRenderablesInGroup( Camera& camera, std::vector< Renderable* >& renderable_array_to_sort, const SortingMode sorting_mode );
 
 		void RecompileModifiedShaders();
 

@@ -323,7 +323,7 @@ void SandboxApplication::Initialize()
 /* Materials: */
 	ResetMaterialData();
 
-/* Renderer (Drawables, RenderStates etc.): */
+/* Renderer (Renderables, RenderStates etc.): */
 	{
 		renderer.SetRenderGroupName( render_group_id_regular, "Default" );
 		//auto& render_state_regular_meshes = renderer.GetRenderState( render_group_id_regular ); // Keep default settings.
@@ -401,63 +401,63 @@ void SandboxApplication::Initialize()
 		render_state_skybox.face_culling_enable = false;
 	}
 
-	/* Create Drawables and assign them RenderGroups: */
+	/* Create Renderables and assign them RenderGroups: */
 
-	light_sources_drawable = Engine::Drawable( &cube_mesh_instanced_with_color, &light_source_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddDrawable( &light_sources_drawable, render_group_id_regular );
+	light_sources_renderable = Engine::Renderable( &cube_mesh_instanced_with_color, &light_source_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	renderer.AddRenderable( &light_sources_renderable, render_group_id_regular );
 
-	cube_drawable = Engine::Drawable( &cube_mesh_instanced, &cube_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddDrawable( &cube_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	cube_renderable = Engine::Renderable( &cube_mesh_instanced, &cube_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	renderer.AddRenderable( &cube_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
-	cube_reflected_drawable = Engine::Drawable( &cube_reflected_mesh_instanced, &cube_reflected_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddDrawable( &cube_reflected_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	cube_reflected_renderable = Engine::Renderable( &cube_reflected_mesh_instanced, &cube_reflected_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	renderer.AddRenderable( &cube_reflected_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
-	//cube_drawable_outline = Engine::Drawable( &cube_mesh_instanced, &outline_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	//renderer.AddDrawable( &cube_drawable_outline, render_group_id_outline );
+	//cube_renderable_outline = Engine::Renderable( &cube_mesh_instanced, &outline_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
+	//renderer.AddRenderable( &cube_renderable_outline, render_group_id_outline );
 
-	ground_drawable = Engine::Drawable( &quad_mesh, &ground_material, &ground_transform );
-	renderer.AddDrawable( &ground_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	ground_renderable = Engine::Renderable( &quad_mesh, &ground_material, &ground_transform );
+	renderer.AddRenderable( &ground_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
-	wall_front_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_front_transform );
-	wall_left_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_left_transform );
-	wall_right_drawable = Engine::Drawable( &quad_mesh, &wall_material, &wall_right_transform );
-	wall_back_drawable  = Engine::Drawable( &quad_mesh, &wall_material, &wall_back_transform );
-	renderer.AddDrawable( &wall_front_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
-	renderer.AddDrawable( &wall_left_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
-	renderer.AddDrawable( &wall_right_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
-	renderer.AddDrawable( &wall_back_drawable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	wall_front_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_front_transform );
+	wall_left_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_left_transform );
+	wall_right_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_right_transform );
+	wall_back_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_back_transform );
+	renderer.AddRenderable( &wall_front_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	renderer.AddRenderable( &wall_left_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	renderer.AddRenderable( &wall_right_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	renderer.AddRenderable( &wall_back_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
 
 	for( auto i = 0; i < WINDOW_COUNT; i++ )
 	{
-		window_drawable_array[ i ] = Engine::Drawable( &quad_mesh_uvs_only, &window_material, &window_transform_array[ i ] );
-		renderer.AddDrawable( &window_drawable_array[ i ], render_group_id_transparent );
+		window_renderable_array[ i ] = Engine::Renderable( &quad_mesh_uvs_only, &window_material, &window_transform_array[ i ] );
+		renderer.AddRenderable( &window_renderable_array[ i ], render_group_id_transparent );
 	}
 
-	offscreen_quad_drawable = Engine::Drawable( &quad_mesh_fullscreen, &offscreen_quad_material );
-	renderer.AddDrawable( &offscreen_quad_drawable, render_group_id_screen_size_quad );
+	offscreen_quad_renderable = Engine::Renderable( &quad_mesh_fullscreen, &offscreen_quad_material );
+	renderer.AddRenderable( &offscreen_quad_renderable, render_group_id_screen_size_quad );
 
-	mirror_quad_drawable = Engine::Drawable( &quad_mesh_mirror, &mirror_quad_material );
-	renderer.AddDrawable( &mirror_quad_drawable, render_group_id_screen_size_quad );
+	mirror_quad_renderable = Engine::Renderable( &quad_mesh_mirror, &mirror_quad_material );
+	renderer.AddRenderable( &mirror_quad_renderable, render_group_id_screen_size_quad );
 
-	mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
+	mirror_quad_renderable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
-	skybox_drawable = Engine::Drawable( &cube_mesh_fullscreen, &skybox_material );
-	renderer.AddDrawable( &skybox_drawable, render_group_id_skybox );
+	skybox_renderable = Engine::Renderable( &cube_mesh_fullscreen, &skybox_material );
+	renderer.AddRenderable( &skybox_renderable, render_group_id_skybox );
 
-	/* Disable some RenderGroups & Drawables on start-up to decrease clutter. */
+	/* Disable some RenderGroups & Renderables on start-up to decrease clutter. */
 	renderer.ToggleRenderGroup( render_group_id_outline, false );
 	renderer.ToggleRenderGroup( render_group_id_transparent, false );
-	wall_front_drawable.ToggleOff();
-	wall_left_drawable.ToggleOff();
-	wall_right_drawable.ToggleOff();
-	wall_back_drawable.ToggleOff();
-	ground_drawable.ToggleOff();
+	wall_front_renderable.ToggleOff();
+	wall_left_renderable.ToggleOff();
+	wall_right_renderable.ToggleOff();
+	wall_back_renderable.ToggleOff();
+	ground_renderable.ToggleOff();
 
 /* Camera: */
 	ResetCamera();
 
 	/* This is the earliest place we can MaximizeWindow() at,
-	 * because the Renderer will populate its Intrinsic UBO info only upon AddDrawable( <Drawable with a Shader using said UBO> ). */
+	 * because the Renderer will populate its Intrinsic UBO info only upon AddRenderable( <Renderable with a Shader using said UBO> ). */
 
 	/* No need to Initialize Framebuffer related stuff as maximizing the window will cause them to be (re)initialized in OnFramebufferResizeEvent(). */
 
@@ -481,7 +481,7 @@ void SandboxApplication::Initialize()
 			config_file >> token /* '=' */ >> token;
 			if( not token.empty() && std::filesystem::exists( token ) )
 				if( ReloadModel( meteorite_model_info, token, "Meteorite" ) )
-					ReplaceMeteoriteAndCubeDrawables( true );
+					ReplaceMeteoriteAndCubeRenderables( true );
 		}
 	}
 }
@@ -691,7 +691,7 @@ void SandboxApplication::RenderImGui()
 	if( ImGui::Begin( "Rear-view Camera", nullptr, ImGuiWindowFlags_NoScrollbar ) )
 	{
 		if( ImGui::Checkbox( "Render to this window instead of default Framebuffer", &draw_rear_view_cam_to_imgui ) )
-			mirror_quad_drawable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
+			mirror_quad_renderable.ToggleOnOrOff( not draw_rear_view_cam_to_imgui );
 
 		if( draw_rear_view_cam_to_imgui )
 			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_array[ 0 ].ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
@@ -767,10 +767,10 @@ void SandboxApplication::RenderImGui()
 		switch( DrawModelLine( meteorite_model_info, "Meteorite" ) )
 		{
 			case ModelLoadActionResult::Loaded:
-				ReplaceMeteoriteAndCubeDrawables( true );
+				ReplaceMeteoriteAndCubeRenderables( true );
 				break;
 			case ModelLoadActionResult::Unloaded:
-				ReplaceMeteoriteAndCubeDrawables( false );
+				ReplaceMeteoriteAndCubeRenderables( false );
 				break;
 			default:
 				break;
@@ -1300,9 +1300,9 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 
 		auto& model_instance_to_load_into = model_info_to_be_loaded.model_instance;
 
-		for( auto& [ render_group_id, drawables_array ] : model_instance_to_load_into.DrawablesMap() )
-			for( auto& drawable_to_remove : drawables_array )
-				renderer.RemoveDrawable( &drawable_to_remove );
+		for( auto& [ render_group_id, renderables_array ] : model_instance_to_load_into.RenderablesMap() )
+			for( auto& renderable_to_remove : renderables_array )
+				renderer.RemoveRenderable( &renderable_to_remove );
 
 		model_instance_to_load_into = ModelInstance( new_model,
 													 model_info_to_be_loaded.shader,
@@ -1318,9 +1318,9 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 														{ render_group_id_shadow_mapping,	nullptr }
 													 } );
 
-		for( const auto& [ render_group_id, drawables_array ] : model_instance_to_load_into.DrawablesMap() )
-			for( auto& drawable_to_add : model_instance_to_load_into.Drawables( render_group_id ) )
-				renderer.AddDrawable( &drawable_to_add, render_group_id );
+		for( const auto& [ render_group_id, renderables_array ] : model_instance_to_load_into.RenderablesMap() )
+			for( auto& renderable_to_add : model_instance_to_load_into.Renderables( render_group_id ) )
+				renderer.AddRenderable( &renderable_to_add, render_group_id );
 
 		return true;
 	}
@@ -1332,32 +1332,32 @@ void SandboxApplication::UnloadModel( ModelInfo& model_info_to_be_loaded )
 {
 	model_info_to_be_loaded.file_path = "";
 
-	for( auto& [ id, drawables_array ] : model_info_to_be_loaded.model_instance.DrawablesMap() )
-		for( auto& drawable_to_remove : drawables_array )
-			renderer.RemoveDrawable( &drawable_to_remove );
+	for( auto& [ id, renderables_array ] : model_info_to_be_loaded.model_instance.RenderablesMap() )
+		for( auto& renderable_to_remove : renderables_array )
+			renderer.RemoveRenderable( &renderable_to_remove );
 
 	model_info_to_be_loaded.model_instance = {};
 }
 
-void SandboxApplication::ReplaceMeteoriteAndCubeDrawables( bool use_meteorites )
+void SandboxApplication::ReplaceMeteoriteAndCubeRenderables( bool use_meteorites )
 {
 	if( use_meteorites )
 	{
-		meteorite_drawable = &meteorite_model_info.model_instance.Drawables( render_group_id_outlined_mesh ).front();
-		cube_mesh_instanced = Engine::Mesh( *meteorite_drawable->GetMesh(),
+		meteorite_renderable = &meteorite_model_info.model_instance.Renderables( render_group_id_outlined_mesh ).front();
+		cube_mesh_instanced = Engine::Mesh( *meteorite_renderable->GetMesh(),
 											{
 												Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
 											},
 											reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
 											CUBE_COUNT,
 											GL_STATIC_DRAW );
-		meteorite_drawable->SetMesh( &cube_mesh_instanced );
-		renderer.RemoveDrawable( &cube_drawable );
+		meteorite_renderable->SetMesh( &cube_mesh_instanced );
+		renderer.RemoveRenderable( &cube_renderable );
 	}
 	else
 	{
-		renderer.RemoveDrawable( meteorite_drawable );
-		meteorite_drawable = nullptr;
+		renderer.RemoveRenderable( meteorite_renderable );
+		meteorite_renderable = nullptr;
 		cube_mesh_instanced = Engine::Mesh( cube_mesh,
 											{
 												Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
@@ -1365,7 +1365,7 @@ void SandboxApplication::ReplaceMeteoriteAndCubeDrawables( bool use_meteorites )
 											reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
 											CUBE_COUNT,
 											GL_STATIC_DRAW );
-		renderer.AddDrawable( &cube_drawable );
+		renderer.AddRenderable( &cube_renderable );
 	}
 }
 

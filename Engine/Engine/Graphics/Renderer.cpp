@@ -102,7 +102,7 @@ namespace Engine
 			{
 				SetRenderState( render_group.render_state );
 
-				SortDrawablesInGroup( camera, render_group.drawable_list, render_group.render_state.sorting_mode );
+				SortRenderablesInGroup( camera, render_group.renderable_list, render_group.render_state.sorting_mode );
 
 				for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
 				{
@@ -114,16 +114,16 @@ namespace Engine
 						{
 							material->UploadUniforms();
 
-							for( auto& drawable : render_group.drawable_list )
+							for( auto& renderable : render_group.renderable_list )
 							{
-								if( drawable->is_enabled && drawable->material->Name() == material_name )
+								if( renderable->is_enabled && renderable->material->Name() == material_name )
 								{
-									drawable->mesh->Bind();
+									renderable->mesh->Bind();
 
-									if( drawable->transform )
-										material->SetAndUploadUniform( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
+									if( renderable->transform )
+										material->SetAndUploadUniform( "uniform_transform_world", renderable->transform->GetFinalMatrix() );
 
-									Render( *drawable->mesh );
+									Render( *renderable->mesh );
 								}
 							}
 						}
@@ -143,7 +143,7 @@ namespace Engine
 	{
 		// TODO: Implement drag & drop reordering of RenderGroups.
 
-		if( ImGui::Begin( ICON_FA_DRAW_POLYGON " Drawables", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+		if( ImGui::Begin( ICON_FA_DRAW_POLYGON " Renderables", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
 			for( auto& [ render_group_id, render_group ] : render_group_map )
 			{
@@ -163,18 +163,18 @@ namespace Engine
 						{
 							if( material->shader->Id() == shader->Id() )
 							{
-								for( auto& drawable : render_group.drawable_list )
+								for( auto& renderable : render_group.renderable_list )
 								{
-									if( drawable->material->Name() == material_name )
+									if( renderable->material->Name() == material_name )
 									{
-										ImGui::PushID( drawable );
-										ImGui::Checkbox( "", &drawable->is_enabled );
+										ImGui::PushID( renderable );
+										ImGui::Checkbox( "", &renderable->is_enabled );
 										ImGui::PopID();
-										ImGui::BeginDisabled( not drawable->is_enabled );
-										ImGui::SameLine(); ImGui::TextUnformatted( drawable->material->name.c_str() );
-										if( drawable->mesh->HasInstancing() )
+										ImGui::BeginDisabled( not renderable->is_enabled );
+										ImGui::SameLine(); ImGui::TextUnformatted( renderable->material->name.c_str() );
+										if( renderable->mesh->HasInstancing() )
 										{
-											int instance_Count = drawable->mesh->InstanceCount();
+											int instance_Count = renderable->mesh->InstanceCount();
 											ImGui::SameLine(); ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "(Instance Count: %d)", instance_Count );
 										}
 										ImGui::EndDisabled();
@@ -224,13 +224,13 @@ namespace Engine
 		}
 	}
 
-	void Renderer::AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id )
+	void Renderer::AddRenderable( Renderable* renderable_to_add, const RenderGroupID render_group_id )
 	{
 		auto& render_group = render_group_map[ render_group_id ];
 
-		render_group.drawable_list.push_back( drawable_to_add );
+		render_group.renderable_list.push_back( renderable_to_add );
 
-		const auto& shader = drawable_to_add->material->shader;
+		const auto& shader = renderable_to_add->material->shader;
 
 		if( ++render_group.shaders_in_flight[ shader ] == 1 )
 		{
@@ -238,24 +238,24 @@ namespace Engine
 				RegisterShader( *shader );
 		}
 
-		render_group.materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
+		render_group.materials_in_flight.try_emplace( renderable_to_add->material->Name(), renderable_to_add->material );
 	}
 
-	void Renderer::AddDrawable( Drawable* drawable_to_add, const std::initializer_list< RenderGroupID > multiple_render_group_ids )
+	void Renderer::AddRenderable( Renderable* renderable_to_add, const std::initializer_list< RenderGroupID > multiple_render_group_ids )
 	{
 		for( const auto render_group_id : multiple_render_group_ids )
-			AddDrawable( drawable_to_add, render_group_id );
+			AddRenderable( renderable_to_add, render_group_id );
 	}
 
-	void Renderer::RemoveDrawable( Drawable* drawable_to_remove )
+	void Renderer::RemoveRenderable( Renderable* renderable_to_remove )
 	{
-		auto& render_groups_found = GetRenderGroups( drawable_to_remove );
+		auto& render_groups_found = GetRenderGroups( renderable_to_remove );
 		for( auto& render_group_found : render_groups_found )
 		{
 			// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
-			std::erase( render_group_found.drawable_list, drawable_to_remove );
+			std::erase( render_group_found.renderable_list, renderable_to_remove );
 
-			const auto& shader = drawable_to_remove->material->shader;
+			const auto& shader = renderable_to_remove->material->shader;
 
 			if( --render_group_found.shaders_in_flight[ shader ] == 0 )
 			{
@@ -264,7 +264,7 @@ namespace Engine
 					UnregisterShader( *shader );
 			}
 
-			render_group_found.materials_in_flight.erase( drawable_to_remove->material->Name() );
+			render_group_found.materials_in_flight.erase( renderable_to_remove->material->Name() );
 		}
 	}
 
@@ -284,10 +284,10 @@ namespace Engine
 				render_group.shaders_in_flight[ material->shader ]++;
 
 				/* Log warning if the new shader is incompatible with mesh(es). */
-				for( auto& drawable : render_group.drawable_list )
-					if( drawable->material == material &&
-						not drawable->mesh->IsCompatibleWith( drawable->material->shader->GetSourceVertexLayout() ) )
-						ServiceLocator< GLLogger >::Get().Warning( "Mesh \"" + drawable->mesh->Name() + "\" is not compatible with its current shader \"" + material->shader->Name() + "\"." );
+				for( auto& renderable : render_group.renderable_list )
+					if( renderable->material == material &&
+						not renderable->mesh->IsCompatibleWith( renderable->material->shader->GetSourceVertexLayout() ) )
+						ServiceLocator< GLLogger >::Get().Warning( "Mesh \"" + renderable->mesh->Name() + "\" is not compatible with its current shader \"" + material->shader->Name() + "\"." );
 			}
 		}
 	}
@@ -634,13 +634,13 @@ namespace Engine
 		uniform_buffer_management_global.UploadAll();
 	}
 
-	std::vector< Renderer::RenderGroup >& Renderer::GetRenderGroups( const Drawable* drawable_of_interest )
+	std::vector< Renderer::RenderGroup >& Renderer::GetRenderGroups( const Renderable* renderable_of_interest )
 	{
 		static std::vector< Renderer::RenderGroup > render_groups;
 		render_groups.clear();
 
 		for( const auto&  [render_group_id, render_group ] : render_group_map )
-			if( std::find( render_group.drawable_list.cbegin(), render_group.drawable_list.cend(), drawable_of_interest ) != render_group.drawable_list.cend() )
+			if( std::find( render_group.renderable_list.cbegin(), render_group.renderable_list.cend(), renderable_of_interest ) != render_group.renderable_list.cend() )
 				render_groups.push_back( render_group );
 
 		return render_groups;
@@ -685,31 +685,31 @@ namespace Engine
 		SetBlendingFunction( render_state_to_set.blending_function );
 	}
 
-	void Renderer::SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode )
+	void Renderer::SortRenderablesInGroup( Camera& camera, std::vector< Renderable* >& renderable_array_to_sort, const SortingMode sorting_mode )
 	{
 		switch( sorting_mode )
 		{
 			case SortingMode::DepthNearestToFarthest:
-				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
-						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
+				std::sort( renderable_array_to_sort.begin(), renderable_array_to_sort.end(),
+						   [ & ]( Renderable* renderable_1, Renderable* renderable_2 )
 							{
-								if( drawable_1->GetTransform() && drawable_2->GetTransform() )
-									return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) <
-										   Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+								if( renderable_1->GetTransform() && renderable_2->GetTransform() )
+									return Math::Distance( camera.Position(), renderable_1->GetTransform()->GetTranslation() ) <
+										   Math::Distance( camera.Position(), renderable_2->GetTransform()->GetTranslation() );
 
-								return drawable_1 < drawable_2; // Does not matter;
+								return renderable_1 < renderable_2; // Does not matter;
 							} );
 				break;
 
 			case SortingMode::DepthFarthestToNearest:
-				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
-						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
+				std::sort( renderable_array_to_sort.begin(), renderable_array_to_sort.end(),
+						   [ & ]( Renderable* renderable_1, Renderable* renderable_2 )
 							{
-								if( drawable_1->GetTransform() && drawable_2->GetTransform() )
-									return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) >
-										   Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+								if( renderable_1->GetTransform() && renderable_2->GetTransform() )
+									return Math::Distance( camera.Position(), renderable_1->GetTransform()->GetTranslation() ) >
+										   Math::Distance( camera.Position(), renderable_2->GetTransform()->GetTranslation() );
 							
-								return drawable_1 < drawable_2; // Does not matter;
+								return renderable_1 < renderable_2; // Does not matter;
 							} );
 				break;
 
