@@ -79,7 +79,7 @@ namespace Engine
 		const Vector3& Forward();
 
 	/* Dirty Flags: */
-		/* This must be reset (via ResetDirtyFlag()) at the beginning of every frame. */
+		/* This must be reset (via ResetDirtyFlag()) at the beginning of every frame, IF is_dirty flag/behaviour is to be utilized. */
 		inline bool IsDirty() const { return is_dirty; }
 		inline bool ResetDirtyFlag() { return is_dirty = false; }
 
@@ -109,9 +109,10 @@ namespace Engine
 
 		bool final_matrix_needsUpdate;
 
-		/* This flag is for external (clients) use. Calls to GetXXXMatrix() APIs may clear the above flags but is_dirty may still be set.
-		 * Once set, it remains set until the beginning of the next frame. Therefore, it reliably tells whether this Transform was modified this frame.
-		 * It is only reset by the ResetDirtyFlag(), which is ideally called at the beginning of every frame. */
+		/* This flag is for external (clients) use. Calls to GetXXXMatrix() APIs may clear the above 'needsUpdate' flags but this flag may still be set.
+		 * It can only be reset by the ResetDirtyFlag().
+		 * Once set, it remains set until ResetDirtyFlag() is called (which is ideally at the beginning of every frame). 
+		 * Therefore, it reliably tells whether this Transform was modified this frame or not (assuming again, the client calls it at the beginning of every frame). */
 		bool is_dirty;
 		//bool padding[ 3 ];
 	};
