@@ -71,7 +71,7 @@ namespace Engine
 
 		const Matrix4x4& GetFinalMatrix();
 		const Matrix4x4 GetInverseOfFinalMatrix();
-		/* If the caller knows there's no scaling involved (for example; Transform of a Camera), calling this function is more preferrable. */
+		/* If the caller knows there's no scaling involved (for example; Transform of a Camera), calling this function is more preferrable, as it is cheaper to execute. */
 		const Matrix4x4 GetInverseOfFinalMatrix_NoScale();
 
 		const Vector3& Right();
