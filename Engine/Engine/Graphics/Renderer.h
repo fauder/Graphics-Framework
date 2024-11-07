@@ -110,6 +110,20 @@ namespace Engine
 			CounterClockwise = GL_CCW
 		};
 
+		enum class UpdateOptions : std::uint8_t
+		{
+			None = 0,
+
+			CommonPerFrame            = 1,
+			UniformBuffers_View       = 2,
+			UniformBuffers_Projection = 4,
+			UniformBuffers_Lighting   = 8,
+
+			UniformBuffers = UniformBuffers_View | UniformBuffers_Projection | UniformBuffers_Lighting,
+
+			All = CommonPerFrame | UniformBuffers
+		};
+
 		struct RenderState
 		{
 		/* Face-culling & winding-order: */
@@ -176,8 +190,7 @@ namespace Engine
 			
 			bool is_enabled = true;
 
-		private:
-			bool reserved[ 3 ]; // Padding.
+			//bool padding[ 3 ];
 		};
 
 	public:
@@ -191,10 +204,9 @@ namespace Engine
 		 * Main:
 		 */
 
-		void Update( Camera& camera );
+		void Update( const BitFlags< UpdateOptions > update_option_flags = UpdateOptions::CommonPerFrame, Camera* camera = nullptr );
 		void Render( Camera& camera, std::initializer_list< RenderGroupID > = {} );
 		void RenderImGui();
-		void OnProjectionParametersChange( Camera& camera );
 		void OnFramebufferResize( const int new_width_in_pixels, const int new_height_in_pixels );
 
 		/* 

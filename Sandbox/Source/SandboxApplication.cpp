@@ -579,6 +579,8 @@ void SandboxApplication::Update()
 		camera_transform.OffsetTranslation( camera_transform.Right()   * -camera_move_speed * time_delta );
 	if( Platform::IsKeyPressed( Platform::KeyCode::KEY_D ) )
 		camera_transform.OffsetTranslation( camera_transform.Right()   * +camera_move_speed * time_delta );
+
+	renderer.Update();
 }
 
 void SandboxApplication::Render()
@@ -587,6 +589,9 @@ void SandboxApplication::Render()
 
 	renderer.Disable_sRGBEncoding();
 
+	camera.ClearCustomProjectionMatrix();
+	renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_Projection, &camera ); // Since some passes modify projection, need to revert back to default here.
+
 	const auto original_camera_orientation = camera_transform.GetRotation();
 
 	/* Pass 1 - Rear-cam view: Invert camera direction, render everything to the off-screen framebuffer 0: */
@@ -594,7 +599,7 @@ void SandboxApplication::Render()
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 0 (Rear view)" ) );
 
 		camera_controller.Invert();
-		renderer.Update( camera );
+		renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_View, &camera );
 
 		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 0 ] );
 
@@ -609,7 +614,7 @@ void SandboxApplication::Render()
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 1 (Default view)" ) );
 		
 		camera_controller.Invert();
-		renderer.Update( camera );
+		renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_View, &camera );
 
 		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 1 ] );
 
@@ -626,9 +631,15 @@ void SandboxApplication::Render()
 	{
 		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Shadow Maps." ) );
 
+		// TODO: Place camera at some position along the direction of the light.
 		camera_transform.LookAt( light_directional.transform->Forward(), light_directional.transform->Up() );
 		camera_controller.ResetToTransform();
-		renderer.Update( camera );
+
+		// TODO: AABBs.
+		// TODO: Render the projection volume as a wireframe cube. More generally, create a debug-render pass, with wire-frame rendering.
+		// Use ortho. projection for directional light. For now,use big values for the projection volume:
+		camera.SetCustomProjectionMatrix( Engine::Matrix::OrthographicProjection( -50.0f, +50.0f, -50.0f, +50.0f, 1.0f, 101.0f ) );
+		renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers, &camera );
 
 		renderer.SetCurrentFramebuffer( &light_directional_shadow_map_framebuffer );
 
@@ -646,9 +657,11 @@ void SandboxApplication::Render()
 
 		if( show_imgui )
 		{
+			/* This pass does not utilize camera view/projection => no Renderer::Update() necessary. */
+
 			renderer.SetCurrentFramebuffer( &editor_framebuffer );
 
-			renderer.Render( camera, { render_group_id_screen_size_quad } );
+			renderer.Render( /* Will not be used => */ camera, { render_group_id_screen_size_quad } );
 
 			/* Now that the editor framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 			editor_framebuffer.ColorAttachment().GenerateMipmaps();
@@ -659,7 +672,7 @@ void SandboxApplication::Render()
 		{
 			renderer.ResetToDefaultFramebuffer();
 
-			renderer.Render( camera, { render_group_id_screen_size_quad } );
+			renderer.Render( /* Will not be used => */ camera, { render_group_id_screen_size_quad } );
 		}
 	}
 
@@ -1238,7 +1251,7 @@ void SandboxApplication::ResetCamera()
 void SandboxApplication::ResetProjection()
 {
 	camera = Engine::Camera( &camera_transform, camera.GetAspectRatio(), camera.GetVerticalFieldOfView() ); // Keep current aspect ratio & v-fov.
-	renderer.OnProjectionParametersChange( camera );
+	renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_Projection, &camera );
 }
 
 void SandboxApplication::SwitchCameraView( const CameraView view )
@@ -1392,7 +1405,7 @@ void SandboxApplication::RecalculateProjectionParameters( const int width_new_pi
 	camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
 	camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
 
-	renderer.OnProjectionParametersChange( camera );
+	renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_Projection, &camera );
 }
 
 void SandboxApplication::RecalculateProjectionParameters( const Vector2I new_size_pixels )

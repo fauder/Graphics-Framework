@@ -25,63 +25,89 @@ namespace Engine
 	{
 	}
 
-	void Renderer::Update( Camera& camera )
+	void Renderer::Update( const BitFlags< UpdateOptions > update_option_flags, Camera* camera )
 	{
-		RecompileModifiedShaders();
+		if( update_option_flags == UpdateOptions::None )
+			return;
 
-		const auto& view_matrix               = camera.GetViewMatrix();
-		const auto& view_matrix_3x3           = view_matrix.SubMatrix< 3 >();
-		const auto& view_matrix_rotation_only = Matrix4x4( view_matrix_3x3 );
+		if( update_option_flags.IsSet( UpdateOptions::CommonPerFrame ) )
+			RecompileModifiedShaders();
 
-		if( update_uniform_buffer_other )
+		if( update_option_flags.IsSet( UpdateOptions::UniformBuffers_Projection ) && update_uniform_buffer_other )
 		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW",				view_matrix );
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_ROTATION_ONLY",	view_matrix_rotation_only );
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION",		view_matrix * camera.GetProjectionMatrix() );
+			ASSERT_DEBUG_ONLY( camera );
+
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", camera->GetProjectionMatrix() );
+			if( not update_option_flags.IsSet( UpdateOptions::UniformBuffers_View ) ) // No need to upload twice.
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION", camera->GetViewProjectionMatrix() );
+
+			if( not camera->HasCustomProjection() )
+			{
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_NEAR",					camera->GetNearPlaneOffset() );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_FAR",					camera->GetFarPlaneOffset() );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_ASPECT_RATIO",			camera->GetAspectRatio() );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_VERTICAL_FIELD_OF_VIEW", camera->GetVerticalFieldOfView() );
+			}
 		}
 
-		if( update_uniform_buffer_lighting )
+		if( update_option_flags.IsSet( UpdateOptions::UniformBuffers_View ) )
 		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", light_directional && light_directional->is_enabled ? 1u : 0u );
-			if( light_directional && light_directional->is_enabled )
+			ASSERT_DEBUG_ONLY( camera );
+
+			const auto& view_matrix               = camera->GetViewMatrix();
+			const auto& view_matrix_3x3           = view_matrix.SubMatrix< 3 >();
+			const auto& view_matrix_rotation_only = Matrix4x4( view_matrix_3x3 );
+
+			if( update_uniform_buffer_other )
 			{
-				light_directional->data.direction_view_space = light_directional->transform->Forward() * view_matrix_3x3;
-				uniform_buffer_management_intrinsic.SetPartial_Struct( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW",				view_matrix );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_ROTATION_ONLY",	view_matrix_rotation_only );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION",		view_matrix * camera->GetProjectionMatrix() );
 			}
 
-			lights_point_active_count = 0;
-			for( auto index = 0; index < lights_point.size(); index++ )
+			if( update_uniform_buffer_lighting )
 			{
-				auto& point_light = lights_point[ index ];
-
-				if( point_light->is_enabled )
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", light_directional && light_directional->is_enabled ? 1u : 0u );
+				if( light_directional && light_directional->is_enabled )
 				{
-					/* Shaders expect the lights' position & direction in view space. */
-					point_light->data.position_view_space = Vector4( point_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix;
-					uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", lights_point_active_count++, point_light->data );
+					light_directional->data.direction_view_space = light_directional->transform->Forward() * view_matrix_3x3;
+					uniform_buffer_management_intrinsic.SetPartial_Struct( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
 				}
-			}
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point_active_count );
 
-			lights_spot_active_count = 0;
-			for( auto index = 0; index < lights_spot.size(); index++ )
-			{
-				auto& spot_light = lights_spot[ index ];
-
-				if( spot_light->is_enabled )
+				lights_point_active_count = 0;
+				for( auto index = 0; index < lights_point.size(); index++ )
 				{
-					/* Shaders expect the lights' position & direction in view space. */
+					auto& point_light = lights_point[ index ];
 
-					spot_light->data.position_view_space_and_cos_cutoff_angle_inner.vector = ( Vector4( spot_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix ).XYZ();
-					spot_light->data.position_view_space_and_cos_cutoff_angle_inner.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_inner ) );
-
-					spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->transform->Forward() * view_matrix_3x3;
-					spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
-
-					uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", lights_spot_active_count++, spot_light->data );
+					if( point_light->is_enabled )
+					{
+						/* Shaders expect the lights' position & direction in view space. */
+						point_light->data.position_view_space = Vector4( point_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix;
+						uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", lights_point_active_count++, point_light->data );
+					}
 				}
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point_active_count );
+
+				lights_spot_active_count = 0;
+				for( auto index = 0; index < lights_spot.size(); index++ )
+				{
+					auto& spot_light = lights_spot[ index ];
+
+					if( spot_light->is_enabled )
+					{
+						/* Shaders expect the lights' position & direction in view space. */
+
+						spot_light->data.position_view_space_and_cos_cutoff_angle_inner.vector = ( Vector4( spot_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix ).XYZ();
+						spot_light->data.position_view_space_and_cos_cutoff_angle_inner.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_inner ) );
+
+						spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->transform->Forward() * view_matrix_3x3;
+						spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
+
+						uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", lights_spot_active_count++, spot_light->data );
+					}
+				}
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot_active_count );
 			}
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot_active_count );
 		}
 	}
 
@@ -136,7 +162,6 @@ namespace Engine
 		/* Reset write masks or clearing will not modify the buffers: */
 		ToggleDepthWrite( true );
 		SetStencilWriteMask( 0xFF );
-
 	}
 
 	void Renderer::RenderImGui()
@@ -200,18 +225,6 @@ namespace Engine
 		/* Uniforms (Renderer-scope): */
 		ImGuiDrawer::Draw( uniform_buffer_management_intrinsic, "Shader Intrinsics" );
 		ImGuiDrawer::Draw( uniform_buffer_management_global,	"Shader Globals" );
-	}
-
-	void Renderer::OnProjectionParametersChange( Camera& camera )
-	{
-		if( update_uniform_buffer_other )
-		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION",				camera.GetProjectionMatrix()	);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_NEAR",					camera.GetNearPlaneOffset()		);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_FAR",					camera.GetFarPlaneOffset()		);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_ASPECT_RATIO",			camera.GetAspectRatio()			);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_VERTICAL_FIELD_OF_VIEW", camera.GetVerticalFieldOfView() );
-		}
 	}
 
 	void Renderer::OnFramebufferResize( const int new_width_in_pixels, const int new_height_in_pixels )
