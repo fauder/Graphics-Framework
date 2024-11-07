@@ -15,6 +15,8 @@ namespace Engine
 		view_projection_matrix_needs_update( true )
 	{}
 
+/* Matrix Getters: */
+
 	const Matrix4x4& Camera::GetViewMatrix()
 	{
 		if( transform->IsDirty() )
@@ -44,20 +46,8 @@ namespace Engine
 
 		return view_projection_matrix;
 	}
-	
-	Camera& Camera::SetNearPlaneOffset( const float offset )
-	{
-		plane_near = offset;
-		SetProjectionMatrixDirty();
-		return *this;
-	}
 
-	Camera& Camera::SetFarPlaneOffset( const float offset )
-	{
-		plane_far = offset;
-		SetProjectionMatrixDirty();
-		return *this;
-	}
+/* View related: */
 
 	Vector3 Camera::Right()
 	{
@@ -74,21 +64,7 @@ namespace Engine
 	Vector3 Camera::Forward()
 	{
 		GetViewMatrix();
-		return view_matrix.GetColumn< 3 >( 2 ); 
-	}
-
-	Camera& Camera::SetAspectRatio( const float new_aspect_ratio )
-	{
-		SetProjectionMatrixDirty();
-		aspect_ratio = new_aspect_ratio;
-		return *this;
-	}
-
-	Camera& Camera::SetVerticalFieldOfView( const Radians new_fov )
-	{
-		SetProjectionMatrixDirty();
-		vertical_field_of_view = new_fov;
-		return *this;
+		return view_matrix.GetColumn< 3 >( 2 );
 	}
 
 	Camera& Camera::SetLookRotation( const Vector3& look_at, const Vector3& up )
@@ -96,6 +72,44 @@ namespace Engine
 		transform->LookAt( look_at, up );
 		return *this;
 	}
+
+/* Projection related: */
+
+	Camera& Camera::SetNearPlaneOffset( const float offset )
+	{
+		plane_near = offset;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::SetFarPlaneOffset( const float offset )
+	{
+		plane_far = offset;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::SetAspectRatio( const float new_aspect_ratio )
+	{
+		aspect_ratio = new_aspect_ratio;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::SetVerticalFieldOfView( const Radians new_fov )
+	{
+		vertical_field_of_view = new_fov;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+		return *this;
+	}
+
+	{
+		return *this;
+	}
+
+/* Other:*/
 
 	Vector3 Camera::ConvertFromScreenSpaceToViewSpace( const Engine::Vector2 screen_space_coordinate, const Engine::Vector2I screen_dimensions )
 	{
@@ -124,6 +138,8 @@ namespace Engine
 				plane_near
 		};
 	}
+
+/* PRIVATE API: */
 
 	void Camera::SetProjectionMatrixDirty()
 	{

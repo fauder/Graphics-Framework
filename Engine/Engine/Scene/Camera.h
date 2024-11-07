@@ -12,14 +12,13 @@ namespace Engine
 
 		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Camera );
 
+	/* Matrix Getters: */
+
 		inline const Matrix4x4& GetViewMatrix();
 		inline const Matrix4x4& GetProjectionMatrix();
 		const Matrix4x4& GetViewProjectionMatrix();
 
-		Camera& SetNearPlaneOffset( const float offset );
-		Camera& SetFarPlaneOffset( const float offset );
-		inline float GetNearPlaneOffset() const { return plane_near; }
-		inline float GetFarPlaneOffset()  const { return plane_far; }
+	/* View related: */
 
 		const Vector3& Position() const { return transform->GetTranslation(); }
 
@@ -27,13 +26,22 @@ namespace Engine
 		Vector3 Up();
 		Vector3 Forward();
 
-		inline const float GetAspectRatio() const { return aspect_ratio; }
+		Camera& SetLookRotation( const Vector3& look_at, const Vector3& up = Vector3::Up() );
+
+	/* Projection Related related: */
+
+		Camera& SetNearPlaneOffset( const float offset );
+		Camera& SetFarPlaneOffset( const float offset );
+		inline float GetNearPlaneOffset() const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return plane_near; }
+		inline float GetFarPlaneOffset()  const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return plane_far; }
+
+		inline const float GetAspectRatio() const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return aspect_ratio; }
 		Camera& SetAspectRatio( const float new_aspect_ratio );
 
-		inline const Radians& GetVerticalFieldOfView() const { return vertical_field_of_view; }
+		inline const Radians& GetVerticalFieldOfView() const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return vertical_field_of_view; }
 		Camera& SetVerticalFieldOfView( const Radians new_fov );
 
-		Camera& SetLookRotation( const Vector3& look_at, const Vector3& up = Vector3::Up() );
+	/* Other:*/
 
 		Vector3 ConvertFromScreenSpaceToViewSpace( const Engine::Vector2 screen_space_coordinate, const Engine::Vector2I screen_dimensions );
 
