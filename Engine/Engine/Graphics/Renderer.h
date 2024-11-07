@@ -90,7 +90,7 @@ namespace Engine
 			Maximum         = GL_MAX
 		};
 
-		enum class SortingMode
+		enum class SortingMode : std::uint8_t
 		{
 			None,
 			DepthNearestToFarthest,
@@ -153,7 +153,7 @@ namespace Engine
 			bool depth_write_enable  = true;
 			bool stencil_test_enable = false;
 			bool blending_enable     = false;
-			//bool padding[ 3 ];
+			//bool padding[ 2 ];
 		};
 
 		enum class RenderGroupID : unsigned int {};
