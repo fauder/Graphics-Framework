@@ -1,5 +1,8 @@
 #pragma once
 
+// std Includes.
+#include <string_view>
+
 /*
  * Default Constructors:
  */
@@ -75,3 +78,22 @@
 #define CONSTEXPR_DEFAULT_EQUALITY_OPERATORS( class_name )\
 	constexpr bool operator ==( const class_name& ) const = default;\
 	constexpr bool operator !=( const class_name& ) const = default;
+
+/* 
+ *Utilities: 
+ */
+
+/* Similar to __FILE__, compile-time way of retrieving the current directory of the source file. */
+#define __DIR__ ( []() -> std::string_view \
+{ \
+    constexpr std::string_view path = __FILE__; \
+    constexpr size_t pos = path.find_last_of( "/\\") ; \
+    return ( pos == std::string_view::npos ) ? "" : path.substr( 0, pos ); \
+}() )
+
+#define __DIR_WITH_SEPARATOR__ ( []() -> std::string_view \
+{ \
+    constexpr std::string_view path = __FILE__; \
+    constexpr size_t pos = path.find_last_of( "/\\" ); \
+    return ( pos == std::string_view::npos ) ? "" : path.substr( 0, pos + 1 ); \
+}() )
