@@ -41,6 +41,14 @@ namespace Engine
 		inline const Radians& GetVerticalFieldOfView() const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return vertical_field_of_view; }
 		Camera& SetVerticalFieldOfView( const Radians new_fov );
 
+		/* Using this will set an "overridden" flag.
+		 * The custom projection matrix set within this function will be used instead of the perspective projection defined internally, until that flag is cleared:
+		 *		A) Directly, by calling ClearCustomProjectionMatrix(),
+		 *		B) Indirectly, by setting near/far planes, aspect ratio or vertical FoV. */
+		Camera& SetCustomProjectionMatrix( const Matrix4x4& custom_projection_matrix );
+		Camera& ClearCustomProjectionMatrix();
+		bool HasCustomProjection() const { return projection_matrix_is_overridden; }
+
 	/* Other:*/
 
 		Vector3 ConvertFromScreenSpaceToViewSpace( const Engine::Vector2 screen_space_coordinate, const Engine::Vector2I screen_dimensions );
@@ -48,6 +56,7 @@ namespace Engine
 	private:
 		void SetProjectionMatrixDirty();
 		void SetViewProjectionMatrixDirty();
+		void SetCustomProjectionMatrixDirty();
 
 	private:
 		Matrix4x4 view_matrix;
@@ -60,10 +69,18 @@ namespace Engine
 		float aspect_ratio;
 		Radians vertical_field_of_view;
 
-		/* Do not need the flag below, as Transform's data is the only data needed to update the view matrix and it has IsDirty() query already. */
-		//bool view_matrix_needs_update;
 		bool projection_matrix_needs_update;
-		bool view_projection_matrix_needs_update;
-		//bool padding[ 6 ];
+		bool view_projection_matrix_needs_update; // This is needed because access to View/Projection matrices causes their dirty flag to be reset.
+		/* Do not need a "view_matrix_needs_update" flag; Transform's data is the only data needed to update the view matrix and it has the IsDirty() query already. */
+
+		// TODO: Above comment is not correct:
+		/* Transform's dirty flag is opt-in.
+		 * Besides, Renderer can not use that flag to optimize Camera UBO uploads, since there may be multiple updates to the Camera transform in a frame.
+		 */
+		// TODO: Given these limitations of the Transform's dirty flag. Figure out how to tackle that in a more robust way.
+
+		bool projection_matrix_is_overridden;
+
+		/* [5 bytes of padding remaining.] */
 	};
 }

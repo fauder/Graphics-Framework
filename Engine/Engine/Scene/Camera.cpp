@@ -12,7 +12,8 @@ namespace Engine
 		aspect_ratio( aspect_ratio ),
 		vertical_field_of_view( vertical_field_of_view ),
 		projection_matrix_needs_update( true ),
-		view_projection_matrix_needs_update( true )
+		view_projection_matrix_needs_update( true ),
+		projection_matrix_is_overridden( false )
 	{}
 
 /* Matrix Getters: */
@@ -29,7 +30,9 @@ namespace Engine
 	{
 		if( projection_matrix_needs_update )
 		{
-			projection_matrix = Matrix::PerspectiveProjection( plane_near, plane_far, aspect_ratio, vertical_field_of_view );
+			if( not projection_matrix_is_overridden )
+				projection_matrix = Matrix::PerspectiveProjection( plane_near, plane_far, aspect_ratio, vertical_field_of_view );
+
 			projection_matrix_needs_update = false;
 		}
 
@@ -40,7 +43,7 @@ namespace Engine
 	{
 		if( view_projection_matrix_needs_update || transform->IsDirty() )
 		{
-			view_projection_matrix = GetViewMatrix() * GetProjectionMatrix();
+			view_projection_matrix              = GetViewMatrix() * GetProjectionMatrix();
 			view_projection_matrix_needs_update = false;
 		}
 
@@ -102,10 +105,17 @@ namespace Engine
 		SetProjectionMatrixDirty();
 		return *this;
 	}
+
+	Camera& Camera::SetCustomProjectionMatrix( const Matrix4x4& custom_projection_matrix )
+	{
+		projection_matrix = custom_projection_matrix;
+		SetCustomProjectionMatrixDirty();
 		return *this;
 	}
 
+	Camera& Camera::ClearCustomProjectionMatrix()
 	{
+		SetProjectionMatrixDirty();
 		return *this;
 	}
 
@@ -143,12 +153,20 @@ namespace Engine
 
 	void Camera::SetProjectionMatrixDirty()
 	{
-		projection_matrix_needs_update = true;
+		projection_matrix_needs_update  = true;
+		projection_matrix_is_overridden = false;
 		SetViewProjectionMatrixDirty();
 	}
 
 	void Camera::SetViewProjectionMatrixDirty()
 	{
 		view_projection_matrix_needs_update = true;
+	}
+
+	void Camera::SetCustomProjectionMatrixDirty()
+	{
+		projection_matrix_needs_update  = false;
+		projection_matrix_is_overridden = true;
+		SetViewProjectionMatrixDirty();
 	}
 }
