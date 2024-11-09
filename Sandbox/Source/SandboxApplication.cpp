@@ -563,7 +563,6 @@ void SandboxApplication::Render()
 
 	renderer.Disable_sRGBEncoding();
 
-	camera.ClearCustomProjectionMatrix();
 	renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_Projection, &camera ); // Since some passes modify projection, need to revert back to default here.
 
 	const auto original_camera_orientation = camera_transform.GetRotation();
@@ -618,6 +617,8 @@ void SandboxApplication::Render()
 		renderer.SetCurrentFramebuffer( &light_directional_shadow_map_framebuffer );
 
 		renderer.Render( camera, { render_group_id_shadow_mapping } );
+
+		camera.ClearCustomProjectionMatrix();
 
 		/* Now that the shadow-map framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
 		//light_directional_shadow_map_framebuffer.DepthAttachment().GenerateMipmaps();
