@@ -964,7 +964,7 @@ namespace Engine::ImGuiDrawer
 				ImGui::NewLine();
 				ImGui::SeparatorText( "Features" );
 				
-				if( const auto& features = shader.Features();
+				if( const auto& features = shader.GetFeatures();
 					features.empty() )
 				{
 					ImGui::TextDisabled( "(None)" );
@@ -982,7 +982,7 @@ namespace Engine::ImGuiDrawer
 						
 						ImGui::PushStyleColor( ImGuiCol_Text, ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ) );
 
-						for( const auto& [ feature_name, feature ] : shader.Features() )
+						for( const auto& [ feature_name, feature ] : shader.GetFeatures() )
 						{
 							ImGui::TableNextColumn();
 							ImGui::TextUnformatted( feature_name.c_str() );

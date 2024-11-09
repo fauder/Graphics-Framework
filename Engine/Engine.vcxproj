@@ -102,6 +102,9 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <BuildLog>
       <Path />
     </BuildLog>
+    <PostBuildEvent>
+      <Command>python $(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.py</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -149,9 +152,13 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <BuildLog>
       <Path />
     </BuildLog>
+    <PostBuildEvent>
+      <Command>python $(SolutionDir)$(ProjectName)\PostBuild_ValidateShaders.py</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Engine.h" />
+    <ClInclude Include="Engine\Asset\Shader\InternalShaderDirectoryPath.h" />
     <ClInclude Include="Engine\Core\Application.h" />
     <ClInclude Include="Engine\Core\Assertion.h" />
     <ClInclude Include="Engine\Core\AssetDatabase.hpp" />
@@ -165,8 +172,11 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\Macros_SpaceshipOperator.h" />
     <ClInclude Include="Engine\Graphics\Framebuffer.h" />
     <ClInclude Include="Engine\Graphics\ID.hpp" />
+    <ClInclude Include="Engine\Graphics\InternalShaders.h" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad.h" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad_FullScreen.h" />
+    <ClInclude Include="Engine\Graphics\ShaderSourcePath.hpp" />
+    <ClInclude Include="Engine\Graphics\ShaderType.h" />
     <ClInclude Include="Engine\Math\VectorConversion.hpp" />
     <ClInclude Include="Engine\Natvis\NatVis.h" />
     <ClInclude Include="Engine\Core\Optimization.h" />
@@ -231,6 +241,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Core\ImGuiDrawer.cpp" />
     <ClCompile Include="Engine\Core\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Core\ImGuiUtility.cpp" />
+    <ClCompile Include="Engine\Graphics\InternalShaders.cpp" />
     <ClCompile Include="Engine\Graphics\Renderable.cpp" />
     <ClCompile Include="Engine\Graphics\Framebuffer.cpp" />
     <ClCompile Include="Engine\Graphics\GLLogger.cpp" />
@@ -263,6 +274,32 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Engine.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Engine\Asset\Shader\Color.frag" />
+    <None Include="Engine\Asset\Shader\Color.vert" />
+    <None Include="Engine\Asset\Shader\Textured.frag" />
+    <None Include="Engine\Asset\Shader\Textured.vert" />
+    <None Include="Engine\Asset\Shader\BasicTextured_Mixed.frag" />
+    <None Include="Engine\Asset\Shader\Blinn-Phong.frag" />
+    <None Include="Engine\Asset\Shader\Blinn-Phong.vert" />
+    <None Include="Engine\Asset\Shader\FullScreenBlit.frag" />
+    <None Include="Engine\Asset\Shader\FullScreenBlit_Resolve.frag" />
+    <None Include="Engine\Asset\Shader\GenericPostprocess.frag" />
+    <None Include="Engine\Asset\Shader\Grayscale.frag" />
+    <None Include="Engine\Asset\Shader\Outline.vert" />
+    <None Include="Engine\Asset\Shader\PassThrough.vert" />
+    <None Include="Engine\Asset\Shader\PassThrough_UVs.vert" />
+    <None Include="Engine\Asset\Shader\Skybox.frag" />
+    <None Include="Engine\Asset\Shader\Skybox.vert" />
+    <None Include="Engine\Asset\Shader\VisualizeDepth.frag" />
+    <None Include="Engine\Asset\Shader\VisualizeNormals.geom" />
+    <None Include="Engine\Asset\Shader\VisualizeNormals.vert" />
+    <None Include="Engine\Asset\Shader\_Depth.glsl" />
+    <None Include="Engine\Asset\Shader\_Global.glsl" />
+    <None Include="Engine\Asset\Shader\_Intrinsic_Lighting.glsl" />
+    <None Include="Engine\Asset\Shader\_Intrinsic_Other.glsl" />
+    <None Include="Engine\Asset\Shader\_sRGB.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

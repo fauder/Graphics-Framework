@@ -144,24 +144,26 @@ private:
 	Engine::Mesh cube_mesh_instanced_with_color; // For light sources.
 
 /* Shaders: */
-	Engine::Shader skybox_shader;
-	Engine::Shader blinn_phong_shader;
-	Engine::Shader blinn_phong_shader_instanced;
-	Engine::Shader blinn_phong_skybox_reflection_shader;
-	Engine::Shader blinn_phong_skybox_reflection_shader_instanced;
-	Engine::Shader basic_color_shader;
-	Engine::Shader basic_color_shader_instanced;
-	Engine::Shader basic_textured_shader;
-	Engine::Shader basic_textured_transparent_discard_shader;
-	Engine::Shader outline_shader;
+	Engine::Shader* skybox_shader;
+	Engine::Shader* blinn_phong_shader;
+	Engine::Shader* blinn_phong_shader_instanced;
+	Engine::Shader* blinn_phong_skybox_reflection_shader;
+	Engine::Shader* blinn_phong_skybox_reflection_shader_instanced;
+	Engine::Shader* basic_color_shader;
+	Engine::Shader* basic_color_shader_instanced;
+	Engine::Shader* basic_textured_shader;
+	Engine::Shader* basic_textured_transparent_discard_shader;
+	Engine::Shader* outline_shader;
 
-	Engine::Shader texture_blit_shader, fullscreen_blit_shader, fullscreen_blit_resolve_shader;
+	Engine::Shader* texture_blit_shader;
+	Engine::Shader* fullscreen_blit_shader;
+	Engine::Shader* fullscreen_blit_resolve_shader;
 
-	Engine::Shader postprocess_grayscale_shader;
+	Engine::Shader* postprocess_grayscale_shader;
 
-	Engine::Shader postprocess_generic_shader;
+	Engine::Shader* postprocess_generic_shader;
 
-	Engine::Shader normal_visualization_shader;
+	Engine::Shader* normal_visualization_shader;
 
 /* Models: */
 	ModelInfo test_model_info;

@@ -1,5 +1,6 @@
 // Engine Includes.
 #include "Renderer.h"
+#include "InternalShaders.h"
 #include "UniformBufferManager.h"
 #include "Core/ImGuiDrawer.hpp"
 
@@ -18,6 +19,8 @@ namespace Engine
 		update_uniform_buffer_lighting( false ),
 		update_uniform_buffer_other( false )
 	{
+		InternalShaders::Initialize( *this );
+
 		SetClearColor();
 	}
 

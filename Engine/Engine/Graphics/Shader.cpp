@@ -5,6 +5,7 @@
 #endif // _WIN32
 
 // Engince Includes.
+#include "Asset/Shader/InternalShaderDirectoryPath.h"
 #include "Core/ServiceLocator.h"
 #include "Core/Utility.hpp"
 #include "GLLogger.h"
@@ -29,17 +30,99 @@ namespace Engine
 	{
 	}
 
-	Shader::Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, 
-					const std::vector< std::string >& features_to_set,
-					const char* geometry_shader_source_file_path )
+	Shader::Shader( const char* name,
+					const VertexShaderSourcePath& vertex_shader_source_path,
+					const FragmentShaderSourcePath& fragment_shader_source_path,
+					const Features& features_to_set )
 		:
 		name( name ),
-		vertex_source_path( vertex_shader_source_file_path ),
-		geometry_source_path( geometry_shader_source_file_path ),
-		fragment_source_path( fragment_shader_source_file_path ),
+		vertex_source_path( vertex_shader_source_path ),
+		fragment_source_path( fragment_shader_source_path ),
+		features_requested( features_to_set.begin(), features_to_set.end() )
+	{
+		FromFile( vertex_shader_source_path, fragment_shader_source_path, features_to_set );
+	}
+
+	Shader::Shader( const char* name,
+					const VertexShaderSourcePath& vertex_shader_source_path,
+					const GeometryShaderSourcePath& geometry_shader_source_path,
+					const FragmentShaderSourcePath& fragment_shader_source_path,
+					const Features& features_to_set )
+		:
+		name( name ),
+		vertex_source_path( vertex_shader_source_path ),
+		geometry_source_path( geometry_shader_source_path ),
+		fragment_source_path( fragment_shader_source_path ),
 		features_requested( features_to_set )
 	{
-		FromFile( vertex_shader_source_file_path, fragment_shader_source_file_path, features_to_set, geometry_shader_source_file_path );
+		FromFile( vertex_shader_source_path, geometry_shader_source_path, fragment_shader_source_path, features_to_set );
+	}
+
+	Shader::Shader( Shader&& donor )
+		:
+		name( std::exchange( donor.name, "<scheduled-for-deletion>" ) ),
+
+		vertex_source_path( std::move( donor.vertex_source_path ) ),
+		geometry_source_path( std::move( donor.geometry_source_path ) ),
+		fragment_source_path( std::move( donor.fragment_source_path ) ),
+
+		vertex_source_include_path_array( std::move( donor.vertex_source_include_path_array ) ),
+		geometry_source_include_path_array( std::move( donor.geometry_source_include_path_array ) ),
+		fragment_source_include_path_array( std::move( donor.fragment_source_include_path_array ) ),
+
+		features_requested( std::move( donor.features_requested ) ),
+		feature_map( std::move( donor.feature_map ) ),
+
+		uniform_info_map( std::move( donor.uniform_info_map ) ),
+
+		uniform_buffer_info_map_regular( std::move( donor.uniform_buffer_info_map_regular ) ),
+		uniform_buffer_info_map_global( std::move( donor.uniform_buffer_info_map_global ) ),
+		uniform_buffer_info_map_intrinsic( std::move( donor.uniform_buffer_info_map_intrinsic ) ),
+
+		last_write_time_map( std::exchange( donor.last_write_time_map, {} ) ),
+
+		uniform_book_keeping_info( std::move( donor.uniform_book_keeping_info ) ),
+
+		vertex_layout_source( std::move( donor.vertex_layout_source ) ),
+		vertex_layout_active( std::move( donor.vertex_layout_active ) )
+	{
+		Delete();
+
+		program_id = std::exchange( donor.program_id, {} );
+	}
+
+	Shader& Shader::operator=( Shader&& donor )
+	{
+		Delete();
+
+		program_id = std::exchange( donor.program_id, {} );
+		name       = std::exchange( donor.name, "<scheduled-for-deletion>" );
+
+		vertex_source_path   = std::move( donor.vertex_source_path );
+		geometry_source_path = std::move( donor.geometry_source_path );
+		fragment_source_path = std::move( donor.fragment_source_path );
+
+		vertex_source_include_path_array   = std::move( donor.vertex_source_include_path_array );
+		geometry_source_include_path_array = std::move( donor.geometry_source_include_path_array );
+		fragment_source_include_path_array = std::move( donor.fragment_source_include_path_array );
+
+		features_requested = std::move( donor.features_requested );
+		feature_map        = std::move( donor.feature_map );
+
+		uniform_info_map = std::move( donor.uniform_info_map );
+
+		uniform_buffer_info_map_regular   = std::move( donor.uniform_buffer_info_map_regular );
+		uniform_buffer_info_map_global    = std::move( donor.uniform_buffer_info_map_global );
+		uniform_buffer_info_map_intrinsic = std::move( donor.uniform_buffer_info_map_intrinsic );
+
+		last_write_time_map = std::exchange( donor.last_write_time_map, {} );
+
+		uniform_book_keeping_info = std::move( donor.uniform_book_keeping_info );
+
+		vertex_layout_source = std::move( donor.vertex_layout_source );
+		vertex_layout_active = std::move( donor.vertex_layout_active );
+
+		return *this;
 	}
 
 	Shader::~Shader()
@@ -47,14 +130,23 @@ namespace Engine
 		Delete();
 	}
 
-	bool Shader::FromFile( const char* vertex_shader_source_file_path,
-						   const char* fragment_shader_source_file_path,
-						   const std::vector< std::string >& features_to_set,
-						   const char* geometry_shader_source_file_path )
+	bool Shader::FromFile( const VertexShaderSourcePath& vertex_shader_source_path,
+						   const FragmentShaderSourcePath& fragment_shader_source_path,
+						   const Features& features_to_set )
 	{
-		this->vertex_source_path   = vertex_shader_source_file_path;
-		this->geometry_source_path = geometry_shader_source_file_path ? geometry_shader_source_file_path : "";
-		this->fragment_source_path = fragment_shader_source_file_path;
+		using namespace Literals;
+
+		return FromFile( vertex_shader_source_path, ""_geom, fragment_shader_source_path, features_to_set );
+	}
+
+	bool Shader::FromFile( const VertexShaderSourcePath& vertex_shader_source_path,
+						   const GeometryShaderSourcePath& geometry_shader_source_path,
+						   const FragmentShaderSourcePath& fragment_shader_source_path,
+						   const Features& features_to_set )
+	{
+		this->vertex_source_path   = ( std::string )vertex_shader_source_path;
+		this->geometry_source_path = ( std::string )geometry_shader_source_path;
+		this->fragment_source_path = ( std::string )fragment_shader_source_path;
 
 		features_requested = features_to_set;
 
@@ -67,17 +159,17 @@ namespace Engine
 		std::unordered_map< std::string, Feature > geometry_shader_features;
 		std::unordered_map< std::string, Feature > fragment_shader_features;
 
-		if( vertex_shader_source = ParseShaderFromFile( vertex_shader_source_file_path, ShaderType::VERTEX );
+		if( vertex_shader_source = ParseShaderFromFile( vertex_shader_source_path, ShaderType::Vertex );
 			vertex_shader_source )
 		{
 			auto& shader_source = *vertex_shader_source;
 
 			vertex_source_include_path_array = PreprocessShaderStage_GetIncludeFilePaths( shader_source );
-			PreProcessShaderStage_IncludeDirectives( vertex_shader_source_file_path, shader_source, ShaderType::VERTEX );
+			PreProcessShaderStage_IncludeDirectives( vertex_shader_source_path, shader_source, ShaderType::Vertex );
 			vertex_shader_features = PreProcessShaderStage_ParseFeatures( shader_source );
 			PreProcessShaderStage_SetFeatures( shader_source, vertex_shader_features, features_to_set );
 
-			if( !CompileShader( shader_source.c_str(), vertex_shader_id, ShaderType::VERTEX ) )
+			if( !CompileShader( shader_source.c_str(), vertex_shader_id, ShaderType::Vertex ) )
 				return false;
 		}
 		else
@@ -85,19 +177,19 @@ namespace Engine
 
 		feature_map.insert( vertex_shader_features.begin(), vertex_shader_features.end() );
 
-		if( geometry_shader_source_file_path )
+		if( not geometry_shader_source_path.Empty() )
 		{
-			if( geometry_shader_source = ParseShaderFromFile( geometry_shader_source_file_path, ShaderType::GEOMETRY );
+			if( geometry_shader_source = ParseShaderFromFile( geometry_shader_source_path, ShaderType::Geometry );
 				geometry_shader_source )
 			{
 				auto& shader_source = *geometry_shader_source;
 
 				geometry_source_include_path_array = PreprocessShaderStage_GetIncludeFilePaths( shader_source );
-				PreProcessShaderStage_IncludeDirectives( geometry_shader_source_file_path, shader_source, ShaderType::GEOMETRY );
+				PreProcessShaderStage_IncludeDirectives( geometry_shader_source_path, shader_source, ShaderType::Geometry );
 				geometry_shader_features = PreProcessShaderStage_ParseFeatures( shader_source );
 				PreProcessShaderStage_SetFeatures( shader_source, geometry_shader_features, features_to_set );
 
-				if( !CompileShader( shader_source.c_str(), geometry_shader_id, ShaderType::GEOMETRY ) )
+				if( !CompileShader( shader_source.c_str(), geometry_shader_id, ShaderType::Geometry ) )
 					return false;
 			}
 			else
@@ -109,17 +201,17 @@ namespace Engine
 			feature_map.insert( geometry_shader_features.begin(), geometry_shader_features.end() );
 		}
 
-		if( fragment_shader_source = ParseShaderFromFile( fragment_shader_source_file_path, ShaderType::FRAGMENT );
+		if( fragment_shader_source = ParseShaderFromFile( fragment_shader_source_path, ShaderType::Fragment );
 			fragment_shader_source )
 		{
 			auto& shader_source = *fragment_shader_source;
 
 			fragment_source_include_path_array = PreprocessShaderStage_GetIncludeFilePaths( shader_source );
-			PreProcessShaderStage_IncludeDirectives( fragment_shader_source_file_path, shader_source, ShaderType::FRAGMENT );
+			PreProcessShaderStage_IncludeDirectives( fragment_shader_source_path, shader_source, ShaderType::Fragment );
 			fragment_shader_features = PreProcessShaderStage_ParseFeatures( shader_source );
 			PreProcessShaderStage_SetFeatures( shader_source, fragment_shader_features, features_to_set );
 
-			if( !CompileShader( shader_source.c_str(), fragment_shader_id, ShaderType::FRAGMENT ) )
+			if( !CompileShader( shader_source.c_str(), fragment_shader_id, ShaderType::Fragment ) )
 				return false;
 		}
 		else
@@ -136,7 +228,7 @@ namespace Engine
 		const bool link_result = LinkProgram( vertex_shader_id, geometry_shader_id, fragment_shader_id );
 
 		glDeleteShader( vertex_shader_id );
-		if( geometry_shader_source_file_path )
+		if( not geometry_shader_source_path.Empty() )
 			glDeleteShader( geometry_shader_id );
 		glDeleteShader( fragment_shader_id );
 
@@ -155,10 +247,10 @@ namespace Engine
 			QueryUniformData();
 
 			ParseShaderSource_VertexLayout( *vertex_shader_source );
-			ParseShaderSource_UniformUsageHints( *vertex_shader_source, ShaderType::VERTEX );
+			ParseShaderSource_UniformUsageHints( *vertex_shader_source, ShaderType::Vertex );
 			if( geometry_shader_source )
-				ParseShaderSource_UniformUsageHints( *geometry_shader_source, ShaderType::GEOMETRY );
-			ParseShaderSource_UniformUsageHints( *fragment_shader_source, ShaderType::FRAGMENT );
+				ParseShaderSource_UniformUsageHints( *geometry_shader_source, ShaderType::Geometry );
+			ParseShaderSource_UniformUsageHints( *fragment_shader_source, ShaderType::Fragment );
 
 			QueryUniformData_BlockIndexAndOffsetForBufferMembers();
 			QueryUniformBufferData( uniform_buffer_info_map_regular, Uniform::BufferCategory::Regular );
@@ -181,7 +273,7 @@ namespace Engine
 				UniformBlockBindingPointManager::RegisterUniformBlock( *this, uniform_buffer_name, uniform_buffer_info );
 
 			last_write_time_map.emplace( vertex_source_path, std::filesystem::last_write_time( vertex_source_path ) );
-			if( not geometry_source_path.empty() )
+			if( not geometry_shader_source_path.Empty() )
 				last_write_time_map.emplace( geometry_source_path, std::filesystem::last_write_time( geometry_source_path ) );
 			last_write_time_map.emplace( fragment_source_path, std::filesystem::last_write_time( fragment_source_path ) );
 		}
@@ -196,7 +288,10 @@ namespace Engine
 
 	bool Shader::RecompileFromThis( Shader& new_shader )
 	{
-		return new_shader.FromFile( vertex_source_path.c_str(), fragment_source_path.c_str(), features_requested, geometry_source_path.empty() ? nullptr : geometry_source_path.c_str() );
+		return new_shader.FromFile( VertexShaderSourcePath( vertex_source_path ),
+									GeometryShaderSourcePath( geometry_source_path ),
+									FragmentShaderSourcePath( fragment_source_path ),
+									features_requested );
 	}
 
 	bool Shader::SourceFilesAreModified()
@@ -315,75 +410,6 @@ namespace Engine
  *
  */
 
-	/* Private, for shader recompilation only, called by the Renderer alone. */
-	Shader::Shader( Shader&& donor )
-		:
-		name( std::exchange( donor.name, "<scheduled-for-deletion>" ) ),
-
-		vertex_source_path( std::move( donor.vertex_source_path ) ),
-		geometry_source_path( std::move( donor.geometry_source_path ) ),
-		fragment_source_path( std::move( donor.fragment_source_path ) ),
-
-		vertex_source_include_path_array( std::move( donor.vertex_source_include_path_array ) ),
-		geometry_source_include_path_array( std::move( donor.geometry_source_include_path_array ) ),
-		fragment_source_include_path_array( std::move( donor.fragment_source_include_path_array ) ),
-
-		features_requested( std::move( donor.features_requested ) ),
-		feature_map( std::move( donor.feature_map ) ),
-
-		uniform_info_map( std::move( donor.uniform_info_map ) ),
-
-		uniform_buffer_info_map_regular( std::move( donor.uniform_buffer_info_map_regular ) ),
-		uniform_buffer_info_map_global( std::move( donor.uniform_buffer_info_map_global ) ),
-		uniform_buffer_info_map_intrinsic( std::move( donor.uniform_buffer_info_map_intrinsic ) ),
-
-		last_write_time_map( std::exchange( donor.last_write_time_map, {} ) ),
-
-		uniform_book_keeping_info( std::move( donor.uniform_book_keeping_info ) ),
-
-		vertex_layout_source( std::move( donor.vertex_layout_source ) ),
-		vertex_layout_active( std::move( donor.vertex_layout_active ) )
-	{
-		Delete();
-
-		program_id = std::exchange( donor.program_id, {} );
-	}
-
-	/* Private, for shader recompilation only, called by the Renderer alone. */
-	Shader& Shader::operator=( Shader&& donor )
-	{
-		Delete();
-
-		program_id = std::exchange( donor.program_id, {} );
-		name       = std::exchange( donor.name, "<scheduled-for-deletion>" );
-
-		vertex_source_path   = std::move( donor.vertex_source_path );
-		geometry_source_path = std::move( donor.geometry_source_path );
-		fragment_source_path = std::move( donor.fragment_source_path );
-
-		vertex_source_include_path_array   = std::move( donor.vertex_source_include_path_array );
-		geometry_source_include_path_array = std::move( donor.geometry_source_include_path_array );
-		fragment_source_include_path_array = std::move( donor.fragment_source_include_path_array );
-
-		features_requested = std::move( donor.features_requested );
-		feature_map        = std::move( donor.feature_map );
-
-		uniform_info_map = std::move( donor.uniform_info_map );
-
-		uniform_buffer_info_map_regular   = std::move( donor.uniform_buffer_info_map_regular );
-		uniform_buffer_info_map_global    = std::move( donor.uniform_buffer_info_map_global );
-		uniform_buffer_info_map_intrinsic = std::move( donor.uniform_buffer_info_map_intrinsic );
-
-		last_write_time_map = std::exchange( donor.last_write_time_map, {} );
-
-		uniform_book_keeping_info = std::move( donor.uniform_book_keeping_info );
-
-		vertex_layout_source = std::move( donor.vertex_layout_source );
-		vertex_layout_active = std::move( donor.vertex_layout_active );
-
-		return *this;
-	}
-
 	void Shader::Delete()
 	{
 		if( IsValid() )
@@ -419,7 +445,7 @@ namespace Engine
 			{
 				const auto& match = matches[ 1 ]; /* First match is the pattern itself. */
 				if( match.length() != 0 && match.matched )
-					includes.emplace_back( match );
+					includes.emplace_back( std::string( Engine::SHADER_SOURCE_DIRECTORY_WITH_SEPARATOR ) + ( std::string )match );
 
 				shader_source = matches.suffix();
 			}

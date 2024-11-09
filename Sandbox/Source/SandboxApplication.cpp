@@ -11,6 +11,7 @@
 #include "Engine/Core/Platform.h"
 #include "Engine/Core/ServiceLocator.h"
 #include "Engine/Graphics/GLLogger.h"
+#include "Engine/Graphics/InternalShaders.h"
 #include "Engine/Graphics/MeshUtility.hpp"
 #include "Engine/Graphics/Primitive/Primitive_Cube.h"
 #include "Engine/Graphics/Primitive/Primitive_Cube_FullScreen.h"
@@ -45,24 +46,8 @@ SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::Creation
 	render_group_id_shadow_mapping( Engine::Renderer::RenderGroupID{ 4 } ),
 	render_group_id_screen_size_quad( Engine::Renderer::RenderGroupID{ 5 } ),
 	render_group_id_skybox( Engine::Renderer::RenderGroupID{ 999 } ),
-	skybox_shader( "Skybox" ),
-	blinn_phong_shader( "Blinn-Phong" ),
-	blinn_phong_shader_instanced( "Blinn-Phong (Instanced)" ),
-	blinn_phong_skybox_reflection_shader( "Blinn-Phong (w/ Skybox Reflection)" ),
-	blinn_phong_skybox_reflection_shader_instanced( "Blinn-Phong (w/ Skybox Reflection, Instanced)" ),
-	basic_color_shader( "Basic Color" ),
-	basic_color_shader_instanced( "Basic Color (Instanced)" ),
-	basic_textured_shader( "Basic Textured" ),
-	basic_textured_transparent_discard_shader( "Basic Textured (Discard Transparents)" ),
-	outline_shader( "Outline" ),
-	texture_blit_shader( "Texture Blit" ),
-	fullscreen_blit_shader( "Fullscreen Blit" ),
-	fullscreen_blit_resolve_shader( "Fullscreen Blit (Resolve)" ),
-	postprocess_grayscale_shader( "Post-process: Grayscale" ),
-	postprocess_generic_shader( "Post-process: Generic" ),
-	normal_visualization_shader( "Normal Visualization" ),
-	test_model_info{ .model_instance = {}, .shader = &blinn_phong_shader, .file_path = {} },
-	meteorite_model_info{ .model_instance = {}, .shader = &blinn_phong_shader_instanced, .file_path = {} },
+	test_model_info{ .model_instance = {}, .shader = Engine::InternalShaders::Get( "Blinn-Phong" ), .file_path = {} },
+	meteorite_model_info{ .model_instance = {}, .shader = Engine::InternalShaders::Get( "Blinn-Phong (Instanced)" ), .file_path = {} },
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT ),
 	cube_reflected_transform_array( CUBE_REFLECTED_COUNT ),
@@ -134,33 +119,22 @@ void SandboxApplication::Initialize()
 																							} );
 
 /* Shaders: */
-	skybox_shader.FromFile( R"(Asset/Shader/Skybox.vert)", R"(Asset/Shader/Skybox.frag)" );
-	blinn_phong_shader.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)" );
-	blinn_phong_shader_instanced.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "INSTANCING_ENABLED" } );
-	blinn_phong_skybox_reflection_shader.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING" } );
-	blinn_phong_skybox_reflection_shader_instanced.FromFile( R"(Asset/Shader/Blinn-Phong.vert)", R"(Asset/Shader/Blinn-Phong.frag)", { "SKYBOX_ENVIRONMENT_MAPPING", "INSTANCING_ENABLED" } );
-	basic_color_shader.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)" );
-	basic_color_shader_instanced.FromFile( R"(Asset/Shader/BasicColor.vert)", R"(Asset/Shader/BasicColor.frag)", { "INSTANCING_ENABLED" } );
-	basic_textured_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)" );
-	basic_textured_transparent_discard_shader.FromFile( R"(Asset/Shader/BasicTextured.vert)", R"(Asset/Shader/BasicTextured.frag)", { "DISCARD_TRANSPARENT_FRAGMENTS" } );
-	outline_shader.FromFile( R"(Asset/Shader/Outline.vert)", R"(Asset/Shader/BasicColor.frag)" );
-	texture_blit_shader.FromFile( R"(Asset/Shader/PassThrough_UVs.vert)", R"(Asset/Shader/BasicTextured.frag)" );
-	fullscreen_blit_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/FullScreenBlit.frag)" );
-	fullscreen_blit_resolve_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/FullScreenBlit_Resolve.frag)" );
-	postprocess_grayscale_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/Grayscale.frag)" );
-	postprocess_generic_shader.FromFile( R"(Asset/Shader/PassThrough.vert)", R"(Asset/Shader/GenericPostprocess.frag)" );
-	normal_visualization_shader.FromFile( R"(Asset/Shader/VisualizeNormals.vert)", R"(Asset/Shader/BasicColor.frag)", { /* No features defined. */ },
-										  R"(Asset/Shader/VisualizeNormals.geom)" );
-
-	/* Register shaders not assigned to materials: */
-	renderer.RegisterShader( basic_color_shader );
-	renderer.RegisterShader( basic_color_shader_instanced );
-	renderer.RegisterShader( blinn_phong_skybox_reflection_shader );
-	renderer.RegisterShader( postprocess_grayscale_shader );
-	renderer.RegisterShader( postprocess_generic_shader );
-	renderer.RegisterShader( normal_visualization_shader );
-	renderer.RegisterShader( fullscreen_blit_shader );
-	renderer.RegisterShader( fullscreen_blit_resolve_shader );
+	skybox_shader                                  = Engine::InternalShaders::Get( "Skybox" );
+	blinn_phong_shader                             = Engine::InternalShaders::Get( "Blinn-Phong" );
+	blinn_phong_shader_instanced                   = Engine::InternalShaders::Get( "Blinn-Phong (Instanced)" );
+	blinn_phong_skybox_reflection_shader           = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection)" );
+	blinn_phong_skybox_reflection_shader_instanced = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection | Instanced)" );
+	basic_color_shader                             = Engine::InternalShaders::Get( "Color" );
+	basic_color_shader_instanced                   = Engine::InternalShaders::Get( "Color (Instanced)" );
+	basic_textured_shader                          = Engine::InternalShaders::Get( "Textured" );
+	basic_textured_transparent_discard_shader      = Engine::InternalShaders::Get( "Textured (Discard Transparent)" );
+	outline_shader                                 = Engine::InternalShaders::Get( "Outline" );
+	texture_blit_shader                            = Engine::InternalShaders::Get( "Texture Blit" );
+	fullscreen_blit_shader                         = Engine::InternalShaders::Get( "Fullscreen Blit" );
+	fullscreen_blit_resolve_shader                 = Engine::InternalShaders::Get( "Fullscreen Blit Resolve" );
+	postprocess_grayscale_shader                   = Engine::InternalShaders::Get( "Post-process Grayscale" );
+	postprocess_generic_shader                     = Engine::InternalShaders::Get( "Post-process Generic" );
+	normal_visualization_shader                    = Engine::InternalShaders::Get( "Normal Visualization" );
 
 /* Instancing Data: */
 	ResetInstanceData();
@@ -1168,13 +1142,13 @@ void SandboxApplication::ResetLightingData()
 
 void SandboxApplication::ResetMaterialData()
 {
-	skybox_material = Engine::Material( "Skybox", &skybox_shader );
+	skybox_material = Engine::Material( "Skybox", skybox_shader );
 	skybox_material.SetTexture( "uniform_texture_slot", skybox_texture );
 
-	light_source_material = Engine::Material( "Light Source", &basic_color_shader_instanced );
+	light_source_material = Engine::Material( "Light Source", basic_color_shader_instanced );
 	
 	/* Set the first cube's material to Blinn-Phong shader w/ skybox reflection: */
-	cube_reflected_material = Engine::Material( "Cube (Reflected)", &blinn_phong_skybox_reflection_shader_instanced );
+	cube_reflected_material = Engine::Material( "Cube (Reflected)", blinn_phong_skybox_reflection_shader_instanced );
 	cube_reflected_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_reflected_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 	cube_reflected_material.SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
@@ -1182,35 +1156,35 @@ void SandboxApplication::ResetMaterialData()
 	cube_reflected_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	cube_reflected_material.Set( "uniform_reflectivity", 1.0f );
 
-	cube_material = Engine::Material( "Cube", &blinn_phong_shader_instanced );
+	cube_material = Engine::Material( "Cube", blinn_phong_shader_instanced );
 	cube_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 	cube_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
-	ground_material = Engine::Material( "Ground", &blinn_phong_shader );
+	ground_material = Engine::Material( "Ground", blinn_phong_shader );
 	ground_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
 	ground_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& ground_quad_scale( ground_transform.GetScaling() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
-	wall_material = Engine::Material( "Front Wall", &blinn_phong_shader );
+	wall_material = Engine::Material( "Wall", blinn_phong_shader );
 	wall_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
 	wall_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& front_wall_quad_scale( wall_front_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	wall_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 
-	window_material = Engine::Material( "Transparent Window", &basic_textured_shader );
+	window_material = Engine::Material( "Transparent Window", basic_textured_shader );
 	window_material.SetTexture( "uniform_texture_slot", transparent_window_texture );
 	window_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
-	outline_material = Engine::Material( "Outline", &outline_shader );
+	outline_material = Engine::Material( "Outline", outline_shader );
 
-	mirror_quad_material = Engine::Material( "Rear-view Mirror", &texture_blit_shader );
+	mirror_quad_material = Engine::Material( "Rear-view Mirror", texture_blit_shader );
 
 	{
-		const auto offscreen_blit_shader_to_use = msaa_for_offscreen_framebuffers_sample_count ? &fullscreen_blit_resolve_shader : &fullscreen_blit_shader;
+		const auto offscreen_blit_shader_to_use = msaa_for_offscreen_framebuffers_sample_count ? fullscreen_blit_resolve_shader : fullscreen_blit_shader;
 		offscreen_quad_material = Engine::Material( "Offscreen Quad", offscreen_blit_shader_to_use );
 		if( msaa_for_offscreen_framebuffers_sample_count )
 			offscreen_quad_material.Set( "uniform_sample_count", *msaa_for_offscreen_framebuffers_sample_count );
