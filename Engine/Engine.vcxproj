@@ -278,6 +278,8 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
   <ItemGroup>
     <None Include="Engine\Asset\Shader\Color.frag" />
     <None Include="Engine\Asset\Shader\Color.vert" />
+    <None Include="Engine\Asset\Shader\Empty.frag" />
+    <None Include="Engine\Asset\Shader\PassThrough_Transform.vert" />
     <None Include="Engine\Asset\Shader\Textured.frag" />
     <None Include="Engine\Asset\Shader\Textured.vert" />
     <None Include="Engine\Asset\Shader\BasicTextured_Mixed.frag" />

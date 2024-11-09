@@ -364,5 +364,7 @@
     <None Include="Engine\Asset\Shader\VisualizeNormals.geom" />
     <None Include="Engine\Asset\Shader\VisualizeNormals.vert" />
     <None Include="Engine\Asset\Shader\Outline.vert" />
+    <None Include="Engine\Asset\Shader\Empty.frag" />
+    <None Include="Engine\Asset\Shader\PassThrough_Transform.vert" />
   </ItemGroup>
 </Project>

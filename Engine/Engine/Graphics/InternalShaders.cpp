@@ -95,6 +95,10 @@ namespace Engine
 								FullShaderPath( "VisualizeNormals.vert"_vert ),
 								FullShaderPath( "VisualizeNormals.geom"_geom ),
 								FullShaderPath( "Color.frag"_frag ) );
+		SHADER_MAP.try_emplace( "Shadow-map Write",
+								"Shadow-map Write",
+								FullShaderPath( "PassThrough_Transform.vert"_vert ),
+								FullShaderPath( "Empty.frag"_frag ) );
 
 		/* Register all built-in shaders: */
 		for( auto& [ shader_name, shader ] : SHADER_MAP )
