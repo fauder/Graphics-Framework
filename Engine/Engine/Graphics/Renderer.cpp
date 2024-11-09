@@ -415,7 +415,7 @@ namespace Engine
 			update_uniform_buffer_other = true;
 		}
 
-		if( shaders_registered_reference_count_map[ &shader ]++ == 1 )
+		if( ++shaders_registered_reference_count_map[ &shader ] == 1 )
 			shaders_registered.insert( &shader );
 	}
 
