@@ -14,6 +14,9 @@ namespace Engine
 
 	Shader* InternalShaders::Get( const std::string& name )
 	{
+		// Just to get a better error message.
+		ASSERT_DEBUG_ONLY( SHADER_MAP.contains( name ) && ( "Built-in shader with the name \"" + name + "\" was not found!" ).c_str() );
+
 		return &( SHADER_MAP.find( name )->second );
 	}
 
