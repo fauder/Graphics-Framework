@@ -484,18 +484,20 @@ void SandboxApplication::Render()
 	Engine::Application::Render();
 
 	const Quaternion original_camera_orientation( camera_transform.GetRotation() );
+	const Vector3 original_camera_position( camera_transform.GetTranslation() );
 
 	/* Shadow mapping pass: Render everything from the view of light sources, to shadow-map framebuffers: */
 	{
 		// TODO: Place shadow-mapping camera code below in Renderer.
 
-		// TODO: Place camera at some position along the direction of the light.
-		camera_transform.LookAt( light_directional.transform->Forward(), light_directional.transform->Up() );
+		const auto& light_direction( light_directional.transform->Forward() );
+		camera_transform.LookAt( light_direction, light_directional.transform->Up() );
+		camera_transform.SetTranslation( -light_direction * 100.0f );
 		camera_controller.ResetToTransform();
 
 		// TODO: AABBs.
 		// TODO: Render the projection volume as a wireframe cube. More generally, create a debug-render pass, with wire-frame rendering.
-		// Use ortho. projection for directional light. For now,use big values for the projection volume:
+		// Use ortho. projection for directional light. For now, use big values for the projection volume:
 		camera.SetCustomProjectionMatrix( Engine::Matrix::OrthographicProjection( -50.0f, +50.0f, -50.0f, +50.0f, 1.0f, 101.0f ) );
 		renderer.UpdatePerPass( Engine::Renderer::PASS_ID_SHADOW_MAPPING, camera );
 
@@ -503,6 +505,7 @@ void SandboxApplication::Render()
 	}
 
 	/* Revert camera back to original orientation: */
+	camera_transform.SetTranslation( original_camera_position );
 	camera_transform.SetRotation( original_camera_orientation );
 	camera_controller.ResetToTransform();
 

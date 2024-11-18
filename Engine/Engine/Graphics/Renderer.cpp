@@ -115,30 +115,69 @@ namespace Engine
 
 						SortRenderablesInQueue( current_camera_info.view_matrix.GetRow< 3 >( 3 ), queue.renderable_list, queue.render_state_override.sorting_mode );
 
-						for( const auto& [ shader, dont_care ] : queue.shaders_in_flight )
+						switch( pass_id )
 						{
-							shader->Bind();
-
-							for( auto& [ material_name, material ] : queue.materials_in_flight )
+							case PASS_ID_SHADOW_MAPPING:
 							{
-								if( material->shader->Id() == shader->Id() )
+								static auto& shadow_map_write_shader           = *InternalShaders::Get( "Shadow-map Write" );
+								static auto& shadow_map_write_instanced_shader = *InternalShaders::Get( "Shadow-map Write (Instanced)" );
+								
+								shadow_map_write_shader.Bind();
+
+								for( auto& renderable : queue.renderable_list )
 								{
-									material->UploadUniforms();
-
-									for( auto& renderable : queue.renderable_list )
+									if( renderable->is_enabled && not renderable->mesh->HasInstancing() )
 									{
-										if( renderable->is_enabled && renderable->material->Name() == material_name )
-										{
-											renderable->mesh->Bind();
+										renderable->mesh->Bind();
 
-											if( renderable->transform )
-												material->SetAndUploadUniform( "uniform_transform_world", renderable->transform->GetFinalMatrix() );
+										if( renderable->transform )
+											shadow_map_write_shader.SetUniform( "uniform_transform_world", renderable->transform->GetFinalMatrix() );
 
-											Render( *renderable->mesh );
-										}
+										Render( *renderable->mesh );
+									}
+								}
+
+								shadow_map_write_instanced_shader.Bind();
+
+								for( auto& renderable : queue.renderable_list )
+								{
+									if( renderable->is_enabled && renderable->mesh->HasInstancing() )
+									{
+										renderable->mesh->Bind();
+
+										Render( *renderable->mesh );
 									}
 								}
 							}
+								break;
+
+							default: // "Regular" passes:
+								for( const auto& [ shader, dont_care ] : queue.shaders_in_flight )
+								{
+									shader->Bind();
+
+									for( auto& [ material_name, material ] : queue.materials_in_flight )
+									{
+										if( material->shader->Id() == shader->Id() )
+										{
+											material->UploadUniforms();
+
+											for( auto& renderable : queue.renderable_list )
+											{
+												if( renderable->is_enabled && renderable->material->Name() == material_name )
+												{
+													renderable->mesh->Bind();
+
+													if( renderable->transform )
+														material->SetAndUploadUniform( "uniform_transform_world", renderable->transform->GetFinalMatrix() );
+
+													Render( *renderable->mesh );
+												}
+											}
+										}
+									}
+								}
+								break;
 						}
 					}
 				}
