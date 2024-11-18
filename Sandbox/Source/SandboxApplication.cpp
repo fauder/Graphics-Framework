@@ -339,9 +339,7 @@ void SandboxApplication::Initialize()
 	// TODO: Do not create an explicit (or rather, Application-visible) Renderable for skybox; Make it Renderer-internal.
 
 	/* Disable some RenderPasses & Renderables on start-up to decrease clutter. */
-	renderer.TogglePass( Engine::Renderer::PASS_ID_SHADOW_MAPPING, false );
 	renderer.TogglePass( Engine::Renderer::PASS_ID_OUTLINE, false );
-	renderer.TogglePass( RENDER_PASS_ID_LIGHTING_REAR_VIEW, false );
 	renderer.ToggleQueue( Engine::Renderer::QUEUE_ID_TRANSPARENT, false );
 	wall_front_renderable.ToggleOff();
 	wall_left_renderable.ToggleOff();

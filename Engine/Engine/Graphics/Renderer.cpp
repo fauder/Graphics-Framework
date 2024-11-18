@@ -126,7 +126,7 @@ namespace Engine
 
 								for( auto& renderable : queue.renderable_list )
 								{
-									if( renderable->is_enabled && not renderable->mesh->HasInstancing() )
+									if( renderable->is_enabled && renderable->is_receiving_shadows && not renderable->mesh->HasInstancing() )
 									{
 										renderable->mesh->Bind();
 
@@ -141,7 +141,7 @@ namespace Engine
 
 								for( auto& renderable : queue.renderable_list )
 								{
-									if( renderable->is_enabled && renderable->mesh->HasInstancing() )
+									if( renderable->is_enabled && renderable->is_receiving_shadows && renderable->mesh->HasInstancing() )
 									{
 										renderable->mesh->Bind();
 
