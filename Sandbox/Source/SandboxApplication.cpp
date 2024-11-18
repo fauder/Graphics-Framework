@@ -970,6 +970,8 @@ void SandboxApplication::RenderImGui_Viewport()
 
 void SandboxApplication::ResetLightingData()
 {
+	light_directional_transform = Engine::Transform();
+
 	light_directional = 
 	{
 		.is_enabled = true,
@@ -1006,6 +1008,8 @@ void SandboxApplication::ResetLightingData()
 			.transform = &light_point_transform_array[ i ]
 		};
 	}
+
+	light_spot_transform = Engine::Transform();
 
 	light_spot =
 	{
