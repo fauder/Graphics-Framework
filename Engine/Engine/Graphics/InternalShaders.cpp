@@ -99,6 +99,11 @@ namespace Engine
 								"Shadow-map Write",
 								FullShaderPath( "PassThrough_Transform.vert"_vert ),
 								FullShaderPath( "Empty.frag"_frag ) );
+		SHADER_MAP.try_emplace( "Shadow-map Write (Instanced)",
+								"Shadow-map Write (Instanced)",
+								FullShaderPath( "PassThrough_Transform.vert"_vert ),
+								FullShaderPath( "Empty.frag"_frag ),
+								Shader::Features{ "INSTANCING_ENABLED" } );
 
 		/* Register all built-in shaders: */
 		for( auto& [ shader_name, shader ] : SHADER_MAP )
