@@ -19,9 +19,11 @@ public:
 	ModelInstance();
 	ModelInstance( const Engine::Model* model, Engine::Shader* const shader,
 				   const Vector3 scale, const Quaternion& rotation, const Vector3& translation,
+				   const Engine::RenderQueue::ID queue_id,
+				   Engine::Material* material,
+				   const bool has_shadows = false,
 				   const Engine::Texture* diffuse_texture = nullptr, const Engine::Texture* specular_texture = nullptr,
-				   const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ),
-				   const std::initializer_list< std::pair< Engine::Renderer::RenderGroupID, Engine::Material* > > render_group_material_info_list = {} );
+				   const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	DELETE_COPY_CONSTRUCTORS( ModelInstance );
 	DEFAULT_MOVE_CONSTRUCTORS( ModelInstance );
@@ -34,13 +36,13 @@ public:
 						  const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 /* Queries: */
-	inline std::map < Engine::Renderer::RenderGroupID, std::vector< Engine::Renderable > >& RenderablesMap() { return node_renderable_array_map; }
-	inline std::vector< Engine::Renderable >& Renderables( const Engine::Renderer::RenderGroupID render_group_id ) { return node_renderable_array_map[ render_group_id ]; }
-	inline const std::vector< Engine::Material >& Materials() const { return node_material_array; }
+	inline		 std::vector< Engine::Renderable >& Renderables()			{ return node_renderable_array; }
+	inline const std::vector< Engine::Material	 >& Materials()		const	{ return node_material_array; }
 
 private:
 	const Engine::Model* model;
-	std::map< Engine::Renderer::RenderGroupID, std::vector< Engine::Renderable > > node_renderable_array_map;
+	Engine::RenderQueue::ID queue_id;
+	std::vector< Engine::Renderable > node_renderable_array;
 	std::vector< Engine::Material > node_material_array;
 	std::vector< Engine::Transform > node_transform_array;
 	std::vector< Engine::MaterialData::BlinnPhongMaterialData > blinn_phong_material_data_array;

@@ -12,8 +12,7 @@ namespace Engine
 		aspect_ratio( aspect_ratio ),
 		vertical_field_of_view( vertical_field_of_view ),
 		projection_matrix_needs_update( true ),
-		view_projection_matrix_needs_update( true ),
-		projection_matrix_is_overridden( false )
+		view_projection_matrix_needs_update( true )
 	{}
 
 /* Matrix Getters: */
@@ -30,7 +29,7 @@ namespace Engine
 	{
 		if( projection_matrix_needs_update )
 		{
-			if( not projection_matrix_is_overridden )
+			if( UsesPerspectiveProjection() )
 				projection_matrix = Matrix::PerspectiveProjection( plane_near, plane_far, aspect_ratio, vertical_field_of_view );
 
 			projection_matrix_needs_update = false;
@@ -115,6 +114,9 @@ namespace Engine
 
 	Camera& Camera::ClearCustomProjectionMatrix()
 	{
+		/* This ensures UsesPerspectiveProjection() works correctly without needing to actually re-calculate projection just to query projection type info. */
+		projection_matrix[ 2 ][ 3 ] = 1.0f;
+
 		SetProjectionMatrixDirty();
 		return *this;
 	}
@@ -153,8 +155,7 @@ namespace Engine
 
 	void Camera::SetProjectionMatrixDirty()
 	{
-		projection_matrix_needs_update  = true;
-		projection_matrix_is_overridden = false;
+		projection_matrix_needs_update = true;
 		SetViewProjectionMatrixDirty();
 	}
 
@@ -165,8 +166,7 @@ namespace Engine
 
 	void Camera::SetCustomProjectionMatrixDirty()
 	{
-		projection_matrix_needs_update  = false;
-		projection_matrix_is_overridden = true;
+		projection_matrix_needs_update = false;
 		SetViewProjectionMatrixDirty();
 	}
 }

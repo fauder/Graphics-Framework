@@ -39,26 +39,19 @@ Engine::Application* Engine::CreateApplication( const Engine::BitFlags< Engine::
 SandboxApplication::SandboxApplication( const Engine::BitFlags< Engine::CreationFlags > flags )
 	:
 	Engine::Application( flags ),
-	render_group_id_regular( Engine::Renderer::RenderGroupID{ 0 } ),
-	render_group_id_outlined_mesh( Engine::Renderer::RenderGroupID{ 1 } ),
-	render_group_id_outline( Engine::Renderer::RenderGroupID{ 2 } ),
-	render_group_id_transparent( Engine::Renderer::RenderGroupID{ 3 } ),
-	render_group_id_shadow_mapping( Engine::Renderer::RenderGroupID{ 4 } ),
-	render_group_id_screen_size_quad( Engine::Renderer::RenderGroupID{ 5 } ),
-	render_group_id_skybox( Engine::Renderer::RenderGroupID{ 999 } ),
+	renderer( /* Offscreen framebuffer MSAA sample counts: */ { /* Main: */ 4, /* Rear-view: */ std::nullopt } ),
 	test_model_info{ .model_instance = {}, .shader = Engine::InternalShaders::Get( "Blinn-Phong" ), .file_path = {} },
 	meteorite_model_info{ .model_instance = {}, .shader = Engine::InternalShaders::Get( "Blinn-Phong (Instanced)" ), .file_path = {} },
 	light_point_transform_array( LIGHT_POINT_COUNT ),
 	cube_transform_array( CUBE_COUNT ),
 	cube_reflected_transform_array( CUBE_REFLECTED_COUNT ),
-	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) ),
+	camera( &camera_transform, Platform::GetAspectRatio(), CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two(), Platform::GetAspectRatio() ) ),
 	camera_rotation_speed( 5.0f ),
 	camera_move_speed( 5.0f ),
 	camera_controller( &camera, camera_rotation_speed ),
 	ui_interaction_enabled( false ),
 	show_imgui_demo_window( false ),
-	render_rear_view_cam_to_imgui( true ),
-	msaa_for_offscreen_framebuffers_sample_count( 4 )
+	render_rear_view_cam_to_imgui( true )
 {
 	Initialize();
 }
@@ -70,13 +63,8 @@ SandboxApplication::~SandboxApplication()
 
 void SandboxApplication::Initialize()
 {
-	renderer.SetClearColor( Engine::Color4::Gray() );
-	renderer.SetClearTargets( Engine::Renderer::ClearTarget::All );
-
 	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
 	
-	Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
-
 	gl_logger.IgnoreID( 131185 );
 
 	//Engine::Math::Random::SeedRandom();
@@ -297,130 +285,64 @@ void SandboxApplication::Initialize()
 /* Materials: */
 	ResetMaterialData();
 
-/* Renderer (Renderables, RenderStates etc.): */
-	{
-		renderer.SetRenderGroupName( render_group_id_regular, "Default" );
-		//auto& render_state_regular_meshes = renderer.GetRenderState( render_group_id_regular ); // Keep default settings.
-	}
+/* Renderer: */
+	/* Add a new Pass for rear-view camera rendering: */
+	renderer.AddPass( RENDER_PASS_ID_LIGHTING_REAR_VIEW,
+					  Engine::RenderPass
+					  {
+						  .name                             = "Lighting - Rear View",
+						  .target_framebuffer               = &renderer.OffscreenFramebuffer( 1 ),
+						  .queue_id_set                     = { Engine::Renderer::QUEUE_ID_GEOMETRY, Engine::Renderer::QUEUE_ID_TRANSPARENT, Engine::Renderer::QUEUE_ID_SKYBOX },
+					      .render_state_override_is_allowed = true
+					  } );
 	
-	{
-		/* This pass renders the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is rendered at. */
-		renderer.SetRenderGroupName( render_group_id_outlined_mesh, "Outlined Meshes" );
-		auto& render_state_outline_meshes = renderer.GetRenderState( render_group_id_outlined_mesh );
-
-		/* Omitted settings are left to defaults. */
-
-		render_state_outline_meshes.stencil_test_enable                           = true;
-		render_state_outline_meshes.stencil_write_mask                            = 0xFF;
-		render_state_outline_meshes.stencil_comparison_function                   = Engine::Renderer::ComparisonFunction::Always;
-		render_state_outline_meshes.stencil_ref                                   = 0x01;
-		render_state_outline_meshes.stencil_test_response_stencil_fail            = Engine::Renderer::StencilTestResponse::Keep;
-		render_state_outline_meshes.stencil_test_response_stencil_pass_depth_fail = Engine::Renderer::StencilTestResponse::Keep;
-		render_state_outline_meshes.stencil_test_response_both_pass               = Engine::Renderer::StencilTestResponse::Replace;
-	}
-
-	{
-		/* This pass renders the outlines only; It does this by rendering the mesh at everywhere the stencil buffer is NOT 1. */
-		renderer.SetRenderGroupName( render_group_id_outline, "Outlines" );
-		auto& render_state_outlines = renderer.GetRenderState( render_group_id_outline );
-
-		/* Omitted settings are left to defaults. */
-
-		render_state_outlines.depth_test_enable = false;
-
-		render_state_outlines.stencil_test_enable         = true;
-		render_state_outlines.stencil_write_mask          = 0x00; // Disable writes; This pass only needs to READ the stencil buffer, to figure out where NOT to render.
-		render_state_outlines.stencil_comparison_function = Engine::Renderer::ComparisonFunction::NotEqual; // Render everywhere that's not the actual mesh, i.e., the border.
-		render_state_outlines.stencil_ref                 = 0x01;
-	}
-
-	{
-		/* This pass renders the transparent meshes. */
-		renderer.SetRenderGroupName( render_group_id_transparent, "Transparent Meshes" );
-		auto& render_state_transparent = renderer.GetRenderState( render_group_id_transparent );
-
-		/* Omitted settings are left to defaults. */
-
-		render_state_transparent.blending_enable = true;
-
-		render_state_transparent.blending_source_color_factor      = Engine::Renderer::BlendingFactor::SourceAlpha;
-		render_state_transparent.blending_destination_color_factor = Engine::Renderer::BlendingFactor::OneMinusSourceAlpha;
-		render_state_transparent.blending_source_alpha_factor      = Engine::Renderer::BlendingFactor::SourceAlpha;
-		render_state_transparent.blending_destination_alpha_factor = Engine::Renderer::BlendingFactor::OneMinusSourceAlpha;
-
-		render_state_transparent.sorting_mode = Engine::Renderer::SortingMode::DepthFarthestToNearest;
-	}
-
-	{
-		/* This pass renders to shadow-maps. */
-		renderer.SetRenderGroupName( render_group_id_shadow_mapping, "Shadow Mapping" );
-		auto& render_state_transparent = renderer.GetRenderState( render_group_id_shadow_mapping );
-
-		/* Omitted settings are left to defaults. */
-
-		render_state_transparent.sorting_mode = Engine::Renderer::SortingMode::DepthNearestToFarthest;
-	}
-
-	{
-		renderer.SetRenderGroupName( render_group_id_screen_size_quad, "Screen-size Quad" );
-		//auto& render_state_screen_size_quad = renderer.GetRenderState( render_group_id_screen_size_quad ); // Keep default settings.
-	}
-
-	{
-		renderer.SetRenderGroupName( render_group_id_skybox, "Skybox" );
-		auto& render_state_skybox = renderer.GetRenderState( render_group_id_skybox ); // Keep default settings except for back face culling.
-
-		render_state_skybox.depth_comparison_function = Engine::Renderer::ComparisonFunction::LessOrEqual;
-
-		render_state_skybox.face_culling_enable = false;
-	}
-
-	/* Create Renderables and assign them RenderGroups: */
-
 	light_sources_renderable = Engine::Renderable( &cube_mesh_instanced_with_color, &light_source_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddRenderable( &light_sources_renderable, render_group_id_regular );
+	renderer.AddRenderable( &light_sources_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY );
 
-	cube_renderable = Engine::Renderable( &cube_mesh_instanced, &cube_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddRenderable( &cube_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	cube_renderable = Engine::Renderable( &cube_mesh_instanced, &cube_material,
+										  nullptr /* => No Transform here, as we will provide the Transforms as instance data. */, true /* => has shadows. */ );
+	renderer.AddRenderable( &cube_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
-	cube_reflected_renderable = Engine::Renderable( &cube_reflected_mesh_instanced, &cube_reflected_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	renderer.AddRenderable( &cube_reflected_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	cube_reflected_renderable = Engine::Renderable( &cube_reflected_mesh_instanced, &cube_reflected_material,
+													nullptr /* => No Transform here, as we will provide the Transforms as instance data. */, true /* => has shadows. */ );
+	renderer.AddRenderable( &cube_reflected_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
-	//cube_renderable_outline = Engine::Renderable( &cube_mesh_instanced, &outline_material, nullptr /* => No Transform here, as we will provide the Transforms as instance data. */ );
-	//renderer.AddRenderable( &cube_renderable_outline, render_group_id_outline );
+	ground_renderable = Engine::Renderable( &quad_mesh, &ground_material, &ground_transform, true /* => has shadows. */ );
+	renderer.AddRenderable( &ground_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
-	ground_renderable = Engine::Renderable( &quad_mesh, &ground_material, &ground_transform );
-	renderer.AddRenderable( &ground_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
-
-	wall_front_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_front_transform );
-	wall_left_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_left_transform );
-	wall_right_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_right_transform );
-	wall_back_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_back_transform );
-	renderer.AddRenderable( &wall_front_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
-	renderer.AddRenderable( &wall_left_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
-	renderer.AddRenderable( &wall_right_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
-	renderer.AddRenderable( &wall_back_renderable, { render_group_id_outlined_mesh, render_group_id_shadow_mapping } );
+	wall_front_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_front_transform, true /* => has shadows. */ );
+	wall_left_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_left_transform, true /* => has shadows. */ );
+	wall_right_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_right_transform, true /* => has shadows. */ );
+	wall_back_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_back_transform, true /* => has shadows. */ );
+	renderer.AddRenderable( &wall_front_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
+	renderer.AddRenderable( &wall_left_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
+	renderer.AddRenderable( &wall_right_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
+	renderer.AddRenderable( &wall_back_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
 	for( auto i = 0; i < WINDOW_COUNT; i++ )
 	{
 		window_renderable_array[ i ] = Engine::Renderable( &quad_mesh_uvs_only, &window_material, &window_transform_array[ i ] );
-		renderer.AddRenderable( &window_renderable_array[ i ], render_group_id_transparent );
+		renderer.AddRenderable( &window_renderable_array[ i ], Engine::Renderer::QUEUE_ID_TRANSPARENT );
 	}
 
 	offscreen_quad_renderable = Engine::Renderable( &quad_mesh_fullscreen, &offscreen_quad_material );
-	renderer.AddRenderable( &offscreen_quad_renderable, render_group_id_screen_size_quad );
+	renderer.AddRenderable( &offscreen_quad_renderable, Engine::Renderer::QUEUE_ID_POSTPROCESSING );
 
 	mirror_quad_renderable = Engine::Renderable( &quad_mesh_mirror, &mirror_quad_material );
-	renderer.AddRenderable( &mirror_quad_renderable, render_group_id_screen_size_quad );
+	renderer.AddRenderable( &mirror_quad_renderable, Engine::Renderer::QUEUE_ID_POSTPROCESSING );
 
 	mirror_quad_renderable.ToggleOnOrOff( not render_rear_view_cam_to_imgui );
 
 	skybox_renderable = Engine::Renderable( &cube_mesh_fullscreen, &skybox_material );
-	renderer.AddRenderable( &skybox_renderable, render_group_id_skybox );
+	renderer.AddRenderable( &skybox_renderable, Engine::Renderer::QUEUE_ID_SKYBOX );
 
-	/* Disable some RenderGroups & Renderables on start-up to decrease clutter. */
-	renderer.ToggleRenderGroup( render_group_id_outline, false );
-	renderer.ToggleRenderGroup( render_group_id_transparent, false );
+	// TODO: Do not create an explicit (or rather, Application-visible) Renderable for skybox; Make it Renderer-internal.
+
+	/* Disable some RenderPasses & Renderables on start-up to decrease clutter. */
+	renderer.TogglePass( Engine::Renderer::PASS_ID_SHADOW_MAPPING, false );
+	renderer.TogglePass( Engine::Renderer::PASS_ID_OUTLINE, false );
+	renderer.TogglePass( RENDER_PASS_ID_LIGHTING_REAR_VIEW, false );
+	renderer.ToggleQueue( Engine::Renderer::QUEUE_ID_TRANSPARENT, false );
 	wall_front_renderable.ToggleOff();
 	wall_left_renderable.ToggleOff();
 	wall_right_renderable.ToggleOff();
@@ -561,48 +483,11 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	renderer.Disable_sRGBEncoding();
+	const Quaternion original_camera_orientation( camera_transform.GetRotation() );
 
-	renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_Projection, &camera ); // Since some passes modify projection, need to revert back to default here.
-
-	const auto original_camera_orientation = camera_transform.GetRotation();
-
-	/* Pass 1 - Rear-cam view: Invert camera direction, render everything to the off-screen framebuffer 0: */
+	/* Shadow mapping pass: Render everything from the view of light sources, to shadow-map framebuffers: */
 	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 0 (Rear view)" ) );
-
-		camera_controller.Invert();
-		renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_View, &camera );
-
-		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 0 ] );
-
-		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
-
-		/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-		offscreen_framebuffer_array[ 0 ].ColorAttachment().GenerateMipmaps();
-	}
-
-	/* Pass 2 - Default view: Invert camera direction again (to revert to default view), render everything to the off-screen framebuffer 1: */
-	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Offscreen FB 1 (Default view)" ) );
-		
-		camera_controller.Invert();
-		renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_View, &camera );
-
-		renderer.SetCurrentFramebuffer( &offscreen_framebuffer_array[ 1 ] );
-
-		renderer.Render( camera, { render_group_id_regular, render_group_id_outlined_mesh, render_group_id_outline, render_group_id_transparent, render_group_id_skybox } );
-
-		if( not offscreen_framebuffer_array[ 1 ].IsMultiSampled() )
-		{
-			/* Now that the off-screen framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-			offscreen_framebuffer_array[ 1 ].ColorAttachment().GenerateMipmaps();
-		}
-	}
-
-	/* Pass 3 - Shadow maps: Render everything from the view of light sources, to shadow-map framebuffers: */
-	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Render to Shadow Maps." ) );
+		// TODO: Place shadow-mapping camera code below in Renderer.
 
 		// TODO: Place camera at some position along the direction of the light.
 		camera_transform.LookAt( light_directional.transform->Forward(), light_directional.transform->Up() );
@@ -612,48 +497,39 @@ void SandboxApplication::Render()
 		// TODO: Render the projection volume as a wireframe cube. More generally, create a debug-render pass, with wire-frame rendering.
 		// Use ortho. projection for directional light. For now,use big values for the projection volume:
 		camera.SetCustomProjectionMatrix( Engine::Matrix::OrthographicProjection( -50.0f, +50.0f, -50.0f, +50.0f, 1.0f, 101.0f ) );
-		renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers, &camera );
-
-		renderer.SetCurrentFramebuffer( &light_directional_shadow_map_framebuffer );
-
-		renderer.Render( camera, { render_group_id_shadow_mapping } );
+		renderer.UpdatePerPass( Engine::Renderer::PASS_ID_SHADOW_MAPPING, camera );
 
 		camera.ClearCustomProjectionMatrix();
-
-		/* Now that the shadow-map framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-		//light_directional_shadow_map_framebuffer.DepthAttachment().GenerateMipmaps();
-	}
-
-	/* Pass 4: Blit off-screen framebuffers to quads on the editor framebuffer to actually display them: */
-	{
-		auto log_group( gl_logger.TemporaryLogGroup( "Sandbox Render(): Blit Offscreen FB(s) to Main FB" ) );
-
-		renderer.Enable_sRGBEncoding(); /* Finalization of colors : Need to convert from linear color space to sRGB color space. */
-
-		if( show_imgui )
-		{
-			/* This pass does not utilize camera view/projection => no Renderer::Update() necessary. */
-
-			renderer.SetCurrentFramebuffer( &editor_framebuffer );
-
-			renderer.Render( /* Will not be used => */ camera, { render_group_id_screen_size_quad } );
-
-			/* Now that the editor framebuffer is filled, we should create mip-maps of it so that it can be mapped onto smaller surfaces: */
-			editor_framebuffer.ColorAttachment().GenerateMipmaps();
-
-			/* Now this editor_framebuffer's color attachment will be passed to ImGui to be displayed inside an ImGui window. */
-		}
-		else
-		{
-			renderer.ResetToDefaultFramebuffer();
-
-			renderer.Render( /* Will not be used => */ camera, { render_group_id_screen_size_quad } );
-		}
 	}
 
 	/* Revert camera back to original orientation: */
 	camera_transform.SetRotation( original_camera_orientation );
 	camera_controller.ResetToTransform();
+
+	/* Lighting - Rear-view pass: Invert camera direction, render everything to the off-screen framebuffer 0: */
+	{
+		camera_controller.Invert();
+		renderer.UpdatePerPass( RENDER_PASS_ID_LIGHTING_REAR_VIEW, camera );
+	}
+
+	/* Lighting: Invert camera direction again (to revert to default view), render everything to the off-screen framebuffer 1: */
+	{
+		camera_controller.Invert(); // Revert back to original orientation.
+		renderer.UpdatePerPass( Engine::Renderer::PASS_ID_LIGHTING, camera );
+	}
+
+	// TODO: Outline pass.
+
+	/* Post-processing pass: Blit off-screen framebuffers to quads on the default or the editor framebuffer to actually display them: */
+	{
+		/* This pass does not utilize camera view/projection => no Renderer::Update() necessary. */
+	}
+
+	/* Revert camera back to original orientation: */
+	camera_transform.SetRotation( original_camera_orientation );
+	camera_controller.ResetToTransform();
+
+	renderer.Render();
 
 	/* CAUTION: The rest of the rendering code (namely, ImGui) will be working in sRGB for the remainder of this frame. */
 }
@@ -682,7 +558,7 @@ void SandboxApplication::RenderImGui()
 			mirror_quad_renderable.ToggleOnOrOff( not render_rear_view_cam_to_imgui );
 
 		if( render_rear_view_cam_to_imgui )
-			ImGui::Image( ( void* )( intptr_t )offscreen_framebuffer_array[ 0 ].ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+			ImGui::Image( ( void* )( intptr_t )renderer.OffscreenFramebuffer( 1 ).ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
 	}
 
 	ImGui::End();
@@ -1020,8 +896,15 @@ void SandboxApplication::OnKeyboardEvent( const Platform::KeyCode key_code, cons
 			if( key_action == Platform::KeyAction::PRESS )
 			{
 				show_imgui = !show_imgui;
-				if( not show_imgui )
+				if( show_imgui )
+				{
+					renderer.SetFinalPassToUseEditorFramebuffer();
+				}
+				else
+				{
+					renderer.SetFinalPassToUseDefaultFramebuffer();
 					OnFramebufferResizeEvent( Platform::GetFramebufferSizeInPixels() );
+				}
 			}
 			break;
 		case Platform::KeyCode::KEY_O:
@@ -1037,18 +920,15 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 {
 	/* Do nothing on minimize: */
 	if( width_new_pixels == 0 || height_new_pixels == 0 || 
-		( editor_framebuffer.Size() == Vector2I{ width_new_pixels, height_new_pixels } ) )
+		( renderer.EditorFramebuffer().Size() == Vector2I{ width_new_pixels, height_new_pixels } ) )
 		return;
 
 	renderer.OnFramebufferResize( width_new_pixels, height_new_pixels );
 
 	RecalculateProjectionParameters( width_new_pixels, height_new_pixels );
 	
-	// Re-initialize:
-	InitializeFramebuffers( width_new_pixels, height_new_pixels );
-
-	mirror_quad_material.SetTexture( "uniform_texture_slot", &offscreen_framebuffer_array[ 0 ].ColorAttachment() );
-	offscreen_quad_material.SetTexture( "uniform_texture_slot", &offscreen_framebuffer_array[ 1 ].ColorAttachment() );
+	offscreen_quad_material.SetTexture( "uniform_texture_slot", &renderer.OffscreenFramebuffer( 0 ).ColorAttachment() );
+	mirror_quad_material.SetTexture( "uniform_texture_slot", &renderer.OffscreenFramebuffer( 1 ).ColorAttachment() );
 }
 
 void SandboxApplication::OnFramebufferResizeEvent( const Vector2I new_size_pixels )
@@ -1079,7 +959,7 @@ void SandboxApplication::RenderImGui_Viewport()
 			ImGui::SetNextFrameWantCaptureKeyboard( false );
 		}
 
-		ImGui::Image( ( void* )( intptr_t )editor_framebuffer.ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
+		ImGui::Image( ( void* )( intptr_t )renderer.EditorFramebuffer().ColorAttachment().Id().Get(), ImGui::GetContentRegionAvail(), { 0, 1 }, { 1, 0 } );
 	}
 
 	ImGui::End();
@@ -1184,12 +1064,16 @@ void SandboxApplication::ResetMaterialData()
 
 	mirror_quad_material = Engine::Material( "Rear-view Mirror", texture_blit_shader );
 
+	/*if( const auto& main_offscreen_framebuffer = renderer.OffscreenFramebuffer( 0 );
+		main_offscreen_framebuffer.IsMultiSampled() )*/
 	{
-		const auto offscreen_blit_shader_to_use = msaa_for_offscreen_framebuffers_sample_count ? fullscreen_blit_resolve_shader : fullscreen_blit_shader;
-		offscreen_quad_material = Engine::Material( "Offscreen Quad", offscreen_blit_shader_to_use );
-		if( msaa_for_offscreen_framebuffers_sample_count )
-			offscreen_quad_material.Set( "uniform_sample_count", *msaa_for_offscreen_framebuffers_sample_count );
+		offscreen_quad_material = Engine::Material( "Offscreen Quad", fullscreen_blit_resolve_shader );
+		//offscreen_quad_material.Set( "uniform_sample_count", main_offscreen_framebuffer.SampleCount() );
+		// TODO: Get rid of the hard-coding here.
+		offscreen_quad_material.Set( "uniform_sample_count", 4 );
 	}
+	/*else
+		offscreen_quad_material = Engine::Material( "Offscreen Quad", fullscreen_blit_shader );*/
 
 	ground_quad_surface_data = wall_surface_data = cube_surface_data =
 	{
@@ -1226,7 +1110,6 @@ void SandboxApplication::ResetCamera()
 void SandboxApplication::ResetProjection()
 {
 	camera = Engine::Camera( &camera_transform, camera.GetAspectRatio(), camera.GetVerticalFieldOfView() ); // Keep current aspect ratio & v-fov.
-	renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_Projection, &camera );
 }
 
 void SandboxApplication::SwitchCameraView( const CameraView view )
@@ -1274,9 +1157,9 @@ void SandboxApplication::SwitchCameraView( const CameraView view )
 	camera_controller.ResetToTransform();
 }
 
-SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const
+SandboxApplication::Radians SandboxApplication::CalculateVerticalFieldOfView( const Radians horizontal_field_of_view, const float aspect_ratio ) const
 {
-	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), camera.GetAspectRatio() );
+	return 2.0f * Engine::Math::Atan2( Engine::Math::Tan( horizontal_field_of_view / 2.0f ), aspect_ratio );
 }
 
 bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const std::string& file_path, const char* name )
@@ -1288,27 +1171,23 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 
 		auto& model_instance_to_load_into = model_info_to_be_loaded.model_instance;
 
-		for( auto& [ render_group_id, renderables_array ] : model_instance_to_load_into.RenderablesMap() )
-			for( auto& renderable_to_remove : renderables_array )
-				renderer.RemoveRenderable( &renderable_to_remove );
+		for( auto& renderable_to_remove : model_instance_to_load_into.Renderables() )
+			renderer.RemoveRenderable( &renderable_to_remove );
 
 		model_instance_to_load_into = ModelInstance( new_model,
 													 model_info_to_be_loaded.shader,
 													 Vector3::One(),
 													 Quaternion(),
 													 Vector3::Up() * 8.0f,
-													 /* Diffuse texture: */ nullptr /* -> Use Albedo colors in-model. */,
+													 Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED,
+													 nullptr,
+													 true, /* has shadows. */
+													 /* Diffuse texture: */ nullptr /* => Use Albedo colors in-model. */,
 													 /* Specular texture: */ checker_pattern_texture,
-													 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f },
-													 {
-														{ render_group_id_outlined_mesh,	nullptr },
-														{ render_group_id_outline,			&outline_material },
-														{ render_group_id_shadow_mapping,	nullptr }
-													 } );
+													 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f } );
 
-		for( const auto& [ render_group_id, renderables_array ] : model_instance_to_load_into.RenderablesMap() )
-			for( auto& renderable_to_add : model_instance_to_load_into.Renderables( render_group_id ) )
-				renderer.AddRenderable( &renderable_to_add, render_group_id );
+			for( auto& renderable_to_add : model_instance_to_load_into.Renderables() )
+				renderer.AddRenderable( &renderable_to_add, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
 		return true;
 	}
@@ -1320,9 +1199,8 @@ void SandboxApplication::UnloadModel( ModelInfo& model_info_to_be_loaded )
 {
 	model_info_to_be_loaded.file_path = "";
 
-	for( auto& [ id, renderables_array ] : model_info_to_be_loaded.model_instance.RenderablesMap() )
-		for( auto& renderable_to_remove : renderables_array )
-			renderer.RemoveRenderable( &renderable_to_remove );
+	for( auto& renderable_to_remove : model_info_to_be_loaded.model_instance.Renderables() )
+		renderer.RemoveRenderable( &renderable_to_remove );
 
 	model_info_to_be_loaded.model_instance = {};
 }
@@ -1331,7 +1209,7 @@ void SandboxApplication::ReplaceMeteoriteAndCubeRenderables( bool use_meteorites
 {
 	if( use_meteorites )
 	{
-		meteorite_renderable = &meteorite_model_info.model_instance.Renderables( render_group_id_outlined_mesh ).front();
+		meteorite_renderable = &meteorite_model_info.model_instance.Renderables().front();
 		cube_mesh_instanced = Engine::Mesh( *meteorite_renderable->GetMesh(),
 											{
 												Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
@@ -1357,30 +1235,10 @@ void SandboxApplication::ReplaceMeteoriteAndCubeRenderables( bool use_meteorites
 	}
 }
 
-void SandboxApplication::InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels )
-{
-	/* Main: */
-	editor_framebuffer = Engine::Framebuffer( "Editor FB", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined,
-											  /* This is the final step, so sRGB encoding should be on => */ true );
-
-	/* Offscreen: */
-	offscreen_framebuffer_array[ 0 ] = Engine::Framebuffer( "Offscreen FB 0", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined );
-	offscreen_framebuffer_array[ 1 ] = Engine::Framebuffer( "Offscreen FB 1", width_new_pixels, height_new_pixels, Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined,
-															/* No sRGB for intermediate steps => */ false, msaa_for_offscreen_framebuffers_sample_count );
-
-	/* Shadow maps: */
-	light_directional_shadow_map_framebuffer = Engine::Framebuffer( "Shadow Map: Dir. Light", width_new_pixels / 2, height_new_pixels / 2, Engine::Framebuffer::AttachmentType::Depth,
-																	/* No sRGB needed for a depth map. => */ false, std::nullopt,
-																	Engine::Texture::Wrapping::Repeat, Engine::Texture::Wrapping::Repeat,
-																	Engine::Texture::Filtering::Nearest, Engine::Texture::Filtering::Nearest );
-}
-
 void SandboxApplication::RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels )
 {
 	camera.SetAspectRatio( float( width_new_pixels ) / height_new_pixels );
-	camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two() ) );
-
-	renderer.Update( Engine::Renderer::UpdateOptions::UniformBuffers_Projection, &camera );
+	camera.SetVerticalFieldOfView( CalculateVerticalFieldOfView( Engine::Constants< Radians >::Pi_Over_Two(), camera.GetAspectRatio() ) );
 }
 
 void SandboxApplication::RecalculateProjectionParameters( const Vector2I new_size_pixels )
@@ -1390,5 +1248,5 @@ void SandboxApplication::RecalculateProjectionParameters( const Vector2I new_siz
 
 void SandboxApplication::RecalculateProjectionParameters()
 {
-	RecalculateProjectionParameters( editor_framebuffer.Size() );
+	RecalculateProjectionParameters( renderer.EditorFramebuffer().Size() );
 }

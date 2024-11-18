@@ -1,7 +1,8 @@
 #pragma once
 
 // Engine Includes.
-#include "Scene/Transform.h"
+#include "Transform.h"
+#include "Math/Matrix.h"
 
 namespace Engine
 {
@@ -32,13 +33,13 @@ namespace Engine
 
 		Camera& SetNearPlaneOffset( const float offset );
 		Camera& SetFarPlaneOffset( const float offset );
-		inline float GetNearPlaneOffset() const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return plane_near; }
-		inline float GetFarPlaneOffset()  const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return plane_far; }
+		inline float GetNearPlaneOffset() const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return plane_near; }
+		inline float GetFarPlaneOffset()  const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return plane_far; }
 
-		inline const float GetAspectRatio() const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return aspect_ratio; }
+		inline const float GetAspectRatio() const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return aspect_ratio; }
 		Camera& SetAspectRatio( const float new_aspect_ratio );
 
-		inline const Radians& GetVerticalFieldOfView() const { ASSERT_DEBUG_ONLY( not projection_matrix_is_overridden ); return vertical_field_of_view; }
+		inline const Radians& GetVerticalFieldOfView() const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return vertical_field_of_view; }
 		Camera& SetVerticalFieldOfView( const Radians new_fov );
 
 		/* Using this will set an "overridden" flag.
@@ -47,7 +48,7 @@ namespace Engine
 		 *		B) Indirectly, by setting near/far planes, aspect ratio or vertical FoV. */
 		Camera& SetCustomProjectionMatrix( const Matrix4x4& custom_projection_matrix );
 		Camera& ClearCustomProjectionMatrix();
-		bool HasCustomProjection() const { return projection_matrix_is_overridden; }
+		inline bool UsesPerspectiveProjection() const { return Matrix::IsPerspectiveProjection( projection_matrix ); }
 
 	/* Other:*/
 
@@ -65,7 +66,8 @@ namespace Engine
 
 		Transform* transform;
 
-		float plane_near, plane_far;
+		float plane_near;
+		float plane_far;
 		float aspect_ratio;
 		Radians vertical_field_of_view;
 
@@ -73,14 +75,12 @@ namespace Engine
 		bool view_projection_matrix_needs_update; // This is needed because access to View/Projection matrices causes their dirty flag to be reset.
 		/* Do not need a "view_matrix_needs_update" flag; Transform's data is the only data needed to update the view matrix and it has the IsDirty() query already. */
 
-		// TODO: Above comment is not correct:
+		// TODO: The comment above is not correct:
 		/* Transform's dirty flag is opt-in.
 		 * Besides, Renderer can not use that flag to optimize Camera UBO uploads, since there may be multiple updates to the Camera transform in a frame.
 		 */
 		// TODO: Given these limitations of the Transform's dirty flag. Figure out how to tackle that in a more robust way.
 
-		bool projection_matrix_is_overridden;
-
-		/* [5 bytes of padding remaining.] */
+		/* [6 bytes of padding remaining.] */
 	};
 }

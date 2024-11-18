@@ -15,12 +15,13 @@ namespace Engine
 
 	public:
 		Renderable();
-		Renderable( const Mesh* mesh, Material* material, Transform* transform = nullptr );
+		Renderable( const Mesh* mesh, Material* material, Transform* transform = nullptr, const bool receive_shadows = false );
 
 		DEFAULT_COPY_AND_MOVE_CONSTRUCTORS( Renderable );
 
 		~Renderable();
 
+	/* Get/Set: */
 		const Transform*	GetTransform()	const { return transform;	}
 		const Mesh*			GetMesh()		const { return mesh;		}
 		const Material*		GetMaterial()	const { return material;	}
@@ -28,6 +29,11 @@ namespace Engine
 		void SetMesh( const Mesh* mesh );
 		void SetMaterial( Material* material );
 
+	/* Queries: */
+		inline bool IsEnabled()				const { return is_enabled; }
+		inline bool IsReceivingShadows()	const { return is_receiving_shadows; }
+
+	/* Toggling: */
 		void ToggleOn();
 		void ToggleOff();
 		void ToggleOnOrOff();
@@ -39,6 +45,7 @@ namespace Engine
 		Material* material;
 
 		bool is_enabled;
-		//bool padding[ 7 ];
+		bool is_receiving_shadows;
+		//bool padding[ 6 ];
 	};
 }

@@ -44,6 +44,8 @@ namespace Engine
 
 	void Application::Initialize()
 	{
+		Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
+
 		Platform::InitializeAndCreateWindow( 800, 600, msaa_sample_count );
 		Platform::ChangeTitle( "Graphics Framework" );
 

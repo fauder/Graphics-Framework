@@ -68,14 +68,12 @@ private:
 	void ResetCamera();
 	void ResetProjection();
 	void SwitchCameraView( const CameraView view );
-	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
+	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view, const float aspect_ratio ) const;
 
 	bool ReloadModel( ModelInfo& model_info_to_be_loaded, const std::string& file_path, const char* name );
 	void UnloadModel( ModelInfo& model_info_to_be_unloaded );
 
 	void ReplaceMeteoriteAndCubeRenderables( bool use_meteorites );
-
-	void InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels );
 
 	void RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels );
 	void RecalculateProjectionParameters( const Vector2I new_size_pixels ); // Convenience overload.
@@ -111,14 +109,7 @@ private:
 
 	Engine::Renderable mirror_quad_renderable;
 
-	const Engine::Renderer::RenderGroupID render_group_id_regular;
-	const Engine::Renderer::RenderGroupID render_group_id_outlined_mesh;
-	const Engine::Renderer::RenderGroupID render_group_id_outline;
-	const Engine::Renderer::RenderGroupID render_group_id_transparent;
-	const Engine::Renderer::RenderGroupID render_group_id_shadow_mapping;
-	const Engine::Renderer::RenderGroupID render_group_id_screen_size_quad;
-
-	const Engine::Renderer::RenderGroupID render_group_id_skybox;
+	static constexpr Engine::RenderPass::ID RENDER_PASS_ID_LIGHTING_REAR_VIEW = Engine::RenderPass::ID( ( unsigned int )Engine::Renderer::PASS_ID_LIGHTING - 1 );
 
 /* Textures: */
 	Engine::Texture* skybox_texture;
@@ -130,12 +121,6 @@ private:
 
 	Engine::Texture* checker_pattern_texture;
 	Engine::Texture* transparent_window_texture;
-
-/* Framebuffers: */
-	std::array< Engine::Framebuffer, 2 > offscreen_framebuffer_array;
-	Engine::Framebuffer editor_framebuffer; // Not to be confused with the default frame-buffer.
-
-	Engine::Framebuffer light_directional_shadow_map_framebuffer;
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh, cube_mesh_fullscreen, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;
@@ -274,6 +259,4 @@ private:
 	bool show_imgui_demo_window;
 
 	bool render_rear_view_cam_to_imgui;
-
-	std::optional< int > msaa_for_offscreen_framebuffers_sample_count;
 };

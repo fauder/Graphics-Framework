@@ -170,11 +170,14 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\Blob.hpp" />
     <ClInclude Include="Engine\Core\Macros.h" />
     <ClInclude Include="Engine\Core\Macros_SpaceshipOperator.h" />
+    <ClInclude Include="Engine\Graphics\DefaultFramebuffer.h" />
+    <ClInclude Include="Engine\Graphics\Enums.h" />
     <ClInclude Include="Engine\Graphics\Framebuffer.h" />
     <ClInclude Include="Engine\Graphics\ID.hpp" />
     <ClInclude Include="Engine\Graphics\InternalShaders.h" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad.h" />
     <ClInclude Include="Engine\Graphics\Primitive\Primitive_Quad_FullScreen.h" />
+    <ClInclude Include="Engine\Graphics\RenderPass.h" />
     <ClInclude Include="Engine\Graphics\ShaderSourcePath.hpp" />
     <ClInclude Include="Engine\Graphics\ShaderType.h" />
     <ClInclude Include="Engine\Math\VectorConversion.hpp" />
@@ -233,6 +236,8 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Math\TypeTraits.h" />
     <ClInclude Include="Engine\Math\Unit.hpp" />
     <ClInclude Include="Engine\Math\Vector.hpp" />
+    <ClInclude Include="Engine\Graphics\RenderQueue.h" />
+    <ClInclude Include="Engine\Graphics\RenderState.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp" />
@@ -241,6 +246,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Core\ImGuiDrawer.cpp" />
     <ClCompile Include="Engine\Core\ImGuiSetup.cpp" />
     <ClCompile Include="Engine\Core\ImGuiUtility.cpp" />
+    <ClCompile Include="Engine\Graphics\DefaultFramebuffer.cpp" />
     <ClCompile Include="Engine\Graphics\InternalShaders.cpp" />
     <ClCompile Include="Engine\Graphics\Renderable.cpp" />
     <ClCompile Include="Engine\Graphics\Framebuffer.cpp" />

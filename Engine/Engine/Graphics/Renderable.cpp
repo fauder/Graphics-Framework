@@ -8,16 +8,18 @@ namespace Engine
 		transform( nullptr ),
 		mesh( nullptr ),
 		material( nullptr ),
-		is_enabled( false )
+		is_enabled( false ),
+		is_receiving_shadows( false )
 	{
 	}
 
-	Renderable::Renderable( const Mesh* mesh, Material* material, Transform* transform )
+	Renderable::Renderable( const Mesh* mesh, Material* material, Transform* transform, const bool receive_shadows )
 		:
 		transform( transform ),
 		mesh( mesh ),
 		material( material ),
-		is_enabled( true )
+		is_enabled( true ),
+		is_receiving_shadows( receive_shadows )
 	{
 	}
 
