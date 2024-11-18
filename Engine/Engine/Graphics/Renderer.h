@@ -203,6 +203,7 @@ namespace Engine
 		void RenderInstanced_Indexed( const Mesh& mesh );
 		void RenderInstanced_NonIndexed( const Mesh& mesh );
 	
+		void SetIntrinsicsPerPass( const RenderPass& pass );
 		void SetIntrinsics( const BitFlags< IntrinsicModifyTarget > targets = IntrinsicModifyTarget::None );
 
 		void UploadIntrinsics();

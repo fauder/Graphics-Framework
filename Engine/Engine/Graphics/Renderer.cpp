@@ -95,34 +95,7 @@ namespace Engine
 			{
 				auto log_group( logger.TemporaryLogGroup( ( "[Pass]:" + pass.name ).c_str() ) );
 
-				/* Update view/projection matrix, only if dirty: */
-				{
-					BitFlags< IntrinsicModifyTarget > intrinsic_modification_targets;
-
-					if( pass.view_matrix && pass.view_matrix != current_camera_info.view_matrix )
-					{
-						intrinsic_modification_targets.Set( IntrinsicModifyTarget::UniformBuffer_View );
-						current_camera_info.view_matrix = *pass.view_matrix;
-					}
-					
-					if( pass.projection_matrix && pass.projection_matrix != current_camera_info.projection_matrix )
-					{
-						intrinsic_modification_targets.Set( IntrinsicModifyTarget::UniformBuffer_Projection );
-						current_camera_info.projection_matrix      = *pass.projection_matrix;
-						current_camera_info.plane_near             = pass.plane_near;
-						current_camera_info.plane_far              = pass.plane_far;
-						current_camera_info.aspect_ratio           = pass.aspect_ratio;
-						current_camera_info.vertical_field_of_view = pass.vertical_field_of_view;
-					}
-
-					if( intrinsic_modification_targets.IsSet( IntrinsicModifyTarget::UniformBuffer_View ) || 
-						intrinsic_modification_targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Projection ) )
-					{
-						current_camera_info.view_projection_matrix = current_camera_info.view_matrix * current_camera_info.projection_matrix;
-					}
-
-					SetIntrinsics( intrinsic_modification_targets );
-				}
+				SetIntrinsicsPerPass( pass );
 
 				UploadIntrinsics();
 				UploadGlobals();
@@ -923,6 +896,36 @@ namespace Engine
 	void Renderer::RenderInstanced_NonIndexed( const Mesh& mesh )
 	{
 		glDrawArraysInstanced( ( GLint )mesh.Primitive(), 0, mesh.VertexCount(), mesh.InstanceCount() );
+	}
+
+	void Renderer::SetIntrinsicsPerPass( const RenderPass& pass )
+	{
+		/* Update view/projection matrix, only if dirty: */
+		BitFlags< IntrinsicModifyTarget > intrinsic_modification_targets;
+
+		if( pass.view_matrix && pass.view_matrix != current_camera_info.view_matrix )
+		{
+			intrinsic_modification_targets.Set( IntrinsicModifyTarget::UniformBuffer_View );
+			current_camera_info.view_matrix = *pass.view_matrix;
+		}
+
+		if( pass.projection_matrix && pass.projection_matrix != current_camera_info.projection_matrix )
+		{
+			intrinsic_modification_targets.Set( IntrinsicModifyTarget::UniformBuffer_Projection );
+			current_camera_info.projection_matrix = *pass.projection_matrix;
+			current_camera_info.plane_near = pass.plane_near;
+			current_camera_info.plane_far = pass.plane_far;
+			current_camera_info.aspect_ratio = pass.aspect_ratio;
+			current_camera_info.vertical_field_of_view = pass.vertical_field_of_view;
+		}
+
+		if( intrinsic_modification_targets.IsSet( IntrinsicModifyTarget::UniformBuffer_View ) ||
+			intrinsic_modification_targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Projection ) )
+		{
+			current_camera_info.view_projection_matrix = current_camera_info.view_matrix * current_camera_info.projection_matrix;
+		}
+
+		SetIntrinsics( intrinsic_modification_targets );
 	}
 
 	void Renderer::SetIntrinsics( const BitFlags< IntrinsicModifyTarget > targets )
