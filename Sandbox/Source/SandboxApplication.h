@@ -129,26 +129,29 @@ private:
 	Engine::Mesh cube_mesh_instanced_with_color; // For light sources.
 
 /* Shaders: */
-	Engine::Shader* skybox_shader;
-	Engine::Shader* blinn_phong_shader;
-	Engine::Shader* blinn_phong_shader_instanced;
-	Engine::Shader* blinn_phong_skybox_reflection_shader;
-	Engine::Shader* blinn_phong_skybox_reflection_shader_instanced;
-	Engine::Shader* basic_color_shader;
-	Engine::Shader* basic_color_shader_instanced;
-	Engine::Shader* basic_textured_shader;
-	Engine::Shader* basic_textured_transparent_discard_shader;
-	Engine::Shader* outline_shader;
+	Engine::Shader* shader_skybox;
+	Engine::Shader* shader_blinn_phong;
+	Engine::Shader* shader_blinn_phong_shadowed;
+	Engine::Shader* shader_blinn_phong_instanced;
+	Engine::Shader* shader_blinn_phong_shadowed_instanced;
+	Engine::Shader* shader_blinn_phong_skybox_reflection;
+	Engine::Shader* shader_blinn_phong_skybox_reflection_instanced;
+	Engine::Shader* shader_blinn_phong_skybox_reflection_shadowed_instanced;
+	Engine::Shader* shader_basic_color;
+	Engine::Shader* shader_basic_color_instanced;
+	Engine::Shader* shader_basic_textured;
+	Engine::Shader* shader_basic_textured_transparent_discard;
+	Engine::Shader* shader_outline;
 
-	Engine::Shader* texture_blit_shader;
-	Engine::Shader* fullscreen_blit_shader;
-	Engine::Shader* fullscreen_blit_resolve_shader;
+	Engine::Shader* shader_texture_blit;
+	Engine::Shader* shader_fullscreen_blit;
+	Engine::Shader* shader_fullscreen_blit_resolve;
 
-	Engine::Shader* postprocess_grayscale_shader;
+	Engine::Shader* shader_postprocess_grayscale;
 
-	Engine::Shader* postprocess_generic_shader;
+	Engine::Shader* shader_postprocess_generic;
 
-	Engine::Shader* normal_visualization_shader;
+	Engine::Shader* shader_normal_visualization;
 
 /* Models: */
 	ModelInfo test_model_info;

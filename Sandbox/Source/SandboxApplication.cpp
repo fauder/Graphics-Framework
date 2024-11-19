@@ -107,22 +107,25 @@ void SandboxApplication::Initialize()
 																							} );
 
 /* Shaders: */
-	skybox_shader                                  = Engine::InternalShaders::Get( "Skybox" );
-	blinn_phong_shader                             = Engine::InternalShaders::Get( "Blinn-Phong" );
-	blinn_phong_shader_instanced                   = Engine::InternalShaders::Get( "Blinn-Phong (Instanced)" );
-	blinn_phong_skybox_reflection_shader           = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection)" );
-	blinn_phong_skybox_reflection_shader_instanced = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection | Instanced)" );
-	basic_color_shader                             = Engine::InternalShaders::Get( "Color" );
-	basic_color_shader_instanced                   = Engine::InternalShaders::Get( "Color (Instanced)" );
-	basic_textured_shader                          = Engine::InternalShaders::Get( "Textured" );
-	basic_textured_transparent_discard_shader      = Engine::InternalShaders::Get( "Textured (Discard Transparent)" );
-	outline_shader                                 = Engine::InternalShaders::Get( "Outline" );
-	texture_blit_shader                            = Engine::InternalShaders::Get( "Texture Blit" );
-	fullscreen_blit_shader                         = Engine::InternalShaders::Get( "Fullscreen Blit" );
-	fullscreen_blit_resolve_shader                 = Engine::InternalShaders::Get( "Fullscreen Blit Resolve" );
-	postprocess_grayscale_shader                   = Engine::InternalShaders::Get( "Post-process Grayscale" );
-	postprocess_generic_shader                     = Engine::InternalShaders::Get( "Post-process Generic" );
-	normal_visualization_shader                    = Engine::InternalShaders::Get( "Normal Visualization" );
+	shader_skybox                                           = Engine::InternalShaders::Get( "Skybox" );
+	shader_blinn_phong                                      = Engine::InternalShaders::Get( "Blinn-Phong" );
+	shader_blinn_phong_shadowed                             = Engine::InternalShaders::Get( "Blinn-Phong (Shadowed)" );
+	shader_blinn_phong_instanced                            = Engine::InternalShaders::Get( "Blinn-Phong (Instanced)" );
+	shader_blinn_phong_shadowed_instanced                   = Engine::InternalShaders::Get( "Blinn-Phong (Shadowed | Instanced)" );
+	shader_blinn_phong_skybox_reflection                    = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection)" );
+	shader_blinn_phong_skybox_reflection_instanced          = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection | Instanced)" );
+	shader_blinn_phong_skybox_reflection_shadowed_instanced = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection | Shadowed | Instanced)" );
+	shader_basic_color                                      = Engine::InternalShaders::Get( "Color" );
+	shader_basic_color_instanced                            = Engine::InternalShaders::Get( "Color (Instanced)" );
+	shader_basic_textured                                   = Engine::InternalShaders::Get( "Textured" );
+	shader_basic_textured_transparent_discard               = Engine::InternalShaders::Get( "Textured (Discard Transparent)" );
+	shader_outline                                          = Engine::InternalShaders::Get( "Outline" );
+	shader_texture_blit                                     = Engine::InternalShaders::Get( "Texture Blit" );
+	shader_fullscreen_blit                                  = Engine::InternalShaders::Get( "Fullscreen Blit" );
+	shader_fullscreen_blit_resolve                          = Engine::InternalShaders::Get( "Fullscreen Blit Resolve" );
+	shader_postprocess_grayscale                            = Engine::InternalShaders::Get( "Post-process Grayscale" );
+	shader_postprocess_generic                              = Engine::InternalShaders::Get( "Post-process Generic" );
+	shader_normal_visualization                             = Engine::InternalShaders::Get( "Normal Visualization" );
 
 /* Instancing Data: */
 	ResetInstanceData();
@@ -165,8 +168,6 @@ void SandboxApplication::Initialize()
 		constexpr Vector3 minimum_offset( -1.0f, -0.4f, -1.0f );
 		constexpr Vector3 maximum_offset( +1.0f, +0.4f, +1.0f );
 
-		const auto before = std::chrono::system_clock::now();
-
 		std::for_each_n( std::execution::par, cube_transform_array.begin(), CUBE_COUNT, [ & ]( auto&& cube_transform )
 		{
 			const int cube_index = ( int )( &cube_transform - cube_transform_array.data() );
@@ -183,11 +184,6 @@ void SandboxApplication::Initialize()
 										  Engine::Math::Sin( random_xz_angle ) )
 								 * ( float )( ( cube_index % 90 ) + 10 ) );
 		} );
-
-		const auto after = std::chrono::system_clock::now();
-
-		Engine::ServiceLocator< Engine::GLLogger >::Get().Info( "Cube instance data gen. took " + std::to_string( std::chrono::duration_cast< std::chrono::milliseconds >( after - before ).count() ) +
-																" milliseconds.\n" );
 	}
 
 	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
@@ -341,11 +337,6 @@ void SandboxApplication::Initialize()
 	/* Disable some RenderPasses & Renderables on start-up to decrease clutter. */
 	renderer.TogglePass( Engine::Renderer::PASS_ID_OUTLINE, false );
 	renderer.ToggleQueue( Engine::Renderer::QUEUE_ID_TRANSPARENT, false );
-	wall_front_renderable.ToggleOff();
-	wall_left_renderable.ToggleOff();
-	wall_right_renderable.ToggleOff();
-	wall_back_renderable.ToggleOff();
-	ground_renderable.ToggleOff();
 
 /* Camera: */
 	ResetCamera();
@@ -481,32 +472,6 @@ void SandboxApplication::Render()
 {
 	Engine::Application::Render();
 
-	const Quaternion original_camera_orientation( camera_transform.GetRotation() );
-	const Vector3 original_camera_position( camera_transform.GetTranslation() );
-
-	/* Shadow mapping pass: Render everything from the view of light sources, to shadow-map framebuffers: */
-	{
-		// TODO: Place shadow-mapping camera code below in Renderer.
-
-		const auto& light_direction( light_directional.transform->Forward() );
-		camera_transform.LookAt( light_direction, light_directional.transform->Up() );
-		camera_transform.SetTranslation( -light_direction * 100.0f );
-		camera_controller.ResetToTransform();
-
-		// TODO: AABBs.
-		// TODO: Render the projection volume as a wireframe cube. More generally, create a debug-render pass, with wire-frame rendering.
-		// Use ortho. projection for directional light. For now, use big values for the projection volume:
-		camera.SetCustomProjectionMatrix( Engine::Matrix::OrthographicProjection( -50.0f, +50.0f, -50.0f, +50.0f, 1.0f, 101.0f ) );
-		renderer.UpdatePerPass( Engine::Renderer::PASS_ID_SHADOW_MAPPING, camera );
-
-		camera.ClearCustomProjectionMatrix();
-	}
-
-	/* Revert camera back to original orientation: */
-	camera_transform.SetTranslation( original_camera_position );
-	camera_transform.SetRotation( original_camera_orientation );
-	camera_controller.ResetToTransform();
-
 	/* Lighting - Rear-view pass: Invert camera direction, render everything to the off-screen framebuffer 0: */
 	{
 		camera_controller.Invert();
@@ -526,17 +491,15 @@ void SandboxApplication::Render()
 		/* This pass does not utilize camera view/projection => no Renderer::Update() necessary. */
 	}
 
-	/* Revert camera back to original orientation: */
-	camera_transform.SetRotation( original_camera_orientation );
-	camera_controller.ResetToTransform();
-
 	renderer.Render();
 
-	/* CAUTION: The rest of the rendering code (namely, ImGui) will be working in sRGB for the remainder of this frame. */
 }
 
 void SandboxApplication::RenderImGui()
 {
+	/* Reminder: The rest of the rendering code (namely, ImGui) will be working in sRGB for the remainder of this frame,
+	 * as the last step in the application's rendering was to enable sRGB encoding for the final framebuffer (default framebuffer or the editor FBO). */
+
 	/* Need to switch to the default framebuffer, so ImGui can render onto it. */
 	renderer.ResetToDefaultFramebuffer();
 
@@ -930,6 +893,11 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 	
 	offscreen_quad_material.SetTexture( "uniform_texture_slot", &renderer.OffscreenFramebuffer( 0 ).ColorAttachment() );
 	mirror_quad_material.SetTexture( "uniform_texture_slot", &renderer.OffscreenFramebuffer( 1 ).ColorAttachment() );
+
+	cube_reflected_material.SetTexture( "uniform_shadow_map_slot", renderer.ShadowMapTexture() );
+	cube_material.SetTexture( "uniform_shadow_map_slot", renderer.ShadowMapTexture() );
+	ground_material.SetTexture( "uniform_shadow_map_slot", renderer.ShadowMapTexture() );
+	wall_material.SetTexture( "uniform_shadow_map_slot", renderer.ShadowMapTexture() );
 }
 
 void SandboxApplication::OnFramebufferResizeEvent( const Vector2I new_size_pixels )
@@ -1028,13 +996,13 @@ void SandboxApplication::ResetLightingData()
 
 void SandboxApplication::ResetMaterialData()
 {
-	skybox_material = Engine::Material( "Skybox", skybox_shader );
+	skybox_material = Engine::Material( "Skybox", shader_skybox );
 	skybox_material.SetTexture( "uniform_texture_slot", skybox_texture );
 
-	light_source_material = Engine::Material( "Light Source", basic_color_shader_instanced );
+	light_source_material = Engine::Material( "Light Source", shader_basic_color_instanced );
 	
 	/* Set the first cube's material to Blinn-Phong shader w/ skybox reflection: */
-	cube_reflected_material = Engine::Material( "Cube (Reflected)", blinn_phong_skybox_reflection_shader_instanced );
+	cube_reflected_material = Engine::Material( "Cube (Reflected)", shader_blinn_phong_skybox_reflection_shadowed_instanced );
 	cube_reflected_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_reflected_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 	cube_reflected_material.SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
@@ -1042,43 +1010,43 @@ void SandboxApplication::ResetMaterialData()
 	cube_reflected_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	cube_reflected_material.Set( "uniform_reflectivity", 1.0f );
 
-	cube_material = Engine::Material( "Cube", blinn_phong_shader_instanced );
+	cube_material = Engine::Material( "Cube", shader_blinn_phong_shadowed_instanced );
 	cube_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
 	cube_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
-	ground_material = Engine::Material( "Ground", blinn_phong_shader );
+	ground_material = Engine::Material( "Ground", shader_blinn_phong_shadowed );
 	ground_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
 	ground_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& ground_quad_scale( ground_transform.GetScaling() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
-	wall_material = Engine::Material( "Wall", blinn_phong_shader );
+	wall_material = Engine::Material( "Wall", shader_blinn_phong_shadowed );
 	wall_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
 	wall_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	const auto& front_wall_quad_scale( wall_front_transform.GetScaling() );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	wall_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 
-	window_material = Engine::Material( "Transparent Window", basic_textured_shader );
+	window_material = Engine::Material( "Transparent Window", shader_basic_textured );
 	window_material.SetTexture( "uniform_texture_slot", transparent_window_texture );
 	window_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
-	outline_material = Engine::Material( "Outline", outline_shader );
+	outline_material = Engine::Material( "Outline", shader_outline );
 
-	mirror_quad_material = Engine::Material( "Rear-view Mirror", texture_blit_shader );
+	mirror_quad_material = Engine::Material( "Rear-view Mirror", shader_texture_blit );
 
 	/*if( const auto& main_offscreen_framebuffer = renderer.OffscreenFramebuffer( 0 );
 		main_offscreen_framebuffer.IsMultiSampled() )*/
 	{
-		offscreen_quad_material = Engine::Material( "Offscreen Quad", fullscreen_blit_resolve_shader );
+		offscreen_quad_material = Engine::Material( "Offscreen Quad", shader_fullscreen_blit_resolve );
 		//offscreen_quad_material.Set( "uniform_sample_count", main_offscreen_framebuffer.SampleCount() );
 		// TODO: Get rid of the hard-coding here.
 		offscreen_quad_material.Set( "uniform_sample_count", 4 );
 	}
 	/*else
-		offscreen_quad_material = Engine::Material( "Offscreen Quad", fullscreen_blit_shader );*/
+		offscreen_quad_material = Engine::Material( "Offscreen Quad", shader_fullscreen_blit );*/
 
 	ground_quad_surface_data = wall_surface_data = cube_surface_data =
 	{

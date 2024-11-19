@@ -32,6 +32,11 @@ namespace Engine
 								"Blinn-Phong",
 								FullShaderPath( "Blinn-Phong.vert"_vert ),
 								FullShaderPath( "Blinn-Phong.frag"_frag ) );
+		SHADER_MAP.try_emplace( "Blinn-Phong (Shadowed)",
+								"Blinn-Phong (Shadowed)",
+								FullShaderPath( "Blinn-Phong.vert"_vert ),
+								FullShaderPath( "Blinn-Phong.frag"_frag ),
+								Shader::Features{ "SHADOWS_ENABLED" } );
 		SHADER_MAP.try_emplace( "Blinn-Phong (Instanced)",
 								"Blinn-Phong (Instanced)",
 								FullShaderPath( "Blinn-Phong.vert"_vert ),
@@ -42,11 +47,24 @@ namespace Engine
 								FullShaderPath( "Blinn-Phong.vert"_vert ),
 								FullShaderPath( "Blinn-Phong.frag"_frag ),
 								Shader::Features{ "SKYBOX_ENVIRONMENT_MAPPING" } );
+		SHADER_MAP.try_emplace( "Blinn-Phong (Shadowed | Instanced)",
+								"Blinn-Phong (Shadowed | Instanced)",
+								FullShaderPath( "Blinn-Phong.vert"_vert ),
+								FullShaderPath( "Blinn-Phong.frag"_frag ),
+								Shader::Features{ "SHADOWS_ENABLED",
+												  "INSTANCING_ENABLED" } );
 		SHADER_MAP.try_emplace( "Blinn-Phong (Skybox Reflection | Instanced)",
 								"Blinn-Phong (Skybox Reflection | Instanced)",
 								FullShaderPath( "Blinn-Phong.vert"_vert ),
 								FullShaderPath( "Blinn-Phong.frag"_frag ),
 								Shader::Features{ "SKYBOX_ENVIRONMENT_MAPPING",
+												  "INSTANCING_ENABLED" } );
+		SHADER_MAP.try_emplace( "Blinn-Phong (Skybox Reflection | Shadowed | Instanced)",
+								"Blinn-Phong (Skybox Reflection | Shadowed | Instanced)",
+								FullShaderPath( "Blinn-Phong.vert"_vert ),
+								FullShaderPath( "Blinn-Phong.frag"_frag ),
+								Shader::Features{ "SKYBOX_ENVIRONMENT_MAPPING",
+												  "SHADOWS_ENABLED",
 												  "INSTANCING_ENABLED" } );
 		SHADER_MAP.try_emplace( "Color",
 								"Color",

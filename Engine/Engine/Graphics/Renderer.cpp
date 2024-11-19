@@ -64,6 +64,8 @@ namespace Engine
 	void Renderer::Update()
 	{
 		RecompileModifiedShaders();
+
+		CalculateShadowMappingInformation();
 	}
 
 	void Renderer::UpdatePerPass( const RenderPass::ID pass_id_to_update, Camera& camera )
@@ -93,7 +95,7 @@ namespace Engine
 		{
 			if( pass.is_enabled )
 			{
-				auto log_group( logger.TemporaryLogGroup( ( "[Pass]:" + pass.name ).c_str() ) );
+				const auto log_group( logger.TemporaryLogGroup( ( "[Pass]:" + pass.name ).c_str() ) );
 
 				SetIntrinsicsPerPass( pass );
 
@@ -107,7 +109,7 @@ namespace Engine
 					if( auto& queue = render_queue_map[ queue_id ]; 
 						queue.is_enabled )
 					{
-						auto log_group( logger.TemporaryLogGroup( ( "[Queue]:" + queue.name ).c_str() ) );
+						const auto log_group( logger.TemporaryLogGroup( ( "[Queue]:" + queue.name ).c_str() ) );
 
 						// TODO: Do not set render state for state that is not changing (i.e., dirty check).
 						if( pass.render_state_override_is_allowed )
@@ -852,6 +854,8 @@ namespace Engine
 					 .name               = "Shadow Mapping",
 					 .target_framebuffer = &light_directional_shadow_map_framebuffer,
 					 .queue_id_set       = { QUEUE_ID_GEOMETRY, QUEUE_ID_GEOMETRY_OUTLINED },
+					 .view_matrix		 = Matrix4x4{},
+					 .projection_matrix  = Matrix4x4{},
 					 .render_state       = RenderState
 					 {
 						 .sorting_mode = Engine::SortingMode::FrontToBack,
@@ -951,10 +955,10 @@ namespace Engine
 		if( pass.projection_matrix && pass.projection_matrix != current_camera_info.projection_matrix )
 		{
 			intrinsic_modification_targets.Set( IntrinsicModifyTarget::UniformBuffer_Projection );
-			current_camera_info.projection_matrix = *pass.projection_matrix;
-			current_camera_info.plane_near = pass.plane_near;
-			current_camera_info.plane_far = pass.plane_far;
-			current_camera_info.aspect_ratio = pass.aspect_ratio;
+			current_camera_info.projection_matrix      = *pass.projection_matrix;
+			current_camera_info.plane_near             = pass.plane_near;
+			current_camera_info.plane_far              = pass.plane_far;
+			current_camera_info.aspect_ratio           = pass.aspect_ratio;
 			current_camera_info.vertical_field_of_view = pass.vertical_field_of_view;
 		}
 
@@ -972,7 +976,7 @@ namespace Engine
 		if( targets == IntrinsicModifyTarget::None )
 			return;
 
-		if( targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Projection ) && update_uniform_buffer_other )
+		if( update_uniform_buffer_other && targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Projection ) )
 		{
 			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", current_camera_info.projection_matrix );
 			if( not targets.IsSet( IntrinsicModifyTarget::UniformBuffer_View ) ) // No need to upload twice.
@@ -1044,6 +1048,12 @@ namespace Engine
 				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot_active_count );
 			}
 		}
+
+		if( update_uniform_buffer_lighting && targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Lighting_ShadowMapping ) )
+		{
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_VIEW_PROJECTION_TRANSFORM", 
+															light_directional_view_projection_transform_matrix );
+		}
 	}
 
 	void Renderer::UploadIntrinsics()
@@ -1054,6 +1064,75 @@ namespace Engine
 	void Renderer::UploadGlobals()
 	{
 		uniform_buffer_management_global.UploadAll();
+	}
+
+	void Renderer::CalculateShadowMappingInformation()
+	{
+		Transform light_transform_copy( *light_directional->transform );
+
+		const auto& light_direction( light_transform_copy.Forward() );
+
+		light_transform_copy.SetTranslation( -light_direction * 50.0f );
+
+		const auto view_matrix = light_transform_copy.GetInverseOfFinalMatrix_NoScale();
+
+		// TODO: AABBs.
+		// TODO: Render the projection volume as a wireframe cube. More generally, create a debug-render pass, with wire-frame rendering.
+		// Use ortho. projection for directional light. For now, use big values for the projection volume:
+		const auto projection_matrix = Engine::Matrix::OrthographicProjection( -50.0f, +50.0f, -50.0f, +50.0f, 1.0f, 101.0f );
+
+		auto& shadow_mapping_pass = render_pass_map[ PASS_ID_SHADOW_MAPPING ];
+		
+		bool recalculate_view_projection_matrix = false;
+
+		if( shadow_mapping_pass.view_matrix != view_matrix )
+		{
+			shadow_mapping_pass.view_matrix = view_matrix;
+			recalculate_view_projection_matrix = true;
+		}
+
+		if( shadow_mapping_pass.projection_matrix != projection_matrix )
+		{
+			shadow_mapping_pass.projection_matrix = projection_matrix;
+			recalculate_view_projection_matrix = true;
+		}
+
+		if( recalculate_view_projection_matrix )
+		{
+			light_directional_view_projection_transform_matrix = view_matrix * projection_matrix;
+			SetIntrinsics( IntrinsicModifyTarget::UniformBuffer_Lighting_ShadowMapping );
+		}
+	}
+
+	void Renderer::RecompileModifiedShaders()
+	{
+		/* Shader Recompilation: */
+		static std::vector< Shader* > shaders_to_recompile;
+
+		/* Have to do two passes as shaders to be recompiled need to be removed from shaders_registered, which we can not do while traversing the container. */
+
+		shaders_to_recompile.clear();
+
+		for( const auto& shader : shaders_registered )
+			if( shader->SourceFilesAreModified() )
+				shaders_to_recompile.push_back( shader );
+
+		for( auto& shader : shaders_to_recompile )
+		{
+			Shader new_shader( shader->name.c_str() );
+			if( shader->RecompileFromThis( new_shader ) )
+			{
+				UnregisterShader( *shader );
+
+				*shader = std::move( new_shader );
+
+				RegisterShader( *shader );
+
+				logger.Info( "\"" + shader->name + "\" shader's source files are modified. It is recompiled." );
+			}
+			else
+				logger.Error( "\"" + shader->name + "\" shader's source files are modified but it could not be recompiled successfully." );
+		}
 	}
 
 	std::vector< RenderQueue >& Renderer::RenderQueuesContaining( const Renderable* renderable_of_interest )
@@ -1158,37 +1237,6 @@ namespace Engine
 			default:
 			case SortingMode::None:
 				break;
-		}
-	}
-
-	void Renderer::RecompileModifiedShaders()
-	{
-		/* Shader Recompilation: */
-		static std::vector< Shader* > shaders_to_recompile;
-
-		/* Have to do two passes as shaders to be recompiled need to be removed from shaders_registered, which we can not do while traversing the container. */
-
-		shaders_to_recompile.clear();
-
-		for( const auto& shader : shaders_registered )
-			if( shader->SourceFilesAreModified() )
-				shaders_to_recompile.push_back( shader );
-
-		for( auto& shader : shaders_to_recompile )
-		{
-			Shader new_shader( shader->name.c_str() );
-			if( shader->RecompileFromThis( new_shader ) )
-			{
-				UnregisterShader( *shader );
-
-				*shader = std::move( new_shader );
-
-				RegisterShader( *shader );
-
-				logger.Info( "\"" + shader->name + "\" shader's source files are modified. It is recompiled." );
-			}
-			else
-				logger.Error( "\"" + shader->name + "\" shader's source files are modified but it could not be recompiled successfully." );
 		}
 	}
 

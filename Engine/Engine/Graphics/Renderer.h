@@ -27,11 +27,12 @@ namespace Engine
 		{
 			None = 0,
 
-			UniformBuffer_View       = 1,
-			UniformBuffer_Projection = 2,
-			UniformBuffer_Lighting   = 4,
+			UniformBuffer_View                   = 1,
+			UniformBuffer_Projection             = 2,
+			UniformBuffer_Lighting               = 4,
+			UniformBuffer_Lighting_ShadowMapping = 8,
 
-			All = UniformBuffer_View | UniformBuffer_Projection | UniformBuffer_Lighting,
+			All = UniformBuffer_View | UniformBuffer_Projection | UniformBuffer_Lighting | UniformBuffer_Lighting_ShadowMapping,
 		};
 
 	public:
@@ -93,6 +94,12 @@ namespace Engine
 		void RemoveAllSpotLights();
 
 		/*
+		 * Shadow-mapping:
+		 */
+
+		inline const Texture* ShadowMapTexture() const { return &light_directional_shadow_map_framebuffer.DepthAttachment(); }
+
+		/*
 		 * Shaders:
 		 */
 
@@ -125,10 +132,6 @@ namespace Engine
 		{
 			uniform_buffer_management_global.Set( buffer_name, uniform_member_name, value );
 		}
-
-		/*
-		 * Shaders:
-		 */
 
 		inline const std::unordered_set< Shader* > RegisteredShaders() const { return shaders_registered; }
 		void RegisterShader( Shader& shader );
@@ -209,6 +212,9 @@ namespace Engine
 		void UploadIntrinsics();
 		void UploadGlobals();
 
+		void CalculateShadowMappingInformation();
+		void RecompileModifiedShaders();
+
 		/*
 		 * Pass, Queue & Renderable:
 		 */
@@ -216,8 +222,6 @@ namespace Engine
 		std::vector< RenderQueue >& RenderQueuesContaining( const Renderable* renderable_of_interest );
 		void SetRenderState( const RenderState& render_state_to_set, Framebuffer* target_framebuffer, const bool clear_framebuffer = false );
 		void SortRenderablesInQueue( const Vector3& camera_position, std::vector< Renderable* >& renderable_array_to_sort, const SortingMode sorting_mode );
-
-		void RecompileModifiedShaders();
 
 		/*
 		 * Face Culling:
@@ -289,6 +293,8 @@ namespace Engine
 		std::vector< SpotLight*	 >	lights_spot;
 		int lights_point_active_count;
 		int lights_spot_active_count;
+
+		Matrix4x4 light_directional_view_projection_transform_matrix;
 
 		/*
 		 * Rendering:
