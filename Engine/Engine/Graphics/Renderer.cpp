@@ -288,8 +288,8 @@ namespace Engine
 																			
 																			.minification_filter  = Engine::Texture::Filtering::Nearest,
 																			.magnification_filter = Engine::Texture::Filtering::Nearest,
-																			.wrap_u               = Engine::Texture::Wrapping::Repeat, 
-																			.wrap_v               = Engine::Texture::Wrapping::Repeat,
+
+																			/* Default wrapping = clamp to border, with border = Color4{0,0,0,0}. */
 
 																			.attachment_bits = Engine::Framebuffer::AttachmentType::Depth
 																		} );
