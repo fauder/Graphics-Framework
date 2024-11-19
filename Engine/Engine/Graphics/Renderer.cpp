@@ -53,6 +53,9 @@ namespace Engine
 		
 		InternalShaders::Initialize( *this );
 
+		if( update_uniform_buffer_lighting )
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED", Vector4( 0.005f, 0.05f, 0.0f, 0.0f ) );
+
 		InitializeBuiltinQueues();
 		InitializeBuiltinPasses();
 	}

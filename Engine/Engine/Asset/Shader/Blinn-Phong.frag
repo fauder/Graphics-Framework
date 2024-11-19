@@ -41,7 +41,7 @@ uniform float uniform_reflectivity; /* _hint_normalized_percentage */
 uniform sampler2D uniform_shadow_map_slot;
 
 /* Returns either 1 = in-shadow or 0 = not in shadow. */
-float CalculateShadowAmount()
+float CalculateShadowAmount( float light_dot_normal )
 {
 	vec3 ndc       = fs_in.varying_position_light_directional_clip_space.xyz / fs_in.varying_position_light_directional_clip_space.w;
 	vec3 ndc_unorm = ndc * 0.5f + 0.5f;
@@ -49,7 +49,8 @@ float CalculateShadowAmount()
 	float shadow_map_sample_z = texture( uniform_shadow_map_slot, ndc_unorm.xy ).r;
 	float current_depth       = ndc_unorm.z;
 
-	return current_depth > shadow_map_sample_z ? 1.0f : 0.0f;
+	float bias = max( _INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED.y * ( 1.0f - light_dot_normal ), _INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED.x );  
+	return ( current_depth - bias ) > shadow_map_sample_z ? 1.0f : 0.0f;
 }
 #endif
 
@@ -62,17 +63,17 @@ vec3 CalculateColorFromDirectionalLight( vec4 normal_view_space, vec4 viewing_di
 /* Diffuse term: */
 	vec4 to_light_view_space = normalize( -_INTRINSIC_DIRECTIONAL_LIGHT.direction_view_space );
 
-	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0 );
+	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0f );
 	vec3 diffuse               = diffuse_sample * _INTRINSIC_DIRECTIONAL_LIGHT.diffuse.rgb * diffuse_contribution;
 
 /* Specular term: */
 	vec4 halfway_angle_view_space = normalize( to_light_view_space + viewing_direction_view_space );
 
-	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0 ), uniform_blinn_phong_material_data.shininess );
+	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0f ), uniform_blinn_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_DIRECTIONAL_LIGHT.specular.rgb * specular_contribution;
 
 #ifdef SHADOWS_ENABLED
-	float shadow = CalculateShadowAmount();
+	float shadow = CalculateShadowAmount( dot( _INTRINSIC_DIRECTIONAL_LIGHT.direction_view_space, normal_view_space ) );
 	return ambient + ( 1.0f - shadow ) * ( diffuse + specular );
 #else
 	return ambient + diffuse + specular;
@@ -97,13 +98,13 @@ vec3 CalculateColorFromPointLight( const int point_light_index,
 	// Uniform point light data passed is passed as a vector3 (padded to vector4); w component is not sent by the CPU side, so it can be any value. Set to 1.0 here to make sure.
 	vec4 to_light_view_space = normalize( vec4( _INTRINSIC_POINT_LIGHTS[ point_light_index ].position_view_space.xyz, 1.0 ) - fs_in.varying_position_view_space );
 
-	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0 );
+	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0f );
 	vec3 diffuse               = diffuse_sample * _INTRINSIC_POINT_LIGHTS[ point_light_index ].diffuse_and_attenuation_linear.rgb * diffuse_contribution;
 
 /* Specular term: */
 	vec4 halfway_angle_view_space = normalize( to_light_view_space + viewing_direction_view_space );
 
-	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0 ), uniform_blinn_phong_material_data.shininess );
+	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0f ), uniform_blinn_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_POINT_LIGHTS[ point_light_index ].specular_and_attenuation_quadratic.rgb * specular_contribution;
 
 /* Attenuation: */
@@ -138,13 +139,13 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 	vec3 ambient = diffuse_sample * _INTRINSIC_SPOT_LIGHTS[ spot_light_index ].ambient.rgb;
 
 /* Diffuse term: */
-	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0 );
+	float diffuse_contribution = max( dot( to_light_view_space, normal_view_space ), 0.0f );
 	vec3 diffuse               = diffuse_sample * _INTRINSIC_SPOT_LIGHTS[ spot_light_index ].diffuse.rgb * diffuse_contribution;
 
 /* Specular term: */
 	vec4 halfway_angle_view_space = normalize( to_light_view_space + viewing_direction_view_space );
 
-	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0 ), uniform_blinn_phong_material_data.shininess );
+	float specular_contribution = pow( max( dot( halfway_angle_view_space, normal_view_space ), 0.0f ), uniform_blinn_phong_material_data.shininess );
 	vec3 specular               = specular_sample * _INTRINSIC_SPOT_LIGHTS[ spot_light_index ].specular.rgb * specular_contribution;
 
 	return ambient + cut_off_intensity * ( diffuse + specular );
