@@ -283,8 +283,8 @@ namespace Engine
 		/* Shadow maps: */
 		light_directional_shadow_map_framebuffer = Engine::Framebuffer( "Shadow Map: Dir. Light", Framebuffer::Description
 																		{
-																			.width_in_pixels  = new_width_in_pixels / 2,
-																			.height_in_pixels = new_height_in_pixels / 2,
+																			.width_in_pixels  = new_width_in_pixels,
+																			.height_in_pixels = new_height_in_pixels,
 																			
 																			.minification_filter  = Engine::Texture::Filtering::Nearest,
 																			.magnification_filter = Engine::Texture::Filtering::Nearest,
