@@ -37,7 +37,9 @@ namespace Engine
 
 			/* Format from import_settings is not used at the moment. */
 			maybe_texture = Texture( name, ( std::byte* )image_data, format, width, height, import_settings.is_sRGB,
-									 import_settings.wrap_u, import_settings.wrap_v, import_settings.min_filter, import_settings.mag_filter );
+									 import_settings.wrap_u, import_settings.wrap_v,
+									 import_settings.border_color, 
+									 import_settings.min_filter, import_settings.mag_filter );
 		}
 		else
 			std::cerr << "Could not load image data from file: \"" << file_path << "\"\n";
@@ -90,7 +92,9 @@ namespace Engine
 		/* Format from import_settings is not used at the moment. */
 		maybe_texture = Texture( CUBEMAP_CONSTRUCTOR, cubemap_name, ( const std::array< const std::byte*, 6 >& )image_data_array, format, width, height,
 								 import_settings.is_sRGB,
-								 import_settings.wrap_u, import_settings.wrap_v, import_settings.wrap_w, import_settings.min_filter, import_settings.mag_filter );
+								 import_settings.wrap_u, import_settings.wrap_v, import_settings.wrap_w,
+								 import_settings.border_color,
+								 import_settings.min_filter, import_settings.mag_filter );
 
 		for( auto i = 0; i < 6; i++ )
 			stbi_image_free( image_data_array[ i ] );
@@ -125,7 +129,9 @@ namespace Engine
 
 			/* Format from import_settings is not used at the moment. */
 			maybe_texture = Texture( name, ( std::byte* )image_data, format, width, height, import_settings.is_sRGB,
-									 import_settings.wrap_u, import_settings.wrap_v, import_settings.min_filter, import_settings.mag_filter );
+									 import_settings.wrap_u, import_settings.wrap_v,
+									 import_settings.border_color,
+									 import_settings.min_filter, import_settings.mag_filter );
 		}
 		else
 			std::cerr << "Could not load image data from memory\n";

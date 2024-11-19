@@ -81,6 +81,7 @@ namespace Engine
 																												  size.Y(),
 																												  use_sRGB,
 																												  description.wrap_u, description.wrap_v,
+																												  description.border_color,
 																												  description.minification_filter, description.magnification_filter ) );
 			}
 

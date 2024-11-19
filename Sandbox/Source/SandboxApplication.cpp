@@ -168,7 +168,8 @@ void SandboxApplication::Initialize()
 		constexpr Vector3 minimum_offset( -1.0f, -0.4f, -1.0f );
 		constexpr Vector3 maximum_offset( +1.0f, +0.4f, +1.0f );
 
-		std::for_each_n( std::execution::par, cube_transform_array.begin(), CUBE_COUNT, [ & ]( auto&& cube_transform )
+		// Skip the first cube and process the rest.
+		std::for_each_n( std::execution::par, cube_transform_array.begin() + 1, CUBE_COUNT - 1, [ & ]( auto&& cube_transform )
 		{
 			const int cube_index = ( int )( &cube_transform - cube_transform_array.data() );
 			Radians random_xz_angle( Engine::Math::Random::Generate( 0.0_rad, Engine::Constants< Radians >::Two_Pi() ) );
@@ -184,6 +185,10 @@ void SandboxApplication::Initialize()
 										  Engine::Math::Sin( random_xz_angle ) )
 								 * ( float )( ( cube_index % 90 ) + 10 ) );
 		} );
+
+		/* First cube is reserved: Put it on the ground to test shadows etc. */
+		cube_transform_array[ 0 ]
+			.SetTranslation( 1.0f, 0.5f, -3.0f );
 	}
 
 	for( auto cube_index = 0; cube_index < CUBE_COUNT; cube_index++ )
@@ -307,9 +312,9 @@ void SandboxApplication::Initialize()
 	renderer.AddRenderable( &ground_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
 	wall_front_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_front_transform, true /* => has shadows. */ );
-	wall_left_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_left_transform, true /* => has shadows. */ );
+	wall_left_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_left_transform,  true /* => has shadows. */ );
 	wall_right_renderable = Engine::Renderable( &quad_mesh, &wall_material, &wall_right_transform, true /* => has shadows. */ );
-	wall_back_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_back_transform, true /* => has shadows. */ );
+	wall_back_renderable  = Engine::Renderable( &quad_mesh, &wall_material, &wall_back_transform,  true /* => has shadows. */ );
 	renderer.AddRenderable( &wall_front_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 	renderer.AddRenderable( &wall_left_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 	renderer.AddRenderable( &wall_right_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );

@@ -1,6 +1,7 @@
 #pragma once
 
 // Engine Includes.
+#include "Color.hpp"
 #include "Graphics.h"
 #include "GraphicsMacros.h"
 #include "ID.hpp"
@@ -60,6 +61,8 @@ namespace Engine
 			Wrapping wrap_v = Wrapping::ClampToEdge;
 			Wrapping wrap_w = Wrapping::ClampToEdge;
 
+			Color4 border_color = Color4::Black();
+
 			Filtering min_filter = Filtering::Linear_MipmapLinear;
 			Filtering mag_filter = Filtering::Linear;
 
@@ -88,7 +91,8 @@ namespace Engine
 				 const int format,
 				 const int width, const int height,
 				 const bool is_sRGB = true,
-				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v	 = Wrapping::ClampToEdge,
+				 const Wrapping wrap_u = Wrapping::ClampToEdge, const Wrapping wrap_v = Wrapping::ClampToEdge,
+				 const Color4 border_color = Color4::Black(),
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 		/* Multi-sampled allocate-only constructor (no data).
@@ -110,7 +114,8 @@ namespace Engine
 				 const int format,
 				 const int width, const int height,
 				 const bool is_sRGB = true,
-				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v	 = Wrapping::ClampToEdge,	const Wrapping wrap_w = Wrapping::ClampToEdge,
+				 const Wrapping wrap_u = Wrapping::ClampToEdge, const Wrapping wrap_v = Wrapping::ClampToEdge, const Wrapping wrap_w = Wrapping::ClampToEdge,
+				 const Color4 border_color = Color4::Black(),
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 		DELETE_COPY_CONSTRUCTORS( Texture );
@@ -148,7 +153,8 @@ namespace Engine
 				 const int format,
 				 const int width, const int height,
 				 const bool is_sRGB = true,
-				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge,
+				 const Wrapping wrap_u = Wrapping::ClampToEdge, const Wrapping wrap_v = Wrapping::ClampToEdge,
+				 const Color4 border_color = Color4::Black(),
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 		/* Private cubemap constructor: Only the AssetDatabase< Texture > should be able to construct a cubemap Texture with data.
@@ -160,7 +166,8 @@ namespace Engine
 				 const int format,
 				 const int width, const int height,
 				 const bool is_sRGB = true,
-				 const Wrapping  wrap_u     = Wrapping::ClampToEdge,		  const Wrapping  wrap_v     = Wrapping::ClampToEdge, const Wrapping wrap_w = Wrapping::ClampToEdge,
+				 const Wrapping wrap_u = Wrapping::ClampToEdge, const Wrapping wrap_v = Wrapping::ClampToEdge, const Wrapping wrap_w = Wrapping::ClampToEdge,
+				 const Color4 border_color = Color4::Black(),
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
 
 		void Delete();

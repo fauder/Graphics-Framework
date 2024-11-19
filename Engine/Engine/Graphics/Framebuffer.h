@@ -49,6 +49,7 @@ namespace Engine
 			Texture::Filtering magnification_filter = Texture::Filtering::Linear;
 			Texture::Wrapping  wrap_u               = Texture::Wrapping::ClampToEdge;
 			Texture::Wrapping  wrap_v               = Texture::Wrapping::ClampToEdge;
+			Color4 border_color                     = Color4::Black();
 			std::optional< int > multi_sample_count = std::nullopt;
 			BindPoint bind_point                    = BindPoint::Both;
 			bool is_sRGB                            = false;
