@@ -46,6 +46,13 @@ float CalculateShadowAmount( float light_dot_normal )
 	vec3 ndc       = fs_in.varying_position_light_directional_clip_space.xyz / fs_in.varying_position_light_directional_clip_space.w;
 	vec3 ndc_unorm = ndc * 0.5f + 0.5f;
 
+	/* Since varying_position_light_directional_clip_space values are not actually clipped, there may be values outside the frustum of the light.
+	 * This means that the ndc_unorm above is not actually unorm: Values outside the frustum are naturally mapped outside the [0,1] range. 
+	 * Thus, values bigger than 1.0 are clamped to 0 (= no shadow). */
+
+	if( ndc_unorm.z > 1.0f )
+		return 0.0f;
+
 	float shadow_map_sample_z = texture( uniform_shadow_map_slot, ndc_unorm.xy ).r;
 	float current_depth       = ndc_unorm.z;
 
