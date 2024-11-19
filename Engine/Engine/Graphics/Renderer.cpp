@@ -735,7 +735,7 @@ namespace Engine
 	void Renderer::ResetToDefaultFramebuffer( const Framebuffer::BindPoint bind_point )
 	{
 		framebuffer_current = nullptr;
-		DefaultFramebuffer::Bind();
+		DefaultFramebuffer::Bind( bind_point );
 	}
 
 	bool Renderer::DefaultFramebufferIsBound() const
