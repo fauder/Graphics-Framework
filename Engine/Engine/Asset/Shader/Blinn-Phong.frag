@@ -5,6 +5,7 @@
 
 #pragma feature SKYBOX_ENVIRONMENT_MAPPING
 #pragma feature SHADOWS_ENABLED
+#pragma feature SOFT_SHADOWS
 
 in VS_To_FS
 {
@@ -53,11 +54,34 @@ float CalculateShadowAmount( float light_dot_normal )
 	if( ndc_unorm.z > 1.0f )
 		return 0.0f;
 
+	float current_depth = ndc_unorm.z;
+
+#ifdef SOFT_SHADOWS
+	float shadow = 0.0f;
+	vec2 texel_size = 1.0f / textureSize( uniform_shadow_map_slot, 0 );
+
+	int x_limit = _INTRINSIC_SHADOW_SAMPLE_COUNT_X_Y.x / 2;
+	int y_limit = _INTRINSIC_SHADOW_SAMPLE_COUNT_X_Y.y / 2;
+	float sample_count = ( x_limit * 2 + 1 ) * ( y_limit * 2 + 1 );
+
+	for( int x = -x_limit; x < x_limit; x++ )
+	{
+		for( int y = -y_limit; y < y_limit; y++ )
+		{
+			float shadow_map_sample_z = texture( uniform_shadow_map_slot, ndc_unorm.xy + vec2( x, y ) * texel_size ).r;
+
+			float bias = max( _INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED.y * ( 1.0f - light_dot_normal ), _INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED.x );  
+			shadow += ( current_depth - bias ) > shadow_map_sample_z ? 1.0f : 0.0f;
+		}
+	}
+
+	return shadow / sample_count;
+#else
 	float shadow_map_sample_z = texture( uniform_shadow_map_slot, ndc_unorm.xy ).r;
-	float current_depth       = ndc_unorm.z;
 
 	float bias = max( _INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED.y * ( 1.0f - light_dot_normal ), _INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED.x );  
 	return ( current_depth - bias ) > shadow_map_sample_z ? 1.0f : 0.0f;
+#endif
 }
 #endif
 
