@@ -57,6 +57,7 @@ namespace Engine
 		/* OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
 		 *
 		 * BUT: cube-map coordinate space has the inverse v behavior, so the image's should not be flipped. */
+		stbi_set_flip_vertically_on_load( false ); // Override whatever is in import_settings.flip_vertically.
 
 		int width, height;
 
