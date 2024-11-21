@@ -859,7 +859,7 @@ namespace Engine
 				 {
 					 .name               = "Shadow Mapping",
 					 .target_framebuffer = &light_directional_shadow_map_framebuffer,
-					 .queue_id_set       = { QUEUE_ID_GEOMETRY, QUEUE_ID_GEOMETRY_OUTLINED },
+					 .queue_id_set       = { QUEUE_ID_GEOMETRY_OUTLINED },
 					 .view_matrix		 = Matrix4x4{},
 					 .projection_matrix  = Matrix4x4{},
 					 .render_state       = RenderState
@@ -1078,7 +1078,7 @@ namespace Engine
 
 		const auto& light_direction( light_transform_copy.Forward() );
 
-		light_transform_copy.SetTranslation( -light_direction * 50.0f );
+		//light_transform_copy.SetTranslation( -light_direction * 50.0f );
 
 		const auto view_matrix = light_transform_copy.GetInverseOfFinalMatrix_NoScale();
 

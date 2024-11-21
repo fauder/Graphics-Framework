@@ -293,7 +293,7 @@ void SandboxApplication::Initialize()
 					  {
 						  .name                             = "Lighting - Rear View",
 						  .target_framebuffer               = &renderer.OffscreenFramebuffer( 1 ),
-						  .queue_id_set                     = { Engine::Renderer::QUEUE_ID_GEOMETRY, Engine::Renderer::QUEUE_ID_TRANSPARENT, Engine::Renderer::QUEUE_ID_SKYBOX },
+						  .queue_id_set                     = { Engine::Renderer::QUEUE_ID_GEOMETRY, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED, Engine::Renderer::QUEUE_ID_TRANSPARENT, Engine::Renderer::QUEUE_ID_SKYBOX },
 					      .render_state_override_is_allowed = true
 					  } );
 	
@@ -972,9 +972,9 @@ void SandboxApplication::ResetLightingData()
 			.is_enabled = true,
 			.data =
 			{
-				.ambient_and_attenuation_constant = { .color = { 0.05f, 0.05f, 0.05f },	.scalar = 0.06f		},
-				.diffuse_and_attenuation_linear   = { .color = random_color,			.scalar = 0.001f	},
-				.specular_attenuation_quadratic   = { .color = random_color,			.scalar = 0.0375f	},
+				.ambient_and_attenuation_constant = { .color = {},			 .scalar = 0.06f	},
+				.diffuse_and_attenuation_linear   = { .color = random_color, .scalar = 0.001f	},
+				.specular_attenuation_quadratic   = { .color = random_color, .scalar = 0.0375f	},
 			},
 			.transform = &light_point_transform_array[ i ]
 		};
