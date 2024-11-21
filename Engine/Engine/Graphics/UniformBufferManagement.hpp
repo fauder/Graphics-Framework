@@ -40,7 +40,7 @@ namespace Engine
 
 		/* This is used by the Renderer, for Intrinsics/Globals:
 		 * Since Uniform::BufferInformation holds pointers to Shader data, it is effectively lost/corrupted when the host Shader is destroyed (upon recompilation). */
-		void RegisterBuffer_ForceUpdateBufferInfoIfBufferExists( const std::string& buffer_name, const Uniform::BufferInformation buffer_info )
+		void RegisterBuffer_ForceUpdateBufferInfoIfBufferExists( const std::string& buffer_name, const Uniform::BufferInformation& buffer_info )
 		{
 			if( buffer_info_map.contains( buffer_name ) )
 			{

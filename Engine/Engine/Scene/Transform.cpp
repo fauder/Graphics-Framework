@@ -239,19 +239,23 @@ namespace Engine
 	/* If the caller knows there's no scaling involved (for example; Transform of a Camera), calling this function is more preferrable. */
 	const Matrix4x4 Transform::GetInverseOfFinalMatrix_NoScale()
 	{
-		/* Instead of actually calculating the inverse of the matrix, we'll leverage the information we have on our matrix:
-		 * Rotation And Translation Matrix:
+		ASSERT_DEBUG_ONLY( scale == Vector3::One() );
+
+		// Force-update the rotation part get up-to-date values.
+		UpdateRotationPartOfMatrixIfDirty();
+
+		/* Instead of actually calculating the inverse of the matrix, we'll leverage the information we have on our Rotation And Translation Matrix:
 		 *		We can simply transpose the rotation part (upper 3x3 portion of the 4x4 matrix) since rotation matrices are orthogonal.
-		 *		We can simply use the inverse (with respect to addition) of the translation part (first 3 elements of the last row of the 4x4 matrix) to reverse the translation operation.
+		 *		We can simply use the inverse of the translation to reverse the translation operation.
+		 *
+		 * Since the scaling is uniform (and in this case, 1), we can simply combine the inverse rotation (3x3 matrix) and the inverse translation (3D vector) in-place,
+		 * to construct a 4x4 transformation matrix, instead of creating two separate matrices and multiplying them together, saving us some cycles.
+		 *			BUT the inverse translation needs to be rotated by the inverse rotation first, to bring it to the correct space after the rotation is applied.
+		 *			(Also, RT != (Ti)(Rt) (where i = inverse & t = transpose), so we can't just plug the Rt & Ti into a single matrix and call it a day).
 		*/
 
-		// Force-update the matrices to get up-to-date values.
-		GetRotationAndTranslationMatrix();
-
-		const Matrix4x4 inverse_rotation_matrix( rotation_and_translation_matrix.SubMatrix< 3 >().Transposed() );
-		const Matrix4x4 inverse_translation_matrix( Matrix4x4{}.SetTranslation( -rotation_and_translation_matrix.GetRow< 3 >( 3 /* Last Row. */ ) ) );
-
-		return inverse_translation_matrix * inverse_rotation_matrix;
+		const Matrix3x3 inverse_rotation_matrix_3x3( rotation_and_translation_matrix.SubMatrix< 3 >().Transposed() );
+		return Matrix4x4( inverse_rotation_matrix_3x3, -translation.XYZ() * inverse_rotation_matrix_3x3 );
 	}
 
 	const Vector3& Transform::Right()

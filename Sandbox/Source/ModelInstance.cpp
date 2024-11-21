@@ -9,9 +9,11 @@ ModelInstance::ModelInstance()
 
 ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const shader,
 							  const Vector3 scale, const Quaternion& rotation, const Vector3& translation,
+							  const Engine::RenderQueue::ID queue_id,
+							  Engine::Material* material,
+							  const bool has_shadows,
 							  const Engine::Texture* diffuse_texture, const Engine::Texture* specular_texture,
-							  const Vector4 texture_scale_and_offset,
-							  const std::initializer_list< std::pair< Engine::Renderer::RenderGroupID, Engine::Material* > > render_group_material_info_list )
+							  const Vector4 texture_scale_and_offset )
 	:
 	model( model )
 {
@@ -19,28 +21,20 @@ ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const 
 
 	SetMaterialData( shader, diffuse_texture, specular_texture, texture_scale_and_offset );
 
-	/* Initialize Transforms, Materials & Drawables of Nodes: */
+	/* Initialize Transforms, Materials & Renderables of Nodes: */
 
 	const auto mesh_instance_count = model->MeshInstanceCount();
 	const auto& meshes             = model->Meshes();
 	const auto& nodes              = model->Nodes();
 
 	node_transform_array.resize( mesh_instance_count );
+	node_renderable_array.resize( mesh_instance_count );
 
-	ASSERT_DEBUG_ONLY( render_group_material_info_list.size() >= 1 );
-
-	for( auto render_group_index = 0; render_group_index < render_group_material_info_list.size(); render_group_index++ )
+	for( auto i = 0; i < mesh_instance_count; i++ )
 	{
-		const auto& [ render_group_id, render_group_material ] = *( render_group_material_info_list.begin() + render_group_index );
-
-		node_drawable_array_map[ render_group_id ].resize( mesh_instance_count );
-		auto& drawable_array = node_drawable_array_map[ render_group_id ];
-
-		for( auto i = 0; i < mesh_instance_count; i++ )
-		{
-			drawable_array[ i ] = Engine::Drawable( &meshes[ i ], ( render_group_material ? render_group_material : &node_material_array[ i ] ),
-													node_material_array[ i ].HasUniform( "uniform_transform_world" ) ? &node_transform_array[ i ] : nullptr );
-		}
+		node_renderable_array[ i ] = Engine::Renderable( &meshes[ i ], ( material ? material : &node_material_array[ i ] ),
+														 node_material_array[ i ].HasUniform( "uniform_transform_world" ) ? &node_transform_array[ i ] : nullptr,
+														 has_shadows );
 	}
 
 	/* Apply scene-graph transformations: */

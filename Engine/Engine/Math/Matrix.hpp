@@ -191,7 +191,7 @@ namespace Engine::Math
 			return *this;
 		}
 
-		template< std::size_t VectorSize >
+		template< std::size_t VectorSize = RowSize >
 		constexpr Matrix& SetRow( const Vector< Type, VectorSize >& vector, const unsigned int row_index = 0, const unsigned int start_index_inRow = 0 ) requires( VectorSize <= ColumnSize )
 		{
 			ASSERT_DEBUG_ONLY( row_index < RowSize && "Row index out of bounds." );
@@ -203,7 +203,7 @@ namespace Engine::Math
 			return *this;
 		}
 
-		template< std::size_t VectorSize >
+		template< std::size_t VectorSize = ColumnSize >
 		constexpr Matrix& SetColumn( const Vector< Type, VectorSize >& vector, const unsigned int column_index = 0, const unsigned int start_index_inColumn = 0 ) requires( VectorSize <= RowSize )
 		{
 			ASSERT_DEBUG_ONLY( column_index < ColumnSize && "Column index out of bounds." );
@@ -215,7 +215,7 @@ namespace Engine::Math
 			return *this;
 		}
 
-		template< std::size_t VectorSize >
+		template< std::size_t VectorSize = RowSize >
 		constexpr const Vector< Type, VectorSize >& GetRow( const unsigned int row_index = 0, const unsigned int start_index_inRow = 0 ) const requires( VectorSize <= ColumnSize )
 		{
 			ASSERT_DEBUG_ONLY( row_index < RowSize && "Row index out of bounds." );
@@ -224,7 +224,7 @@ namespace Engine::Math
 			return reinterpret_cast< const Vector< Type, VectorSize >& >( *( data[ row_index ] + start_index_inRow ) );
 		}
 
-		template< std::size_t VectorSize >
+		template< std::size_t VectorSize = RowSize >
 		Vector< Type, VectorSize >& GetRow( const unsigned int row_index = 0, const unsigned int start_index_inRow = 0 ) requires( VectorSize <= ColumnSize )
 		{
 			ASSERT_DEBUG_ONLY( row_index < RowSize && "Row index out of bounds." );
@@ -234,7 +234,7 @@ namespace Engine::Math
 		}
 
 		/* Obligatory copy is returned as the data is laid out such that rows are contiguous, not columns. */
-		template< std::size_t VectorSize >
+		template< std::size_t VectorSize = ColumnSize >
 		constexpr Vector< Type, VectorSize > GetColumn( const unsigned int column_index = 0, const unsigned int start_index_inColumn = 0 ) const requires( VectorSize <= RowSize )
 		{
 			ASSERT_DEBUG_ONLY( column_index < ColumnSize && "Column index out of bounds." );
@@ -261,7 +261,7 @@ namespace Engine::Math
 		}
 
 	/* Other Queries. */
-		constexpr bool IsIdentity() { return *this == Identity(); }
+		constexpr bool IsIdentity() const { return *this == Identity(); }
 
 		static consteval std::size_t RowCount()     { return RowSize; }
 		static consteval std::size_t ColumnCount()  { return ColumnSize; }

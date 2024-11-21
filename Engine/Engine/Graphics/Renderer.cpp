@@ -1,186 +1,258 @@
 // Engine Includes.
 #include "Renderer.h"
+#include "DefaultFramebuffer.h"
+#include "InternalShaders.h"
 #include "UniformBufferManager.h"
 #include "Core/ImGuiDrawer.hpp"
 
 // Vendor Includes.
 #include <IconFontCppHeaders/IconsFontAwesome6.h>
 
+#ifdef _DEBUG
+#define CONSOLE_ERROR( message ) logger.Error( ICON_FA_DRAW_POLYGON " " message )
+#else
+#define CONSOLE_ERROR( message ) do {} while( false )
+#endif
+
+#ifdef _DEBUG
+#define CONSOLE_ERROR_AND_RETURN_IF_PASS_DOES_NOT_EXIST( function_name, pass_id )\
+if( not render_pass_map.contains( pass_id ) )\
+{\
+	logger.Error( ICON_FA_DRAW_POLYGON " " function_name "() called for non-existing pass." );\
+	return;\
+}
+#else
+#define CONSOLE_ERROR_AND_RETURN_IF_PASS_DOES_NOT_EXIST( function_name, pass_id ) do {} while( false )
+#endif
+
+#ifdef _DEBUG
+#define CONSOLE_ERROR_AND_RETURN_IF_QUEUE_DOES_NOT_EXIST( function_name, queue_id )\
+if( not render_queue_map.contains( queue_id ) )\
+{\
+	logger.Error( ICON_FA_DRAW_POLYGON " " function_name "() called for non-existing queue." );\
+	return;\
+}
+#else
+#define CONSOLE_ERROR_AND_RETURN_IF_QUEUE_DOES_NOT_EXIST( function_name, queue_id ) do {} while( false )
+#endif
+
 namespace Engine
 {
-	Renderer::Renderer()
+	Renderer::Renderer( std::array< std::optional< int >, Renderer::FRAMEBUFFER_OFFSCREEN_COUNT >&& offscreen_framebuffer_msaa_sample_count_values )
 		:
+		logger( ServiceLocator< GLLogger >::Get() ),
 		framebuffer_current( nullptr ),
+		offscreen_framebuffer_msaa_sample_count_array( std::move( offscreen_framebuffer_msaa_sample_count_values ) ),
 		lights_point_active_count( 0 ),
 		lights_spot_active_count( 0 ),
-		clear_color( Color4::Gray( 0.1f ) ),
-		clear_targets( ClearTarget::ColorBuffer, ClearTarget::DepthBuffer ),
 		update_uniform_buffer_lighting( false ),
-		update_uniform_buffer_other( false )
+		update_uniform_buffer_other( false ),
+		sRGB_encoding_is_enabled( false )
 	{
-		SetClearColor();
+		DefaultFramebuffer::Instance(); // Initialize.
+		
+		InternalShaders::Initialize( *this );
+
+		if( update_uniform_buffer_lighting )
+		{
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED", Vector4( 0.005f, 0.05f, 0.0f, 0.0f ) );
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SHADOW_SAMPLE_COUNT_X_Y",		Vector2I( 3, 3 ) );
+		}
+
+		InitializeBuiltinQueues();
+		InitializeBuiltinPasses();
 	}
 
 	Renderer::~Renderer()
 	{
 	}
 
-	void Renderer::Update( Camera& camera )
+	void Renderer::Update()
 	{
 		RecompileModifiedShaders();
 
-		const auto& view_matrix               = camera.GetViewMatrix();
-		const auto& view_matrix_3x3           = view_matrix.SubMatrix< 3 >();
-		const auto& view_matrix_rotation_only = Matrix4x4( view_matrix_3x3 );
+		CalculateShadowMappingInformation();
+	}
 
-		if( update_uniform_buffer_other )
+	void Renderer::UpdatePerPass( const RenderPass::ID pass_id_to_update, Camera& camera )
+	{
+#ifdef _DEBUG
+		if( not render_pass_map.contains( pass_id_to_update ) )
+			CONSOLE_ERROR( " UpdatePerPass() called for non-existing pass." );
+#endif // _DEBUG
+
+		auto& pass = render_pass_map[ pass_id_to_update ];
+
+		pass.view_matrix       = camera.GetViewMatrix();
+		pass.projection_matrix = camera.GetProjectionMatrix();
+
+		if( camera.UsesPerspectiveProjection() )
 		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW",				view_matrix );
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_ROTATION_ONLY",	view_matrix_rotation_only );
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION",		view_matrix * camera.GetProjectionMatrix() );
-		}
-
-		if( update_uniform_buffer_lighting )
-		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", light_directional && light_directional->is_enabled ? 1u : 0u );
-			if( light_directional && light_directional->is_enabled )
-			{
-				light_directional->data.direction_view_space = light_directional->transform->Forward() * view_matrix_3x3;
-				uniform_buffer_management_intrinsic.SetPartial_Struct( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
-			}
-
-			lights_point_active_count = 0;
-			for( auto index = 0; index < lights_point.size(); index++ )
-			{
-				auto& point_light = lights_point[ index ];
-
-				if( point_light->is_enabled )
-				{
-					/* Shaders expect the lights' position & direction in view space. */
-					point_light->data.position_view_space = Vector4( point_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix;
-					uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", lights_point_active_count++, point_light->data );
-				}
-			}
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point_active_count );
-
-			lights_spot_active_count = 0;
-			for( auto index = 0; index < lights_spot.size(); index++ )
-			{
-				auto& spot_light = lights_spot[ index ];
-
-				if( spot_light->is_enabled )
-				{
-					/* Shaders expect the lights' position & direction in view space. */
-
-					spot_light->data.position_view_space_and_cos_cutoff_angle_inner.vector = ( Vector4( spot_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix ).XYZ();
-					spot_light->data.position_view_space_and_cos_cutoff_angle_inner.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_inner ) );
-
-					spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->transform->Forward() * view_matrix_3x3;
-					spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
-
-					uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", lights_spot_active_count++, spot_light->data );
-				}
-			}
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot_active_count );
+			pass.plane_near             = camera.GetNearPlaneOffset();
+			pass.plane_far              = camera.GetFarPlaneOffset();
+			pass.aspect_ratio           = camera.GetAspectRatio();
+			pass.vertical_field_of_view = camera.GetVerticalFieldOfView();
 		}
 	}
 
-	void Renderer::Render( Camera& camera, std::initializer_list< RenderGroupID > groups_to_render )
+	void Renderer::Render()
 	{
-		ASSERT_DEBUG_ONLY( groups_to_render.end() == std::find_if( groups_to_render.begin(), groups_to_render.end(), 
-																   [ & ]( const RenderGroupID& id ) { return not render_group_map.contains( id ); } ) );
-
-		Clear();
-
-		UploadIntrinsics();
-		UploadGlobals();
-
-		for( auto& [ render_group_id, render_group ] : render_group_map )
+		for( auto& [ pass_id, pass ] : render_pass_map )
 		{
-			if( std::find( groups_to_render.begin(), groups_to_render.end(), render_group_id ) != groups_to_render.end() &&
-				render_group.is_enabled )
+			if( pass.is_enabled )
 			{
-				SetRenderState( render_group.render_state );
+				const auto log_group( logger.TemporaryLogGroup( ( "[Pass]:" + pass.name ).c_str() ) );
 
-				SortDrawablesInGroup( camera, render_group.drawable_list, render_group.render_state.sorting_mode );
+				SetIntrinsicsPerPass( pass );
 
-				for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
+				UploadIntrinsics();
+				UploadGlobals();
+
+				SetRenderState( pass.render_state, pass.target_framebuffer, pass.clear_framebuffer );
+
+				for( auto& queue_id : pass.queue_id_set )
 				{
-					shader->Bind();
-
-					for( auto& [ material_name, material ] : render_group.materials_in_flight )
+					if( auto& queue = render_queue_map[ queue_id ]; 
+						queue.is_enabled )
 					{
-						if( material->shader->Id() == shader->Id() )
+						const auto log_group( logger.TemporaryLogGroup( ( "[Queue]:" + queue.name ).c_str() ) );
+
+						// TODO: Do not set render state for state that is not changing (i.e., dirty check).
+						if( pass.render_state_override_is_allowed )
+							SetRenderState( queue.render_state_override, pass.target_framebuffer /* No clearing for queues. */ );
+
+						SortRenderablesInQueue( current_camera_info.view_matrix.GetRow< 3 >( 3 ), queue.renderable_list, queue.render_state_override.sorting_mode );
+
+						switch( pass_id )
 						{
-							material->UploadUniforms();
-
-							for( auto& drawable : render_group.drawable_list )
+							case PASS_ID_SHADOW_MAPPING:
 							{
-								if( drawable->is_enabled && drawable->material->Name() == material_name )
+								static auto& shadow_map_write_shader           = *InternalShaders::Get( "Shadow-map Write" );
+								static auto& shadow_map_write_instanced_shader = *InternalShaders::Get( "Shadow-map Write (Instanced)" );
+								
+								shadow_map_write_shader.Bind();
+
+								for( auto& renderable : queue.renderable_list )
 								{
-									drawable->mesh->Bind();
+									if( renderable->is_enabled && renderable->is_receiving_shadows && not renderable->mesh->HasInstancing() )
+									{
+										renderable->mesh->Bind();
 
-									if( drawable->transform )
-										material->SetAndUploadUniform( "uniform_transform_world", drawable->transform->GetFinalMatrix() );
+										if( renderable->transform )
+											shadow_map_write_shader.SetUniform( "uniform_transform_world", renderable->transform->GetFinalMatrix() );
 
-									Render( *drawable->mesh );
+										Render( *renderable->mesh );
+									}
+								}
+
+								shadow_map_write_instanced_shader.Bind();
+
+								for( auto& renderable : queue.renderable_list )
+								{
+									if( renderable->is_enabled && renderable->is_receiving_shadows && renderable->mesh->HasInstancing() )
+									{
+										renderable->mesh->Bind();
+
+										Render( *renderable->mesh );
+									}
 								}
 							}
+								break;
+
+							default: // "Regular" passes:
+								for( const auto& [ shader, dont_care ] : queue.shaders_in_flight )
+								{
+									shader->Bind();
+
+									for( auto& [ material_name, material ] : queue.materials_in_flight )
+									{
+										if( material->shader->Id() == shader->Id() )
+										{
+											material->UploadUniforms();
+
+											for( auto& renderable : queue.renderable_list )
+											{
+												if( renderable->is_enabled && renderable->material->Name() == material_name )
+												{
+													renderable->mesh->Bind();
+
+													if( renderable->transform )
+														material->SetAndUploadUniform( "uniform_transform_world", renderable->transform->GetFinalMatrix() );
+
+													Render( *renderable->mesh );
+												}
+											}
+										}
+									}
+								}
+								break;
 						}
 					}
 				}
 			}
 		}
-
-		// TODO: Figure out how to correctly model this behaviour: What if the user wants to explicitly NOT clear a specific buffer?
-		/* Reset write masks or clearing will not modify the buffers: */
-		ToggleDepthWrite( true );
-		SetStencilWriteMask( 0xFF );
-
 	}
 
 	void Renderer::RenderImGui()
 	{
-		// TODO: Implement drag & drop reordering of RenderGroups.
-
-		if( ImGui::Begin( ICON_FA_DRAW_POLYGON " Drawables", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
+		if( ImGui::Begin( ICON_FA_DRAW_POLYGON " Renderer", nullptr, ImGuiWindowFlags_AlwaysAutoResize ) )
 		{
-			for( auto& [ render_group_id, render_group ] : render_group_map )
+			for( auto& [ pass_id, pass ] : render_pass_map )
 			{
-				ImGui::PushID( ( int )render_group_id );
-				ImGui::Checkbox( "", &render_group.is_enabled );
+				ImGui::PushID( ( int )pass_id );
+				ImGui::Checkbox( "", &pass.is_enabled );
 				ImGui::PopID();
 
 				ImGui::SameLine();
-				if( ImGui::TreeNodeEx( render_group.name.c_str(), 0, "Render Group [%d]: %s", ( int )render_group_id, render_group.name.c_str() ) )
+				if( ImGui::TreeNodeEx( pass.name.c_str(), 0, "Pass [%d]: %s", ( int )pass_id, pass.name.c_str() ) )
 				{
 					// TODO: Display RenderState info as a collapseable header.
-					ImGui::BeginDisabled( not render_group.is_enabled );
+					ImGui::BeginDisabled( not pass.is_enabled );
 
-					for( const auto& [ shader, dont_care ] : render_group.shaders_in_flight )
+					for( auto& queue_id : pass.queue_id_set )
 					{
-						for( const auto& [ material_name, material ] : render_group.materials_in_flight )
+						auto& queue = render_queue_map[ queue_id ];
+
+						ImGui::PushID( ( int )queue_id );
+						ImGui::Checkbox( "", &queue.is_enabled );
+						ImGui::PopID();
+
+						ImGui::SameLine();
+
+						if( ImGui::TreeNodeEx( queue.name.c_str(), 0, "Queue [%d]: %s", ( int )queue_id, queue.name.c_str() ) )
 						{
-							if( material->shader->Id() == shader->Id() )
+							ImGui::BeginDisabled( not queue.is_enabled );
+
+							for( const auto& [ shader, dont_care ] : queue.shaders_in_flight )
 							{
-								for( auto& drawable : render_group.drawable_list )
+								for( const auto& [ material_name, material ] : queue.materials_in_flight )
 								{
-									if( drawable->material->Name() == material_name )
+									if( material->shader->Id() == shader->Id() )
 									{
-										ImGui::PushID( drawable );
-										ImGui::Checkbox( "", &drawable->is_enabled );
-										ImGui::PopID();
-										ImGui::BeginDisabled( not drawable->is_enabled );
-										ImGui::SameLine(); ImGui::TextUnformatted( drawable->material->name.c_str() );
-										if( drawable->mesh->HasInstancing() )
+										for( auto& renderable : queue.renderable_list )
 										{
-											int instance_Count = drawable->mesh->InstanceCount();
-											ImGui::SameLine(); ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "(Instance Count: %d)", instance_Count );
+											if( renderable->material->Name() == material_name )
+											{
+												ImGui::PushID( renderable );
+												ImGui::Checkbox( "", &renderable->is_enabled );
+												ImGui::PopID();
+												ImGui::BeginDisabled( not renderable->is_enabled );
+												ImGui::SameLine(); ImGui::TextUnformatted( renderable->material->name.c_str() );
+												if( renderable->mesh->HasInstancing() )
+												{
+													int instance_Count = renderable->mesh->InstanceCount();
+													ImGui::SameLine(); ImGui::TextColored( ImVec4( 0.84f, 0.59f, 0.45f, 1.0f ), "(Instance Count: %d)", instance_Count );
+												}
+												ImGui::EndDisabled();
+											}
 										}
-										ImGui::EndDisabled();
 									}
 								}
 							}
+
+							ImGui::EndDisabled();
+
+							ImGui::TreePop();
 						}
 					}
 
@@ -202,18 +274,6 @@ namespace Engine
 		ImGuiDrawer::Draw( uniform_buffer_management_global,	"Shader Globals" );
 	}
 
-	void Renderer::OnProjectionParametersChange( Camera& camera )
-	{
-		if( update_uniform_buffer_other )
-		{
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION",				camera.GetProjectionMatrix()	);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_NEAR",					camera.GetNearPlaneOffset()		);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_FAR",					camera.GetFarPlaneOffset()		);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_ASPECT_RATIO",			camera.GetAspectRatio()			);
-			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_VERTICAL_FIELD_OF_VIEW", camera.GetVerticalFieldOfView() );
-		}
-	}
-
 	void Renderer::OnFramebufferResize( const int new_width_in_pixels, const int new_height_in_pixels )
 	{
 		glViewport( 0, 0, new_width_in_pixels, new_height_in_pixels );
@@ -222,94 +282,229 @@ namespace Engine
 		{
 			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_VIEWPORT_SIZE", Vector2( ( float )new_width_in_pixels, ( float )new_height_in_pixels ) );
 		}
+
+		/* Shadow maps: */
+		light_directional_shadow_map_framebuffer = Engine::Framebuffer( "Shadow Map: Dir. Light", Framebuffer::Description
+																		{
+																			.width_in_pixels  = new_width_in_pixels,
+																			.height_in_pixels = new_height_in_pixels,
+																			
+																			.minification_filter  = Engine::Texture::Filtering::Nearest,
+																			.magnification_filter = Engine::Texture::Filtering::Nearest,
+
+																			/* Default wrapping = clamp to border, with border = Color4{0,0,0,0}. */
+
+																			.attachment_bits = Engine::Framebuffer::AttachmentType::Depth
+																		} );
+
+		/* Main: */
+		editor_framebuffer = Engine::Framebuffer( "Editor FB", Framebuffer::Description
+												  {
+													  .width_in_pixels  = new_width_in_pixels,
+													  .height_in_pixels = new_height_in_pixels,
+
+													  .is_sRGB          = true, /* This is the final step, so sRGB encoding should be on. */
+													  .attachment_bits  = Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined
+												  } );
+
+		/* Offscreen: */
+		for( auto index = 0; index < offscreen_framebuffer_msaa_sample_count_array.size(); index++ )
+			offscreen_framebuffer_array[ index ] = Engine::Framebuffer( "Offscreen FB " + std::to_string( index ), Framebuffer::Description
+																		{
+																			.width_in_pixels    = new_width_in_pixels,
+																			.height_in_pixels   = new_height_in_pixels,
+
+																			.multi_sample_count = offscreen_framebuffer_msaa_sample_count_array[ index ],
+																			.attachment_bits    = Engine::Framebuffer::AttachmentType::Color_DepthStencilCombined
+																		} );
+
+		// TODO: Keep descriptions for offscreen framebuffers around, so client code can request modification to them and indirectly modify offscreen framebuffers' properties.
+		// This would make offscreen_framebuffer_msaa_sample_count_array etc. redundant.
 	}
 
-	void Renderer::AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id )
+	void Renderer::AddRenderable( Renderable* renderable_to_add, const RenderQueue::ID queue_id )
 	{
-		auto& render_group = render_group_map[ render_group_id ];
+		auto& queue = render_queue_map[ queue_id ];
 
-		render_group.drawable_list.push_back( drawable_to_add );
+		queue.renderable_list.push_back( renderable_to_add );
 
-		const auto& shader = drawable_to_add->material->shader;
+		const auto& shader = renderable_to_add->material->shader;
 
-		if( ++render_group.shaders_in_flight[ shader ] == 1 )
+		if( ++queue.shaders_in_flight[ shader ] == 1 )
 		{
 			if( not shaders_registered.contains( shader ) )
 				RegisterShader( *shader );
 		}
 
-		render_group.materials_in_flight.try_emplace( drawable_to_add->material->Name(), drawable_to_add->material );
+		queue.materials_in_flight.try_emplace( renderable_to_add->material->Name(), renderable_to_add->material );
 	}
 
-	void Renderer::RemoveDrawable( Drawable* drawable_to_remove )
+	void Renderer::RemoveRenderable( Renderable* renderable_to_remove )
 	{
-		if( auto render_group_found = GetRenderGroup( drawable_to_remove ) )
+		auto& queues_containing_renderable = RenderQueuesContaining( renderable_to_remove );
+		for( auto& queue : queues_containing_renderable )
 		{
-			auto& render_group_to_remove_from = *render_group_found;
-
 			// For now, stick to removing elements from a vector, which is sub-par performance but should be OK for the time being.
-			std::erase( render_group_to_remove_from.drawable_list, drawable_to_remove );
+			std::erase( queue.renderable_list, renderable_to_remove );
 
-			const auto& shader = drawable_to_remove->material->shader;
+			const auto& shader = renderable_to_remove->material->shader;
 
-			if( --render_group_to_remove_from.shaders_in_flight[ shader ] == 0 )
+			if( --queue.shaders_in_flight[ shader ] == 0 )
 			{
-				render_group_to_remove_from.shaders_in_flight.erase( shader );
-				if( shaders_registered.contains( shader ) )
+				queue.shaders_in_flight.erase( shader );
+				if( --shaders_registered_reference_count_map[ shader ] == 0 )
 					UnregisterShader( *shader );
 			}
 
-			render_group_to_remove_from.materials_in_flight.erase( drawable_to_remove->material->Name() );
-		}
-	}
-
-	void Renderer::RemoveAllDrawables()
-	{
-		for( auto& [ render_group_id, render_group ] : render_group_map )
-		{
-			render_group.drawable_list.clear();
-			render_group.shaders_in_flight.clear();
-			render_group.materials_in_flight.clear();
+			queue.materials_in_flight.erase( renderable_to_remove->material->Name() );
 		}
 	}
 
 	void Renderer::OnShaderReassign( Shader* previous_shader, const std::string& name_of_material_whose_shader_changed )
 	{
-		for( auto& [ render_group_id, render_group ] : render_group_map )
+		for( auto& [ queue_id, queue ] : render_queue_map )
 		{
-			if( auto iterator = render_group.materials_in_flight.find( name_of_material_whose_shader_changed );
-				iterator != render_group.materials_in_flight.cend() )
+			if( auto iterator = queue.materials_in_flight.find( name_of_material_whose_shader_changed );
+				iterator != queue.materials_in_flight.cend() )
 			{
 				Material* material = iterator->second;
 
-				if( auto ref_count = render_group.shaders_in_flight[ previous_shader ];
+				if( auto ref_count = queue.shaders_in_flight[ previous_shader ];
 					ref_count == 1 )
-					render_group.shaders_in_flight.erase( previous_shader );
+					queue.shaders_in_flight.erase( previous_shader );
 
-				render_group.shaders_in_flight[ material->shader ]++;
+				queue.shaders_in_flight[ material->shader ]++;
 
 				/* Log warning if the new shader is incompatible with mesh(es). */
-				for( auto& drawable : render_group.drawable_list )
-					if( drawable->material == material &&
-						not drawable->mesh->IsCompatibleWith( drawable->material->shader->GetSourceVertexLayout() ) )
-						ServiceLocator< GLLogger >::Get().Warning( "Mesh \"" + drawable->mesh->Name() + "\" is not compatible with its current shader \"" + material->shader->Name() + "\"." );
+				for( auto& renderable : queue.renderable_list )
+					if( renderable->material == material &&
+						not renderable->mesh->IsCompatibleWith( renderable->material->shader->GetSourceVertexLayout() ) )
+						logger.Warning( "Mesh \"" + renderable->mesh->Name() +
+																   "\" is not compatible with its current shader \"" + material->shader->Name() + "\"." );
 			}
 		}
 	}
 
-	Renderer::RenderState& Renderer::GetRenderState( const RenderGroupID group_id_to_fetch )
+	RenderState& Renderer::GetRenderState( const RenderPass::ID pass_id_to_fetch )
 	{
-		return render_group_map[ group_id_to_fetch ].render_state;
+		return render_pass_map[ pass_id_to_fetch ].render_state;
 	}
 
-	void Renderer::SetRenderGroupName( const RenderGroupID group_id_to_rename, const std::string_view new_name )
+	void Renderer::AddPass( const RenderPass::ID new_pass_id, RenderPass&& new_pass )
 	{
-		render_group_map[ group_id_to_rename ].name = new_name;
+		if( not render_pass_map.try_emplace( new_pass_id, std::move( new_pass ) ).second )
+			CONSOLE_ERROR( "Attempting to add a new pass with the ID of an existing queue!" );
 	}
 
-	void Renderer::ToggleRenderGroup( const RenderGroupID group_id_to_toggle, const bool enable )
+	void Renderer::RemovePass( const RenderPass::ID pass_id_to_remove )
 	{
-		render_group_map[ group_id_to_toggle ].is_enabled = enable;
+		if( pass_id_to_remove == PASS_ID_LIGHTING || pass_id_to_remove == PASS_ID_SHADOW_MAPPING ||
+			pass_id_to_remove == PASS_ID_OUTLINE  || pass_id_to_remove == PASS_ID_POSTPROCESSING )
+		{
+			CONSOLE_ERROR( "Removing a built-in pass is not allowed! Please use TogglePass( id, false ) to disable unwanted passes instead." );
+			return;
+		}
+
+#ifdef _DEBUG
+		if( const auto iterator = render_pass_map.find( pass_id_to_remove );
+			iterator != render_pass_map.cend() )
+			render_pass_map.erase( pass_id_to_remove );
+		else
+			throw std::runtime_error( "Attempting to remove a non-existing pass!" );
+#else
+		render_pass_map.erase( pass_id_to_remove );
+#endif // _DEBUG
+	}
+
+	void Renderer::TogglePass( const RenderPass::ID pass_id_to_toggle, const bool enable )
+	{
+#ifdef _DEBUG
+		if( auto iterator = render_pass_map.find( pass_id_to_toggle );
+			iterator != render_pass_map.cend() )
+		{
+			iterator->second.is_enabled = enable;
+		}
+		else
+			CONSOLE_ERROR( "Attempting to toggle a non-existing pass!" );
+#else
+		render_pass_map[ pass_id_to_toggle ].is_enabled = enable;
+#endif
+	}
+
+	void Renderer::AddQueue( const RenderQueue::ID new_queue_id, RenderQueue&& new_queue )
+	{
+		if( not render_queue_map.try_emplace( new_queue_id, std::move( new_queue ) ).second )
+			CONSOLE_ERROR( "Attempting to add a new queue with the ID of an existing queue!" );
+	}
+
+	void Renderer::RemoveQueue( const RenderQueue::ID queue_id_to_remove )
+	{
+		if( queue_id_to_remove == QUEUE_ID_GEOMETRY    || queue_id_to_remove == QUEUE_ID_GEOMETRY_OUTLINED ||
+			queue_id_to_remove == QUEUE_ID_TRANSPARENT || queue_id_to_remove == QUEUE_ID_SKYBOX ||
+			queue_id_to_remove == QUEUE_ID_POSTPROCESSING )
+		{
+			CONSOLE_ERROR( "Removing a built-in queue is not allowed! Please use ToggleQueue( id, false ) to disable unwanted passes instead." );
+			return;
+		}
+
+#ifdef _DEBUG
+		if( const auto iterator = render_queue_map.find( queue_id_to_remove );
+			iterator != render_queue_map.cend() )
+			render_queue_map.erase( queue_id_to_remove );
+		else
+			throw std::runtime_error( "Attempting to remove a non-existing queue!" );
+	#else
+		render_queue_map.erase( queue_id_to_remove );
+#endif // _DEBUG
+	}
+
+	void Renderer::AddQueueToPass( const RenderQueue::ID queue_id_to_add, const RenderPass::ID pass_to_add_to )
+	{
+		CONSOLE_ERROR_AND_RETURN_IF_PASS_DOES_NOT_EXIST( "AddQueueToPass", pass_to_add_to );
+		CONSOLE_ERROR_AND_RETURN_IF_QUEUE_DOES_NOT_EXIST( "AddQueueToPass", queue_id_to_add );
+
+		if( not render_pass_map[ pass_to_add_to ].queue_id_set.emplace( queue_id_to_add ).second )
+			CONSOLE_ERROR( "Attempting to add an already existing queue to a pass!" );
+
+	}
+	void Renderer::RemoveQueueFromPass( const RenderQueue::ID queue_id_to_remove, const RenderPass::ID pass_to_remove_from )
+	{
+		CONSOLE_ERROR_AND_RETURN_IF_PASS_DOES_NOT_EXIST( "RemoveQueueFromPass", pass_to_remove_from );
+		CONSOLE_ERROR_AND_RETURN_IF_QUEUE_DOES_NOT_EXIST( "RemoveQueueFromPass", queue_id_to_remove );
+
+		if( not render_pass_map[ pass_to_remove_from ].queue_id_set.erase( queue_id_to_remove ) )
+			CONSOLE_ERROR( "Attempting to add a non-existing queue from a pass!" );
+	}
+
+	void Renderer::ToggleQueue( const RenderQueue::ID queue_id_to_toggle, const bool enable )
+	{
+#ifdef _DEBUG
+		if( auto iterator = render_queue_map.find( queue_id_to_toggle );
+			iterator != render_queue_map.cend() )
+		{
+			iterator->second.is_enabled = enable;
+		}
+		else
+			CONSOLE_ERROR( "Attempting to toggle a non-existing queue!" );
+#else
+		render_queue_map[ queue_id_to_toggle ].is_enabled = enable;
+#endif
+	}
+
+	void Renderer::SetFinalPassToUseEditorFramebuffer()
+	{
+		CONSOLE_ERROR_AND_RETURN_IF_PASS_DOES_NOT_EXIST( "SetFinalPassToUseEditorFramebuffer", PASS_ID_POSTPROCESSING );
+
+		auto& pass = render_pass_map[ PASS_ID_POSTPROCESSING ];
+		pass.target_framebuffer = &editor_framebuffer;
+	}
+
+	void Renderer::SetFinalPassToUseDefaultFramebuffer()
+	{
+		CONSOLE_ERROR_AND_RETURN_IF_PASS_DOES_NOT_EXIST( "SetFinalPassToUseDefaultFramebuffer", PASS_ID_POSTPROCESSING );
+
+		auto& pass = render_pass_map[ PASS_ID_POSTPROCESSING ];
+		pass.target_framebuffer = nullptr;
 	}
 
 	void Renderer::AddDirectionalLight( DirectionalLight* light_to_add )
@@ -404,7 +599,8 @@ namespace Engine
 			update_uniform_buffer_other = true;
 		}
 
-		shaders_registered.insert( &shader );
+		if( ++shaders_registered_reference_count_map[ &shader ] == 1 )
+			shaders_registered.insert( &shader );
 	}
 
 	void Renderer::UnregisterShader( Shader& shader )
@@ -420,7 +616,7 @@ namespace Engine
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
-					// Check if this buffer is still used by other reigstered Shaders:
+					// Check if this buffer is still used by other registered Shaders:
 					if( std::find_if( shaders_registered.cbegin(), shaders_registered.cend(),
 										[ &uniform_buffer_name ]( const Shader* shader ) { return shader->HasGlobalUniformBlock( uniform_buffer_name ); } ) == shaders_registered.cend() )
 						uniform_buffer_management_global.UnregisterBuffer( uniform_buffer_name );
@@ -433,7 +629,7 @@ namespace Engine
 
 				for( auto& [ uniform_buffer_name, uniform_buffer_info ] : uniform_buffer_info_map )
 				{
-					// Check if this buffer is still used by other reigstered Shaders:
+					// Check if this buffer is still used by other registered Shaders:
 					if( std::find_if( shaders_registered.cbegin(), shaders_registered.cend(),
 										[ &uniform_buffer_name ]( const Shader* shader ) { return shader->HasIntrinsicUniformBlock( uniform_buffer_name ); } ) == shaders_registered.cend() )
 						uniform_buffer_management_intrinsic.UnregisterBuffer( uniform_buffer_name );
@@ -456,23 +652,7 @@ namespace Engine
 		}
 
 		shaders_registered.erase( &shader );
-	}
-
-	void Renderer::SetClearColor( const Color3& new_clear_color )
-	{
-		clear_color = new_clear_color;
-		SetClearColor();
-	}
-
-	void Renderer::SetClearColor( const Color4& new_clear_color )
-	{
-		clear_color = new_clear_color;
-		SetClearColor();
-	}
-
-	void Renderer::SetClearTargets( const BitFlags< ClearTarget > targets )
-	{
-		clear_targets = targets;
+		shaders_registered_reference_count_map.erase( &shader );
 	}
 
 /*
@@ -547,16 +727,23 @@ namespace Engine
 		glBlendEquation( ( GLenum )function );
 	}
 
-	void Renderer::SetCurrentFramebuffer( const Framebuffer* framebuffer )
+	void Renderer::SetCurrentFramebuffer( Framebuffer* framebuffer )
 	{
+		ASSERT_DEBUG_ONLY( framebuffer && ICON_FA_DRAW_POLYGON " " "SetCurrentFramebuffer() called with nullptr. ResetToDefaultFramebuffer() can be used to bind the default framebuffer." );
+
+		const Vector2I old_framebuffer_size = framebuffer_current ? framebuffer_current->Size() : Vector2I{};
+		
 		framebuffer_current = framebuffer;
 		framebuffer_current->Bind();
+
+		if( framebuffer->Size() != old_framebuffer_size )
+			glViewport( 0, 0, framebuffer->Width(), framebuffer->Height() );
 	}
 
-	void Renderer::ResetToDefaultFramebuffer( const Framebuffer::Target target )
+	void Renderer::ResetToDefaultFramebuffer( const Framebuffer::BindPoint bind_point )
 	{
 		framebuffer_current = nullptr;
-		glBindFramebuffer( ( GLenum )target, 0 );
+		DefaultFramebuffer::Bind( bind_point );
 	}
 
 	bool Renderer::DefaultFramebufferIsBound() const
@@ -564,24 +751,162 @@ namespace Engine
 		return framebuffer_current == nullptr;
 	}
 
-	const Framebuffer* Renderer::CurrentFramebuffer() const
+	Framebuffer* Renderer::CurrentFramebuffer()
 	{
 		return framebuffer_current;
 	}
 
-	void Renderer::EnablesRGBEncoding()
+	Framebuffer& Renderer::EditorFramebuffer()
 	{
-		glEnable( GL_FRAMEBUFFER_SRGB );
+		return editor_framebuffer;
 	}
 
-	void Renderer::DisablesRGBEncoding()
+	Framebuffer& Renderer::OffscreenFramebuffer( const unsigned int framebuffer_index )
+	{
+		return offscreen_framebuffer_array[ framebuffer_index ];
+	}
+
+	void Renderer::Enable_sRGBEncoding()
+	{
+		glEnable( GL_FRAMEBUFFER_SRGB );
+		sRGB_encoding_is_enabled = true;
+	}
+
+	void Renderer::Disable_sRGBEncoding()
 	{
 		glDisable( GL_FRAMEBUFFER_SRGB );
+		sRGB_encoding_is_enabled = false;
 	}
 
 	void Renderer::SetPolygonMode( const PolygonMode mode )
 	{
 		glPolygonMode( GL_FRONT_AND_BACK, ( GLenum )mode );
+	}
+
+	void Renderer::InitializeBuiltinQueues()
+	{
+		AddQueue( QUEUE_ID_GEOMETRY,
+				  RenderQueue
+				  {
+					  .name                  = "Geometry",
+					  .render_state_override = RenderState
+					  {
+						  .sorting_mode = Engine::SortingMode::FrontToBack
+					  }
+				  } );
+
+		AddQueue( QUEUE_ID_GEOMETRY_OUTLINED,
+				  RenderQueue
+				  {
+					  .name                  = "Geometry - Outlined",
+					  .render_state_override = RenderState
+					  {
+						  /* This pass renders the mesh semi-regularly; It also marks the stencil buffer with 1s everywhere the mesh is rendered at. */
+
+						  .stencil_test_enable = true,
+
+						  .sorting_mode = Engine::SortingMode::FrontToBack,
+
+						  .stencil_write_mask                            = 0xFF,
+						  .stencil_comparison_function                   = Engine::ComparisonFunction::Always,
+						  .stencil_ref                                   = 0x01,
+						  .stencil_test_response_stencil_fail            = Engine::StencilTestResponse::Keep,
+						  .stencil_test_response_stencil_pass_depth_fail = Engine::StencilTestResponse::Keep,
+						  .stencil_test_response_both_pass               = Engine::StencilTestResponse::Replace
+					  }
+				  } );
+
+		AddQueue( QUEUE_ID_TRANSPARENT,
+				  RenderQueue
+				  {
+					  .name                  = "Transparent",
+					  .render_state_override = RenderState
+					  {
+						  .blending_enable = true,
+
+						  .sorting_mode = Engine::SortingMode::BackToFront,
+
+						  .blending_source_color_factor      = Engine::BlendingFactor::SourceAlpha,
+						  .blending_destination_color_factor = Engine::BlendingFactor::OneMinusSourceAlpha,
+						  .blending_source_alpha_factor      = Engine::BlendingFactor::SourceAlpha,
+						  .blending_destination_alpha_factor = Engine::BlendingFactor::OneMinusSourceAlpha
+					  }
+				  } );
+
+
+		AddQueue( QUEUE_ID_SKYBOX,
+				  RenderQueue
+				  {
+					  .name                  = "Skybox",
+					  .render_state_override = RenderState
+					  {
+						 .face_culling_enable = false,
+
+						 .depth_comparison_function = ComparisonFunction::LessOrEqual
+					  }
+				  } );
+		AddQueue( QUEUE_ID_POSTPROCESSING,
+				  RenderQueue
+				  {
+					  .name = "Post-processing",
+				  } );
+	}
+
+	void Renderer::InitializeBuiltinPasses()
+	{
+		AddPass( PASS_ID_SHADOW_MAPPING,
+				 RenderPass
+				 {
+					 .name               = "Shadow Mapping",
+					 .target_framebuffer = &light_directional_shadow_map_framebuffer,
+					 .queue_id_set       = { QUEUE_ID_GEOMETRY_OUTLINED },
+					 .view_matrix		 = Matrix4x4{},
+					 .projection_matrix  = Matrix4x4{},
+					 .render_state       = RenderState
+					 {
+						 .sorting_mode = Engine::SortingMode::FrontToBack,
+					 },
+					 .render_state_override_is_allowed = false,
+					 .clear_framebuffer                = true
+				 } );
+
+
+		AddPass( PASS_ID_LIGHTING,
+				 RenderPass
+				 {
+					 .name               = "Lighting",
+					 .target_framebuffer = &offscreen_framebuffer_array[ 0 ],
+					 .queue_id_set       = { QUEUE_ID_GEOMETRY, QUEUE_ID_GEOMETRY_OUTLINED, QUEUE_ID_TRANSPARENT, QUEUE_ID_SKYBOX },
+					 .clear_framebuffer  = true,
+				 } );
+
+		AddPass( PASS_ID_OUTLINE,
+				 RenderPass
+				 {
+					 .name               = "Outline",
+					 .target_framebuffer = &offscreen_framebuffer_array[ 0 ],
+					 .queue_id_set       = { QUEUE_ID_GEOMETRY },
+					 .render_state       = RenderState
+					 {
+					     .depth_test_enable   = false,
+						 .stencil_test_enable = true,
+
+
+						 .stencil_write_mask          = 0x00, // Disable writes; This pass only needs to READ the stencil buffer, to figure out where NOT to render.
+						 .stencil_comparison_function = Engine::ComparisonFunction::NotEqual, // Render everywhere that's not the actual mesh, i.e., the border.
+						 .stencil_ref                 = 0x01
+					 },
+					 .render_state_override_is_allowed = false,
+					 .clear_framebuffer                = false, // => because rendering into the same framebuffer as the Lighting pass.
+				 } );
+
+		AddPass( PASS_ID_POSTPROCESSING,
+				 RenderPass
+				 {
+					 .name               = "Post-processing",
+					 .target_framebuffer = &editor_framebuffer,
+					 .queue_id_set       = { QUEUE_ID_POSTPROCESSING }
+				 } );
 	}
 
 	void Renderer::Render( const Mesh& mesh )
@@ -622,6 +947,121 @@ namespace Engine
 		glDrawArraysInstanced( ( GLint )mesh.Primitive(), 0, mesh.VertexCount(), mesh.InstanceCount() );
 	}
 
+	void Renderer::SetIntrinsicsPerPass( const RenderPass& pass )
+	{
+		/* Update view/projection matrix, only if dirty: */
+		BitFlags< IntrinsicModifyTarget > intrinsic_modification_targets;
+
+		if( pass.view_matrix && pass.view_matrix != current_camera_info.view_matrix )
+		{
+			intrinsic_modification_targets.Set( IntrinsicModifyTarget::UniformBuffer_View );
+			current_camera_info.view_matrix = *pass.view_matrix;
+		}
+
+		if( pass.projection_matrix && pass.projection_matrix != current_camera_info.projection_matrix )
+		{
+			intrinsic_modification_targets.Set( IntrinsicModifyTarget::UniformBuffer_Projection );
+			current_camera_info.projection_matrix      = *pass.projection_matrix;
+			current_camera_info.plane_near             = pass.plane_near;
+			current_camera_info.plane_far              = pass.plane_far;
+			current_camera_info.aspect_ratio           = pass.aspect_ratio;
+			current_camera_info.vertical_field_of_view = pass.vertical_field_of_view;
+		}
+
+		if( intrinsic_modification_targets.IsSet( IntrinsicModifyTarget::UniformBuffer_View ) ||
+			intrinsic_modification_targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Projection ) )
+		{
+			current_camera_info.view_projection_matrix = current_camera_info.view_matrix * current_camera_info.projection_matrix;
+		}
+
+		SetIntrinsics( intrinsic_modification_targets );
+	}
+
+	void Renderer::SetIntrinsics( const BitFlags< IntrinsicModifyTarget > targets )
+	{
+		if( targets == IntrinsicModifyTarget::None )
+			return;
+
+		if( update_uniform_buffer_other && targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Projection ) )
+		{
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_PROJECTION", current_camera_info.projection_matrix );
+			if( not targets.IsSet( IntrinsicModifyTarget::UniformBuffer_View ) ) // No need to upload twice.
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION", current_camera_info.view_projection_matrix );
+
+			if( Matrix::IsPerspectiveProjection( current_camera_info.projection_matrix ) ) // No need to upload these if they will not mean anything anyway.
+			{
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_NEAR",					current_camera_info.plane_near );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_FAR",					current_camera_info.plane_far );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_ASPECT_RATIO",			current_camera_info.aspect_ratio );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_PROJECTION_VERTICAL_FIELD_OF_VIEW", current_camera_info.vertical_field_of_view );
+			}
+		}
+
+		if( targets.IsSet( IntrinsicModifyTarget::UniformBuffer_View ) )
+		{
+			const auto& view_matrix               = current_camera_info.view_matrix;
+			const auto& view_matrix_3x3           = view_matrix.SubMatrix< 3 >();
+			const auto& view_matrix_rotation_only = Matrix4x4( view_matrix_3x3 );
+
+			if( update_uniform_buffer_other )
+			{
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW",				view_matrix );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_ROTATION_ONLY",	view_matrix_rotation_only );
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Other", "_INTRINSIC_TRANSFORM_VIEW_PROJECTION",		current_camera_info.view_projection_matrix );
+			}
+
+			if( update_uniform_buffer_lighting )
+			{
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE", light_directional && light_directional->is_enabled ? 1u : 0u );
+				if( light_directional && light_directional->is_enabled )
+				{
+					light_directional->data.direction_view_space = light_directional->transform->Forward() * view_matrix_3x3;
+					uniform_buffer_management_intrinsic.SetPartial_Struct( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT", light_directional->data );
+				}
+
+				lights_point_active_count = 0;
+				for( auto index = 0; index < lights_point.size(); index++ )
+				{
+					auto& point_light = lights_point[ index ];
+
+					if( point_light->is_enabled )
+					{
+						/* Shaders expect the lights' position & direction in view space. */
+						point_light->data.position_view_space = Vector4( point_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix;
+						uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHTS", lights_point_active_count++, point_light->data );
+					}
+				}
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT", lights_point_active_count );
+
+				lights_spot_active_count = 0;
+				for( auto index = 0; index < lights_spot.size(); index++ )
+				{
+					auto& spot_light = lights_spot[ index ];
+
+					if( spot_light->is_enabled )
+					{
+						/* Shaders expect the lights' position & direction in view space. */
+
+						spot_light->data.position_view_space_and_cos_cutoff_angle_inner.vector = ( Vector4( spot_light->transform->GetTranslation() ).SetW( 1.0f ) * view_matrix ).XYZ();
+						spot_light->data.position_view_space_and_cos_cutoff_angle_inner.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_inner ) );
+
+						spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.vector = spot_light->transform->Forward() * view_matrix_3x3;
+						spot_light->data.direction_view_space_and_cos_cutoff_angle_outer.scalar = Math::Cos( Radians( spot_light->data.cutoff_angle_outer ) );
+
+						uniform_buffer_management_intrinsic.SetPartial_Array( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHTS", lights_spot_active_count++, spot_light->data );
+					}
+				}
+				uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT", lights_spot_active_count );
+			}
+		}
+
+		if( update_uniform_buffer_lighting && targets.IsSet( IntrinsicModifyTarget::UniformBuffer_Lighting_ShadowMapping ) )
+		{
+			uniform_buffer_management_intrinsic.SetPartial( "_Intrinsic_Lighting", "_INTRINSIC_DIRECTIONAL_LIGHT_VIEW_PROJECTION_TRANSFORM", 
+															light_directional_view_projection_transform_matrix );
+		}
+	}
+
 	void Renderer::UploadIntrinsics()
 	{
 		uniform_buffer_management_intrinsic.UploadAll();
@@ -632,17 +1072,109 @@ namespace Engine
 		uniform_buffer_management_global.UploadAll();
 	}
 
-	Renderer::RenderGroup* Renderer::GetRenderGroup( const Drawable* drawable_of_interest )
+	void Renderer::CalculateShadowMappingInformation()
 	{
-		for( auto& [ render_group_id, render_group ] : render_group_map )
-			if( std::find( render_group.drawable_list.cbegin(), render_group.drawable_list.cend(), drawable_of_interest ) != render_group.drawable_list.cend() )
-				return &render_group;
+		Transform light_transform_copy( *light_directional->transform );
 
-		return nullptr;
+		const auto& light_direction( light_transform_copy.Forward() );
+
+		//light_transform_copy.SetTranslation( -light_direction * 50.0f );
+
+		const auto view_matrix = light_transform_copy.GetInverseOfFinalMatrix_NoScale();
+
+		// TODO: AABBs.
+		// TODO: Render the projection volume as a wireframe cube. More generally, create a debug-render pass, with wire-frame rendering.
+		// Use ortho. projection for directional light. For now, use big values for the projection volume:
+		const auto projection_matrix = Engine::Matrix::OrthographicProjection( -50.0f, +50.0f, -50.0f, +50.0f, 1.0f, 101.0f );
+
+		auto& shadow_mapping_pass = render_pass_map[ PASS_ID_SHADOW_MAPPING ];
+		
+		bool recalculate_view_projection_matrix = false;
+
+		if( shadow_mapping_pass.view_matrix != view_matrix )
+		{
+			shadow_mapping_pass.view_matrix = view_matrix;
+			recalculate_view_projection_matrix = true;
+		}
+
+		if( shadow_mapping_pass.projection_matrix != projection_matrix )
+		{
+			shadow_mapping_pass.projection_matrix = projection_matrix;
+			recalculate_view_projection_matrix = true;
+		}
+
+		if( recalculate_view_projection_matrix )
+		{
+			light_directional_view_projection_transform_matrix = view_matrix * projection_matrix;
+			SetIntrinsics( IntrinsicModifyTarget::UniformBuffer_Lighting_ShadowMapping );
+		}
 	}
 
-	void Renderer::SetRenderState( const RenderState& render_state_to_set )
+	void Renderer::RecompileModifiedShaders()
 	{
+		/* Shader Recompilation: */
+		static std::vector< Shader* > shaders_to_recompile;
+
+		/* Have to do two passes as shaders to be recompiled need to be removed from shaders_registered, which we can not do while traversing the container. */
+
+		shaders_to_recompile.clear();
+
+		for( const auto& shader : shaders_registered )
+			if( shader->SourceFilesAreModified() )
+				shaders_to_recompile.push_back( shader );
+
+		for( auto& shader : shaders_to_recompile )
+		{
+			Shader new_shader( shader->name.c_str() );
+			if( shader->RecompileFromThis( new_shader ) )
+			{
+				UnregisterShader( *shader );
+
+				*shader = std::move( new_shader );
+
+				RegisterShader( *shader );
+
+				logger.Info( "\"" + shader->name + "\" shader's source files are modified. It is recompiled." );
+			}
+			else
+				logger.Error( "\"" + shader->name + "\" shader's source files are modified but it could not be recompiled successfully." );
+		}
+	}
+
+	std::vector< RenderQueue >& Renderer::RenderQueuesContaining( const Renderable* renderable_of_interest )
+	{
+		static std::vector< RenderQueue > queues;
+		queues.clear();
+
+		for( const auto& [ queue_id, queue ] : render_queue_map )
+			if( std::find( queue.renderable_list.cbegin(), queue.renderable_list.cend(), renderable_of_interest ) != queue.renderable_list.cend() )
+				queues.push_back( queue );
+
+		return queues;
+	}
+
+	void Renderer::SetRenderState( const RenderState& render_state_to_set, Framebuffer* target_framebuffer, const bool clear_framebuffer )
+	{
+		if( framebuffer_current != target_framebuffer )
+		{
+			if( target_framebuffer )
+				SetCurrentFramebuffer( target_framebuffer );
+			else
+				ResetToDefaultFramebuffer();
+		}
+
+		if( clear_framebuffer )
+			framebuffer_current ? framebuffer_current->Clear() : DefaultFramebuffer::Clear();
+
+		if( auto framebuffer_uses_srgb_encoding = framebuffer_current ? framebuffer_current->Is_sRGB() : true /* Default framebuffer always uses sRGB Encoding. */;
+			framebuffer_uses_srgb_encoding != sRGB_encoding_is_enabled )
+		{
+			if( framebuffer_uses_srgb_encoding )
+				Enable_sRGBEncoding();
+			else
+				Disable_sRGBEncoding();
+		}
+
 		if( render_state_to_set.face_culling_enable )
 			EnableFaceCulling();
 		else
@@ -680,25 +1212,31 @@ namespace Engine
 		SetBlendingFunction( render_state_to_set.blending_function );
 	}
 
-	void Renderer::SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode )
+	void Renderer::SortRenderablesInQueue( const Vector3& camera_position, std::vector< Renderable* >& renderable_array_to_sort, const SortingMode sorting_mode )
 	{
 		switch( sorting_mode )
 		{
-			case SortingMode::DepthNearestToFarthest:
-				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
-						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
+			case SortingMode::FrontToBack:
+				std::sort( renderable_array_to_sort.begin(), renderable_array_to_sort.end(),
+						   [ & ]( Renderable* renderable_1, Renderable* renderable_2 )
 							{
-								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) <
-										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+								if( renderable_1->GetTransform() && renderable_2->GetTransform() )
+									return Math::Distance( camera_position, renderable_1->GetTransform()->GetTranslation() ) <
+										   Math::Distance( camera_position, renderable_2->GetTransform()->GetTranslation() );
+
+								return renderable_1 < renderable_2; // Does not matter;
 							} );
 				break;
 
-			case SortingMode::DepthFarthestToNearest:
-				std::sort( drawable_array_to_sort.begin(), drawable_array_to_sort.end(),
-						   [ & ]( Drawable* drawable_1, Drawable* drawable_2 )
+			case SortingMode::BackToFront:
+				std::sort( renderable_array_to_sort.begin(), renderable_array_to_sort.end(),
+						   [ & ]( Renderable* renderable_1, Renderable* renderable_2 )
 							{
-								return Math::Distance( camera.Position(), drawable_1->GetTransform()->GetTranslation() ) >
-										Math::Distance( camera.Position(), drawable_2->GetTransform()->GetTranslation() );
+								if( renderable_1->GetTransform() && renderable_2->GetTransform() )
+									return Math::Distance( camera_position, renderable_1->GetTransform()->GetTranslation() ) >
+										   Math::Distance( camera_position, renderable_2->GetTransform()->GetTranslation() );
+							
+								return renderable_1 < renderable_2; // Does not matter;
 							} );
 				break;
 
@@ -706,56 +1244,6 @@ namespace Engine
 			case SortingMode::None:
 				break;
 		}
-	}
-
-	void Renderer::RecompileModifiedShaders()
-	{
-		/* Shader Recompilation: */
-		static std::vector< Shader* > shaders_to_recompile;
-
-		/* Have to do two passes as shaders to be recompiled need to be removed from shaders_registered, which we can not do while traversing the container. */
-
-		shaders_to_recompile.clear();
-
-		for( const auto& shader : shaders_registered )
-			if( shader->SourceFilesAreModified() )
-				shaders_to_recompile.push_back( shader );
-
-		for( auto& shader : shaders_to_recompile )
-		{
-			Shader new_shader( shader->name.c_str() );
-			if( shader->RecompileFromThis( new_shader ) )
-			{
-				UnregisterShader( *shader );
-
-				/* Swap: */
-				{
-					*shader = std::move( new_shader );
-
-					//Shader temp( std::move( *shader ) );
-					//*shader    = std::move( new_shader );
-					//new_shader = std::move( temp );
-
-					//new_shader.program_id.Reset(); // To prevent double-deletion.
-				}
-
-				RegisterShader( *shader );
-
-				ServiceLocator< GLLogger >::Get().Info( "\"" + shader->name + "\" shader's source files are modified. It is recompiled." );
-			}
-			else
-				ServiceLocator< GLLogger >::Get().Error( "\"" + shader->name + "\" shader's source files are modified but it could not be recompiled successfully." );
-		}
-	}
-
-	void Renderer::SetClearColor()
-	{
-		glClearColor( clear_color.R(), clear_color.G(), clear_color.B(), clear_color.A() );
-	}
-
-	void Renderer::Clear() const
-	{
-		glClear( ( GLbitfield )clear_targets.ToBits() );
 	}
 
 	void Renderer::EnableFaceCulling()

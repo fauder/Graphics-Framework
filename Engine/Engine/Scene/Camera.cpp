@@ -15,6 +15,8 @@ namespace Engine
 		view_projection_matrix_needs_update( true )
 	{}
 
+/* Matrix Getters: */
+
 	const Matrix4x4& Camera::GetViewMatrix()
 	{
 		if( transform->IsDirty() )
@@ -27,7 +29,9 @@ namespace Engine
 	{
 		if( projection_matrix_needs_update )
 		{
-			projection_matrix = Matrix::PerspectiveProjection( plane_near, plane_far, aspect_ratio, vertical_field_of_view );
+			if( UsesPerspectiveProjection() )
+				projection_matrix = Matrix::PerspectiveProjection( plane_near, plane_far, aspect_ratio, vertical_field_of_view );
+
 			projection_matrix_needs_update = false;
 		}
 
@@ -38,26 +42,14 @@ namespace Engine
 	{
 		if( view_projection_matrix_needs_update || transform->IsDirty() )
 		{
-			view_projection_matrix = GetViewMatrix() * GetProjectionMatrix();
+			view_projection_matrix              = GetViewMatrix() * GetProjectionMatrix();
 			view_projection_matrix_needs_update = false;
 		}
 
 		return view_projection_matrix;
 	}
-	
-	Camera& Camera::SetNearPlaneOffset( const float offset )
-	{
-		plane_near = offset;
-		SetProjectionMatrixDirty();
-		return *this;
-	}
 
-	Camera& Camera::SetFarPlaneOffset( const float offset )
-	{
-		plane_far = offset;
-		SetProjectionMatrixDirty();
-		return *this;
-	}
+/* View related: */
 
 	Vector3 Camera::Right()
 	{
@@ -74,21 +66,7 @@ namespace Engine
 	Vector3 Camera::Forward()
 	{
 		GetViewMatrix();
-		return view_matrix.GetColumn< 3 >( 2 ); 
-	}
-
-	Camera& Camera::SetAspectRatio( const float new_aspect_ratio )
-	{
-		SetProjectionMatrixDirty();
-		aspect_ratio = new_aspect_ratio;
-		return *this;
-	}
-
-	Camera& Camera::SetVerticalFieldOfView( const Radians new_fov )
-	{
-		SetProjectionMatrixDirty();
-		vertical_field_of_view = new_fov;
-		return *this;
+		return view_matrix.GetColumn< 3 >( 2 );
 	}
 
 	Camera& Camera::SetLookRotation( const Vector3& look_at, const Vector3& up )
@@ -96,6 +74,54 @@ namespace Engine
 		transform->LookAt( look_at, up );
 		return *this;
 	}
+
+/* Projection related: */
+
+	Camera& Camera::SetNearPlaneOffset( const float offset )
+	{
+		plane_near = offset;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::SetFarPlaneOffset( const float offset )
+	{
+		plane_far = offset;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::SetAspectRatio( const float new_aspect_ratio )
+	{
+		aspect_ratio = new_aspect_ratio;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::SetVerticalFieldOfView( const Radians new_fov )
+	{
+		vertical_field_of_view = new_fov;
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::SetCustomProjectionMatrix( const Matrix4x4& custom_projection_matrix )
+	{
+		projection_matrix = custom_projection_matrix;
+		SetCustomProjectionMatrixDirty();
+		return *this;
+	}
+
+	Camera& Camera::ClearCustomProjectionMatrix()
+	{
+		/* This ensures UsesPerspectiveProjection() works correctly without needing to actually re-calculate projection just to query projection type info. */
+		projection_matrix[ 2 ][ 3 ] = 1.0f;
+
+		SetProjectionMatrixDirty();
+		return *this;
+	}
+
+/* Other:*/
 
 	Vector3 Camera::ConvertFromScreenSpaceToViewSpace( const Engine::Vector2 screen_space_coordinate, const Engine::Vector2I screen_dimensions )
 	{
@@ -125,6 +151,8 @@ namespace Engine
 		};
 	}
 
+/* PRIVATE API: */
+
 	void Camera::SetProjectionMatrixDirty()
 	{
 		projection_matrix_needs_update = true;
@@ -134,5 +162,11 @@ namespace Engine
 	void Camera::SetViewProjectionMatrixDirty()
 	{
 		view_projection_matrix_needs_update = true;
+	}
+
+	void Camera::SetCustomProjectionMatrixDirty()
+	{
+		projection_matrix_needs_update = false;
+		SetViewProjectionMatrixDirty();
 	}
 }

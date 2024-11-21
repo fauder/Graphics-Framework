@@ -68,14 +68,12 @@ private:
 	void ResetCamera();
 	void ResetProjection();
 	void SwitchCameraView( const CameraView view );
-	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view ) const;
+	Radians CalculateVerticalFieldOfView( const Radians horizontal_field_of_view, const float aspect_ratio ) const;
 
 	bool ReloadModel( ModelInfo& model_info_to_be_loaded, const std::string& file_path, const char* name );
 	void UnloadModel( ModelInfo& model_info_to_be_unloaded );
 
-	void ReplaceMeteoriteAndCubeDrawables( bool use_meteorites );
-
-	void InitializeFramebuffers( const int width_new_pixels, const int height_new_pixels );
+	void ReplaceMeteoriteAndCubeRenderables( bool use_meteorites );
 
 	void RecalculateProjectionParameters( const int width_new_pixels, const int height_new_pixels );
 	void RecalculateProjectionParameters( const Vector2I new_size_pixels ); // Convenience overload.
@@ -85,50 +83,44 @@ private:
 /* Renderer: */
 	Engine::Renderer renderer;
 
-	Engine::Drawable light_sources_drawable;
+	Engine::Renderable light_sources_renderable;
 
 	const static constexpr int CUBE_COUNT           = 200'000;
 	const static constexpr int CUBE_REFLECTED_COUNT = 10;
-	Engine::Drawable cube_drawable;
-	Engine::Drawable cube_drawable_outline;
+	Engine::Renderable cube_renderable;
+	Engine::Renderable cube_renderable_outline;
 
-	Engine::Drawable cube_reflected_drawable;
+	Engine::Renderable cube_reflected_renderable;
 
-	Engine::Drawable* meteorite_drawable;
+	Engine::Renderable* meteorite_renderable;
 
-	Engine::Drawable skybox_drawable;
+	Engine::Renderable skybox_renderable;
 
-	Engine::Drawable ground_drawable;
-	Engine::Drawable wall_front_drawable;
-	Engine::Drawable wall_left_drawable;
-	Engine::Drawable wall_right_drawable;
-	Engine::Drawable wall_back_drawable;
+	Engine::Renderable ground_renderable;
+	Engine::Renderable wall_front_renderable;
+	Engine::Renderable wall_left_renderable;
+	Engine::Renderable wall_right_renderable;
+	Engine::Renderable wall_back_renderable;
 
 	const static constexpr int WINDOW_COUNT = 5;
-	std::array< Engine::Drawable, WINDOW_COUNT > window_drawable_array;
+	std::array< Engine::Renderable, WINDOW_COUNT > window_renderable_array;
 
-	Engine::Drawable offscreen_quad_drawable;
+	Engine::Renderable offscreen_quad_renderable;
 
-	Engine::Drawable mirror_quad_drawable;
+	Engine::Renderable mirror_quad_renderable;
 
-	const Engine::Renderer::RenderGroupID render_group_id_skybox;
-	const Engine::Renderer::RenderGroupID render_group_id_regular;
-	const Engine::Renderer::RenderGroupID render_group_id_outlined_mesh;
-	const Engine::Renderer::RenderGroupID render_group_id_outline;
-	const Engine::Renderer::RenderGroupID render_group_id_transparent;
-	const Engine::Renderer::RenderGroupID render_group_id_screen_size_quad;
+	static constexpr Engine::RenderPass::ID RENDER_PASS_ID_LIGHTING_REAR_VIEW = Engine::RenderPass::ID( ( unsigned int )Engine::Renderer::PASS_ID_LIGHTING - 1 );
 
 /* Textures: */
 	Engine::Texture* skybox_texture;
 
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
+
+	Engine::Texture* half_gray_srgb_texture;
+
 	Engine::Texture* checker_pattern_texture;
 	Engine::Texture* transparent_window_texture;
-
-/* Framebuffers: */
-	std::array< Engine::Framebuffer, 2 > offscreen_framebuffer_array;
-	Engine::Framebuffer editor_framebuffer; // Not to be confused with the default frame-buffer.
 
 /* Vertex Info.: */
 	Engine::Mesh cube_mesh, cube_mesh_fullscreen, quad_mesh, quad_mesh_uvs_only, quad_mesh_fullscreen, quad_mesh_mirror;
@@ -137,23 +129,29 @@ private:
 	Engine::Mesh cube_mesh_instanced_with_color; // For light sources.
 
 /* Shaders: */
-	Engine::Shader skybox_shader;
-	Engine::Shader blinn_phong_shader;
-	Engine::Shader blinn_phong_shader_instanced;
-	Engine::Shader blinn_phong_skybox_reflection_shader;
-	Engine::Shader blinn_phong_skybox_reflection_shader_instanced;
-	Engine::Shader basic_color_shader;
-	Engine::Shader basic_textured_shader;
-	Engine::Shader basic_textured_transparent_discard_shader;
-	Engine::Shader outline_shader;
+	Engine::Shader* shader_skybox;
+	Engine::Shader* shader_blinn_phong;
+	Engine::Shader* shader_blinn_phong_shadowed;
+	Engine::Shader* shader_blinn_phong_instanced;
+	Engine::Shader* shader_blinn_phong_shadowed_instanced;
+	Engine::Shader* shader_blinn_phong_skybox_reflection;
+	Engine::Shader* shader_blinn_phong_skybox_reflection_instanced;
+	Engine::Shader* shader_blinn_phong_skybox_reflection_shadowed_instanced;
+	Engine::Shader* shader_basic_color;
+	Engine::Shader* shader_basic_color_instanced;
+	Engine::Shader* shader_basic_textured;
+	Engine::Shader* shader_basic_textured_transparent_discard;
+	Engine::Shader* shader_outline;
 
-	Engine::Shader texture_blit_shader, fullscreen_blit_shader, fullscreen_blit_resolve_shader;
+	Engine::Shader* shader_texture_blit;
+	Engine::Shader* shader_fullscreen_blit;
+	Engine::Shader* shader_fullscreen_blit_resolve;
 
-	Engine::Shader postprocess_grayscale_shader;
+	Engine::Shader* shader_postprocess_grayscale;
 
-	Engine::Shader postprocess_generic_shader;
+	Engine::Shader* shader_postprocess_generic;
 
-	Engine::Shader normal_visualization_shader;
+	Engine::Shader* shader_normal_visualization;
 
 /* Models: */
 	ModelInfo test_model_info;
@@ -263,7 +261,5 @@ private:
 	bool ui_interaction_enabled;
 	bool show_imgui_demo_window;
 
-	bool draw_rear_view_cam_to_imgui;
-
-	std::optional< int > msaa_for_offscreen_framebuffers_sample_count;
+	bool render_rear_view_cam_to_imgui;
 };

@@ -19,12 +19,19 @@ struct SpotLightData
 	vec4 position_view_space_and_cos_cutoff_angle_inner, direction_view_space_and_cos_cutoff_angle_outer;
 };
 
-layout ( std140 ) uniform _Intrinsic_Lighting
+layout ( row_major, std140 ) uniform _Intrinsic_Lighting
 {
-float padding;
+/* Shadow-mapping: */
+	mat4x4					_INTRINSIC_DIRECTIONAL_LIGHT_VIEW_PROJECTION_TRANSFORM;
+	vec4					_INTRINSIC_SHADOW_BIAS_MIN_MAX_2_RESERVED;
+	ivec2					_INTRINSIC_SHADOW_SAMPLE_COUNT_X_Y;
+
+/* Lighting: */
 	uint					_INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE;
 	uint					_INTRINSIC_POINT_LIGHT_ACTIVE_COUNT;
 	uint					_INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT;
+
+uvec3 padding;
 
 	DirectionalLightData	_INTRINSIC_DIRECTIONAL_LIGHT;
 	PointLightData			_INTRINSIC_POINT_LIGHTS[ POINT_LIGHT_MAX_COUNT ];

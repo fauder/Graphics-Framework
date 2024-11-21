@@ -9,28 +9,5 @@
     <ClCompile Include="Source\ModelInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Asset\Shader\BasicTextured.vert" />
-    <None Include="Asset\Shader\BasicTextured.frag" />
-    <None Include="Asset\Shader\Blinn-Phong.frag" />
-    <None Include="Asset\Shader\Blinn-Phong.vert" />
-    <None Include="Asset\Shader\BasicColor.frag" />
-    <None Include="Asset\Shader\_Intrinsic_Lighting.glsl" />
-    <None Include="Asset\Shader\_Intrinsic_Other.glsl" />
-    <None Include="Asset\Shader\_Global.glsl" />
-    <None Include="Asset\Shader\VisualizeDepth.frag" />
-    <None Include="Asset\Shader\_Depth.glsl" />
-    <None Include="Asset\Shader\Outline.vert" />
-    <None Include="Asset\Shader\PassThrough.vert" />
-    <None Include="Asset\Shader\Grayscale.frag" />
-    <None Include="Asset\Shader\GenericPostprocess.frag" />
-    <None Include="Asset\Shader\Skybox.vert" />
-    <None Include="Asset\Shader\Skybox.frag" />
-    <None Include="Asset\Shader\VisualizeNormals.geom" />
-    <None Include="Asset\Shader\VisualizeNormals.vert" />
-    <None Include="Asset\Shader\BasicColor.vert" />
-    <None Include="Asset\Shader\BasicTextured_Mixed.frag" />
-    <None Include="Asset\Shader\FullScreenBlit.frag" />
-    <None Include="Asset\Shader\FullScreenBlit_Resolve.frag" />
-    <None Include="Asset\Shader\PassThrough_UVs.vert" />
   </ItemGroup>
 </Project>

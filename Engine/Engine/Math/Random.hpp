@@ -66,6 +66,19 @@ namespace Engine::Math
 			return vector;
 		}
 
+		template< Concepts::Arithmetic Type, std::size_t Length >
+		static std::array< Type, Length > Generate( const Type min = Type( 0 ), const Type max = Type( 1 ) )
+		{
+			auto& instance = Instance();
+
+			std::array< Type, Length > result;
+
+			for( auto i = 0; i < Length; i++ )
+				result[ i ] = Generate( min, max );
+
+			return result;
+		}
+
 	private:
 		Random( const unsigned int seed )
 			:

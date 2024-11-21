@@ -129,7 +129,7 @@
     <ClInclude Include="Engine\Graphics\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Engine\Graphics\Drawable.h">
+    <ClInclude Include="Engine\Graphics\Renderable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Graphics\Renderer.h">
@@ -231,6 +231,33 @@
     <ClInclude Include="Engine\Math\VectorConversion.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Graphics\InternalShaders.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Graphics\ShaderSourcePath.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Graphics\ShaderType.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Asset\Shader\InternalShaderDirectoryPath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Graphics\RenderQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Graphics\RenderState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Graphics\Enums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Graphics\RenderPass.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Graphics\DefaultFramebuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Engine\Core\Application.cpp">
@@ -275,7 +302,7 @@
     <ClCompile Include="Engine\Graphics\Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Engine\Graphics\Drawable.cpp">
+    <ClCompile Include="Engine\Graphics\Renderable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Graphics\Renderer.cpp">
@@ -320,8 +347,42 @@
     <ClCompile Include="Engine\Graphics\TextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Graphics\InternalShaders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Graphics\DefaultFramebuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="Engine.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Engine\Asset\Shader\_Depth.glsl" />
+    <None Include="Engine\Asset\Shader\_Global.glsl" />
+    <None Include="Engine\Asset\Shader\_Intrinsic_Lighting.glsl" />
+    <None Include="Engine\Asset\Shader\_Intrinsic_Other.glsl" />
+    <None Include="Engine\Asset\Shader\_sRGB.glsl" />
+    <None Include="Engine\Asset\Shader\Color.frag" />
+    <None Include="Engine\Asset\Shader\Color.vert" />
+    <None Include="Engine\Asset\Shader\Textured.frag" />
+    <None Include="Engine\Asset\Shader\Textured.vert" />
+    <None Include="Engine\Asset\Shader\BasicTextured_Mixed.frag" />
+    <None Include="Engine\Asset\Shader\Blinn-Phong.frag" />
+    <None Include="Engine\Asset\Shader\Blinn-Phong.vert" />
+    <None Include="Engine\Asset\Shader\FullScreenBlit.frag" />
+    <None Include="Engine\Asset\Shader\FullScreenBlit_Resolve.frag" />
+    <None Include="Engine\Asset\Shader\GenericPostprocess.frag" />
+    <None Include="Engine\Asset\Shader\Grayscale.frag" />
+    <None Include="Engine\Asset\Shader\PassThrough_UVs.vert" />
+    <None Include="Engine\Asset\Shader\PassThrough.vert" />
+    <None Include="Engine\Asset\Shader\Skybox.frag" />
+    <None Include="Engine\Asset\Shader\Skybox.vert" />
+    <None Include="Engine\Asset\Shader\VisualizeDepth.frag" />
+    <None Include="Engine\Asset\Shader\VisualizeNormals.geom" />
+    <None Include="Engine\Asset\Shader\VisualizeNormals.vert" />
+    <None Include="Engine\Asset\Shader\Outline.vert" />
+    <None Include="Engine\Asset\Shader\Empty.frag" />
+    <None Include="Engine\Asset\Shader\PassThrough_Transform.vert" />
   </ItemGroup>
 </Project>

@@ -5,6 +5,7 @@
 #include "Color.hpp"
 #include "Id.hpp"
 #include "Lighting/Lighting.h"
+#include "ShaderSourcePath.hpp"
 #include "Std140StructTag.h"
 #include "Uniform.h"
 #include "VertexLayout.hpp"
@@ -22,48 +23,22 @@
 
 namespace Engine
 {
-	enum class ShaderType
-	{
-		VERTEX,
-		GEOMETRY,
-		FRAGMENT,
 
-		_COUNT_
-	};
-
-	constexpr const char* ShaderTypeString( const ShaderType shader_type )
-	{
-		constexpr std::array< const char*, ( int )ShaderType::_COUNT_ > shader_type_identifiers
-		{
-			"VERTEX",
-			"GEOMETRY",
-			"FRAGMENT"
-		};
-
-		return shader_type_identifiers[ ( int )shader_type ];
-	}
-
-	constexpr int ShaderTypeID( const ShaderType shader_type )
-	{
-		constexpr std::array< int, ( int )ShaderType::_COUNT_ > shader_type_identifiers
-		{
-			GL_VERTEX_SHADER,
-			GL_GEOMETRY_SHADER,
-			GL_FRAGMENT_SHADER
-		};
-
-		return shader_type_identifiers[ ( int )shader_type ];
-	}
-
-	/* Forward Declaration: */
+	/* Forward Declarations: */
 	class Renderer;
+	class InternalShaders;
 
 	class Shader
 	{
 		friend class Renderer;
+		friend class InternalShaders;
+		friend class std::unordered_map< std::string, Shader >;
+
+		using ReferenceCount = unsigned int;
 
 	public:
-		using ID = ID< Renderer >;
+		using ID       = ID< Renderer >;
+		using Features = std::vector< std::string >;
 
 		/* Features can be:
 		 *		Declared in shaders, via "#pragma feature <feature_name>" syntax. 
@@ -80,13 +55,20 @@ namespace Engine
 	public:
 		/* Will be initialized later with FromFile(). */
 		Shader( const char* name );
-		Shader( const char* name, const char* vertex_shader_source_file_path, const char* fragment_shader_source_file_path, 
-				const std::vector< std::string >& = {}, 
-				const char* geometry_shader_source_file_path = nullptr );
+		Shader( const char* name,
+				const VertexShaderSourcePath& vertex_shader_source_path,
+				const FragmentShaderSourcePath& fragment_shader_source_path, 
+				const Features& features_to_set = {} );
+		Shader( const char* name,
+				const VertexShaderSourcePath& vertex_shader_source_path,
+				const GeometryShaderSourcePath& geometry_shader_source_path,
+				const FragmentShaderSourcePath& fragment_shader_source_path,
+				const Features& features_to_set = {} );
 
 		DELETE_COPY_CONSTRUCTORS( Shader );
 
-		// Move constructors are private, for shader recompilation use only. Renderer (a friend class) is the only caller.
+		Shader( Shader&& );
+		Shader& operator=( Shader&& );
 
 		~Shader();
 
@@ -96,10 +78,13 @@ namespace Engine
 
 /* Compilation: */
 
-		bool FromFile( const char* vertex_shader_source_file_path,
-					   const char* fragment_shader_source_file_path,
-					   const std::vector< std::string >& = {},
-					   const char* geometry_shader_source_file_path = nullptr );
+		bool FromFile( const VertexShaderSourcePath& vertex_shader_source_path,
+					   const FragmentShaderSourcePath& fragment_shader_source_path,
+					   const Features& features_to_set = {} );
+		bool FromFile( const VertexShaderSourcePath& vertex_shader_source_path,
+					   const GeometryShaderSourcePath& geometry_shader_source_path,
+					   const FragmentShaderSourcePath& fragment_shader_source_path,
+					   const Features& features_to_set = {} );
 
 
 		bool RecompileFromThis( Shader& new_shader );
@@ -116,7 +101,7 @@ namespace Engine
 		inline const std::vector< std::string >&	GeometrySourceIncludePaths()	const { return geometry_source_include_path_array;	}
 		inline const std::vector< std::string >&	FragmentSourceIncludePaths()	const { return fragment_source_include_path_array;	}
 
-		inline const std::unordered_map< std::string, Feature >& Features() const { return feature_map; }
+		inline const std::unordered_map< std::string, Feature >& GetFeatures() const { return feature_map; }
 
 		inline const VertexLayout& GetSourceVertexLayout()	const { return vertex_layout_source; }
 		inline const VertexLayout& GetActiveVertexLayout()	const { return vertex_layout_active; }
@@ -518,15 +503,9 @@ namespace Engine
 
 
 
-
 	private:
 
 
-
-		/* Private, for shader recompilation only, called by the Renderer alone. */
-		Shader( Shader&& );
-		/* Private, for shader recompilation only, called by the Renderer alone. */
-		Shader& operator=( Shader&& );
 
 		void Delete();
 

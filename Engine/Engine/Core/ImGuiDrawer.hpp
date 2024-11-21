@@ -308,7 +308,7 @@ namespace Engine::ImGuiDrawer
 
 						std::byte* memory_blob = ( std::byte* )buffer_management.Get( uniform_buffer_name );
 
-						for( const auto& [ dont_care, uniform_buffer_member_struct_info ] : uniform_buffer_info.members_struct_map )
+						for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_struct_info ] : uniform_buffer_info.members_struct_map )
 						{
 							ImGui::TableNextColumn();
 
@@ -323,7 +323,17 @@ namespace Engine::ImGuiDrawer
 									ImGui::TableNextColumn();
 
 									ImGui::PushID( ( void* )uniform_buffer_member_info );
-									is_modified |= Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
+									if constexpr( std::is_same_v< BlobType, DirtyBlob > )
+									{
+										if( Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset ) )
+										{
+											buffer_management.SetPartial_Struct( uniform_buffer_name, uniform_buffer_member_name.c_str(), 
+																				 memory_blob + uniform_buffer_member_info->offset );
+											is_modified = true;
+										}
+									}
+									else
+										is_modified |= Draw( uniform_buffer_member_info->type, memory_blob + uniform_buffer_member_info->offset );
 									ImGui::PopID();
 								}
 
@@ -333,7 +343,7 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextRow();
 						}
 
-						for( const auto& [ dont_care, uniform_buffer_member_array_info ] : uniform_buffer_info.members_array_map )
+						for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_array_info ] : uniform_buffer_info.members_array_map )
 						{
 							ImGui::TableNextColumn();
 
@@ -361,7 +371,17 @@ namespace Engine::ImGuiDrawer
 											std::byte* effective_offset = memory_blob + uniform_buffer_member_info->offset + array_index * uniform_buffer_member_array_info.stride;
 
 											ImGui::PushID( effective_offset );
-											is_modified |= Draw( uniform_buffer_member_info->type, effective_offset );
+											if constexpr( std::is_same_v< BlobType, DirtyBlob > )
+											{
+												if( Draw( uniform_buffer_member_info->type, effective_offset ) )
+												{
+													buffer_management.SetPartial_Array( uniform_buffer_name, uniform_buffer_member_name.c_str(), 
+																						array_index, effective_offset );
+													is_modified = true;
+												}
+											}
+											else
+												is_modified |= Draw( uniform_buffer_member_info->type, effective_offset );
 											ImGui::PopID();
 										}
 
@@ -377,14 +397,24 @@ namespace Engine::ImGuiDrawer
 								ImGui::TableNextRow();
 						}
 
-						for( const auto& [ dont_care, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
+						for( const auto& [ uniform_buffer_member_name, uniform_buffer_member_single_info ] : uniform_buffer_info.members_single_map )
 						{
 							ImGui::TableNextColumn(); ImGui::TextUnformatted( uniform_buffer_member_single_info->editor_name.c_str() );
 
 							ImGui::TableNextColumn();
 
 							ImGui::PushID( ( void* )uniform_buffer_member_single_info );
-							is_modified |= Draw( uniform_buffer_member_single_info->type, memory_blob + uniform_buffer_member_single_info->offset );
+							if constexpr( std::is_same_v< BlobType, DirtyBlob > )
+							{
+								if( Draw( uniform_buffer_member_single_info->type, memory_blob + uniform_buffer_member_single_info->offset ) )
+								{
+									buffer_management.SetPartial( uniform_buffer_name, uniform_buffer_member_name.c_str(), 
+																  memory_blob + uniform_buffer_member_single_info->offset );
+									is_modified = true;
+								}
+							}
+							else
+								is_modified |= Draw( uniform_buffer_member_single_info->type, memory_blob + uniform_buffer_member_single_info->offset );
 							ImGui::PopID();
 						}
 

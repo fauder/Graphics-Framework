@@ -1,7 +1,8 @@
 #pragma once
 
 // Engine Includes.
-#include "Drawable.h"
+#include "Renderable.h"
+#include "RenderPass.h"
 #include "Framebuffer.h"
 #include "Core/BitFlags.hpp"
 #include "Core/DirtyBlob.h"
@@ -22,164 +23,23 @@ namespace Engine
 	class Renderer
 	{
 	public:
-		enum class ClearTarget : unsigned int
+		enum class IntrinsicModifyTarget : std::uint8_t
 		{
 			None = 0,
 
-			DepthBuffer   = GL_DEPTH_BUFFER_BIT,
-			StencilBuffer = GL_STENCIL_BUFFER_BIT,
-			ColorBuffer   = GL_COLOR_BUFFER_BIT,
+			UniformBuffer_View                   = 1,
+			UniformBuffer_Projection             = 2,
+			UniformBuffer_Lighting               = 4,
+			UniformBuffer_Lighting_ShadowMapping = 8,
 
-			All = DepthBuffer | StencilBuffer | ColorBuffer
-		};
-
-		enum class PolygonMode
-		{
-			Point = GL_POINT,
-			Line  = GL_LINE, 
-			Fill  = GL_FILL,
-			
-			Wireframe = Line
-		};
-
-		enum class ComparisonFunction
-		{
-			Always	       = GL_ALWAYS,
-			Never 	       = GL_NEVER,
-			Equal 	       = GL_EQUAL,
-			NotEqual       = GL_NOTEQUAL,
-			Less 	       = GL_LESS,
-			LessOrEqual    = GL_LEQUAL,
-			Greater        = GL_GREATER,
-			GreaterOrEqual = GL_GEQUAL
-		};
-
-		enum class StencilTestResponse
-		{
-			Keep          = GL_KEEP,
-			Zero          = GL_ZERO,
-			Replace       = GL_REPLACE,
-			Increment     = GL_INCR,
-			IncrementWrap = GL_INCR_WRAP,
-			Decrement     = GL_DECR,
-			DecrementWrap = GL_DECR_WRAP,
-			Invert        = GL_INVERT
-		};
-
-		enum class BlendingFactor
-		{
-			Zero                       = GL_ZERO,
-			One                        = GL_ONE,
-			SourceColor                = GL_SRC_COLOR,
-			OneMinusSourceColor        = GL_ONE_MINUS_SRC_COLOR,
-			SourceAlpha                = GL_SRC_ALPHA,
-			OneMinusSourceAlpha        = GL_ONE_MINUS_SRC_ALPHA,
-			DestinationAlpha           = GL_DST_ALPHA,
-			OneMinusDestinationAlpha   = GL_ONE_MINUS_DST_ALPHA,
-			DestinationColor           = GL_DST_COLOR,
-			OneMinusDestinationColor   = GL_ONE_MINUS_DST_COLOR,
-			SourceAlphaSaturate        = GL_SRC_ALPHA_SATURATE
-		};
-
-		enum class BlendingFunction
-		{
-			Add             = GL_FUNC_ADD,
-			ReverseSubtract = GL_FUNC_REVERSE_SUBTRACT,
-			Subtract        = GL_FUNC_SUBTRACT,
-			Minimum         = GL_MIN,
-			Maximum         = GL_MAX
-		};
-
-		enum class SortingMode
-		{
-			None,
-			DepthNearestToFarthest,
-			DepthFarthestToNearest
-		};
-
-		enum class Face
-		{
-			Front        = GL_FRONT,
-			Back         = GL_BACK,
-			FrontAndBack = GL_FRONT_AND_BACK
-		};
-
-		enum class WindingOrder
-		{
-			Clockwise        = GL_CW,
-			CounterClockwise = GL_CCW
-		};
-
-		struct RenderState
-		{
-		/* Face-culling & winding-order: */
-
-			Face face_culling_face_to_cull          = Face::Back;
-			WindingOrder face_culling_winding_order = WindingOrder::CounterClockwise;
-
-		/* Depth: */
-
-			ComparisonFunction depth_comparison_function = ComparisonFunction::Less;
-
-		/* Stencil: */
-
-			unsigned int stencil_write_mask                = true;
-			ComparisonFunction stencil_comparison_function = ComparisonFunction::Always;
-			unsigned int stencil_ref                       = 0;
-			unsigned int stencil_mask                      = 0xFF;
-
-			StencilTestResponse stencil_test_response_stencil_fail            = StencilTestResponse::Keep;
-			StencilTestResponse stencil_test_response_stencil_pass_depth_fail = StencilTestResponse::Keep;
-			StencilTestResponse stencil_test_response_both_pass               = StencilTestResponse::Keep;
-
-		/* Blending: */
-
-
-			BlendingFactor blending_source_color_factor      = BlendingFactor::One;
-			BlendingFactor blending_destination_color_factor = BlendingFactor::Zero;
-			BlendingFactor blending_source_alpha_factor      = BlendingFactor::One;
-			BlendingFactor blending_destination_alpha_factor = BlendingFactor::Zero;
-
-			BlendingFunction blending_function = BlendingFunction::Add;
-
-		/* Other: */
-
-			SortingMode sorting_mode = SortingMode::None;
-
-		/* Enable flags (kept together for optimal memory alignment): */
-
-			bool face_culling_enable = true; // Differing from GL here; Back face culling is the default, to save perf.
-			bool depth_test_enable   = true;
-			bool depth_write_enable  = true;
-			bool stencil_test_enable = false;
-			bool blending_enable     = false;
-			//bool padding[ 3 ];
-		};
-
-		enum class RenderGroupID : unsigned int {};
-
-	private:
-		struct RenderGroup
-		{
-			using ReferenceCount = unsigned int;
-
-			std::string name = "<unnamed>";
-
-			RenderState render_state;
-
-			std::vector< Drawable* > drawable_list;
-
-			std::unordered_map< Shader*, ReferenceCount > shaders_in_flight;
-			std::unordered_map< std::string, Material* > materials_in_flight; // TODO: Generate an ID for Materials (who will generate it?) and use that ID as the key here.
-			
-			bool is_enabled = true;
-
-		private:
-			bool reserved[ 3 ]; // Padding.
+			All = UniformBuffer_View | UniformBuffer_Projection | UniformBuffer_Lighting | UniformBuffer_Lighting_ShadowMapping,
 		};
 
 	public:
-		Renderer();
+		static constexpr std::size_t FRAMEBUFFER_OFFSCREEN_COUNT = 2;
+	
+	public:
+		Renderer( std::array< std::optional< int >, FRAMEBUFFER_OFFSCREEN_COUNT >&& offscreen_framebuffer_msaa_sample_count_values = {} );
 
 		DELETE_COPY_AND_MOVE_CONSTRUCTORS( Renderer );
 
@@ -189,24 +49,31 @@ namespace Engine
 		 * Main:
 		 */
 
-		void Update( Camera& camera );
-		void Render( Camera& camera, std::initializer_list< RenderGroupID > = {} );
+		void Update();
+		void UpdatePerPass( const RenderPass::ID pass_id_to_update, Camera& camera );
+		void Render();
 		void RenderImGui();
-		void OnProjectionParametersChange( Camera& camera );
 		void OnFramebufferResize( const int new_width_in_pixels, const int new_height_in_pixels );
 
 		/* 
-		 * RenderGroup & Drawable:
+		 * Pass, Queue & Renderable:
 		 */
 
-		RenderState& GetRenderState( const RenderGroupID group_id_to_fetch );
-		void SetRenderGroupName( const RenderGroupID group_id_to_rename, const std::string_view new_name );
-		void ToggleRenderGroup( const RenderGroupID group_id_to_toggle, const bool enable );
+		RenderState& GetRenderState( const RenderPass::ID pass_id_to_fetch );
+		void AddPass( const RenderPass::ID new_pass_id, RenderPass&& new_pass );
+		void RemovePass( const RenderPass::ID pass_id_to_remove );
+		void TogglePass( const RenderPass::ID pass_id_to_toggle, const bool enable );
+		void AddQueue( const RenderQueue::ID new_queue_id, RenderQueue&& new_queue );
+		void RemoveQueue( const RenderQueue::ID queue_id_to_remove );
+		void AddQueueToPass( const RenderQueue::ID queue_id_to_add, const RenderPass::ID pass_to_add_to );
+		void RemoveQueueFromPass( const RenderQueue::ID queue_id_to_remove, const RenderPass::ID pass_to_remove_from );
+		void ToggleQueue( const RenderQueue::ID queue_id_to_toggle, const bool enable );
+		void SetFinalPassToUseEditorFramebuffer();
+		void SetFinalPassToUseDefaultFramebuffer();
 
-		void AddDrawable( Drawable* drawable_to_add, const RenderGroupID render_group_id = RenderGroupID{ 0 } );
+		void AddRenderable( Renderable* renderable_to_add, const RenderQueue::ID queue_id = RenderQueue::ID{ 0 } );
 		// TODO: Switch to unsigned map of "Component" UUIDs when Component class is implemented.
-		void RemoveDrawable( Drawable* drawable_to_remove );
-		void RemoveAllDrawables();
+		void RemoveRenderable( Renderable* renderable_to_remove );
 
 		void OnShaderReassign( Shader* previous_shader, const std::string& name_of_material_whose_shader_changed );
 
@@ -225,6 +92,12 @@ namespace Engine
 		void AddSpotLight( SpotLight* light_to_add );
 		void RemoveSpotLight( SpotLight* light_to_remove );
 		void RemoveAllSpotLights();
+
+		/*
+		 * Shadow-mapping:
+		 */
+
+		inline const Texture* ShadowMapTexture() const { return &light_directional_shadow_map_framebuffer.DepthAttachment(); }
 
 		/*
 		 * Shaders:
@@ -260,21 +133,9 @@ namespace Engine
 			uniform_buffer_management_global.Set( buffer_name, uniform_member_name, value );
 		}
 
-		/*
-		 * Shaders:
-		 */
-
 		inline const std::unordered_set< Shader* > RegisteredShaders() const { return shaders_registered; }
 		void RegisterShader( Shader& shader );
 		void UnregisterShader( Shader& shader );
-
-		/*
-		 * Clearing:
-		 */
-
-		void SetClearColor( const Color3& new_clear_color );
-		void SetClearColor( const Color4& new_clear_color );
-		void SetClearTargets( const BitFlags< ClearTarget > targets );
 
 		/*
 		 * Stencil Test:
@@ -309,14 +170,18 @@ namespace Engine
 		 * Framebuffer:
 		 */
 
-		void SetCurrentFramebuffer( const Framebuffer* framebuffer );
-		void ResetToDefaultFramebuffer( const Framebuffer::Target target = Framebuffer::Target::Both );
+		// TODO: Make these private after some time if they are not used (as pass API makes explicit Framebuffer operations redundant).
+
+		void SetCurrentFramebuffer( Framebuffer* framebuffer );
+		void ResetToDefaultFramebuffer( const Framebuffer::BindPoint bind_point = Framebuffer::BindPoint::Both );
 		bool DefaultFramebufferIsBound() const;
-		const Framebuffer* CurrentFramebuffer() const;
+		Framebuffer* CurrentFramebuffer();
+		Framebuffer& EditorFramebuffer();
+		Framebuffer& OffscreenFramebuffer( const unsigned int framebuffer_index = 0 );
 
 		/* Color Space: */
-		void EnablesRGBEncoding();
-		void DisablesRGBEncoding();
+		void Enable_sRGBEncoding();
+		void Disable_sRGBEncoding();
 
 		/*
 		 * Other:
@@ -330,6 +195,9 @@ namespace Engine
 		 * Main:
 		 */
 
+		void InitializeBuiltinQueues();
+		void InitializeBuiltinPasses();
+
 		void Render( const Mesh& mesh );
 		void Render_Indexed( const Mesh& mesh );
 		void Render_NonIndexed( const Mesh& mesh );
@@ -338,25 +206,22 @@ namespace Engine
 		void RenderInstanced_Indexed( const Mesh& mesh );
 		void RenderInstanced_NonIndexed( const Mesh& mesh );
 	
+		void SetIntrinsicsPerPass( const RenderPass& pass );
+		void SetIntrinsics( const BitFlags< IntrinsicModifyTarget > targets = IntrinsicModifyTarget::None );
+
 		void UploadIntrinsics();
 		void UploadGlobals();
 
-		/*
-		 * RenderGroup & Drawable:
-		 */
-
-		RenderGroup* GetRenderGroup( const Drawable* drawable_of_interest );
-		void SetRenderState( const RenderState& render_state_to_set );
-		void SortDrawablesInGroup( Camera& camera, std::vector< Drawable* >& drawable_array_to_sort, const SortingMode sorting_mode );
-
+		void CalculateShadowMappingInformation();
 		void RecompileModifiedShaders();
 
 		/*
-		 * Clearing:
+		 * Pass, Queue & Renderable:
 		 */
 
-		void SetClearColor();
-		void Clear() const;
+		std::vector< RenderQueue >& RenderQueuesContaining( const Renderable* renderable_of_interest );
+		void SetRenderState( const RenderState& render_state_to_set, Framebuffer* target_framebuffer, const bool clear_framebuffer = false );
+		void SortRenderablesInQueue( const Vector3& camera_position, std::vector< Renderable* >& renderable_array_to_sort, const SortingMode sorting_mode );
 
 		/*
 		 * Face Culling:
@@ -367,21 +232,57 @@ namespace Engine
 		void SetCullFace( const Face face );
 		void SetFrontFaceConvention( const WindingOrder winding_order_of_front_faces );
 
+	public:
+		
+		/* Built-in Pass IDs: */
+
+		static constexpr RenderPass::ID PASS_ID_SHADOW_MAPPING = RenderPass::ID( 10u );
+		static constexpr RenderPass::ID PASS_ID_LIGHTING       = RenderPass::ID( 50u );
+		static constexpr RenderPass::ID PASS_ID_OUTLINE		   = RenderPass::ID( 100u );
+		static constexpr RenderPass::ID PASS_ID_POSTPROCESSING = RenderPass::ID( 220u );
+
+		/* Built-in Queue IDs: */
+
+		/* Using Unity defaults: Background is 1000, Geometry is 2000, AlphaTest is 2450, Transparent is 3000 and Overlay is 4000 */
+
+		static constexpr RenderQueue::ID QUEUE_ID_GEOMETRY          = RenderQueue::ID( 2000u );
+		static constexpr RenderQueue::ID QUEUE_ID_GEOMETRY_OUTLINED = RenderQueue::ID( 2350u );
+		static constexpr RenderQueue::ID QUEUE_ID_TRANSPARENT       = RenderQueue::ID( 2450u );
+		static constexpr RenderQueue::ID QUEUE_ID_SKYBOX            = RenderQueue::ID( 2900u );
+		static constexpr RenderQueue::ID QUEUE_ID_POSTPROCESSING    = RenderQueue::ID( 3000u );
+
 	private:
+
+		struct CameraInfo
+		{
+			Matrix4x4 view_matrix;
+			Matrix4x4 projection_matrix;
+			Matrix4x4 view_projection_matrix;
+
+			float plane_near;
+			float plane_far;
+			float aspect_ratio;
+			Radians vertical_field_of_view;
+		};
+
+	private:
+
+		/*
+		 * Logging:
+		 */
+
+		GLLogger& logger;
 
 		/*
 		 * Framebuffer:
 		 */
 
-		const Framebuffer* framebuffer_current;
-
-		/*
-		 * Clearing:
-		 */
-
-		Color4 clear_color;
-		BitFlags< ClearTarget > clear_targets;
-		// int padding;
+		Framebuffer* framebuffer_current;
+		Framebuffer editor_framebuffer;
+		Framebuffer light_directional_shadow_map_framebuffer;
+		/* Used for lighting etc. Blitted onto the default framebuffer (or the offscreen editor framebuffer when running in editor). */
+		std::array< Framebuffer,			FRAMEBUFFER_OFFSCREEN_COUNT > offscreen_framebuffer_array;
+		std::array< std::optional< int >,	FRAMEBUFFER_OFFSCREEN_COUNT > offscreen_framebuffer_msaa_sample_count_array;
 
 		/*
 		 * Lighting:
@@ -393,13 +294,17 @@ namespace Engine
 		int lights_point_active_count;
 		int lights_spot_active_count;
 
+		Matrix4x4 light_directional_view_projection_transform_matrix;
+
 		/*
 		 * Rendering:
 		 */
 
-		std::map< RenderGroupID, RenderGroup > render_group_map;
+		std::map< RenderPass::ID,  RenderPass  > render_pass_map;
+		std::map< RenderQueue::ID, RenderQueue > render_queue_map;
 
 		std::unordered_set< Shader* > shaders_registered;
+		std::unordered_map< Shader*, Shader::ReferenceCount > shaders_registered_reference_count_map;
 
 		/*
 		 * Uniform Management:
@@ -411,8 +316,17 @@ namespace Engine
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_global;
 		UniformBufferManagement< DirtyBlob > uniform_buffer_management_intrinsic;
 
+		CameraInfo current_camera_info;
+
 		bool update_uniform_buffer_lighting;
 		bool update_uniform_buffer_other;
-		// bool padding[ 6 ];
+
+		/*
+		 * Color Space:
+		 */
+
+		bool sRGB_encoding_is_enabled;
+		
+		/* 5 bytes of padding. */
 	};
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 // std Includes.
+#include <array>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -29,6 +30,36 @@ namespace Engine
 
 				auto it = result.begin();
 				( void )( ( it = std::copy_n( strings, Length - 1, it ), 0 ), ... );
+				return result;
+			}
+
+			template< size_t Array1_Size, size_t Array2_Size >
+			constexpr std::array< char, Array1_Size + Array2_Size + 1 > ConstexprConcatenate( const std::array< char, Array1_Size >& string_1,
+																							  const std::array< char, Array2_Size >& string_2 )
+			{
+				std::array< char, Array1_Size + Array2_Size + 1 > result = {};
+
+				// Copy contents of string_1:
+				for( size_t i = 0; i < Array1_Size; ++i )
+					result[ i ] = string_1[ i ];
+
+				// Copy contents of string_2:
+				for( size_t i = 0; i < Array2_Size; ++i )
+					result[ Array1_Size + i ] = string_2[ i ];
+
+				result[ Array1_Size + Array2_Size ] = '\0';
+
+				return result;
+			}
+
+			// Helper constexpr function to create std::array from std::string_view.
+			template< size_t Size >
+			constexpr std::array< char, Size > StringViewToArray( std::string_view view )
+			{
+				std::array< char, Size > result = {};
+				for( size_t i = 0; i < Size; ++i )
+					result[ i ] = view[ i ];
+
 				return result;
 			}
 

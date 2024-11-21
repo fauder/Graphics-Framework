@@ -30,6 +30,11 @@ namespace Engine::Matrix
 	Matrix4x4 PerspectiveProjection( const float near_plane_offset, const float far_plane_offset,
 									 const float aspect_ratio, const Radians vertical_field_of_view );
 
+	constexpr bool IsPerspectiveProjection( const Matrix4x4 matrix )
+	{
+		return Math::IsEqual( matrix[ 2 ][ 3 ], 1.0f );
+	}
+
 	/* In row-major form. */ constexpr Matrix4x4 Scaling( const float new_scale )
 	{
 		return Matrix4x4

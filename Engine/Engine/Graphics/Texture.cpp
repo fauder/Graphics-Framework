@@ -67,8 +67,9 @@ namespace Engine
 					  const int format,
 					  const int width, const int height,
 					  const bool is_sRGB,
-					  Wrapping  wrap_u,		Wrapping  wrap_v,
-					  Filtering min_filter, Filtering mag_filter )
+					  const Wrapping wrap_u, const Wrapping wrap_v,
+					  const Color4 border_color,
+					  const Filtering min_filter, Filtering mag_filter )
 		:
 		id( {} ),
 		size( width, height ),
@@ -89,6 +90,9 @@ namespace Engine
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, ( GLenum )mag_filter );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,	   ( GLenum )wrap_u );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,	   ( GLenum )wrap_v );
+
+		if( wrap_u == Wrapping::ClampToBorder || wrap_v == Wrapping::ClampToBorder )
+			glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.Data() );
 
 		glTexImage2D( GL_TEXTURE_2D, 0, InternalFormat( format, is_sRGB ), width, height, 0, format, PixelDataType( format ), nullptr );
 
@@ -124,6 +128,8 @@ namespace Engine
 
 		glTexImage2DMultisample( GL_TEXTURE_2D_MULTISAMPLE, sample_count, InternalFormat( format, is_sRGB ), width, height, GL_TRUE );
 
+		/* Multi-sampled textures do not support setting of any sampler state, including filtering & wrapping modes. */
+
 		Unbind();
 	}
 
@@ -136,8 +142,9 @@ namespace Engine
 					  const int format,
 					  const int width, const int height,
 					  const bool is_sRGB,
-					  Wrapping  wrap_u,		Wrapping  wrap_v,	 Wrapping wrap_w,
-					  Filtering min_filter, Filtering mag_filter )
+					  const Wrapping wrap_u, const Wrapping wrap_v, const Wrapping wrap_w,
+					  Color4 border_color,
+					  const Filtering min_filter, const Filtering mag_filter )
 		:
 		id( {} ),
 		size( width, height ),
@@ -164,6 +171,9 @@ namespace Engine
 		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S,	 ( GLenum )wrap_u );
 		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T,	 ( GLenum )wrap_v );
 		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R,	 ( GLenum )wrap_w );
+
+		if( wrap_u == Wrapping::ClampToBorder || wrap_v == Wrapping::ClampToBorder || wrap_w == Wrapping::ClampToBorder )
+			glTexParameterfv( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, border_color.Data() );
 
 		Unbind();
 	}
@@ -236,8 +246,9 @@ namespace Engine
 					  const std::byte* data,
 					  const int format, const int width, const int height,
 					  const bool is_sRGB,
-					  Wrapping  wrap_u,		Wrapping  wrap_v,
-					  Filtering min_filter, Filtering mag_filter )
+					  const Wrapping wrap_u, const Wrapping wrap_v,
+					  const Color4 border_color,
+					  const Filtering min_filter, const Filtering mag_filter )
 		:
 		id( {} ),
 		size( width, height ),
@@ -259,6 +270,9 @@ namespace Engine
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,	   ( GLenum )wrap_u );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,	   ( GLenum )wrap_v );
 
+		if( wrap_u == Wrapping::ClampToBorder || wrap_v == Wrapping::ClampToBorder )
+			glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.Data() );
+
 		glTexImage2D( GL_TEXTURE_2D, 0, InternalFormat( format, is_sRGB ), width, height, 0, format, PixelDataType( format ), data );
 		glGenerateMipmap( GL_TEXTURE_2D );
 
@@ -273,8 +287,9 @@ namespace Engine
 					  const std::array< const std::byte*, 6 >& cubemap_data_array,
 					  const int format, const int width, const int height,
 					  const bool is_sRGB,
-					  Wrapping  wrap_u,		Wrapping  wrap_v,	Wrapping wrap_w,
-					  Filtering min_filter, Filtering mag_filter )
+					  const Wrapping wrap_u, const Wrapping wrap_v,	const Wrapping wrap_w,
+					  const Color4 border_color,
+					  const Filtering min_filter, const Filtering mag_filter )
 		:
 		id( {} ),
 		size( width, height ),
@@ -300,6 +315,9 @@ namespace Engine
 		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S,	 ( GLenum )wrap_u );
 		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T,	 ( GLenum )wrap_v );
 		glTexParameteri( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R,	 ( GLenum )wrap_w );
+
+		if( wrap_u == Wrapping::ClampToBorder || wrap_v == Wrapping::ClampToBorder || wrap_w == Wrapping::ClampToBorder )
+			glTexParameterfv( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, border_color.Data() );
 
 		Unbind();
 	}
