@@ -2,6 +2,7 @@
 #include "Renderer.h"
 #include "DefaultFramebuffer.h"
 #include "InternalShaders.h"
+#include "InternalTextures.h"
 #include "UniformBufferManager.h"
 #include "Core/ImGuiDrawer.hpp"
 
@@ -52,6 +53,7 @@ namespace Engine
 		DefaultFramebuffer::Instance(); // Initialize.
 		
 		InternalShaders::Initialize( *this );
+		InternalTextures::Initialize();
 
 		if( update_uniform_buffer_lighting )
 		{

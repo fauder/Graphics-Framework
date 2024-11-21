@@ -1,7 +1,7 @@
 #pragma once
 
 // Engine Includes.
-#include "Shader.hpp"
+#include "Texture.h"
 
 // std Includes.
 #include <unordered_map>
@@ -12,17 +12,17 @@ namespace Engine
 	class Renderer;
 
 	/* Singleton. */
-	class InternalShaders
+	class InternalTextures
 	{
 		friend class Renderer;
 
 	public:
-		static Shader* Get( const std::string& name );
+		static Texture* Get( const std::string& name );
 
 	private:
-		static void Initialize( Renderer& renderer );
+		static void Initialize();
 
 	private:
-		static std::unordered_map< std::string, Shader > SHADER_MAP;
+		static std::unordered_map< std::string, Texture* > TEXTURE_MAP;
 	};
 }
