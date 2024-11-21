@@ -361,14 +361,12 @@ namespace Engine::ImGuiDrawer
 
 	void Draw( const Texture* texture, const char* name )
 	{
-		ImGui::BeginDisabled();
-
 		if( texture )
 		{
 			if( texture->Type() == TextureType::Texture2D )
 				ImGui::Image( ( void* )( intptr_t )texture->Id().Get(), ImVec2( 24, 24 ), { 0, 1 }, { 1, 0 } );
 			ImGui::SameLine();
-			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
+			ImGui::Text( "%s (ID: %d)", texture->Name().c_str(), texture->Id() );
 		}
 		else
 		{
@@ -377,8 +375,6 @@ namespace Engine::ImGuiDrawer
 			ImGui::SameLine();
 			ImGui::TextColored( ImGui::GetStyleColorVec4( ImGuiCol_TextDisabled ), "    <unassigned>" );
 		}
-
-		ImGui::EndDisabled();
 	}
 
 	void Draw( const std::map< std::string, Texture >& texture_map, const Vector2& window_size )
@@ -400,7 +396,7 @@ namespace Engine::ImGuiDrawer
 				for( const auto& [ texture_asset_name, texture ] : texture_map )
 				{
 					ImGui::PushID( texture_asset_name.c_str() );
-					if( ImGui::Selectable( "" ) )
+					if( ImGui::Selectable( "", selected_texture == &texture ) )
 						selected_texture = &texture;
 					ImGui::PopID();
 					ImGui::SameLine();
@@ -1021,7 +1017,7 @@ namespace Engine::ImGuiDrawer
 		is_modified |= Draw( directional_light.data.diffuse,  "Diffuse"  );
 		is_modified |= Draw( directional_light.data.specular, "Specular" );
 
-		is_modified |= Draw( *directional_light.transform, Transform::Mask::Rotation, "Transform" );
+		is_modified |= Draw( *directional_light.transform, Transform::Mask::NoScale, "Transform" );
 
 		ImGui::PopID();
 
