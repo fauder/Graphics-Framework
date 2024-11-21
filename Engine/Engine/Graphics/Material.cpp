@@ -1,5 +1,6 @@
 // Engine Includes.
 #include "Material.hpp"
+#include "InternalTextures.h"
 
 namespace Engine
 {
@@ -153,18 +154,36 @@ namespace Engine
 	{
 		unsigned int texture_unit_slots_in_use = 0; // This can be controlled via a central manager class if more complex use-cases arise. For now every Material will act as if it is the only one using Texture Unit slots.
 
+		auto UploadTexture = [ & ]( const std::string& sampler_name, const Texture& texture )
+		{
+			const auto& sampler_uniform_info     = uniform_info_map->at( sampler_name );
+			const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
+
+			uniform_blob_default_block.Set( ( const std::byte* )&texture_unit_slot, sampler_uniform_info.offset, sampler_uniform_info.size );
+
+			texture.Activate( texture_unit_slot );
+		};
+
 		/* Copy texture slot to blob, activate the slot & upload the slot uniform to GPU. */
 		for( auto& [ sampler_name, texture ] : texture_map )
 		{
 			if( texture )
 			{
-				const auto& sampler_uniform_info = uniform_info_map->at( sampler_name );
-				const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
-
-				uniform_blob_default_block.Set( ( const std::byte* )&texture_unit_slot, sampler_uniform_info.offset, sampler_uniform_info.size );
-
-				texture->Activate( texture_unit_slot );
+				UploadTexture( sampler_name, *texture );
 			}
+#ifdef _DEBUG
+			else
+			{
+				if( sampler_name.find( "normal_map" ) != std::string::npos )
+				{
+					UploadTexture( sampler_name, *InternalTextures::Get( "Normal Map" ) );
+				}
+				else
+				{
+					UploadTexture( sampler_name, *InternalTextures::Get( "Missing" ) );
+				}
+			}
+#endif // _DEBUG
 		}
 
 		for( const auto& [ uniform_name, uniform_info ] : *uniform_info_map )
