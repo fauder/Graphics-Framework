@@ -3,9 +3,7 @@
 # Graphics-Framework
 Personal graphics framework I'm developing, to study graphics programming topics.
 
-![](Gallery/screenshot_1.png)
-
-![](Gallery/lighting_showcase.gif)
+![](Gallery/screenshot-21-11-24.png)
 
 ## Credits
 - To get up to speed with OpenGL, I use:
@@ -20,7 +18,7 @@ Personal graphics framework I'm developing, to study graphics programming topics
 - [GLFW](https://www.glfw.org/) is used for windowing & other platform-specific needs.
 - [GLAD](https://github.com/Dav1dde/glad) is used as the loader for OpenGL functions.
 - [fastgltf](https://github.com/spnda/fastgltf) is used to load .gltf models.
-- [RenderDoc](https://renderdoc.org/) is used to analyze/debug graphics bugs.
+- [RenderDoc](https://renderdoc.org/) is used for analyzing/debugging graphics bugs.
 - [kenney](https://kenney.nl/)'s awesome assets are used (currently for prototype textures)
 - [glslang](https://github.com/KhronosGroup/glslang) is used for offline validation of GLSL shaders as a Visual Studio post-build step.
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is used as the font for ImGui.
