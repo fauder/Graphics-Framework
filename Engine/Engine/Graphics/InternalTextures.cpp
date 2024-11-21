@@ -24,18 +24,21 @@ namespace Engine
 
 	void InternalTextures::Initialize()
 	{
-		TEXTURE_MAP.try_emplace( "Normal Map", Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Default Normal Map", FullTexturePath( "default_normal_map.jpg" ),
-																											  Engine::Texture::ImportSettings
-																											  {
-																												  .wrap_u = Engine::Texture::Wrapping::Repeat,
-																												  .wrap_v = Engine::Texture::Wrapping::Repeat
-																											  } ) );
+		TEXTURE_MAP.try_emplace( "Normal Map", AssetDatabase< Texture >::CreateAssetFromFile( "Default Normal Map", FullTexturePath( "default_normal_map.jpg" ),
+																							  Texture::ImportSettings
+																							  {
+																								  .wrap_u     = Texture::Wrapping::Repeat,
+																								  .wrap_v     = Texture::Wrapping::Repeat,
+																								  .min_filter = Texture::Filtering::Nearest,
+																								  .mag_filter = Texture::Filtering::Nearest,
+																								  .is_sRGB    = false,
+																							  } ) );
 
-		TEXTURE_MAP.try_emplace( "Missing", Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Missing", FullTexturePath( "missing_texture.jpg" ),
-																										   Engine::Texture::ImportSettings
-																										   {
-																											   .wrap_u = Engine::Texture::Wrapping::Repeat,
-																											   .wrap_v = Engine::Texture::Wrapping::Repeat
-																										   } ) );
+		TEXTURE_MAP.try_emplace( "Missing", AssetDatabase< Texture >::CreateAssetFromFile( "Missing", FullTexturePath( "missing_texture.jpg" ),
+																						   Texture::ImportSettings
+																						   {
+																							   .wrap_u = Texture::Wrapping::Repeat,
+																							   .wrap_v = Texture::Wrapping::Repeat
+																						   } ) );
 	}
 }
