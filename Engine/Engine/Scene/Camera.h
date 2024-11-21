@@ -33,13 +33,13 @@ namespace Engine
 
 		Camera& SetNearPlaneOffset( const float offset );
 		Camera& SetFarPlaneOffset( const float offset );
-		inline float GetNearPlaneOffset() const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return plane_near; }
-		inline float GetFarPlaneOffset()  const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return plane_far; }
+		inline float GetNearPlaneOffset() const { ASSERT_DEBUG_ONLY( UsesPerspectiveProjection() ); return plane_near; }
+		inline float GetFarPlaneOffset()  const { ASSERT_DEBUG_ONLY( UsesPerspectiveProjection() ); return plane_far; }
 
-		inline const float GetAspectRatio() const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return aspect_ratio; }
+		inline const float GetAspectRatio() const { ASSERT_DEBUG_ONLY( UsesPerspectiveProjection() ); return aspect_ratio; }
 		Camera& SetAspectRatio( const float new_aspect_ratio );
 
-		inline const Radians& GetVerticalFieldOfView() const { ASSERT_DEBUG_ONLY( projection_matrix.IsIdentity() || UsesPerspectiveProjection() ); return vertical_field_of_view; }
+		inline const Radians& GetVerticalFieldOfView() const { ASSERT_DEBUG_ONLY( UsesPerspectiveProjection() ); return vertical_field_of_view; }
 		Camera& SetVerticalFieldOfView( const Radians new_fov );
 
 		/* Using this will set an "overridden" flag.
@@ -48,7 +48,7 @@ namespace Engine
 		 *		B) Indirectly, by setting near/far planes, aspect ratio or vertical FoV. */
 		Camera& SetCustomProjectionMatrix( const Matrix4x4& custom_projection_matrix );
 		Camera& ClearCustomProjectionMatrix();
-		inline bool UsesPerspectiveProjection() const { return Matrix::IsPerspectiveProjection( projection_matrix ); }
+		inline bool UsesPerspectiveProjection() const { return projection_matrix.IsIdentity() || Matrix::IsPerspectiveProjection( projection_matrix ); }
 
 	/* Other:*/
 
