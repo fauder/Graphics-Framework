@@ -24,7 +24,7 @@ namespace Engine
 
 	void InternalTextures::Initialize()
 	{
-		TEXTURE_MAP.try_emplace( "Normal Map", AssetDatabase< Texture >::CreateAssetFromFile( "Default Normal Map", FullTexturePath( "default_normal_map.jpg" ),
+		TEXTURE_MAP.try_emplace( "Normal Map", AssetDatabase< Texture >::CreateAssetFromFile( "Default Normal Map", FullTexturePath( "default_normal_map.png" ),
 																							  Texture::ImportSettings
 																							  {
 																								  .wrap_u     = Texture::Wrapping::Repeat,
