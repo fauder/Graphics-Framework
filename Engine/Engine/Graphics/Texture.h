@@ -55,8 +55,6 @@ namespace Engine
 
 		struct ImportSettings
 		{
-			int format = GL_RGBA;
-
 			Wrapping wrap_u = Wrapping::ClampToEdge;
 			Wrapping wrap_v = Wrapping::ClampToEdge;
 			Wrapping wrap_w = Wrapping::ClampToEdge;

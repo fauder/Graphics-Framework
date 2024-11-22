@@ -83,7 +83,6 @@ void SandboxApplication::Initialize()
 																					},
 																					Engine::Texture::ImportSettings
 																					{
-																						.format          = GL_RGB,
 																						.min_filter      = Engine::Texture::Filtering::Linear,
 																						.flip_vertically = false,
 																					} );

@@ -12,27 +12,7 @@ namespace Engine
 
 	int InternalFormat( const int format, const bool is_sRGB )
 	{
-		if( is_sRGB )
-		{
-			switch( format )
-			{
-				case GL_RGB:	return GL_SRGB;
-				case GL_RGBA:	return GL_SRGB_ALPHA;
-
-				default:		return format;
-			}
-		}
-		else
-		{
-			switch( format )
-			{
-				case GL_DEPTH_STENCIL:		return GL_DEPTH_STENCIL;
-				case GL_DEPTH_COMPONENT:	return GL_DEPTH_COMPONENT;
-				case GL_STENCIL_INDEX:		return GL_STENCIL_INDEX;
-
-				default:					return format;
-			}
-		}
+		return ( int )is_sRGB * GL_SRGB_ALPHA + ( 1 - ( int )is_sRGB ) * format;
 	};
 
 	GLenum PixelDataType( const int format )
