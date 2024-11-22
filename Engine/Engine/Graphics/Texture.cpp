@@ -226,6 +226,7 @@ namespace Engine
 					  const std::byte* data,
 					  const int format, const int width, const int height,
 					  const bool is_sRGB,
+					  const bool generate_mipmaps,
 					  const Wrapping wrap_u, const Wrapping wrap_v,
 					  const Color4 border_color,
 					  const Filtering min_filter, const Filtering mag_filter )
@@ -254,7 +255,9 @@ namespace Engine
 			glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.Data() );
 
 		glTexImage2D( GL_TEXTURE_2D, 0, InternalFormat( format, is_sRGB ), width, height, 0, format, PixelDataType( format ), data );
-		glGenerateMipmap( GL_TEXTURE_2D );
+
+		if( generate_mipmaps )
+			glGenerateMipmap( GL_TEXTURE_2D );
 
 		Unbind();
 	}

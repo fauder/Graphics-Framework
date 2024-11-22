@@ -33,6 +33,7 @@ namespace Engine
 									 FORMAT,
 									 width, height, 
 									 import_settings.is_sRGB,
+									 import_settings.generate_mipmaps,
 									 import_settings.wrap_u, import_settings.wrap_v,
 									 import_settings.border_color, 
 									 import_settings.min_filter, import_settings.mag_filter );
@@ -111,6 +112,7 @@ namespace Engine
 									 FORMAT, 
 									 width, height, 
 									 import_settings.is_sRGB,
+									 import_settings.generate_mipmaps,
 									 import_settings.wrap_u, import_settings.wrap_v,
 									 import_settings.border_color,
 									 import_settings.min_filter, import_settings.mag_filter );

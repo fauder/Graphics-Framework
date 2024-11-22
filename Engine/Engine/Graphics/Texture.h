@@ -64,9 +64,11 @@ namespace Engine
 			Filtering min_filter = Filtering::Linear_MipmapLinear;
 			Filtering mag_filter = Filtering::Linear;
 
-			bool flip_vertically = true;
-			bool is_sRGB         = true;
-			//bool padding[ 2 ];
+			bool flip_vertically  = true;
+			bool is_sRGB          = true;
+			bool generate_mipmaps = true;
+			
+			/* 1 byte of padding. */
 		};
 
 		static constexpr ImportSettings DEFAULT_IMPORT_SETTINGS = {};
@@ -151,6 +153,7 @@ namespace Engine
 				 const int format,
 				 const int width, const int height,
 				 const bool is_sRGB = true,
+				 const bool generate_mipmaps = true,
 				 const Wrapping wrap_u = Wrapping::ClampToEdge, const Wrapping wrap_v = Wrapping::ClampToEdge,
 				 const Color4 border_color = Color4::Black(),
 				 const Filtering min_filter = Filtering::Linear_MipmapLinear, const Filtering mag_filter = Filtering::Linear );
