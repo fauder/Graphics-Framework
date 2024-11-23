@@ -1045,6 +1045,7 @@ void SandboxApplication::ResetMaterialData()
 	wall_material = Engine::Material( "Wall", shader_blinn_phong_shadowed );
 	wall_material.SetTexture( "uniform_diffuse_map_slot", brickwall_diffuse_map );
 	wall_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
+	wall_material.SetTexture( "uniform_normal_map_slot", brickwall_normal_map );
 	const auto& front_wall_quad_scale( wall_front_transform.GetScaling().XY() / 10.0f );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	wall_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
