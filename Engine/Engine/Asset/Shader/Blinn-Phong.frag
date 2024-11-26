@@ -30,7 +30,9 @@ layout ( std140 ) uniform BlinnPhongMaterialData
 	vec3 padding;
 } uniform_blinn_phong_material_data;
 
-uniform sampler2D uniform_diffuse_map_slot, uniform_specular_map_slot;
+uniform sampler2D uniform_diffuse_map_slot;
+uniform sampler2D uniform_specular_map_slot;
+uniform sampler2D uniform_normal_map_slot;
 
 #ifdef SKYBOX_ENVIRONMENT_MAPPING
 uniform samplerCube uniform_texture_skybox_slot;
@@ -184,7 +186,10 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 
 void main()
 {
+	vec4 normal_from_map = normalize( 2.0f * texture( uniform_normal_map_slot, fs_in.varying_tex_coords ) - 1.0f );
+
 	vec4 normal_view_space = normalize( fs_in.varying_normal_view_space );
+
 	// No need to subtract from the camera position since the camera is positioned at the origin in view space.
 	vec4 viewing_direction_view_space = normalize( -fs_in.varying_position_view_space ); 
 
@@ -194,19 +199,19 @@ void main()
 	vec3 specular_sample = vec3( texture( uniform_specular_map_slot, fs_in.varying_tex_coords ) );
 
 	vec3 from_directional_light = _INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE * 
-									CalculateColorFromDirectionalLight( normal_view_space, viewing_direction_view_space,
+									CalculateColorFromDirectionalLight( normal_from_map, viewing_direction_view_space,
 																		diffuse_sample, specular_sample );
 
 	vec3 from_point_light = vec3( 0 );																		
 	for( int i = 0; i < _INTRINSIC_POINT_LIGHT_ACTIVE_COUNT; i++ )
 		from_point_light += CalculateColorFromPointLight( i, 
-														  normal_view_space, viewing_direction_view_space,
+														  normal_from_map, viewing_direction_view_space,
 														  diffuse_sample, specular_sample );
 
 	vec3 from_spot_light = vec3( 0 );																		
 	for( int i = 0; i < _INTRINSIC_SPOT_LIGHT_ACTIVE_COUNT; i++ )
 		from_spot_light += CalculateColorFromSpotLight( i,
-														normal_view_space, viewing_direction_view_space,
+														normal_from_map, viewing_direction_view_space,
 														diffuse_sample, specular_sample );
 
 	out_color = vec4( from_directional_light + from_point_light + from_spot_light, 1.0 );

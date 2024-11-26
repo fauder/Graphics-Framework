@@ -159,6 +159,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
   <ItemGroup>
     <ClInclude Include="Engine.h" />
     <ClInclude Include="Engine\Asset\Shader\InternalShaderDirectoryPath.h" />
+    <ClInclude Include="Engine\Asset\Texture\InternalTextureDirectoryPath.h" />
     <ClInclude Include="Engine\Core\Application.h" />
     <ClInclude Include="Engine\Core\Assertion.h" />
     <ClInclude Include="Engine\Core\AssetDatabase.hpp" />
@@ -171,6 +172,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClInclude Include="Engine\Core\Macros.h" />
     <ClInclude Include="Engine\Core\Macros_SpaceshipOperator.h" />
     <ClInclude Include="Engine\Graphics\DefaultFramebuffer.h" />
+    <ClInclude Include="Engine\Graphics\InternalTextures.h" />
     <ClInclude Include="Engine\Graphics\Enums.h" />
     <ClInclude Include="Engine\Graphics\Framebuffer.h" />
     <ClInclude Include="Engine\Graphics\ID.hpp" />
@@ -248,6 +250,7 @@ xcopy $(SolutionDir)Bin\$(Platform)-Debug\Vendor\Vendor.pdb "$(OutDir)" /Y</Comm
     <ClCompile Include="Engine\Core\ImGuiUtility.cpp" />
     <ClCompile Include="Engine\Graphics\DefaultFramebuffer.cpp" />
     <ClCompile Include="Engine\Graphics\InternalShaders.cpp" />
+    <ClCompile Include="Engine\Graphics\InternalTextures.cpp" />
     <ClCompile Include="Engine\Graphics\Renderable.cpp" />
     <ClCompile Include="Engine\Graphics\Framebuffer.cpp" />
     <ClCompile Include="Engine\Graphics\GLLogger.cpp" />

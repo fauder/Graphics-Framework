@@ -12,27 +12,7 @@ namespace Engine
 
 	int InternalFormat( const int format, const bool is_sRGB )
 	{
-		if( is_sRGB )
-		{
-			switch( format )
-			{
-				case GL_RGB:	return GL_SRGB;
-				case GL_RGBA:	return GL_SRGB_ALPHA;
-
-				default:		return format;
-			}
-		}
-		else
-		{
-			switch( format )
-			{
-				case GL_DEPTH_STENCIL:		return GL_DEPTH_STENCIL;
-				case GL_DEPTH_COMPONENT:	return GL_DEPTH_COMPONENT;
-				case GL_STENCIL_INDEX:		return GL_STENCIL_INDEX;
-
-				default:					return format;
-			}
-		}
+		return ( int )is_sRGB * GL_SRGB_ALPHA + ( 1 - ( int )is_sRGB ) * format;
 	};
 
 	GLenum PixelDataType( const int format )
@@ -246,6 +226,7 @@ namespace Engine
 					  const std::byte* data,
 					  const int format, const int width, const int height,
 					  const bool is_sRGB,
+					  const bool generate_mipmaps,
 					  const Wrapping wrap_u, const Wrapping wrap_v,
 					  const Color4 border_color,
 					  const Filtering min_filter, const Filtering mag_filter )
@@ -274,7 +255,9 @@ namespace Engine
 			glTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color.Data() );
 
 		glTexImage2D( GL_TEXTURE_2D, 0, InternalFormat( format, is_sRGB ), width, height, 0, format, PixelDataType( format ), data );
-		glGenerateMipmap( GL_TEXTURE_2D );
+
+		if( generate_mipmaps )
+			glGenerateMipmap( GL_TEXTURE_2D );
 
 		Unbind();
 	}

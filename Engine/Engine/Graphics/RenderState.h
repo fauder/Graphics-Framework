@@ -25,7 +25,7 @@ namespace Engine
 	/* Face-culling & winding-order: */
 
 		Face face_culling_face_to_cull          = Face::Back;
-		WindingOrder face_culling_winding_order = WindingOrder::CounterClockwise;
+		WindingOrder face_culling_winding_order = WindingOrder::Clockwise;
 
 	/* Depth: */
 

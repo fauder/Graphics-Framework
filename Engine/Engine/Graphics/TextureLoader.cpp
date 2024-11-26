@@ -10,6 +10,9 @@
 
 namespace Engine
 {
+	constexpr GLenum FORMAT        = GL_RGBA;
+	constexpr int DESIRED_CHANNELS = 4;
+
 	std::optional< Texture > Texture::Loader::FromFile( const::std::string_view name, const std::string& file_path, const ImportSettings& import_settings )
 	{
 		//auto& instance = Instance();
@@ -17,26 +20,20 @@ namespace Engine
 		// OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
 		stbi_set_flip_vertically_on_load( import_settings.flip_vertically );
 
-		int width, height;
-
 		std::optional< Texture > maybe_texture;
 
+		int width, height;
 		int number_of_channels = -1;
-		auto image_data = stbi_load( file_path.c_str(), &width, &height, &number_of_channels, 0 );
+		auto image_data = stbi_load( file_path.c_str(), &width, &height, &number_of_channels, DESIRED_CHANNELS );
 		if( image_data )
 		{
-			GLenum format = 0;
-
-			switch( number_of_channels )
-			{
-				case 1: format = GL_RED;	break;
-				case 2: format = GL_RG;		break;
-				case 3: format = GL_RGB;	break;
-				case 4: format = GL_RGBA;	break;
-			}
-
 			/* Format from import_settings is not used at the moment. */
-			maybe_texture = Texture( name, ( std::byte* )image_data, format, width, height, import_settings.is_sRGB,
+			maybe_texture = Texture( name, 
+									 ( std::byte* )image_data, 
+									 FORMAT,
+									 width, height, 
+									 import_settings.is_sRGB,
+									 import_settings.generate_mipmaps,
 									 import_settings.wrap_u, import_settings.wrap_v,
 									 import_settings.border_color, 
 									 import_settings.min_filter, import_settings.mag_filter );
@@ -57,20 +54,20 @@ namespace Engine
 		/* OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
 		 *
 		 * BUT: cube-map coordinate space has the inverse v behavior, so the image's should not be flipped. */
-
-		int width, height;
+		stbi_set_flip_vertically_on_load( false ); // Override whatever is in import_settings.flip_vertically.
 
 		std::optional< Texture > maybe_texture;
 
 		std::array< stbi_uc*, 6 > image_data_array;
 
+		int width, height;
 		int number_of_channels = -1;
 
 		for( auto i = 0; i < 6; i++ )
 		{
 			const auto& file_path( ( cubemap_file_paths.begin() + i ) );
 
-			image_data_array[ i ] = stbi_load( file_path->c_str(), &width, &height, &number_of_channels, 0 );
+			image_data_array[ i ] = stbi_load( file_path->c_str(), &width, &height, &number_of_channels, DESIRED_CHANNELS );
 			if( image_data_array[ i ] == nullptr )
 			{
 				std::cerr << "Could not load image data from file: \"" << file_path << "\"\n";
@@ -79,18 +76,11 @@ namespace Engine
 			}
 		}
 
-		GLenum format = 0;
-
-		switch( number_of_channels )
-		{
-			case 1: format = GL_RED;	break;
-			case 2: format = GL_RG;		break;
-			case 3: format = GL_RGB;	break;
-			case 4: format = GL_RGBA;	break;
-		}
-
-		/* Format from import_settings is not used at the moment. */
-		maybe_texture = Texture( CUBEMAP_CONSTRUCTOR, cubemap_name, ( const std::array< const std::byte*, 6 >& )image_data_array, format, width, height,
+		maybe_texture = Texture( CUBEMAP_CONSTRUCTOR, 
+								 cubemap_name, 
+								 ( const std::array< const std::byte*, 6 >& )image_data_array, 
+								 FORMAT, 
+								 width, height,
 								 import_settings.is_sRGB,
 								 import_settings.wrap_u, import_settings.wrap_v, import_settings.wrap_w,
 								 import_settings.border_color,
@@ -109,26 +99,20 @@ namespace Engine
 		// OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
 		stbi_set_flip_vertically_on_load( import_settings.flip_vertically );
 
-		int width, height;
-
 		std::optional< Texture > maybe_texture;
 
+		int width, height;
 		int number_of_channels = -1;
-		auto image_data = stbi_load_from_memory( ( stbi_uc* )data, size, &width, &height, &number_of_channels, 0 );
+		auto image_data = stbi_load_from_memory( ( stbi_uc* )data, size, &width, &height, &number_of_channels, DESIRED_CHANNELS );
 		if( image_data )
 		{
-			GLenum format = 0;
-
-			switch( number_of_channels )
-			{
-				case 1: format = GL_RED;	break;
-				case 2: format = GL_RG;		break;
-				case 3: format = GL_RGB;	break;
-				case 4: format = GL_RGBA;	break;
-			}
-
 			/* Format from import_settings is not used at the moment. */
-			maybe_texture = Texture( name, ( std::byte* )image_data, format, width, height, import_settings.is_sRGB,
+			maybe_texture = Texture( name, 
+									 ( std::byte* )image_data, 
+									 FORMAT, 
+									 width, height, 
+									 import_settings.is_sRGB,
+									 import_settings.generate_mipmaps,
 									 import_settings.wrap_u, import_settings.wrap_v,
 									 import_settings.border_color,
 									 import_settings.min_filter, import_settings.mag_filter );

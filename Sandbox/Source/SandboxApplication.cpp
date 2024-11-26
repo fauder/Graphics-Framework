@@ -83,14 +83,27 @@ void SandboxApplication::Initialize()
 																					},
 																					Engine::Texture::ImportSettings
 																					{
-																						.format          = GL_RGB,
 																						.min_filter      = Engine::Texture::Filtering::Linear,
 																						.flip_vertically = false,
 																					} );
 
 	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)" );
 	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)" );
-	transparent_window_texture     = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window",		R"(Asset/Texture/blending_transparent_window.png)" );
+
+	brickwall_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Diffuse) Map", R"(Asset/Texture/brickwall.jpg)",
+																							Engine::Texture::ImportSettings
+																							{
+																								.wrap_u = Engine::Texture::Wrapping::Repeat,
+																								.wrap_v = Engine::Texture::Wrapping::Repeat
+																							} );
+	brickwall_normal_map   = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Normal) Map",  R"(Asset/Texture/brickwall_normal.jpg)",
+																							Engine::Texture::ImportSettings
+																							{
+																								.wrap_u = Engine::Texture::Wrapping::Repeat,
+																								.wrap_v = Engine::Texture::Wrapping::Repeat
+																							} );
+
+	transparent_window_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window", R"(Asset/Texture/blending_transparent_window.png)" );
 	
 	checker_pattern_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Checkerboard Pattern 09", R"(Asset/Texture/kenney_prototype/texture_09.png)", 
 																							 Engine::Texture::ImportSettings
@@ -896,6 +909,8 @@ void SandboxApplication::OnFramebufferResizeEvent( const int width_new_pixels, c
 
 	RecalculateProjectionParameters( width_new_pixels, height_new_pixels );
 	
+	// TODO: Move these into Renderer: Maybe Materials can have a sort of requirements info. (or dependencies) and the Renderer can automatically update Material info such as the ones below.
+
 	offscreen_quad_material.SetTexture( "uniform_texture_slot", &renderer.OffscreenFramebuffer( 0 ).ColorAttachment() );
 	mirror_quad_material.SetTexture( "uniform_texture_slot", &renderer.OffscreenFramebuffer( 1 ).ColorAttachment() );
 
@@ -1023,14 +1038,15 @@ void SandboxApplication::ResetMaterialData()
 	ground_material = Engine::Material( "Ground", shader_blinn_phong_shadowed );
 	ground_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
 	ground_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
-	const auto& ground_quad_scale( ground_transform.GetScaling() );
+	const auto& ground_quad_scale( ground_transform.GetScaling().XY() );
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
 	wall_material = Engine::Material( "Wall", shader_blinn_phong_shadowed );
-	wall_material.SetTexture( "uniform_diffuse_map_slot", checker_pattern_texture );
+	wall_material.SetTexture( "uniform_diffuse_map_slot", brickwall_diffuse_map );
 	wall_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
-	const auto& front_wall_quad_scale( wall_front_transform.GetScaling() );
+	wall_material.SetTexture( "uniform_normal_map_slot", brickwall_normal_map );
+	const auto& front_wall_quad_scale( wall_front_transform.GetScaling().XY() / 10.0f );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	wall_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
 

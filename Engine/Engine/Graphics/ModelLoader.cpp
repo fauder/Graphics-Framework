@@ -162,7 +162,23 @@ namespace Engine
 
             // Ignore 16 bit indices (or any other format other than 32 bit for that matter).
             indices_u32.resize( index_count );
-            fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
+
+            auto EffectiveIndex = []( const std::size_t index )
+            {
+                /* To swap the winding order:
+                 * Swap the 2nd & 3rd vertex of every triangle to convert from ccw front-faces to cw front-faces. */
+                const std::size_t index_mod_3 = index % 3;
+                const std::size_t needs_swap( ( bool )index_mod_3 ); // true/1 for 1 & 2, false/0 for 0.
+                const std::size_t swapped_index = ( index - index_mod_3 ) + 3 - index_mod_3;
+                return needs_swap * swapped_index + ( 1 - needs_swap ) * index;
+            };
+
+            //fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
+            fastgltf::iterateAccessorWithIndex< std::uint32_t >( gltf_asset, index_accessor,
+                                                                 [ & ]( std::uint32_t actual_index, std::size_t array_index )
+                                                                 {
+                                                                     indices_u32[ EffectiveIndex( array_index ) ] = actual_index;
+                                                                 } );
 
             std::string sub_mesh_name( mesh_group_to_load.name + "_" + std::to_string( std::distance( gltf_mesh.primitives.begin(), submesh_iterator ) ) );
 

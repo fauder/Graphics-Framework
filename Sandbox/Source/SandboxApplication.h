@@ -117,6 +117,9 @@ private:
 	Engine::Texture* container_texture_diffuse_map;
 	Engine::Texture* container_texture_specular_map;
 
+	Engine::Texture* brickwall_diffuse_map;
+	Engine::Texture* brickwall_normal_map;
+
 	Engine::Texture* half_gray_srgb_texture;
 
 	Engine::Texture* checker_pattern_texture;
