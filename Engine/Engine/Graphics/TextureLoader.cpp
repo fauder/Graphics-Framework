@@ -1,5 +1,7 @@
 // Engine Includes.
 #include "Texture.h"
+#include "GLLogger.h"
+#include "Core/ServiceLocator.h"
 
 // Vendor/stb Includes.
 #include "stb/stb_image.h"
@@ -39,7 +41,10 @@ namespace Engine
 									 import_settings.min_filter, import_settings.mag_filter );
 		}
 		else
-			std::cerr << "Could not load image data from file: \"" << file_path << "\"\n";
+		{
+			std::cerr << R"(Texture ")" << name << R"(": Could not load image data from file: ")" << file_path << "\"\n";
+			ServiceLocator< GLLogger >::Get().Error( R"(Texture ")" + std::string( name ) + R"(" Could not load image data from file: ")" + file_path + "\"\n" );
+		}
 
 		stbi_image_free( image_data );
 		
@@ -70,7 +75,8 @@ namespace Engine
 			image_data_array[ i ] = stbi_load( file_path->c_str(), &width, &height, &number_of_channels, DESIRED_CHANNELS );
 			if( image_data_array[ i ] == nullptr )
 			{
-				std::cerr << "Could not load image data from file: \"" << file_path << "\"\n";
+				std::cerr << R"(Cubemap texture ")" << cubemap_name << R"(": Could not load image data from file: ")" << *file_path << "\"\n";
+				ServiceLocator< GLLogger >::Get().Error( R"(Cubemap texture ")" + std::string( cubemap_name ) + R"(": Could not load image data from file: ")" + *file_path + "\"\n" );
 				stbi_image_free( image_data_array[ i ] );
 				return maybe_texture;
 			}
@@ -118,7 +124,10 @@ namespace Engine
 									 import_settings.min_filter, import_settings.mag_filter );
 		}
 		else
-			std::cerr << "Could not load image data from memory\n";
+		{
+			std::cerr << R"(Texture ")" << name << R"(": Could not load image data from memory.")" << "\n";
+			ServiceLocator< GLLogger >::Get().Error( R"(Texture ")" + std::string(name) + R"(": Could not load image data from memory.)" "\n" );
+		}
 
 		stbi_image_free( image_data );
 		
