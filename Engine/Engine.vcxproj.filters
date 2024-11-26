@@ -393,5 +393,6 @@
     <None Include="Engine\Asset\Shader\Outline.vert" />
     <None Include="Engine\Asset\Shader\Empty.frag" />
     <None Include="Engine\Asset\Shader\PassThrough_Transform.vert" />
+    <None Include="Engine\Asset\Shader\_Attributes.glsl" />
   </ItemGroup>
 </Project>

@@ -1,14 +1,15 @@
 #version 460 core
 #extension GL_ARB_shading_language_include : require
 
+#include "_Attributes.glsl"
 #include "_Intrinsic_Other.glsl"
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 tex_coords;
+POSITION                    vec3 position;
+NORMAL                      vec3 normal;
+TEXCOORDS                   vec2 tex_coords;
 #ifdef INSTANCING_ENABLED
-layout (location = 3) in mat4 world_transform;
-layout (location = 7) in vec4 color;
+INSTANCE_WORLD_TRANSFORM    mat4 world_transform;
+INSTANCE_COLOR              vec4 color;
 #endif
 
 #pragma feature INSTANCING_ENABLED

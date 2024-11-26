@@ -33,6 +33,7 @@ namespace Engine
 	{
 		int count;
 		GLenum type;
+		unsigned int location;
 
 		/* Comparison operators. */
 		constexpr bool operator ==( const VertexInstanceAttribute& other ) const = default;

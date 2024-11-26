@@ -1,6 +1,8 @@
 // Engine Includes.
 #include "VertexLayout.hpp"
 
+#include "Asset/Shader/_Attributes.glsl"
+
 namespace Engine
 {
 	VertexLayout::VertexLayout()
@@ -28,18 +30,21 @@ namespace Engine
 
 	void VertexLayout::Push( const VertexInstanceAttribute& attribute )
 	{
-		// Assume that At least 1 (position) non-instanced attribute is present => No if( attributes.empty() ) check necessary.
+		// Assume that At least 1 non-instanced attribute (which is position) is present. This way, no "if( attributes.empty() )" check are necessary.
 		ASSERT_DEBUG_ONLY( not attributes.empty() && "No non-instanced attributes found before attempting to push instanced attribute!" );
 
-		const auto& previous_attribute = attributes.back();
-		const auto& [ previous_attribute_occupied_slot_count, dont_care_slot_size ] = GL::Type::RowAndColumnCountOf( previous_attribute.type );
+		ASSERT_DEBUG_ONLY( attribute.location >= INSTANCED_ATTRIBUTE_START && "Instanced attributes can not have locations smaller than the INSTANCED_ATTRIBUTE_START value!" );
+
+		/*const auto& previous_attribute = attributes.back();
+		const auto& [ previous_attribute_occupied_slot_count, dont_care_slot_size ] = GL::Type::RowAndColumnCountOf( previous_attribute.type );*/
 		attributes.push_back( {
 			.count        = attribute.count,
 			.type         = attribute.type,
 			.is_instanced = true,
-			.location     = previous_attribute.location + previous_attribute_occupied_slot_count
+			.location     = attribute.location
+			//.location     = previous_attribute.location + previous_attribute_occupied_slot_count
 		} );
-	}	
+	}
 
 	void VertexLayout::SetAndEnableAttributes_NonInstanced() const
 	{

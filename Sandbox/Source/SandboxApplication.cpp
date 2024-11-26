@@ -22,6 +22,8 @@
 #include "Engine/Math/Random.hpp"
 #include "Engine/Math/VectorConversion.hpp"
 
+#include "Engine/Asset/Shader/_Attributes.glsl"
+
 // Vendor Includes.
 #include <IconFontCppHeaders/IconsFontAwesome6.h>
 
@@ -246,7 +248,7 @@ void SandboxApplication::Initialize()
 
 	cube_mesh_instanced = Engine::Mesh( cube_mesh,
 										{
-											Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+											Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4, INSTANCED_ATTRIBUTE_START }	// Transform.
 										},
 										reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
 										CUBE_COUNT,
@@ -254,7 +256,7 @@ void SandboxApplication::Initialize()
 
 	cube_reflected_mesh_instanced = Engine::Mesh( cube_mesh,
 												  {
-													  Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+													  Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4, INSTANCED_ATTRIBUTE_START }	// Transform.
 												  },
 												  reinterpret_cast< std::vector< float >& >( cube_reflected_instance_data_array ),
 												  CUBE_REFLECTED_COUNT,
@@ -262,8 +264,8 @@ void SandboxApplication::Initialize()
 
 	cube_mesh_instanced_with_color = Engine::Mesh( cube_mesh,
 												   {
-													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }, // Transform.
-													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_VEC4 }	// Color.
+													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4, INSTANCED_ATTRIBUTE_START }, // Transform.
+													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_VEC4, INSTANCED_ATTRIBUTE_START + 4 }	// Color.
 												   },
 												   reinterpret_cast< std::vector< float >& >( light_source_instance_data_array ),
 												   LIGHT_POINT_COUNT,
