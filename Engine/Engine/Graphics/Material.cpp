@@ -108,6 +108,7 @@ namespace Engine
 
 	void Material::SetTexture( const char* sampler_name_of_new_texture, const Texture* texture_to_be_set )
 	{
+#ifdef _DEBUG
 		if( const auto found = texture_map.find( sampler_name_of_new_texture ); 
 			found != texture_map.cend() )
 		{
@@ -115,8 +116,12 @@ namespace Engine
 		}
 		else
 		{
-			throw std::runtime_error( R"(ERROR::MATERIAL::SetTexture(): given sampler name ")" + std::string( sampler_name_of_new_texture ) + R"(" does not exist!)" );
+			ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": Texture ")" + std::string( sampler_name_of_new_texture ) + R"(" can not be set; it does not exist!)" );
 		}
+#else
+		texture_map.at( sampler_name_of_new_texture ).second = texture_to_be_set;
+		}
+#endif // _DEBUG
 	}
 
 	const Texture* Material::GetTexture( const char* sampler_name_of_new_texture ) const
@@ -156,6 +161,14 @@ namespace Engine
 
 		auto UploadTexture = [ & ]( const std::string& sampler_name, const Texture& texture )
 		{
+#if _DEBUG
+			if( not uniform_info_map->contains( sampler_name ) )
+			{
+				ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": Uniform ")" + std::string( sampler_name ) + R"(" can not be uploaded; it does not exist!)" );
+				return;
+			}
+#endif
+
 			const auto& sampler_uniform_info     = uniform_info_map->at( sampler_name );
 			const unsigned int texture_unit_slot = texture_unit_slots_in_use++;
 

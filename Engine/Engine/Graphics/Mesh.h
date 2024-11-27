@@ -31,16 +31,17 @@ namespace Engine
 		DELETE_COPY_CONSTRUCTORS( Mesh );
 		DEFAULT_MOVE_CONSTRUCTORS( Mesh );
 
-		Mesh( std::vector< Vector3			>&& positions, 
+		Mesh( std::vector< Vector3			>&& positions,
 			  const std::string&				name			= {},
 			  std::vector< Vector3			>&& normals			= {},
-			  std::vector< Vector2			>&& uvs_0			= {}, 
+			  std::vector< Vector2			>&& uvs_0			= {},
 			  std::vector< std::uint32_t	>&& indices		    = {},
+			  std::vector< Vector3			>&& tangents		= {},
 			  const PrimitiveType				primitive_type	= PrimitiveType::Triangles,
 			  const GLenum						usage			= GL_STATIC_DRAW,
 			  /* Below are seldom used so they come after. */
 			  std::vector< Vector2			>&& uvs_1			= {},
-			  std::vector< Vector2			>&& uvs_2			= {}, 
+			  std::vector< Vector2			>&& uvs_2			= {},
 			  std::vector< Vector2			>&& uvs_3			= {},
 			  std::vector< Color4			>&& colors_rgba		= {} );
 
@@ -94,6 +95,7 @@ namespace Engine
 
 		inline const std::vector< Vector3 >& Positions()	const { return positions;	};
 		inline const std::vector< Vector3 >& Normals()		const { return normals;		};
+		inline const std::vector< Vector3 >& Tangents()		const { return tangents;	};
 		inline const std::vector< Vector2 >& Uvs_0()		const { return uvs_0;		};
 		inline const std::vector< Vector2 >& Uvs_1()		const { return uvs_1;		};
 		inline const std::vector< Vector2 >& Uvs_2()		const { return uvs_2;		};
@@ -102,6 +104,7 @@ namespace Engine
 
 		inline const float* Positions_Raw()		const { return reinterpret_cast< const float* >( positions.data()	); };
 		inline const float* Normals_Raw()		const { return reinterpret_cast< const float* >( normals.data()		); };
+		inline const float* Tangents_Raw()		const { return reinterpret_cast< const float* >( tangents.data()	); };
 		inline const float* Uvs_0_Raw()			const { return reinterpret_cast< const float* >( uvs_0.data()		); };
 		inline const float* Uvs_1_Raw()			const { return reinterpret_cast< const float* >( uvs_1.data()		); };
 		inline const float* Uvs_2_Raw()			const { return reinterpret_cast< const float* >( uvs_2.data()		); };
@@ -109,9 +112,11 @@ namespace Engine
 		inline const float* Colors_RGBA_Raw()	const { return reinterpret_cast< const float* >( colors_rgba.data()	); };
 
 	private:
-		static std::array< VertexAttribute, 7 > GatherAttributes( const std::vector< Vector3 >& positions, const std::vector< Vector3 >& normals,
-																  const std::vector< Vector2 >& uvs_0, const std::vector< Vector2 >& uvs_1,
-																  const std::vector< Vector2 >& uvs_2, const std::vector< Vector2 >& uvs_3,
+		static std::array< VertexAttribute, 8 > GatherAttributes( const std::vector< Vector3 >& positions,
+																  const std::vector< Vector3 >& normals,
+																  const std::vector< Vector2 >& uvs_0, 
+																  const std::vector< Vector3 >& tangents,
+																  const std::vector< Vector2 >& uvs_1, const std::vector< Vector2 >& uvs_2, const std::vector< Vector2 >& uvs_3,
 																  const std::vector< Color4 >& colors_rgba );
 
  	private:
@@ -121,6 +126,7 @@ namespace Engine
 
 		std::vector< Vector3 > positions;
 		std::vector< Vector3 > normals;
+		std::vector< Vector3 > tangents;
 		std::vector< Vector2 > uvs_0;
 		std::vector< Vector2 > uvs_1;
 		std::vector< Vector2 > uvs_2;

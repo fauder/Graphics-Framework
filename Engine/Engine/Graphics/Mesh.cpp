@@ -13,6 +13,7 @@ namespace Engine
 				std::vector< Vector3 >&&		normals,
 				std::vector< Vector2 >&&		uvs_0,
 				std::vector< std::uint32_t >&&	indices,
+				std::vector< Vector3 >&&		tangents,
 				const PrimitiveType				primitive_type,
 				const GLenum					usage,
 				/* Below are seldom used so they come after. */
@@ -25,6 +26,7 @@ namespace Engine
 		indices( indices ),
 		positions( positions ),
 		normals( normals ),
+		tangents( tangents ),
 		uvs_0( uvs_0 ),
 		uvs_1( uvs_1 ),
 		uvs_2( uvs_2 ),
@@ -34,10 +36,10 @@ namespace Engine
 		instance_count( 1 )
 	{
 		unsigned int vertex_count_interleaved;
-		const auto interleaved_vertices = MeshUtility::Interleave( vertex_count_interleaved, positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgba );
+		const auto interleaved_vertices = MeshUtility::Interleave( vertex_count_interleaved, positions, normals, uvs_0, tangents, uvs_1, uvs_2, uvs_3, colors_rgba );
 
 		vertex_buffer = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), name + " Vertex Buffer", usage );
-		vertex_layout = VertexLayout( GatherAttributes( positions, normals, uvs_0, uvs_1, uvs_2, uvs_3, colors_rgba ) );
+		vertex_layout = VertexLayout( GatherAttributes( positions, normals, uvs_0, tangents, uvs_1, uvs_2, uvs_3, colors_rgba ) );
 		index_buffer  = indices.empty() ? std::nullopt : std::optional< IndexBuffer >( std::in_place, std::span( indices ), name + " Index Buffer", usage );
 		vertex_array  = VertexArray( vertex_buffer, vertex_layout, index_buffer, name + " VAO");
 	}
@@ -52,6 +54,7 @@ namespace Engine
 		indices( other.indices ),
 		positions( other.positions ),
 		normals( other.normals ),
+		tangents( other.tangents ),
 		uvs_0( other.uvs_0 ),
 		uvs_1( other.uvs_1 ),
 		uvs_2( other.uvs_2 ),
@@ -98,20 +101,22 @@ namespace Engine
 		instance_buffer->Update_Partial( data_span, offset_from_buffer_start );
 	}
 
-	std::array< VertexAttribute, 7 > Mesh::GatherAttributes( const std::vector< Vector3 >& positions, const std::vector< Vector3 >& normals,
-															 const std::vector< Vector2 >& uvs_0, const std::vector< Vector2 >& uvs_1,
-															 const std::vector< Vector2 >& uvs_2, const std::vector< Vector2 >& uvs_3,
+	std::array< VertexAttribute, 8 > Mesh::GatherAttributes( const std::vector< Vector3 >& positions, const std::vector< Vector3 >& normals,
+															 const std::vector< Vector2 >& uvs_0,
+															 const std::vector< Vector3 >& tangents, 
+															 const std::vector< Vector2 >& uvs_1, const std::vector< Vector2 >& uvs_2, const std::vector< Vector2 >& uvs_3,
 															 const std::vector< Color4 >& colors_rgba )
 	{
 		auto CountOf = []( auto&& attribute_container ) { return attribute_container.empty() ? 0 : int( sizeof( attribute_container.front() ) / sizeof( float ) ); };
 
 		constexpr bool is_instanced = false;
 
-		return std::array< VertexAttribute, 7 >
+		return std::array< VertexAttribute, 8 >
 		( {
 			VertexAttribute{ CountOf( positions ),		GL_FLOAT,	is_instanced },
 			VertexAttribute{ CountOf( normals ),		GL_FLOAT,	is_instanced },
 			VertexAttribute{ CountOf( uvs_0 ),			GL_FLOAT,	is_instanced },
+			VertexAttribute{ CountOf( tangents ),		GL_FLOAT,	is_instanced },
 			VertexAttribute{ CountOf( uvs_1 ),			GL_FLOAT,	is_instanced },
 			VertexAttribute{ CountOf( uvs_2 ),			GL_FLOAT,	is_instanced },
 			VertexAttribute{ CountOf( uvs_3 ),			GL_FLOAT,	is_instanced },

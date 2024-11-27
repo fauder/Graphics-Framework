@@ -101,8 +101,9 @@ void SandboxApplication::Initialize()
 	brickwall_normal_map   = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Normal) Map",  R"(Asset/Texture/brickwall_normal.jpg)",
 																							Engine::Texture::ImportSettings
 																							{
-																								.wrap_u = Engine::Texture::Wrapping::Repeat,
-																								.wrap_v = Engine::Texture::Wrapping::Repeat
+																								.wrap_u  = Engine::Texture::Wrapping::Repeat,
+																								.wrap_v  = Engine::Texture::Wrapping::Repeat,
+																								.is_sRGB = false,
 																							} );
 
 	transparent_window_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window", R"(Asset/Texture/blending_transparent_window.png)" );
@@ -220,7 +221,8 @@ void SandboxApplication::Initialize()
 							  "Cube",
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
-							  { /* No indices. */ } );
+							  { /* No indices. */ },
+							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Tangents.cbegin(), Engine::Primitive::NonIndexed::Cube::Tangents.cend() ) );
 
 	cube_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cend() ),
 										 "Cube (Fullscreen)",
@@ -238,7 +240,8 @@ void SandboxApplication::Initialize()
 							  "Quad",
 							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Normals.cbegin(), Engine::Primitive::NonIndexed::Quad::Normals.cend() ),
 							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
-							  { /* No indices. */ } );
+							  { /* No indices. */ },
+							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Tangents.cbegin(), Engine::Primitive::NonIndexed::Quad::Tangents.cend() ) );
 
 	quad_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cend() ),
 										 "Quad (FullScreen)",
@@ -965,9 +968,9 @@ void SandboxApplication::ResetLightingData()
 		.is_enabled = true,
 		.data =
 		{
-			.ambient  = Engine::Color3{  0.33f,  0.33f,  0.33f },
-			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
-			.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+			.ambient  = Engine::Color3{ 0.1f, 0.1f, 0.1f },
+			.diffuse  = Engine::Color3{ 0.4f, 0.4f, 0.4f },
+			.specular = Engine::Color3{ 0.5f, 0.5f, 0.5f },
 		},
 		.transform = &light_directional_transform
 	};
@@ -1027,6 +1030,7 @@ void SandboxApplication::ResetMaterialData()
 	cube_reflected_material = Engine::Material( "Cube (Reflected)", shader_blinn_phong_skybox_reflection_shadowed_instanced );
 	cube_reflected_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_reflected_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
+	cube_reflected_material.SetTexture( "uniform_normal_map_slot", container_texture_normal_map );
 	cube_reflected_material.SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
 	cube_reflected_material.SetTexture( "uniform_texture_skybox_slot", skybox_texture );
 	cube_reflected_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
@@ -1035,6 +1039,7 @@ void SandboxApplication::ResetMaterialData()
 	cube_material = Engine::Material( "Cube", shader_blinn_phong_shadowed_instanced );
 	cube_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
+	cube_material.SetTexture( "uniform_normal_map_slot", container_texture_normal_map );
 	cube_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	ground_material = Engine::Material( "Ground", shader_blinn_phong_shadowed );
