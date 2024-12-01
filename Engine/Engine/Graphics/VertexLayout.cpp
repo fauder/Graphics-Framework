@@ -11,23 +11,6 @@ namespace Engine
 	VertexLayout::~VertexLayout()
 	{}
 
-	void VertexLayout::Push( const GLenum type, const int count, const bool is_instanced )
-	{
-		if( attributes.empty() )
-			attributes.push_back( { count, type, is_instanced, 0 } );
-		else
-		{
-			const auto& previous_attribute = attributes.back();
-			const auto& [ previous_attribute_occupied_slot_count, dont_care_slot_size ] = GL::Type::RowAndColumnCountOf( previous_attribute.type );
-			attributes.push_back( {
-				.count        = count,
-				.type         = type,
-				.is_instanced = is_instanced,
-				.location     = previous_attribute.location + previous_attribute_occupied_slot_count
-			} );
-		}
-	}
-
 	void VertexLayout::Push( const VertexInstanceAttribute& attribute )
 	{
 		// Assume that At least 1 non-instanced attribute (which is position) is present. This way, no "if( attributes.empty() )" check are necessary.
@@ -173,5 +156,28 @@ namespace Engine
 				return false;
 			
 		return true;
+	}
+
+	/*
+	 * Private API
+	 */
+
+	/* Currently unused. */
+	void VertexLayout::Push( const GLenum type, const int count, const bool is_instanced )
+	{
+		if( attributes.empty() )
+			attributes.push_back( { count, type, is_instanced, 0 } );
+		else
+		{
+			const auto& previous_attribute = attributes.back();
+			const auto& [previous_attribute_occupied_slot_count, dont_care_slot_size] = GL::Type::RowAndColumnCountOf( previous_attribute.type );
+			attributes.push_back(
+			{
+				.count        = count,
+				.type         = type,
+				.is_instanced = is_instanced,
+				.location     = previous_attribute.location + previous_attribute_occupied_slot_count
+			} );
+		}
 	}
 }

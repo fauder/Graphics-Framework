@@ -64,7 +64,6 @@ namespace Engine
 		constexpr bool operator ==( const VertexLayout& ) const = default;
 		constexpr bool operator !=( const VertexLayout& ) const = default;
 
-		void Push( const GLenum type, const int count, const bool is_instanced = false );
 		void Push( const VertexInstanceAttribute& attribute );
 
 		void SetAndEnableAttributes_NonInstanced() const;
@@ -79,6 +78,11 @@ namespace Engine
 		bool IsCompatibleWith( const VertexLayout& other ) const;
 
 	private:
+		/* Currently unused. */
+		void Push( const GLenum type, const int count, const bool is_instanced = false );
+
+
+	private:
 		std::vector< VertexAttribute > attributes;
 	};
 
@@ -88,6 +92,6 @@ namespace Engine
 	{
 		for( const auto& attribute : attribute_counts_and_types )
 			if( !attribute.Empty() )
-				Push( attribute.type, attribute.count, attribute.is_instanced );
+				attributes.push_back( attribute );
 	}
 }

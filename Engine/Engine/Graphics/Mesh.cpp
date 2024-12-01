@@ -1,5 +1,6 @@
 // Engine Includes.
 #include "Mesh.h"
+#include "Asset/Shader/_Attributes.glsl"
 
 namespace Engine
 {
@@ -11,35 +12,26 @@ namespace Engine
 	Mesh::Mesh( std::vector< Vector3 >&&		positions,
 				const std::string&				name,
 				std::vector< Vector3 >&&		normals,
-				std::vector< Vector2 >&&		uvs_0,
+				std::vector< Vector2 >&&		uvs,
 				std::vector< std::uint32_t >&&	indices,
 				std::vector< Vector3 >&&		tangents,
 				const PrimitiveType				primitive_type,
-				const GLenum					usage,
-				/* Below are seldom used so they come after. */
-				std::vector< Vector2 >&&		uvs_1,
-				std::vector< Vector2 >&&		uvs_2,
-				std::vector< Vector2 >&&		uvs_3,
-				std::vector< Color4 >&&			colors_rgba )
+				const GLenum					usage )
 		:
 		name( name ),
 		indices( indices ),
 		positions( positions ),
 		normals( normals ),
 		tangents( tangents ),
-		uvs_0( uvs_0 ),
-		uvs_1( uvs_1 ),
-		uvs_2( uvs_2 ),
-		uvs_3( uvs_3 ),
-		colors_rgba( colors_rgba ),
+		uvs( uvs ),
 		primitive_type( primitive_type ),
 		instance_count( 1 )
 	{
 		unsigned int vertex_count_interleaved;
-		const auto interleaved_vertices = MeshUtility::Interleave( vertex_count_interleaved, positions, normals, uvs_0, tangents, uvs_1, uvs_2, uvs_3, colors_rgba );
+		const auto interleaved_vertices = MeshUtility::Interleave( vertex_count_interleaved, positions, normals, uvs, tangents );
 
 		vertex_buffer = VertexBuffer( vertex_count_interleaved, std::span( interleaved_vertices ), name + " Vertex Buffer", usage );
-		vertex_layout = VertexLayout( GatherAttributes( positions, normals, uvs_0, tangents, uvs_1, uvs_2, uvs_3, colors_rgba ) );
+		vertex_layout = VertexLayout( GatherAttributes( positions, normals, uvs, tangents ) );
 		index_buffer  = indices.empty() ? std::nullopt : std::optional< IndexBuffer >( std::in_place, std::span( indices ), name + " Index Buffer", usage );
 		vertex_array  = VertexArray( vertex_buffer, vertex_layout, index_buffer, name + " VAO");
 	}
@@ -55,11 +47,7 @@ namespace Engine
 		positions( other.positions ),
 		normals( other.normals ),
 		tangents( other.tangents ),
-		uvs_0( other.uvs_0 ),
-		uvs_1( other.uvs_1 ),
-		uvs_2( other.uvs_2 ),
-		uvs_3( other.uvs_3 ),
-		colors_rgba( other.colors_rgba ),
+		uvs( other.uvs ),
 		primitive_type( other.primitive_type ),
 		instance_count( instance_count ),
 		vertex_buffer( other.vertex_buffer ),
@@ -101,26 +89,20 @@ namespace Engine
 		instance_buffer->Update_Partial( data_span, offset_from_buffer_start );
 	}
 
-	std::array< VertexAttribute, 8 > Mesh::GatherAttributes( const std::vector< Vector3 >& positions, const std::vector< Vector3 >& normals,
-															 const std::vector< Vector2 >& uvs_0,
-															 const std::vector< Vector3 >& tangents, 
-															 const std::vector< Vector2 >& uvs_1, const std::vector< Vector2 >& uvs_2, const std::vector< Vector2 >& uvs_3,
-															 const std::vector< Color4 >& colors_rgba )
+	std::array< VertexAttribute, 4 > Mesh::GatherAttributes( const std::vector< Vector3 >& positions, const std::vector< Vector3 >& normals,
+															 const std::vector< Vector2 >& uvs,
+															 const std::vector< Vector3 >& tangents )
 	{
 		auto CountOf = []( auto&& attribute_container ) { return attribute_container.empty() ? 0 : int( sizeof( attribute_container.front() ) / sizeof( float ) ); };
 
 		constexpr bool is_instanced = false;
 
-		return std::array< VertexAttribute, 8 >
+		return std::array< VertexAttribute, 4 >
 		( {
-			VertexAttribute{ CountOf( positions ),		GL_FLOAT,	is_instanced },
-			VertexAttribute{ CountOf( normals ),		GL_FLOAT,	is_instanced },
-			VertexAttribute{ CountOf( uvs_0 ),			GL_FLOAT,	is_instanced },
-			VertexAttribute{ CountOf( tangents ),		GL_FLOAT,	is_instanced },
-			VertexAttribute{ CountOf( uvs_1 ),			GL_FLOAT,	is_instanced },
-			VertexAttribute{ CountOf( uvs_2 ),			GL_FLOAT,	is_instanced },
-			VertexAttribute{ CountOf( uvs_3 ),			GL_FLOAT,	is_instanced },
-			VertexAttribute{ CountOf( colors_rgba ),	GL_FLOAT,	is_instanced }
+			VertexAttribute{ CountOf( positions ),		GL_FLOAT,	is_instanced, POSITION_LOCATION		},
+			VertexAttribute{ CountOf( normals ),		GL_FLOAT,	is_instanced, NORMAL_LOCATION		},
+			VertexAttribute{ CountOf( uvs ),			GL_FLOAT,	is_instanced, TEXCOORDS_LOCATION	},
+			VertexAttribute{ CountOf( tangents ),		GL_FLOAT,	is_instanced, TANGENT_LOCATION		},
 		} );
 	}
 }
