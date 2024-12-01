@@ -217,12 +217,12 @@ void SandboxApplication::Initialize()
 	window_transform_array[ 4 ].SetTranslation( Vector3(  0.5f,	5.0f, -0.6f  ) );
 
 /* Vertex/Index Data: */
-	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
+	cube_mesh = Engine::Mesh( std::vector< Vector3		 >( Engine::Primitive::Indexed::Cube::Positions.cbegin(),	Engine::Primitive::Indexed::Cube::Positions.cend() ),
 							  "Cube",
-							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
-							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
-							  { /* No indices. */ },
-							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Tangents.cbegin(), Engine::Primitive::NonIndexed::Cube::Tangents.cend() ) );
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Cube::Normals.cbegin(),		Engine::Primitive::Indexed::Cube::Normals.cend() ),
+							  std::vector< Vector2		 >( Engine::Primitive::Indexed::Cube::UVs.cbegin(),			Engine::Primitive::Indexed::Cube::UVs.cend() ),
+							  std::vector< std::uint32_t >( Engine::Primitive::Indexed::Cube::Indices.cbegin(),		Engine::Primitive::Indexed::Cube::Indices.cend() ),
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Cube::Tangents.cbegin(),	Engine::Primitive::Indexed::Cube::Tangents.cend() ) );
 
 	cube_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cend() ),
 										 "Cube (Fullscreen)",
@@ -230,18 +230,18 @@ void SandboxApplication::Initialize()
 										 { /* No uvs.		*/ },
 										 { /* No indices.	*/ } );
 
-	quad_mesh_uvs_only = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
+	quad_mesh_uvs_only = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::Indexed::Quad::Positions.cbegin(), Engine::Primitive::Indexed::Quad::Positions.cend() ),
 									   "Quad (UVs Only)",
 									   { /* No normals. */ },
-									   std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
-									   { /* No indices. */ } );
+									   std::vector< Vector2 >( Engine::Primitive::Indexed::Quad::UVs.cbegin(), Engine::Primitive::Indexed::Quad::UVs.cend() ),
+									   std::vector< std::uint32_t >( Engine::Primitive::Indexed::Quad::Indices.cbegin(), Engine::Primitive::Indexed::Quad::Indices.cend() ) );
 
-	quad_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
+	quad_mesh = Engine::Mesh( std::vector< Vector3		 >( Engine::Primitive::Indexed::Quad::Positions.cbegin(),	Engine::Primitive::Indexed::Quad::Positions.cend() ),
 							  "Quad",
-							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Normals.cbegin(), Engine::Primitive::NonIndexed::Quad::Normals.cend() ),
-							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
-							  { /* No indices. */ },
-							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Tangents.cbegin(), Engine::Primitive::NonIndexed::Quad::Tangents.cend() ) );
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Quad::Normals.cbegin(),		Engine::Primitive::Indexed::Quad::Normals.cend() ),
+							  std::vector< Vector2		 >( Engine::Primitive::Indexed::Quad::UVs.cbegin(),			Engine::Primitive::Indexed::Quad::UVs.cend() ),
+							  std::vector< std::uint32_t >( Engine::Primitive::Indexed::Quad::Indices.cbegin(),		Engine::Primitive::Indexed::Quad::Indices.cend() ),
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Quad::Tangents.cbegin(),	Engine::Primitive::Indexed::Quad::Tangents.cend() ) );
 
 	quad_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cend() ),
 										 "Quad (FullScreen)",
