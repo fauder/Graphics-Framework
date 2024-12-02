@@ -36,9 +36,28 @@ namespace Engine
 																										.wrap_v           = Texture::Wrapping::ClampToEdge,
 																										.min_filter       = Texture::Filtering::Nearest,
 																										.mag_filter       = Texture::Filtering::Nearest,
+																										.flip_vertically  = false,
 																										.is_sRGB          = false,
 																										.generate_mipmaps = false,
 																									} ) );
+		}
+
+		{
+			const unsigned char texel[] = { 255, 255, 255, 255 };
+			TEXTURE_MAP.try_emplace( "White", AssetDatabase< Texture >::CreateAssetFromMemory( "White",
+																							   reinterpret_cast< const std::byte* >( &texel ),
+																							   1,
+																							   true, // => using raw data instead of file contents.
+																							   Texture::ImportSettings
+																							   {
+																								   .wrap_u           = Texture::Wrapping::ClampToEdge,
+																								   .wrap_v           = Texture::Wrapping::ClampToEdge,
+																								   .min_filter       = Texture::Filtering::Nearest,
+																								   .mag_filter       = Texture::Filtering::Nearest,
+																								   .flip_vertically  = false,
+																								   .is_sRGB          = true,
+																								   .generate_mipmaps = false,
+																							   } ) );
 		}
 
 		TEXTURE_MAP.try_emplace( "Missing", AssetDatabase< Texture >::CreateAssetFromFile( "Missing", FullTexturePath( "missing_texture.jpg" ),
