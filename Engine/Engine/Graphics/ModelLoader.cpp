@@ -55,6 +55,7 @@ namespace Engine
             std::size_t material_index      = -1;
 
             Texture* sub_mesh_albedo_texture = nullptr;
+            Texture* sub_mesh_normal_texture = nullptr;
             std::optional< Color3 > sub_mesh_albedo_color;
 
 			auto* position_iterator = submesh_iterator->findAttribute( "POSITION" );
@@ -64,9 +65,9 @@ namespace Engine
             {
                 material_index       = submesh_iterator->materialIndex.value();
                 const auto& material = gltf_asset.materials[ submesh_iterator->materialIndex.value() ];
-
-                const auto& base_color_texture_info = material.pbrData.baseColorTexture;
-                if( base_color_texture_info.has_value() )
+                
+                if( const auto& base_color_texture_info = material.pbrData.baseColorTexture; 
+                    base_color_texture_info.has_value() )
                 {
                     const auto& fastgltf_texture = gltf_asset.textures[ base_color_texture_info->textureIndex ];
                     if( !fastgltf_texture.imageIndex.has_value() )
@@ -84,6 +85,17 @@ namespace Engine
                 {
                     // Use Albedo color.
                     sub_mesh_albedo_color = reinterpret_cast< const Color3& /* Omit alpha */ >( material.pbrData.baseColorFactor );
+                }
+
+                if( const auto& normal_texture_info = material.normalTexture;
+                    normal_texture_info.has_value() )
+                {
+                    const auto& fastgltf_texture = gltf_asset.textures[ normal_texture_info->textureIndex ];
+                    if( !fastgltf_texture.imageIndex.has_value() )
+                        return false;
+
+                    sub_mesh_normal_texture = textures[ fastgltf_texture.imageIndex.value() ];
+                    sub_mesh_normal_texture->SetName( ( "Normal (" + gltf_mesh.name + ")" ).c_str() );
                 }
             }
 
@@ -197,7 +209,6 @@ namespace Engine
                 return needs_swap * swapped_index + ( 1 - needs_swap ) * index;
             };
 
-            //fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
             fastgltf::iterateAccessorWithIndex< std::uint32_t >( gltf_asset, index_accessor,
                                                                  [ & ]( std::uint32_t actual_index, std::size_t array_index )
                                                                  {
@@ -252,6 +263,7 @@ namespace Engine
                                                                                    std::move( indices_u32 ),
                                                                                    std::move( tangents ) ) ),
 														sub_mesh_albedo_texture,
+                                                        sub_mesh_normal_texture,
                                                         std::move( sub_mesh_albedo_color ) );
 		}
 

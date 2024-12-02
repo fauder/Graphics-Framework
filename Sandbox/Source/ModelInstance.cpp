@@ -103,7 +103,11 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader, const Vector4
 					};
 				}
 
-				material.SetTexture( "uniform_specular_map_slot", Engine::InternalTextures::Get( "White" ) );
+				static const auto default_normal_map_texture = Engine::InternalTextures::Get( "Normal Map" );
+				static const auto white_texture              = Engine::InternalTextures::Get( "White" );
+
+				material.SetTexture( "uniform_normal_map_slot", sub_mesh.texture_normal ? sub_mesh.texture_normal : default_normal_map_texture );
+				material.SetTexture( "uniform_specular_map_slot", white_texture );
 
 				material.Set( "uniform_texture_scale_and_offset", texture_scale_and_offset );
 

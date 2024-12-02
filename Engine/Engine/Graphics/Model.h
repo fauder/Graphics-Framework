@@ -32,6 +32,7 @@ namespace Engine
 			Mesh& mesh; // Actual mesh storage is kept in the Model class.
 			
 			Texture* texture_albedo;
+			Texture* texture_normal;
 			std::optional< Color3 > color_albedo;
 		};
 
