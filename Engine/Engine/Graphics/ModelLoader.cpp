@@ -197,14 +197,8 @@ namespace Engine
     }
 
     bool LoadTexture( const fastgltf::Asset& gltf_asset, const fastgltf::Image& gltf_image,
-                      Texture*& texture_to_load )
+                      Texture*& texture_to_load, const Engine::Texture::ImportSettings& import_settings )
     {
-        Engine::Texture::ImportSettings texture_import_settings;
-        texture_import_settings.wrap_u = Texture::Wrapping::MirroredRepeat;
-        texture_import_settings.wrap_v = Texture::Wrapping::MirroredRepeat;
-
-        // TODO: Import sampler settings and remove the hard-coded wrapping parameters above.
-
         std::visit( fastgltf::visitor
                     {
                         []( const auto& arg ) {},
@@ -215,12 +209,12 @@ namespace Engine
 
                             const std::string path( file_path.uri.path().begin(), file_path.uri.path().end() );
 
-                            texture_to_load = AssetDatabase< Texture >::CreateAssetFromFile( std::string( gltf_image.name ), path, texture_import_settings );
+                            texture_to_load = AssetDatabase< Texture >::CreateAssetFromFile( std::string( gltf_image.name ), path, import_settings );
                         },
                         [ & ]( const fastgltf::sources::Array& vector )
                         {
                             texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ), vector.bytes.data(), static_cast< int >( vector.bytes.size() ),
-																					           texture_import_settings );
+																					           import_settings );
                         },
                         [ & ]( const fastgltf::sources::BufferView& view )
                         {
@@ -239,7 +233,7 @@ namespace Engine
 												texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ),
 																										           vector.bytes.data() + buffer_view.byteOffset,
 																										           static_cast< int >( buffer_view.byteLength ),
-																										           texture_import_settings );
+																										           import_settings );
                                             }
                                         }, buffer.data );
                         }
@@ -299,7 +293,6 @@ namespace Engine
 
             constexpr auto gltf_options =
                 fastgltf::Options::DontRequireValidAssetMember |
-                fastgltf::Options::AllowDouble |
                 fastgltf::Options::LoadExternalBuffers |
                 fastgltf::Options::LoadExternalImages |
                 fastgltf::Options::GenerateMeshIndices;
@@ -334,10 +327,53 @@ namespace Engine
         
         model.textures.reserve( gltf_asset.images.size() );
 
-		for( auto& gltf_image : gltf_asset.images )
-            if( not LoadTexture( gltf_asset, gltf_image, 
-                                 model.textures.emplace_back() ) )
+		for( auto& gltf_texture : gltf_asset.textures )
+        {
+            const auto& gltf_image = gltf_asset.images[ *gltf_texture.imageIndex ];
+
+            Texture::ImportSettings import_settings
+            {
+                .wrap_u          = Texture::Wrapping::Repeat,
+                .wrap_v          = Texture::Wrapping::Repeat,
+                /* gltf spec dictates that V coordinates increase in downward direction (i.e., UV origin is top-left).
+                 * This is compatible with how stb interprets/treats uvs, so no need to flip uvs coming from gltf. */
+                .flip_vertically = false
+            };
+
+            if( gltf_texture.samplerIndex.has_value() )
+            {
+                const auto& sampler = gltf_asset.samplers[ *gltf_texture.samplerIndex ];
+                import_settings.wrap_u = Texture::Wrapping( sampler.wrapS );
+                import_settings.wrap_v = Texture::Wrapping( sampler.wrapT );
+                if( sampler.minFilter.has_value() )
+                    import_settings.min_filter = Texture::Filtering( *sampler.minFilter );
+                if( sampler.magFilter.has_value() )
+                    import_settings.mag_filter = Texture::Filtering( *sampler.magFilter );
+
+            }
+
+            /* Turn off sRGB status for linear textures: */
+            for( auto& material : gltf_asset.materials )
+            {
+                if( ( material.normalTexture                            && material.normalTexture->textureIndex == *gltf_texture.imageIndex ) ||
+                    ( material.packedNormalMetallicRoughnessTexture     && material.packedNormalMetallicRoughnessTexture->textureIndex == *gltf_texture.imageIndex ) ||
+                    ( material.occlusionTexture                         && material.occlusionTexture->textureIndex == *gltf_texture.imageIndex ) ||
+                    ( material.packedOcclusionRoughnessMetallicTextures &&
+					  ( ( material.packedOcclusionRoughnessMetallicTextures->normalTexture &&
+						  material.packedOcclusionRoughnessMetallicTextures->normalTexture->textureIndex == *gltf_texture.imageIndex ) ||
+						( material.packedOcclusionRoughnessMetallicTextures->occlusionRoughnessMetallicTexture &&
+						  material.packedOcclusionRoughnessMetallicTextures->occlusionRoughnessMetallicTexture->textureIndex == *gltf_texture.imageIndex ) ||
+						( material.packedOcclusionRoughnessMetallicTextures->roughnessMetallicOcclusionTexture &&
+						  material.packedOcclusionRoughnessMetallicTextures->roughnessMetallicOcclusionTexture->textureIndex == *gltf_texture.imageIndex ) ) ) )
+                {
+                    import_settings.is_sRGB = false;
+                }
+            }
+
+            if( not LoadTexture( gltf_asset, gltf_image,
+                                 model.textures.emplace_back(), import_settings ) )
                 return std::nullopt;
+        }
 
         /*
          * Mapping between the glTF & this engine: 
