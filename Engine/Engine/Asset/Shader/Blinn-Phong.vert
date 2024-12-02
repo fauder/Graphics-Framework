@@ -61,9 +61,15 @@ void main()
      * Right-handed cross product of these produce the normal.
      * Therefore, bitangent = normal x tangent. */
 
-    /* Tangent   => */ vs_out.tangent_to_view_space_transformation[ 0 ] = normalize( tangent * mat3x3( world_view_transform ) );
-    /* Bitangent => */ vs_out.tangent_to_view_space_transformation[ 1 ] = normalize( cross( vs_out.surface_normal_view_space.xyz, vs_out.tangent_to_view_space_transformation[ 0 ] ) );
     /* Normal    => */ vs_out.tangent_to_view_space_transformation[ 2 ] = vs_out.surface_normal_view_space.xyz;
+    /* Tangent   => */ vs_out.tangent_to_view_space_transformation[ 0 ] = normalize( tangent * mat3x3( world_view_transform ) );
+
+    /* Gram-Schmidt re-orthogonalization: */
+    vs_out.tangent_to_view_space_transformation[ 0 ] = normalize( vs_out.tangent_to_view_space_transformation[ 0 ] - 
+                                                                  dot( vs_out.tangent_to_view_space_transformation[ 0 ], vs_out.surface_normal_view_space.xyz ) *
+                                                                  vs_out.surface_normal_view_space.xyz );
+
+    /* Bitangent => */ vs_out.tangent_to_view_space_transformation[ 1 ] = normalize( cross( vs_out.surface_normal_view_space.xyz, vs_out.tangent_to_view_space_transformation[ 0 ] ) );
 
     gl_Position = vs_out.position_view_space * _INTRINSIC_TRANSFORM_PROJECTION;
 }
