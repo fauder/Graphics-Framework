@@ -115,7 +115,8 @@ namespace Engine
 
             std::vector< Vector3 > normals;
 
-			if( auto* normal_iterator = submesh_iterator->findAttribute( "NORMAL" ); normal_iterator )
+			if( auto* normal_iterator = submesh_iterator->findAttribute( "NORMAL" );
+                normal_iterator != submesh_iterator->attributes.end() )
             {
                 const auto& normal_accessor = gltf_asset.accessors[ normal_iterator->accessorIndex ];
                 if( !normal_accessor.bufferViewIndex.has_value() )
@@ -136,7 +137,8 @@ namespace Engine
 
             std::vector< Vector2 > uvs_0;
 
-            if( auto* uvs_0_iterator = submesh_iterator->findAttribute( "TEXCOORD_0" ); uvs_0_iterator )
+            if( auto* uvs_0_iterator = submesh_iterator->findAttribute( "TEXCOORD_0" );
+                uvs_0_iterator != submesh_iterator->attributes.end() )
             {
                 const auto& uvs_0_accessor = gltf_asset.accessors[ uvs_0_iterator->accessorIndex ];
                 if( !uvs_0_accessor.bufferViewIndex.has_value() )
@@ -145,6 +147,28 @@ namespace Engine
                 uvs_0.resize( uvs_0_accessor.count, ZERO_INITIALIZATION );
 
                 fastgltf::copyFromAccessor< Vector2 >( gltf_asset, uvs_0_accessor, uvs_0.data() );
+            }
+
+            /*
+             * Tangents:
+             */
+
+            std::vector< Vector3 > tangents;
+
+			if( auto* tangent_iterator = submesh_iterator->findAttribute( "TANGENT" );
+                tangent_iterator != submesh_iterator->attributes.cend() )
+            {
+                const auto& tangent_accessor = gltf_asset.accessors[ tangent_iterator->accessorIndex ];
+                if( !tangent_accessor.bufferViewIndex.has_value() )
+                    continue;
+
+                tangents.resize( tangent_accessor.count, ZERO_INITIALIZATION );
+
+                fastgltf::iterateAccessorWithIndex< Vector4 >( gltf_asset, tangent_accessor,
+														   [ & ]( Vector4 tangent, std::size_t index )
+														   {
+                                                    	   	   tangents[ index ] = tangent.XYZ() * coordinate_system_transform;
+														   } );
             }
 
             /*
@@ -179,6 +203,43 @@ namespace Engine
                                                                  {
                                                                      indices_u32[ EffectiveIndex( array_index ) ] = actual_index;
                                                                  } );
+            
+            /* Calculate tangents if the model did not have them. */
+            if( tangents.empty() )
+            {
+                const auto index_count = indices_u32.size();
+                const auto size = uvs_0.size();
+                tangents.reserve( size );
+                for( auto base_index = 0; base_index < index_count; base_index += 3 )
+                {
+                    const auto index_0 = indices_u32[ base_index     ];
+                    const auto index_1 = indices_u32[ base_index + 1 ];
+                    const auto index_2 = indices_u32[ base_index + 2 ];
+
+                    const auto position_0 = positions[ index_0 ];
+                    const auto position_1 = positions[ index_1 ];
+                    const auto position_2 = positions[ index_2 ];
+
+                    const auto uv_0 = uvs_0[ index_0 ];
+                    const auto uv_1 = uvs_0[ index_1 ];
+                    const auto uv_2 = uvs_0[ index_2 ];
+
+                    const auto edge_1 = position_1 - position_0;
+                    const auto edge_2 = position_2 - position_0;
+
+                    const auto delta_uv_1 = uv_1 - uv_0;
+                    const auto delta_uv_2 = uv_2 - uv_0;
+
+                    const auto delta_v_1 = delta_uv_1.Y();
+                    const auto delta_v_2 = delta_uv_2.Y();
+
+                    const auto f = 1.0f / ( delta_uv_1.X() * delta_v_2 - delta_uv_2.X() * delta_v_1 );
+
+                    tangents.emplace_back( f * ( delta_v_2 * edge_1.X() - delta_v_1 * edge_2.X() ),
+                                           f * ( delta_v_2 * edge_1.Y() - delta_v_1 * edge_2.Y() ),
+                                           f * ( delta_v_2 * edge_1.Z() - delta_v_1 * edge_2.Z() ) );
+                }
+            }
 
             std::string sub_mesh_name( mesh_group_to_load.name + "_" + std::to_string( std::distance( gltf_mesh.primitives.begin(), submesh_iterator ) ) );
 
@@ -187,8 +248,9 @@ namespace Engine
 														meshes.emplace_back( Mesh( std::move( positions ),
 																				   sub_mesh_name,
 																				   std::move( normals ),
-																				   std::move( uvs_0 ),
-																				   std::move( indices_u32 ) ) ),
+                                                                                   std::move( uvs_0 ),
+                                                                                   std::move( indices_u32 ),
+                                                                                   std::move( tangents ) ) ),
 														sub_mesh_albedo_texture,
                                                         std::move( sub_mesh_albedo_color ) );
 		}
