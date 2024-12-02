@@ -126,8 +126,10 @@ void SandboxApplication::Initialize()
 	shader_skybox                                           = Engine::InternalShaders::Get( "Skybox" );
 	shader_blinn_phong                                      = Engine::InternalShaders::Get( "Blinn-Phong" );
 	shader_blinn_phong_shadowed                             = Engine::InternalShaders::Get( "Blinn-Phong (Shadowed)" );
+	shader_blinn_phong_shadowed_parallax                    = Engine::InternalShaders::Get( "Blinn-Phong (Shadowed | Parallax)" );
 	shader_blinn_phong_instanced                            = Engine::InternalShaders::Get( "Blinn-Phong (Instanced)" );
 	shader_blinn_phong_shadowed_instanced                   = Engine::InternalShaders::Get( "Blinn-Phong (Shadowed | Instanced)" );
+	shader_blinn_phong_shadowed_parallax_instanced          = Engine::InternalShaders::Get( "Blinn-Phong (Shadowed | Parallax | Instanced)" );
 	shader_blinn_phong_skybox_reflection                    = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection)" );
 	shader_blinn_phong_skybox_reflection_instanced          = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection | Instanced)" );
 	shader_blinn_phong_skybox_reflection_shadowed_instanced = Engine::InternalShaders::Get( "Blinn-Phong (Skybox Reflection | Shadowed | Instanced)" );
@@ -1185,8 +1187,8 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 													 true, /* has shadows. */
 													 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f } );
 
-			for( auto& renderable_to_add : model_instance_to_load_into.Renderables() )
-				renderer.AddRenderable( &renderable_to_add, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
+		for( auto& renderable_to_add : model_instance_to_load_into.Renderables() )
+			renderer.AddRenderable( &renderable_to_add, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
 		return true;
 	}

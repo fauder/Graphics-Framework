@@ -55,6 +55,21 @@ namespace Engine
 								Shader::Features{ "SHADOWS_ENABLED",
 												  "SOFT_SHADOWS",
 												  "INSTANCING_ENABLED" } );
+		SHADER_MAP.try_emplace( "Blinn-Phong (Shadowed | Parallax)",
+								"Blinn-Phong (Shadowed | Parallax)",
+								FullShaderPath( "Blinn-Phong.vert"_vert ),
+								FullShaderPath( "Blinn-Phong.frag"_frag ),
+								Shader::Features{ "SHADOWS_ENABLED",
+												  "SOFT_SHADOWS",
+												  "PARALLAX_MAPPING_ENABLED" } );
+		SHADER_MAP.try_emplace( "Blinn-Phong (Shadowed | Parallax | Instanced)",
+								"Blinn-Phong (Shadowed | Parallax | Instanced)",
+								FullShaderPath( "Blinn-Phong.vert"_vert ),
+								FullShaderPath( "Blinn-Phong.frag"_frag ),
+								Shader::Features{ "SHADOWS_ENABLED",
+												  "SOFT_SHADOWS",
+												  "PARALLAX_MAPPING_ENABLED",
+												  "INSTANCING_ENABLED" } );
 		SHADER_MAP.try_emplace( "Blinn-Phong (Skybox Reflection | Instanced)",
 								"Blinn-Phong (Skybox Reflection | Instanced)",
 								FullShaderPath( "Blinn-Phong.vert"_vert ),

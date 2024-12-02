@@ -136,8 +136,10 @@ private:
 	Engine::Shader* shader_skybox;
 	Engine::Shader* shader_blinn_phong;
 	Engine::Shader* shader_blinn_phong_shadowed;
+	Engine::Shader* shader_blinn_phong_shadowed_parallax;
 	Engine::Shader* shader_blinn_phong_instanced;
 	Engine::Shader* shader_blinn_phong_shadowed_instanced;
+	Engine::Shader* shader_blinn_phong_shadowed_parallax_instanced;
 	Engine::Shader* shader_blinn_phong_skybox_reflection;
 	Engine::Shader* shader_blinn_phong_skybox_reflection_instanced;
 	Engine::Shader* shader_blinn_phong_skybox_reflection_shadowed_instanced;
