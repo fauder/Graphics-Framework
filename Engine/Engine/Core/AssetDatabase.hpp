@@ -64,6 +64,7 @@ namespace Engine
 		static AssetType* CreateAssetFromMemory( const std::string& name,
 												 const std::byte* data,
 												 const int size,
+												 const bool data_is_raw_bytes_instead_of_file_contents,
 												 const typename AssetType::ImportSettings& import_settings = AssetType::DEFAULT_IMPORT_SETTINGS )
 		{
 			auto& instance = Instance();
@@ -72,7 +73,7 @@ namespace Engine
 			{
 				std::string new_name( "<unnamed>_" + std::to_string( ( int )instance.asset_map.size() ) );
 
-				if( auto maybe_asset = AssetType::Loader::FromMemory( new_name, data, size, import_settings );
+				if( auto maybe_asset = AssetType::Loader::FromMemory( new_name, data, size, data_is_raw_bytes_instead_of_file_contents, import_settings );
 					maybe_asset )
 				{
 					instance.asset_map[ new_name ] = std::move( *maybe_asset );
@@ -86,7 +87,7 @@ namespace Engine
 			{
 				if( not instance.asset_map.contains( name ) ) // Can not compare file_paths as the asset does not & will not have a path.
 				{
-					if( auto maybe_asset = AssetType::Loader::FromMemory( name, data, size, import_settings );
+					if( auto maybe_asset = AssetType::Loader::FromMemory( name, data, size, data_is_raw_bytes_instead_of_file_contents, import_settings );
 						maybe_asset )
 					{
 						instance.asset_map[ name ] = std::move( *maybe_asset );

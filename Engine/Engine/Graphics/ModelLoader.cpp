@@ -276,7 +276,7 @@ namespace Engine
                         [ & ]( const fastgltf::sources::Array& vector )
                         {
                             texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ), vector.bytes.data(), static_cast< int >( vector.bytes.size() ),
-																					           import_settings );
+																					           false, import_settings );
                         },
                         [ & ]( const fastgltf::sources::BufferView& view )
                         {
@@ -295,7 +295,7 @@ namespace Engine
 												texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ),
 																										           vector.bytes.data() + buffer_view.byteOffset,
 																										           static_cast< int >( buffer_view.byteLength ),
-																										           import_settings );
+																										           false, import_settings );
                                             }
                                         }, buffer.data );
                         }
@@ -369,7 +369,7 @@ namespace Engine
             std::filesystem::path path( file_path );
 
             fastgltf::Expected< fastgltf::Asset > maybe_gltf_asset( fastgltf::Error::None );
-
+             
             if( const auto gltf_type = fastgltf::determineGltfFileType( gltfFile.get() );
                 gltf_type == fastgltf::GltfType::glTF )
                 maybe_gltf_asset = parser.loadGltf( gltfFile.get(), path.parent_path(), gltf_options );

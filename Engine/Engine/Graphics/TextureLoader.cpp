@@ -98,14 +98,37 @@ namespace Engine
 		return maybe_texture;
 	}
 
-	std::optional< Texture > Texture::Loader::FromMemory( const::std::string_view name, const std::byte* data, const int size, const ImportSettings& import_settings )
+	/* For raw data, texture is assumed to be square => width/height derived from square root of size. */
+	std::optional< Texture > Texture::Loader::FromMemory( const::std::string_view name, 
+														  const std::byte* data, 
+														  const int size,
+														  const bool data_is_raw_bytes_instead_of_file_contents,
+														  const ImportSettings& import_settings )
 	{
 		//auto& instance = Instance();
+
+		std::optional< Texture > maybe_texture;
+
+		if( data_is_raw_bytes_instead_of_file_contents )
+		{
+			const int width_and_height = ( int )Math::Sqrt( size );
+
+			/* Format from import_settings is not used at the moment. */
+			maybe_texture = Texture( name,
+									 data,
+									 FORMAT,
+									 width_and_height, width_and_height,
+									 import_settings.is_sRGB,
+									 import_settings.generate_mipmaps,
+									 import_settings.wrap_u, import_settings.wrap_v,
+									 import_settings.border_color,
+									 import_settings.min_filter, import_settings.mag_filter );
+			return maybe_texture;
+		}
 
 		// OpenGL expects uv coordinate v = 0 to be on the most bottom whereas stb loads image data with v = 0 to be top.
 		stbi_set_flip_vertically_on_load( import_settings.flip_vertically );
 
-		std::optional< Texture > maybe_texture;
 
 		int width, height;
 		int number_of_channels = -1;
