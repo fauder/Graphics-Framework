@@ -1,5 +1,6 @@
 // Project Includes.
 #include "ModelInstance.h"
+#include "Graphics/InternalTextures.h"
 
 ModelInstance::ModelInstance()
 	:
@@ -12,14 +13,13 @@ ModelInstance::ModelInstance( const Engine::Model* model, Engine::Shader* const 
 							  const Engine::RenderQueue::ID queue_id,
 							  Engine::Material* material,
 							  const bool has_shadows,
-							  const Engine::Texture* diffuse_texture, const Engine::Texture* specular_texture,
 							  const Vector4 texture_scale_and_offset )
 	:
 	model( model )
 {
 	ASSERT_DEBUG_ONLY( model != nullptr );
 
-	SetMaterialData( shader, diffuse_texture, specular_texture, texture_scale_and_offset );
+	SetMaterialData( shader, texture_scale_and_offset );
 
 	/* Initialize Transforms, Materials & Renderables of Nodes: */
 
@@ -62,10 +62,7 @@ ModelInstance::~ModelInstance()
 {
 }
 
-void ModelInstance::SetMaterialData( Engine::Shader* const shader,
-									 const Engine::Texture* diffuse_texture,
-									 const Engine::Texture* specular_texture,
-									 const Vector4 texture_scale_and_offset )
+void ModelInstance::SetMaterialData( Engine::Shader* const shader, const Vector4 texture_scale_and_offset )
 {
 	int material_index = 0;
 
@@ -85,7 +82,7 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 			{
 				auto& material = node_material_array[ material_index ] = Engine::Material( model->Name() + "_" + sub_mesh.name, shader );
 
-				if( diffuse_texture || sub_mesh.texture_albedo )
+				if( sub_mesh.texture_albedo )
 				{
 					blinn_phong_material_data_array[ material_index ] =
 					{
@@ -94,7 +91,7 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 						.shininess           = 32.0f
 					};
 
-					material.SetTexture( "uniform_diffuse_map_slot", diffuse_texture ? diffuse_texture : sub_mesh.texture_albedo );
+					material.SetTexture( "uniform_diffuse_map_slot", sub_mesh.texture_albedo );
 				}
 				else if( sub_mesh.color_albedo )
 				{
@@ -106,8 +103,7 @@ void ModelInstance::SetMaterialData( Engine::Shader* const shader,
 					};
 				}
 
-				if( specular_texture )
-					material.SetTexture( "uniform_specular_map_slot", specular_texture );
+				material.SetTexture( "uniform_specular_map_slot", Engine::InternalTextures::Get( "White" ) );
 
 				material.Set( "uniform_texture_scale_and_offset", texture_scale_and_offset );
 

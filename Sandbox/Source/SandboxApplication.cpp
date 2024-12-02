@@ -1183,8 +1183,6 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 													 Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED,
 													 nullptr,
 													 true, /* has shadows. */
-													 /* Diffuse texture: */ nullptr /* => Use Albedo colors in-model. */,
-													 /* Specular texture: */ checker_pattern_texture,
 													 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f } );
 
 			for( auto& renderable_to_add : model_instance_to_load_into.Renderables() )
