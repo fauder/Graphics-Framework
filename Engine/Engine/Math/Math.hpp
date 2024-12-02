@@ -47,8 +47,8 @@ namespace Engine::Math
 	template< typename Value >
 	Value Max( const Value left, const Value right ) { return left > right ? left : right; }
 
-	template< std::floating_point Value >
-	Value Sqrt( const Value value ) { return std::sqrt( value ); }
+	template< Concepts::Arithmetic Value >
+	auto Sqrt( const Value value ) { return std::sqrt( value ); }
 
 	template< std::floating_point Value >
 	Value Pow( const Value value, const Value exponent ) { return std::pow( value, exponent ); }
