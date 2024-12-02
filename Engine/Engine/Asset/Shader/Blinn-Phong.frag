@@ -6,6 +6,7 @@
 #pragma feature SKYBOX_ENVIRONMENT_MAPPING
 #pragma feature SHADOWS_ENABLED
 #pragma feature SOFT_SHADOWS
+#pragma feature PARALLAX_MAPPING_ENABLED
 
 in VS_To_FS
 {
@@ -45,7 +46,14 @@ uniform float uniform_reflectivity; /* _hint_normalized_percentage */
 
 #ifdef SHADOWS_ENABLED
 uniform sampler2D uniform_shadow_map_slot;
+#endif
 
+#ifdef PARALLAX_MAPPING_ENABLED
+uniform sampler2D uniform_parallax_height_map_slot;
+uniform float uniform_parallax_height_scale;
+#endif
+
+#ifdef SHADOWS_ENABLED
 /* Returns either 1 = in-shadow or 0 = not in shadow. */
 float CalculateShadowAmount( float light_dot_normal )
 {
@@ -187,24 +195,39 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 	return ambient + cut_off_intensity * ( diffuse + specular );
 }
 
+#ifdef PARALLAX_MAPPING_ENABLED
+vec2 ParallaxMappedTextureCoordinates( vec2 original_texture_coordinates, vec3 view_direction_tangent_space )
+{
+	float height_sample = texture( uniform_parallax_height_map_slot, original_texture_coordinates ).r;
+	vec2 p = view_direction_tangent_space.xy / view_direction_tangent_space.z * height_sample * uniform_parallax_height_scale;
+	return original_texture_coordinates - p;
+}
+#endif
+
 void main()
 {
+	// No need to subtract from the camera position since the camera is positioned at the origin in view space.
+	vec4 viewing_direction_view_space = normalize( -fs_in.position_view_space ); 
+
+#ifdef PARALLAX_MAPPING_ENABLED
+	vec2 uvs = ParallaxMappedTextureCoordinates( fs_in.tex_coords, normalize( fs_in.tangent_to_view_space_transformation * viewing_direction_view_space.xyz ) );
+#else
+	vec2 uvs = fs_in.tex_coords;
+#endif
+
 	/* Normally, the convention used in this engine is to post-multiply vectors with matrices BUT
 	 * tangent_to_view_space_transformation is constructed in the vertex shader part of this shader program => it is column-major.
 	 * That's why in the below line, the sampled tangent-space normal vector is pre-multiplied by the column-major tangent_to_view_space_transformation matrix. */
 
-	vec4 normal_sample_view_space = vec4( normalize( fs_in.tangent_to_view_space_transformation * ( texture( uniform_normal_map_slot, fs_in.tex_coords ).xyz * 2.0f - 1.0f ) ),
+	vec4 normal_sample_view_space = vec4( normalize( fs_in.tangent_to_view_space_transformation * ( texture( uniform_normal_map_slot, uvs ).xyz * 2.0f - 1.0f ) ),
 										  0.0f );
 
 //	vec4 surface_normal_view_space = normalize( fs_in.surface_normal_view_space );
 
-	// No need to subtract from the camera position since the camera is positioned at the origin in view space.
-	vec4 viewing_direction_view_space = normalize( -fs_in.position_view_space ); 
-
 	vec3 diffuse_sample  = uniform_blinn_phong_material_data.has_texture_diffuse
-							? vec3( texture( uniform_diffuse_map_slot,  fs_in.tex_coords ) )
-							: uniform_blinn_phong_material_data.color_diffuse;
-	vec3 specular_sample = vec3( texture( uniform_specular_map_slot, fs_in.tex_coords ) );
+							   ? vec3( texture( uniform_diffuse_map_slot,  uvs ) )
+							   : uniform_blinn_phong_material_data.color_diffuse;
+	vec3 specular_sample = vec3( texture( uniform_specular_map_slot, uvs ) );
 
 	vec3 from_directional_light = _INTRINSIC_DIRECTIONAL_LIGHT_IS_ACTIVE * 
 									CalculateColorFromDirectionalLight( normal_sample_view_space, viewing_direction_view_space,
@@ -229,7 +252,7 @@ void main()
 	vec3 reflected         = reflect( fs_in.position_view_space, normal_sample_view_space ).xyz;
 	vec4 reflection_sample = vec4( texture( uniform_texture_skybox_slot, reflected.xyz ).rgb, 1.0 );
 
-	vec4 reflection_map_sample = vec4( texture( uniform_reflection_map_slot, fs_in.tex_coords ).rgb, 1.0 );
+	vec4 reflection_map_sample = vec4( texture( uniform_reflection_map_slot, uvs ).rgb, 1.0 );
 
 	out_color = mix( out_color, ( 1.0 - reflection_map_sample.r ) * reflection_sample, uniform_reflectivity );
 #endif
