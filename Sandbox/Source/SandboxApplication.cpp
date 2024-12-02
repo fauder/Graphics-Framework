@@ -22,6 +22,8 @@
 #include "Engine/Math/Random.hpp"
 #include "Engine/Math/VectorConversion.hpp"
 
+#include "Engine/Asset/Shader/_Attributes.glsl"
+
 // Vendor Includes.
 #include <IconFontCppHeaders/IconsFontAwesome6.h>
 
@@ -99,8 +101,9 @@ void SandboxApplication::Initialize()
 	brickwall_normal_map   = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Normal) Map",  R"(Asset/Texture/brickwall_normal.jpg)",
 																							Engine::Texture::ImportSettings
 																							{
-																								.wrap_u = Engine::Texture::Wrapping::Repeat,
-																								.wrap_v = Engine::Texture::Wrapping::Repeat
+																								.wrap_u  = Engine::Texture::Wrapping::Repeat,
+																								.wrap_v  = Engine::Texture::Wrapping::Repeat,
+																								.is_sRGB = false,
 																							} );
 
 	transparent_window_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window", R"(Asset/Texture/blending_transparent_window.png)" );
@@ -214,11 +217,12 @@ void SandboxApplication::Initialize()
 	window_transform_array[ 4 ].SetTranslation( Vector3(  0.5f,	5.0f, -0.6f  ) );
 
 /* Vertex/Index Data: */
-	cube_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube::Positions.cend() ),
+	cube_mesh = Engine::Mesh( std::vector< Vector3		 >( Engine::Primitive::Indexed::Cube::Positions.cbegin(),	Engine::Primitive::Indexed::Cube::Positions.cend() ),
 							  "Cube",
-							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube::Normals.cbegin(), Engine::Primitive::NonIndexed::Cube::Normals.cend() ),
-							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Cube::UVs.cbegin(), Engine::Primitive::NonIndexed::Cube::UVs.cend() ),
-							  { /* No indices. */ } );
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Cube::Normals.cbegin(),		Engine::Primitive::Indexed::Cube::Normals.cend() ),
+							  std::vector< Vector2		 >( Engine::Primitive::Indexed::Cube::UVs.cbegin(),			Engine::Primitive::Indexed::Cube::UVs.cend() ),
+							  std::vector< std::uint32_t >( Engine::Primitive::Indexed::Cube::Indices.cbegin(),		Engine::Primitive::Indexed::Cube::Indices.cend() ),
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Cube::Tangents.cbegin(),	Engine::Primitive::Indexed::Cube::Tangents.cend() ) );
 
 	cube_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Cube_FullScreen::Positions.cend() ),
 										 "Cube (Fullscreen)",
@@ -226,17 +230,18 @@ void SandboxApplication::Initialize()
 										 { /* No uvs.		*/ },
 										 { /* No indices.	*/ } );
 
-	quad_mesh_uvs_only = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
+	quad_mesh_uvs_only = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::Indexed::Quad::Positions.cbegin(), Engine::Primitive::Indexed::Quad::Positions.cend() ),
 									   "Quad (UVs Only)",
 									   { /* No normals. */ },
-									   std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
-									   { /* No indices. */ } );
+									   std::vector< Vector2 >( Engine::Primitive::Indexed::Quad::UVs.cbegin(), Engine::Primitive::Indexed::Quad::UVs.cend() ),
+									   std::vector< std::uint32_t >( Engine::Primitive::Indexed::Quad::Indices.cbegin(), Engine::Primitive::Indexed::Quad::Indices.cend() ) );
 
-	quad_mesh = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad::Positions.cend() ),
+	quad_mesh = Engine::Mesh( std::vector< Vector3		 >( Engine::Primitive::Indexed::Quad::Positions.cbegin(),	Engine::Primitive::Indexed::Quad::Positions.cend() ),
 							  "Quad",
-							  std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad::Normals.cbegin(), Engine::Primitive::NonIndexed::Quad::Normals.cend() ),
-							  std::vector< Vector2 >( Engine::Primitive::NonIndexed::Quad::UVs.cbegin(), Engine::Primitive::NonIndexed::Quad::UVs.cend() ),
-							  { /* No indices. */ } );
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Quad::Normals.cbegin(),		Engine::Primitive::Indexed::Quad::Normals.cend() ),
+							  std::vector< Vector2		 >( Engine::Primitive::Indexed::Quad::UVs.cbegin(),			Engine::Primitive::Indexed::Quad::UVs.cend() ),
+							  std::vector< std::uint32_t >( Engine::Primitive::Indexed::Quad::Indices.cbegin(),		Engine::Primitive::Indexed::Quad::Indices.cend() ),
+							  std::vector< Vector3		 >( Engine::Primitive::Indexed::Quad::Tangents.cbegin(),	Engine::Primitive::Indexed::Quad::Tangents.cend() ) );
 
 	quad_mesh_fullscreen = Engine::Mesh( std::vector< Vector3 >( Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cbegin(), Engine::Primitive::NonIndexed::Quad_FullScreen::Positions.cend() ),
 										 "Quad (FullScreen)",
@@ -246,7 +251,7 @@ void SandboxApplication::Initialize()
 
 	cube_mesh_instanced = Engine::Mesh( cube_mesh,
 										{
-											Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+											Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4, INSTANCED_ATTRIBUTE_START }	// Transform.
 										},
 										reinterpret_cast< std::vector< float >& >( cube_instance_data_array ),
 										CUBE_COUNT,
@@ -254,7 +259,7 @@ void SandboxApplication::Initialize()
 
 	cube_reflected_mesh_instanced = Engine::Mesh( cube_mesh,
 												  {
-													  Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }	// Transform.
+													  Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4, INSTANCED_ATTRIBUTE_START }	// Transform.
 												  },
 												  reinterpret_cast< std::vector< float >& >( cube_reflected_instance_data_array ),
 												  CUBE_REFLECTED_COUNT,
@@ -262,8 +267,8 @@ void SandboxApplication::Initialize()
 
 	cube_mesh_instanced_with_color = Engine::Mesh( cube_mesh,
 												   {
-													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4 }, // Transform.
-													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_VEC4 }	// Color.
+													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_MAT4, INSTANCED_ATTRIBUTE_START }, // Transform.
+													   Engine::VertexInstanceAttribute{ 1, GL_FLOAT_VEC4, INSTANCED_ATTRIBUTE_START + 4 }	// Color.
 												   },
 												   reinterpret_cast< std::vector< float >& >( light_source_instance_data_array ),
 												   LIGHT_POINT_COUNT,
@@ -963,9 +968,9 @@ void SandboxApplication::ResetLightingData()
 		.is_enabled = true,
 		.data =
 		{
-			.ambient  = Engine::Color3{  0.33f,  0.33f,  0.33f },
-			.diffuse  = Engine::Color3{  0.4f,   0.4f,   0.4f  },
-			.specular = Engine::Color3{  0.5f,   0.5f,   0.5f  },
+			.ambient  = Engine::Color3{ 0.1f, 0.1f, 0.1f },
+			.diffuse  = Engine::Color3{ 0.4f, 0.4f, 0.4f },
+			.specular = Engine::Color3{ 0.5f, 0.5f, 0.5f },
 		},
 		.transform = &light_directional_transform
 	};
@@ -1025,6 +1030,7 @@ void SandboxApplication::ResetMaterialData()
 	cube_reflected_material = Engine::Material( "Cube (Reflected)", shader_blinn_phong_skybox_reflection_shadowed_instanced );
 	cube_reflected_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_reflected_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
+	cube_reflected_material.SetTexture( "uniform_normal_map_slot", container_texture_normal_map );
 	cube_reflected_material.SetTexture( "uniform_reflection_map_slot", container_texture_specular_map );
 	cube_reflected_material.SetTexture( "uniform_texture_skybox_slot", skybox_texture );
 	cube_reflected_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
@@ -1033,6 +1039,7 @@ void SandboxApplication::ResetMaterialData()
 	cube_material = Engine::Material( "Cube", shader_blinn_phong_shadowed_instanced );
 	cube_material.SetTexture( "uniform_diffuse_map_slot", container_texture_diffuse_map );
 	cube_material.SetTexture( "uniform_specular_map_slot", container_texture_specular_map );
+	cube_material.SetTexture( "uniform_normal_map_slot", container_texture_normal_map );
 	cube_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	ground_material = Engine::Material( "Ground", shader_blinn_phong_shadowed );
@@ -1176,8 +1183,6 @@ bool SandboxApplication::ReloadModel( ModelInfo& model_info_to_be_loaded, const 
 													 Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED,
 													 nullptr,
 													 true, /* has shadows. */
-													 /* Diffuse texture: */ nullptr /* => Use Albedo colors in-model. */,
-													 /* Specular texture: */ checker_pattern_texture,
 													 Vector4{ 1.0f, 1.0f, 0.0f, 0.0f } );
 
 			for( auto& renderable_to_add : model_instance_to_load_into.Renderables() )

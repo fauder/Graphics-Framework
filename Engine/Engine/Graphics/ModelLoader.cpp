@@ -55,6 +55,7 @@ namespace Engine
             std::size_t material_index      = -1;
 
             Texture* sub_mesh_albedo_texture = nullptr;
+            Texture* sub_mesh_normal_texture = nullptr;
             std::optional< Color3 > sub_mesh_albedo_color;
 
 			auto* position_iterator = submesh_iterator->findAttribute( "POSITION" );
@@ -64,9 +65,9 @@ namespace Engine
             {
                 material_index       = submesh_iterator->materialIndex.value();
                 const auto& material = gltf_asset.materials[ submesh_iterator->materialIndex.value() ];
-
-                const auto& base_color_texture_info = material.pbrData.baseColorTexture;
-                if( base_color_texture_info.has_value() )
+                
+                if( const auto& base_color_texture_info = material.pbrData.baseColorTexture; 
+                    base_color_texture_info.has_value() )
                 {
                     const auto& fastgltf_texture = gltf_asset.textures[ base_color_texture_info->textureIndex ];
                     if( !fastgltf_texture.imageIndex.has_value() )
@@ -84,6 +85,17 @@ namespace Engine
                 {
                     // Use Albedo color.
                     sub_mesh_albedo_color = reinterpret_cast< const Color3& /* Omit alpha */ >( material.pbrData.baseColorFactor );
+                }
+
+                if( const auto& normal_texture_info = material.normalTexture;
+                    normal_texture_info.has_value() )
+                {
+                    const auto& fastgltf_texture = gltf_asset.textures[ normal_texture_info->textureIndex ];
+                    if( !fastgltf_texture.imageIndex.has_value() )
+                        return false;
+
+                    sub_mesh_normal_texture = textures[ fastgltf_texture.imageIndex.value() ];
+                    sub_mesh_normal_texture->SetName( ( "Normal (" + gltf_mesh.name + ")" ).c_str() );
                 }
             }
 
@@ -115,7 +127,8 @@ namespace Engine
 
             std::vector< Vector3 > normals;
 
-			if( auto* normal_iterator = submesh_iterator->findAttribute( "NORMAL" ); normal_iterator )
+			if( auto* normal_iterator = submesh_iterator->findAttribute( "NORMAL" );
+                normal_iterator != submesh_iterator->attributes.end() )
             {
                 const auto& normal_accessor = gltf_asset.accessors[ normal_iterator->accessorIndex ];
                 if( !normal_accessor.bufferViewIndex.has_value() )
@@ -136,7 +149,8 @@ namespace Engine
 
             std::vector< Vector2 > uvs_0;
 
-            if( auto* uvs_0_iterator = submesh_iterator->findAttribute( "TEXCOORD_0" ); uvs_0_iterator )
+            if( auto* uvs_0_iterator = submesh_iterator->findAttribute( "TEXCOORD_0" );
+                uvs_0_iterator != submesh_iterator->attributes.end() )
             {
                 const auto& uvs_0_accessor = gltf_asset.accessors[ uvs_0_iterator->accessorIndex ];
                 if( !uvs_0_accessor.bufferViewIndex.has_value() )
@@ -145,6 +159,28 @@ namespace Engine
                 uvs_0.resize( uvs_0_accessor.count, ZERO_INITIALIZATION );
 
                 fastgltf::copyFromAccessor< Vector2 >( gltf_asset, uvs_0_accessor, uvs_0.data() );
+            }
+
+            /*
+             * Tangents:
+             */
+
+            std::vector< Vector3 > tangents;
+
+			if( auto* tangent_iterator = submesh_iterator->findAttribute( "TANGENT" );
+                tangent_iterator != submesh_iterator->attributes.cend() )
+            {
+                const auto& tangent_accessor = gltf_asset.accessors[ tangent_iterator->accessorIndex ];
+                if( !tangent_accessor.bufferViewIndex.has_value() )
+                    continue;
+
+                tangents.resize( tangent_accessor.count, ZERO_INITIALIZATION );
+
+                fastgltf::iterateAccessorWithIndex< Vector4 >( gltf_asset, tangent_accessor,
+														   [ & ]( Vector4 tangent, std::size_t index )
+														   {
+                                                    	   	   tangents[ index ] = tangent.XYZ() * coordinate_system_transform;
+														   } );
             }
 
             /*
@@ -173,12 +209,48 @@ namespace Engine
                 return needs_swap * swapped_index + ( 1 - needs_swap ) * index;
             };
 
-            //fastgltf::copyFromAccessor< std::uint32_t >( gltf_asset, index_accessor, indices_u32.data() );
             fastgltf::iterateAccessorWithIndex< std::uint32_t >( gltf_asset, index_accessor,
                                                                  [ & ]( std::uint32_t actual_index, std::size_t array_index )
                                                                  {
                                                                      indices_u32[ EffectiveIndex( array_index ) ] = actual_index;
                                                                  } );
+            
+            /* Calculate tangents if the model did not have them. */
+            if( tangents.empty() )
+            {
+                const auto index_count = indices_u32.size();
+                const auto size = uvs_0.size();
+                tangents.reserve( size );
+                for( auto base_index = 0; base_index < index_count; base_index += 3 )
+                {
+                    const auto index_0 = indices_u32[ base_index     ];
+                    const auto index_1 = indices_u32[ base_index + 1 ];
+                    const auto index_2 = indices_u32[ base_index + 2 ];
+
+                    const auto position_0 = positions[ index_0 ];
+                    const auto position_1 = positions[ index_1 ];
+                    const auto position_2 = positions[ index_2 ];
+
+                    const auto uv_0 = uvs_0[ index_0 ];
+                    const auto uv_1 = uvs_0[ index_1 ];
+                    const auto uv_2 = uvs_0[ index_2 ];
+
+                    const auto edge_1 = position_1 - position_0;
+                    const auto edge_2 = position_2 - position_0;
+
+                    const auto delta_uv_1 = uv_1 - uv_0;
+                    const auto delta_uv_2 = uv_2 - uv_0;
+
+                    const auto delta_v_1 = delta_uv_1.Y();
+                    const auto delta_v_2 = delta_uv_2.Y();
+
+                    const auto f = 1.0f / ( delta_uv_1.X() * delta_v_2 - delta_uv_2.X() * delta_v_1 );
+
+                    tangents.emplace_back( f * ( delta_v_2 * edge_1.X() - delta_v_1 * edge_2.X() ),
+                                           f * ( delta_v_2 * edge_1.Y() - delta_v_1 * edge_2.Y() ),
+                                           f * ( delta_v_2 * edge_1.Z() - delta_v_1 * edge_2.Z() ) );
+                }
+            }
 
             std::string sub_mesh_name( mesh_group_to_load.name + "_" + std::to_string( std::distance( gltf_mesh.primitives.begin(), submesh_iterator ) ) );
 
@@ -187,9 +259,11 @@ namespace Engine
 														meshes.emplace_back( Mesh( std::move( positions ),
 																				   sub_mesh_name,
 																				   std::move( normals ),
-																				   std::move( uvs_0 ),
-																				   std::move( indices_u32 ) ) ),
+                                                                                   std::move( uvs_0 ),
+                                                                                   std::move( indices_u32 ),
+                                                                                   std::move( tangents ) ) ),
 														sub_mesh_albedo_texture,
+                                                        sub_mesh_normal_texture,
                                                         std::move( sub_mesh_albedo_color ) );
 		}
 
@@ -197,14 +271,8 @@ namespace Engine
     }
 
     bool LoadTexture( const fastgltf::Asset& gltf_asset, const fastgltf::Image& gltf_image,
-                      Texture*& texture_to_load )
+                      Texture*& texture_to_load, const Engine::Texture::ImportSettings& import_settings )
     {
-        Engine::Texture::ImportSettings texture_import_settings;
-        texture_import_settings.wrap_u = Texture::Wrapping::MirroredRepeat;
-        texture_import_settings.wrap_v = Texture::Wrapping::MirroredRepeat;
-
-        // TODO: Import sampler settings and remove the hard-coded wrapping parameters above.
-
         std::visit( fastgltf::visitor
                     {
                         []( const auto& arg ) {},
@@ -215,12 +283,12 @@ namespace Engine
 
                             const std::string path( file_path.uri.path().begin(), file_path.uri.path().end() );
 
-                            texture_to_load = AssetDatabase< Texture >::CreateAssetFromFile( std::string( gltf_image.name ), path, texture_import_settings );
+                            texture_to_load = AssetDatabase< Texture >::CreateAssetFromFile( std::string( gltf_image.name ), path, import_settings );
                         },
                         [ & ]( const fastgltf::sources::Array& vector )
                         {
                             texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ), vector.bytes.data(), static_cast< int >( vector.bytes.size() ),
-																					           texture_import_settings );
+																					           false, import_settings );
                         },
                         [ & ]( const fastgltf::sources::BufferView& view )
                         {
@@ -239,7 +307,7 @@ namespace Engine
 												texture_to_load = AssetDatabase< Texture >::CreateAssetFromMemory( std::string( gltf_image.name ),
 																										           vector.bytes.data() + buffer_view.byteOffset,
 																										           static_cast< int >( buffer_view.byteLength ),
-																										           texture_import_settings );
+																										           false, import_settings );
                                             }
                                         }, buffer.data );
                         }
@@ -299,7 +367,6 @@ namespace Engine
 
             constexpr auto gltf_options =
                 fastgltf::Options::DontRequireValidAssetMember |
-                fastgltf::Options::AllowDouble |
                 fastgltf::Options::LoadExternalBuffers |
                 fastgltf::Options::LoadExternalImages |
                 fastgltf::Options::GenerateMeshIndices;
@@ -314,7 +381,7 @@ namespace Engine
             std::filesystem::path path( file_path );
 
             fastgltf::Expected< fastgltf::Asset > maybe_gltf_asset( fastgltf::Error::None );
-
+             
             if( const auto gltf_type = fastgltf::determineGltfFileType( gltfFile.get() );
                 gltf_type == fastgltf::GltfType::glTF )
                 maybe_gltf_asset = parser.loadGltf( gltfFile.get(), path.parent_path(), gltf_options );
@@ -334,10 +401,53 @@ namespace Engine
         
         model.textures.reserve( gltf_asset.images.size() );
 
-		for( auto& gltf_image : gltf_asset.images )
-            if( not LoadTexture( gltf_asset, gltf_image, 
-                                 model.textures.emplace_back() ) )
+		for( auto& gltf_texture : gltf_asset.textures )
+        {
+            const auto& gltf_image = gltf_asset.images[ *gltf_texture.imageIndex ];
+
+            Texture::ImportSettings import_settings
+            {
+                .wrap_u          = Texture::Wrapping::Repeat,
+                .wrap_v          = Texture::Wrapping::Repeat,
+                /* gltf spec dictates that V coordinates increase in downward direction (i.e., UV origin is top-left).
+                 * This is compatible with how stb interprets/treats uvs, so no need to flip uvs coming from gltf. */
+                .flip_vertically = false
+            };
+
+            if( gltf_texture.samplerIndex.has_value() )
+            {
+                const auto& sampler = gltf_asset.samplers[ *gltf_texture.samplerIndex ];
+                import_settings.wrap_u = Texture::Wrapping( sampler.wrapS );
+                import_settings.wrap_v = Texture::Wrapping( sampler.wrapT );
+                if( sampler.minFilter.has_value() )
+                    import_settings.min_filter = Texture::Filtering( *sampler.minFilter );
+                if( sampler.magFilter.has_value() )
+                    import_settings.mag_filter = Texture::Filtering( *sampler.magFilter );
+
+            }
+
+            /* Turn off sRGB status for linear textures: */
+            for( auto& material : gltf_asset.materials )
+            {
+                if( ( material.normalTexture                            && material.normalTexture->textureIndex == *gltf_texture.imageIndex ) ||
+                    ( material.packedNormalMetallicRoughnessTexture     && material.packedNormalMetallicRoughnessTexture->textureIndex == *gltf_texture.imageIndex ) ||
+                    ( material.occlusionTexture                         && material.occlusionTexture->textureIndex == *gltf_texture.imageIndex ) ||
+                    ( material.packedOcclusionRoughnessMetallicTextures &&
+					  ( ( material.packedOcclusionRoughnessMetallicTextures->normalTexture &&
+						  material.packedOcclusionRoughnessMetallicTextures->normalTexture->textureIndex == *gltf_texture.imageIndex ) ||
+						( material.packedOcclusionRoughnessMetallicTextures->occlusionRoughnessMetallicTexture &&
+						  material.packedOcclusionRoughnessMetallicTextures->occlusionRoughnessMetallicTexture->textureIndex == *gltf_texture.imageIndex ) ||
+						( material.packedOcclusionRoughnessMetallicTextures->roughnessMetallicOcclusionTexture &&
+						  material.packedOcclusionRoughnessMetallicTextures->roughnessMetallicOcclusionTexture->textureIndex == *gltf_texture.imageIndex ) ) ) )
+                {
+                    import_settings.is_sRGB = false;
+                }
+            }
+
+            if( not LoadTexture( gltf_asset, gltf_image,
+                                 model.textures.emplace_back(), import_settings ) )
                 return std::nullopt;
+        }
 
         /*
          * Mapping between the glTF & this engine: 

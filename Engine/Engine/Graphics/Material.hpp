@@ -86,7 +86,7 @@ namespace Engine
 				ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": uniform (array) ")" + std::string( uniform_name ) + R"(" does not exist!)" );
 				return;
 			}
-		#endif // _DEBUG
+#endif // _DEBUG
 
 			const auto& uniform_info = GetUniformInformation( uniform_name );
 

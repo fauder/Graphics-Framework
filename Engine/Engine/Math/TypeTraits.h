@@ -5,6 +5,7 @@
 
 // std includes.
 #include <concepts>
+#include <limits>
 
 namespace Engine
 {
@@ -15,6 +16,9 @@ namespace Engine
 	{
 		TypeTraits() = delete;
 
+		static constexpr float Min()				{ return (std::numeric_limits< float >::min)(); }
+		static constexpr float Max()				{ return (std::numeric_limits< float >::max)(); }
+		static constexpr float Infinity()			{ return std::numeric_limits< float >::infinity(); }
 		static constexpr float Epsilon()			{ return 10e-5f;			}
 		static constexpr float TwoEpsilon()			{ return Epsilon() * 2.0f;	}
 		static constexpr float OneMinusEpsilon()	{ return 1.0f - Epsilon();	}
@@ -25,6 +29,9 @@ namespace Engine
 	{
 		TypeTraits() = delete;
 
+		static constexpr double Min()				{ return (std::numeric_limits< double >::min)(); }
+		static constexpr double Max()				{ return (std::numeric_limits< double >::max)(); }
+		static constexpr double Infinity()			{ return std::numeric_limits< double >::infinity(); }
 		static constexpr double Epsilon()			{ return 10e-15;			}
 		static constexpr double TwoEpsilon()		{ return Epsilon() * 2.0;	}
 		static constexpr double OneMinusEpsilon()	{ return 1.0 - Epsilon();	}

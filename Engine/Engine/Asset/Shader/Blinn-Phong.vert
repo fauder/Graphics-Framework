@@ -1,26 +1,31 @@
 #version 460 core
 #extension GL_ARB_shading_language_include : require
 
+#include "_Attributes.glsl"
 #include "_Intrinsic_Lighting.glsl"
 #include "_Intrinsic_Other.glsl"
 
 #pragma feature INSTANCING_ENABLED
 #pragma feature SHADOWS_ENABLED
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 tex_coords;
+POSITION  vec3 position;
+NORMAL    vec3 normal;
+TEXCOORDS vec2 tex_coords;
+TANGENT   vec3 tangent;
 #ifdef INSTANCING_ENABLED
-layout (location = 3) in mat4 world_transform;
+INSTANCE_WORLD_TRANSFORM mat4 world_transform;
 #endif
 
 out VS_To_FS
 {
-    vec4 varying_position_view_space;
-    vec4 varying_normal_view_space;
-    vec2 varying_tex_coords;
+    vec4 position_view_space;
+    vec4 surface_normal_view_space;
+    vec2 tex_coords;
+
+    mat3x3 tangent_to_view_space_transformation;
+
 #ifdef SHADOWS_ENABLED
-    vec4 varying_position_light_directional_clip_space;
+    vec4 position_light_directional_clip_space;
 #endif
 } vs_out;
 
@@ -42,15 +47,29 @@ void main()
 
 #ifdef SHADOWS_ENABLED
     #ifdef INSTANCING_ENABLED
-        vs_out.varying_position_light_directional_clip_space = vec4( position, 1.0 ) * world_transform * _INTRINSIC_DIRECTIONAL_LIGHT_VIEW_PROJECTION_TRANSFORM;
+        vs_out.position_light_directional_clip_space = vec4( position, 1.0 ) * world_transform * _INTRINSIC_DIRECTIONAL_LIGHT_VIEW_PROJECTION_TRANSFORM;
     #else
-        vs_out.varying_position_light_directional_clip_space = vec4( position, 1.0 ) * uniform_transform_world * _INTRINSIC_DIRECTIONAL_LIGHT_VIEW_PROJECTION_TRANSFORM;
+        vs_out.position_light_directional_clip_space = vec4( position, 1.0 ) * uniform_transform_world * _INTRINSIC_DIRECTIONAL_LIGHT_VIEW_PROJECTION_TRANSFORM;
     #endif
 #endif
 
-    vs_out.varying_position_view_space = vec4( position, 1.0 ) * world_view_transform;
-    vs_out.varying_normal_view_space   = vec4( normalize( normal * world_view_transform_for_normals ), 0.0 );
-    vs_out.varying_tex_coords          = tex_coords * uniform_texture_scale_and_offset.xy + uniform_texture_scale_and_offset.zw;
-    
-    gl_Position = vs_out.varying_position_view_space * _INTRINSIC_TRANSFORM_PROJECTION;
+    vs_out.position_view_space       = vec4( position, 1.0 ) * world_view_transform;
+    vs_out.surface_normal_view_space = vec4( normalize( normal * world_view_transform_for_normals ), 0.0 );
+    vs_out.tex_coords                = tex_coords * uniform_texture_scale_and_offset.xy + uniform_texture_scale_and_offset.zw;
+
+    /* Tangent space is right handed (tangent points in the u direction, bitangent points in the v direction.
+     * Right-handed cross product of these produce the normal.
+     * Therefore, bitangent = normal x tangent. */
+
+    /* Normal    => */ vs_out.tangent_to_view_space_transformation[ 2 ] = vs_out.surface_normal_view_space.xyz;
+    /* Tangent   => */ vs_out.tangent_to_view_space_transformation[ 0 ] = normalize( tangent * mat3x3( world_view_transform ) );
+
+    /* Gram-Schmidt re-orthogonalization: */
+    vs_out.tangent_to_view_space_transformation[ 0 ] = normalize( vs_out.tangent_to_view_space_transformation[ 0 ] - 
+                                                                  dot( vs_out.tangent_to_view_space_transformation[ 0 ], vs_out.surface_normal_view_space.xyz ) *
+                                                                  vs_out.surface_normal_view_space.xyz );
+
+    /* Bitangent => */ vs_out.tangent_to_view_space_transformation[ 1 ] = normalize( cross( vs_out.surface_normal_view_space.xyz, vs_out.tangent_to_view_space_transformation[ 0 ] ) );
+
+    gl_Position = vs_out.position_view_space * _INTRINSIC_TRANSFORM_PROJECTION;
 }

@@ -22,7 +22,6 @@ public:
 				   const Engine::RenderQueue::ID queue_id,
 				   Engine::Material* material,
 				   const bool has_shadows = false,
-				   const Engine::Texture* diffuse_texture = nullptr, const Engine::Texture* specular_texture = nullptr,
 				   const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 	DELETE_COPY_CONSTRUCTORS( ModelInstance );
@@ -30,10 +29,7 @@ public:
 
 	~ModelInstance();
 
-	void SetMaterialData( Engine::Shader* const shader, 
-						  const Engine::Texture* diffuse_texture = nullptr,
-						  const Engine::Texture* specular_texture = nullptr,
-						  const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+	void SetMaterialData( Engine::Shader* const shader, const Vector4 texture_scale_and_offset = Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 
 /* Queries: */
 	inline		 std::vector< Engine::Renderable >& Renderables()			{ return node_renderable_array; }

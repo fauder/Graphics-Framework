@@ -1,11 +1,12 @@
 #version 460 core
 #extension GL_ARB_shading_language_include : require
 
+#include "_Attributes.glsl"
 #include "_Intrinsic_Other.glsl"
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
-layout (location = 2) in vec2 tex_coords;
+POSITION    vec3 position;
+NORMAL      vec3 normal;
+TEXCOORDS   vec2 tex_coords;
 
 out vec4 varying_position_view_space;
 out vec4 varying_normal_view_space;
