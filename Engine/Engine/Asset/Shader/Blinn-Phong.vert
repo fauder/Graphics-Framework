@@ -69,7 +69,7 @@ void main()
                                                                   dot( vs_out.tangent_to_view_space_transformation[ 0 ], vs_out.surface_normal_view_space.xyz ) *
                                                                   vs_out.surface_normal_view_space.xyz );
 
-    /* Bitangent => */ vs_out.tangent_to_view_space_transformation[ 1 ] = normalize( cross( vs_out.surface_normal_view_space.xyz, vs_out.tangent_to_view_space_transformation[ 0 ] ) );
+    /* Bitangent => */ vs_out.tangent_to_view_space_transformation[ 1 ] = normalize( cross( vs_out.tangent_to_view_space_transformation[ 0 ], vs_out.surface_normal_view_space.xyz ) );
 
     gl_Position = vs_out.position_view_space * _INTRINSIC_TRANSFORM_PROJECTION;
 }
