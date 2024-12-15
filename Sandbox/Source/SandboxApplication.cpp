@@ -88,23 +88,29 @@ void SandboxApplication::Initialize()
 																						.min_filter      = Engine::Texture::Filtering::Linear,
 																						.flip_vertically = false,
 																					} );
-
+		
 	container_texture_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Diffuse) Map",	R"(Asset/Texture/container2.png)" );
 	container_texture_specular_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Container (Specular) Map", R"(Asset/Texture/container2_specular.png)" );
 
-	brickwall_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Diffuse) Map", R"(Asset/Texture/brickwall.jpg)",
+	brickwall_diffuse_map  = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Diffuse) Map", R"(Asset/Texture/bricks2.jpg)",
 																							Engine::Texture::ImportSettings
 																							{
 																								.wrap_u = Engine::Texture::Wrapping::Repeat,
 																								.wrap_v = Engine::Texture::Wrapping::Repeat
 																							} );
-	brickwall_normal_map   = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Normal) Map",  R"(Asset/Texture/brickwall_normal.jpg)",
+	brickwall_normal_map   = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Normal) Map",  R"(Asset/Texture/bricks2_normal.jpg)",
 																							Engine::Texture::ImportSettings
 																							{
 																								.wrap_u  = Engine::Texture::Wrapping::Repeat,
 																								.wrap_v  = Engine::Texture::Wrapping::Repeat,
 																								.is_sRGB = false,
 																							} );
+
+	brickwall_displacement_map = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Brickwall (Displacement) Map", R"(Asset/Texture/bricks2_disp.jpg)",
+																								Engine::Texture::ImportSettings
+																								{
+																									.is_sRGB = false,
+																								} );
 
 	transparent_window_texture = Engine::AssetDatabase< Engine::Texture >::CreateAssetFromFile( "Transparent Window", R"(Asset/Texture/blending_transparent_window.png)" );
 	
@@ -168,6 +174,8 @@ void SandboxApplication::Initialize()
 		.SetScaling( 30.0f, 15.0f, 1.0f )
 		.SetRotation( 180.0_deg, 0.0_deg, 0.0_deg )
 		.SetTranslation( 0.0f, 7.5f, -30.0f );
+
+	cube_parallax_transform.SetTranslation( -1.0f, 0.5f, -2.0f );
 
 	/* Keep the first 10 the same as the ones from LOGL: */
 	for( auto cube_index = 0; cube_index < CUBE_REFLECTED_COUNT; cube_index++ )
@@ -324,6 +332,9 @@ void SandboxApplication::Initialize()
 										  nullptr /* => No Transform here, as we will provide the Transforms as instance data. */, true /* => has shadows. */ );
 	renderer.AddRenderable( &cube_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
 
+	cube_parallax_renderable = Engine::Renderable( &cube_mesh, &wall_material, &cube_parallax_transform, true /* => has shadows. */ );
+	renderer.AddRenderable( &cube_parallax_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
+
 	cube_reflected_renderable = Engine::Renderable( &cube_reflected_mesh_instanced, &cube_reflected_material,
 													nullptr /* => No Transform here, as we will provide the Transforms as instance data. */, true /* => has shadows. */ );
 	renderer.AddRenderable( &cube_reflected_renderable, Engine::Renderer::QUEUE_ID_GEOMETRY_OUTLINED );
@@ -454,6 +465,23 @@ void SandboxApplication::Update()
 	}
 
 	cube_mesh_instanced_with_color.UpdateInstanceData( light_source_instance_data_array.data() );
+
+	/* Instanced cube's transform: */
+	{
+		Radians old_heading, old_pitch, old_bank;
+		Engine::Math::QuaternionToEuler( cube_transform_array[ 0 ].GetRotation(), old_heading, old_pitch, old_bank );
+		cube_transform_array[ 0 ].SetRotation( old_heading + angle_increment * 0.0035f, old_pitch, old_bank );
+		cube_instance_data_array[ 0 ] = cube_transform_array[ 0 ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
+		
+		cube_mesh_instanced.UpdateInstanceData( cube_instance_data_array.data() );
+	}
+
+	/* Parallax cube's transform: */
+	{
+		Radians old_heading, old_pitch, old_bank;
+		Engine::Math::QuaternionToEuler( cube_parallax_transform.GetRotation(), old_heading, old_pitch, old_bank );
+		cube_parallax_transform.SetRotation( old_heading + angle_increment * 0.0035f, old_pitch, old_bank );
+	}
 
 	/* Camera transform: */
 	if( camera_animation_is_enabled )
@@ -1051,13 +1079,16 @@ void SandboxApplication::ResetMaterialData()
 	Vector4 ground_texture_scale_and_offset( ground_quad_scale.X(), ground_quad_scale.Y() /* Offset is 0 so no need to set it explicitly. */ );
 	ground_material.Set( "uniform_texture_scale_and_offset", ground_texture_scale_and_offset );
 
-	wall_material = Engine::Material( "Wall", shader_blinn_phong_shadowed );
+	wall_material = Engine::Material( "Wall", shader_blinn_phong_shadowed_parallax );
 	wall_material.SetTexture( "uniform_diffuse_map_slot", brickwall_diffuse_map );
 	wall_material.SetTexture( "uniform_specular_map_slot", checker_pattern_texture );
 	wall_material.SetTexture( "uniform_normal_map_slot", brickwall_normal_map );
+	wall_material.SetTexture( "uniform_parallax_height_map_slot", brickwall_displacement_map );
 	const auto& front_wall_quad_scale( wall_front_transform.GetScaling().XY() / 10.0f );
 	Vector4 front_wall_texture_scale_and_offset( front_wall_quad_scale /* Offset is 0 so no need to set it explicitly. */ );
 	wall_material.Set( "uniform_texture_scale_and_offset", front_wall_texture_scale_and_offset );
+	wall_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
+	wall_material.Set( "uniform_parallax_height_scale", 0.1f );
 
 	window_material = Engine::Material( "Transparent Window", shader_basic_textured );
 	window_material.SetTexture( "uniform_texture_slot", transparent_window_texture );

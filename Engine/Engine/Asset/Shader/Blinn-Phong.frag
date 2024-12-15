@@ -16,6 +16,10 @@ in VS_To_FS
 
     mat3x3 tangent_to_view_space_transformation;
 
+#ifdef PARALLAX_MAPPING_ENABLED
+    vec3 viewing_direction_tangent_space;
+#endif
+
 #ifdef SHADOWS_ENABLED
     vec4 position_light_directional_clip_space;
 #endif
@@ -196,10 +200,10 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 }
 
 #ifdef PARALLAX_MAPPING_ENABLED
-vec2 ParallaxMappedTextureCoordinates( vec2 original_texture_coordinates, vec3 view_direction_tangent_space )
+vec2 ParallaxMappedTextureCoordinates( vec2 original_texture_coordinates, vec3 viewing_direction_tangent_space )
 {
 	float height_sample = texture( uniform_parallax_height_map_slot, original_texture_coordinates ).r;
-	vec2 p = view_direction_tangent_space.xy / view_direction_tangent_space.z * height_sample * uniform_parallax_height_scale;
+	vec2 p = viewing_direction_tangent_space.xy / viewing_direction_tangent_space.z * ( height_sample * uniform_parallax_height_scale );
 	return original_texture_coordinates - p;
 }
 #endif
@@ -210,7 +214,8 @@ void main()
 	vec4 viewing_direction_view_space = normalize( -fs_in.position_view_space ); 
 
 #ifdef PARALLAX_MAPPING_ENABLED
-	vec2 uvs = ParallaxMappedTextureCoordinates( fs_in.tex_coords, normalize( fs_in.tangent_to_view_space_transformation * viewing_direction_view_space.xyz ) );
+	vec2 uvs = ParallaxMappedTextureCoordinates( fs_in.tex_coords, normalize( fs_in.viewing_direction_tangent_space ) );
+	
 #else
 	vec2 uvs = fs_in.tex_coords;
 #endif
@@ -219,13 +224,13 @@ void main()
 	 * tangent_to_view_space_transformation is constructed in the vertex shader part of this shader program => it is column-major.
 	 * That's why in the below line, the sampled tangent-space normal vector is pre-multiplied by the column-major tangent_to_view_space_transformation matrix. */
 
-	vec4 normal_sample_view_space = vec4( normalize( fs_in.tangent_to_view_space_transformation * ( texture( uniform_normal_map_slot, uvs ).xyz * 2.0f - 1.0f ) ),
+    vec4 normal_sample_view_space = vec4( normalize( fs_in.tangent_to_view_space_transformation * ( texture( uniform_normal_map_slot, uvs ).xyz * 2.0f - 1.0f ) ),
 										  0.0f );
 
 //	vec4 surface_normal_view_space = normalize( fs_in.surface_normal_view_space );
 
 	vec3 diffuse_sample  = uniform_blinn_phong_material_data.has_texture_diffuse
-							   ? vec3( texture( uniform_diffuse_map_slot,  uvs ) )
+							   ? vec3( texture( uniform_diffuse_map_slot, uvs ) )
 							   : uniform_blinn_phong_material_data.color_diffuse;
 	vec3 specular_sample = vec3( texture( uniform_specular_map_slot, uvs ) );
 

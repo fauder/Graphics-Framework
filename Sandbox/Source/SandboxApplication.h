@@ -90,6 +90,8 @@ private:
 	Engine::Renderable cube_renderable;
 	Engine::Renderable cube_renderable_outline;
 
+	Engine::Renderable cube_parallax_renderable;
+
 	Engine::Renderable cube_reflected_renderable;
 
 	Engine::Renderable* meteorite_renderable;
@@ -120,6 +122,7 @@ private:
 
 	Engine::Texture* brickwall_diffuse_map;
 	Engine::Texture* brickwall_normal_map;
+	Engine::Texture* brickwall_displacement_map;
 
 	Engine::Texture* half_gray_srgb_texture;
 
@@ -205,6 +208,7 @@ private:
 	std::vector< Engine::Transform > cube_transform_array;
 	std::vector< Engine::Transform > cube_reflected_transform_array;
 
+	Engine::Transform cube_parallax_transform;
 	Engine::Transform ground_transform;
 	Engine::Transform wall_front_transform;
 	Engine::Transform wall_left_transform;
