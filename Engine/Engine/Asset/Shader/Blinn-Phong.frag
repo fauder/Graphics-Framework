@@ -215,7 +215,8 @@ void main()
 
 #ifdef PARALLAX_MAPPING_ENABLED
 	vec2 uvs = ParallaxMappedTextureCoordinates( fs_in.tex_coords, normalize( fs_in.viewing_direction_tangent_space ) );
-	
+	if( uvs.x > 1.0 || uvs.y > 1.0 || uvs.x < 0.0 || uvs.y < 0.0 )
+		discard;
 #else
 	vec2 uvs = fs_in.tex_coords;
 #endif
