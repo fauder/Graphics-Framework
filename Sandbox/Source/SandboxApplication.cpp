@@ -470,7 +470,7 @@ void SandboxApplication::Update()
 	{
 		Radians old_heading, old_pitch, old_bank;
 		Engine::Math::QuaternionToEuler( cube_transform_array[ 0 ].GetRotation(), old_heading, old_pitch, old_bank );
-		cube_transform_array[ 0 ].SetRotation( old_heading + angle_increment * 0.0035f, old_pitch, old_bank );
+		cube_transform_array[ 0 ].SetRotation( old_heading + angle_increment * time_delta, old_pitch, old_bank );
 		cube_instance_data_array[ 0 ] = cube_transform_array[ 0 ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
 		
 		cube_mesh_instanced.UpdateInstanceData( cube_instance_data_array.data() );
@@ -480,7 +480,7 @@ void SandboxApplication::Update()
 	{
 		Radians old_heading, old_pitch, old_bank;
 		Engine::Math::QuaternionToEuler( cube_parallax_transform.GetRotation(), old_heading, old_pitch, old_bank );
-		cube_parallax_transform.SetRotation( old_heading + angle_increment * 0.0035f, old_pitch, old_bank );
+		cube_parallax_transform.SetRotation( old_heading + angle_increment * time_delta, old_pitch, old_bank );
 	}
 
 	/* Camera transform: */
