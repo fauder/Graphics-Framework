@@ -473,7 +473,8 @@ void SandboxApplication::Update()
 		cube_transform_array[ 0 ].SetRotation( old_heading + angle_increment * time_delta, old_pitch, old_bank );
 		cube_instance_data_array[ 0 ] = cube_transform_array[ 0 ].GetFinalMatrix().Transposed(); // Vertex attribute matrices' major can not be flipped in GLSL.
 		
-		cube_mesh_instanced.UpdateInstanceData( cube_instance_data_array.data() );
+		cube_mesh_instanced.UpdateInstanceData_Partial( std::span< std::byte, sizeof( Matrix4x4 ) >( reinterpret_cast< std::byte* >( &cube_instance_data_array[ 0 ] ), reinterpret_cast< std::byte* >( &cube_instance_data_array[ 1 ] ) ),
+														0 );
 	}
 
 	/* Parallax cube's transform: */
