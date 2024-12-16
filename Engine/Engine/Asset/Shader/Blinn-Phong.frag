@@ -55,8 +55,8 @@ uniform sampler2D uniform_shadow_map_slot;
 #ifdef PARALLAX_MAPPING_ENABLED
 uniform sampler2D uniform_parallax_height_map_slot;
 uniform float uniform_parallax_height_scale;
-uniform int  uniform_parallax_steep_level_count;
 uniform bool uniform_parallax_steep_enabled;
+uniform uvec2 uniform_parallax_steep_layer_count_min_max;
 #endif
 
 #ifdef SHADOWS_ENABLED
@@ -208,10 +208,14 @@ vec2 ParallaxMappedTextureCoordinates( vec2 original_texture_coordinates, vec3 v
 
 	if( uniform_parallax_steep_enabled )
 	{
-		const float layer_depth = 1.0f / float( uniform_parallax_steep_level_count );
+		// Use the lerp. range max-min, as we want to minimize the sample count when the viewing direction aligns with the normal.
+		const float layer_count = float( mix( uniform_parallax_steep_layer_count_min_max.y, uniform_parallax_steep_layer_count_min_max.x,
+											  max( dot( vec3( 0.0f, 0.0f, +1.0f ), viewing_direction_tangent_space ), 0.0f ) ) );
+
+		const float layer_depth = 1.0f / layer_count;
 		float current_level_depth_value = 0.0f;
 
-		const vec2 delta_uv = viewing_direction_tangent_space.xy * uniform_parallax_height_scale / float( uniform_parallax_steep_level_count );
+		const vec2 delta_uv = viewing_direction_tangent_space.xy * uniform_parallax_height_scale / layer_count;
 
 		vec2 current_uv = original_texture_coordinates;
 

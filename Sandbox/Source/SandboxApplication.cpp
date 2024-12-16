@@ -1090,7 +1090,7 @@ void SandboxApplication::ResetMaterialData()
 	wall_material.Set( "uniform_texture_scale_and_offset", Vector4( 1.0f, 1.0f, 0.0f, 0.0f ) );
 	wall_material.Set( "uniform_parallax_height_scale", 0.1f );
 	wall_material.Set( "uniform_parallax_steep_enabled", false );
-	wall_material.Set( "uniform_parallax_steep_level_count", 10 );
+	wall_material.Set( "uniform_parallax_steep_layer_count_min_max", Vector2U( 8u, 32u ) );
 
 	window_material = Engine::Material( "Transparent Window", shader_basic_textured );
 	window_material.SetTexture( "uniform_texture_slot", transparent_window_texture );
