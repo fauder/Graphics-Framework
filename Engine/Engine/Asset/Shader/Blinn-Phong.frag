@@ -55,6 +55,8 @@ uniform sampler2D uniform_shadow_map_slot;
 #ifdef PARALLAX_MAPPING_ENABLED
 uniform sampler2D uniform_parallax_height_map_slot;
 uniform float uniform_parallax_height_scale;
+uniform int  uniform_parallax_steep_level_count;
+uniform bool uniform_parallax_steep_enabled;
 #endif
 
 #ifdef SHADOWS_ENABLED
@@ -203,8 +205,31 @@ vec3 CalculateColorFromSpotLight( const int spot_light_index,
 vec2 ParallaxMappedTextureCoordinates( vec2 original_texture_coordinates, vec3 viewing_direction_tangent_space )
 {
 	float height_sample = texture( uniform_parallax_height_map_slot, original_texture_coordinates ).r;
-	vec2 p = viewing_direction_tangent_space.xy / viewing_direction_tangent_space.z * ( height_sample * uniform_parallax_height_scale );
-	return original_texture_coordinates - p;
+
+	if( uniform_parallax_steep_enabled )
+	{
+		const float layer_depth = 1.0f / float( uniform_parallax_steep_level_count );
+		float current_level_depth_value = 0.0f;
+
+		const vec2 delta_uv = viewing_direction_tangent_space.xy * uniform_parallax_height_scale / float( uniform_parallax_steep_level_count );
+
+		vec2 current_uv = original_texture_coordinates;
+
+		while( current_level_depth_value < height_sample )
+		{
+			current_uv                -= delta_uv;
+			height_sample              = texture( uniform_parallax_height_map_slot, current_uv ).r;
+			current_level_depth_value += layer_depth;
+		}
+
+		return current_uv;
+	}
+	else
+	{
+		vec2 p = viewing_direction_tangent_space.xy / viewing_direction_tangent_space.z * ( height_sample * uniform_parallax_height_scale );
+
+		return original_texture_coordinates - p;
+	}
 }
 #endif
 
