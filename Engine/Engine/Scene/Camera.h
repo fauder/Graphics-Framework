@@ -21,7 +21,9 @@ namespace Engine
 
 	/* View related: */
 
-		const Vector3& Position() const { return transform->GetTranslation(); }
+		const Vector3&		Scale()		const { return transform->GetScaling(); }
+		const Vector3&		Position()	const { return transform->GetTranslation(); }
+		const Quaternion&	Rotation()	const { return transform->GetRotation(); }
 
 		Vector3 Right();
 		Vector3 Up();

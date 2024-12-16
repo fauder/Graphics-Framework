@@ -58,6 +58,14 @@ namespace Engine
 		void UpdateInstanceData( const void* data ) const;
 		void UpdateInstanceData_Partial( const std::span< std::byte > data_span, const std::size_t offset_from_buffer_start ) const;
 
+		template< typename InstanceDataType >
+		void UpdateInstanceData_Partial( const std::span< InstanceDataType > data_span, const std::size_t offset_from_buffer_start ) const
+		{
+			ASSERT_DEBUG_ONLY( instance_buffer && "UpdateInstanceData_Partial< T >() called on non-instanced Mesh!" );
+
+			instance_buffer->Update_Partial( std::as_writable_bytes( data_span ), offset_from_buffer_start );
+		}
+
 	/*
 	 * Queries:
 	 */

@@ -410,10 +410,10 @@ namespace Engine::Primitive::Indexed::Cube
 		{ +1.0f,  0.0f,  0.0f }, // FRONT
 		{ +1.0f,  0.0f,  0.0f }, // FRONT
 
-		{ +1.0f,  0.0f,  0.0f }, // BACK
-		{ +1.0f,  0.0f,  0.0f }, // BACK
-		{ +1.0f,  0.0f,  0.0f }, // BACK
-		{ +1.0f,  0.0f,  0.0f }, // BACK
+		{ -1.0f,  0.0f,  0.0f }, // BACK
+		{ -1.0f,  0.0f,  0.0f }, // BACK
+		{ -1.0f,  0.0f,  0.0f }, // BACK
+		{ -1.0f,  0.0f,  0.0f }, // BACK
 
 		{  0.0f,  0.0f, -1.0f }, // LEFT
 		{  0.0f,  0.0f, -1.0f }, // LEFT
@@ -443,10 +443,10 @@ namespace Engine::Primitive::Indexed::Cube
 		{  0.0f, +1.0f,  0.0f }, // FRONT
 		{  0.0f, +1.0f,  0.0f }, // FRONT
 
-		{  0.0f, -1.0f,  0.0f }, // BACK
-		{  0.0f, -1.0f,  0.0f }, // BACK
-		{  0.0f, -1.0f,  0.0f }, // BACK
-		{  0.0f, -1.0f,  0.0f }, // BACK
+		{  0.0f, +1.0f,  0.0f }, // BACK
+		{  0.0f, +1.0f,  0.0f }, // BACK
+		{  0.0f, +1.0f,  0.0f }, // BACK
+		{  0.0f, +1.0f,  0.0f }, // BACK
 
 		{  0.0f, +1.0f,  0.0f }, // LEFT
 		{  0.0f, +1.0f,  0.0f }, // LEFT
