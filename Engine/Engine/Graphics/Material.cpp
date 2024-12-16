@@ -119,8 +119,7 @@ namespace Engine
 			ServiceLocator< GLLogger >::Get().Error( R"(Material ")" + name + R"(": Texture ")" + std::string( sampler_name_of_new_texture ) + R"(" can not be set; it does not exist!)" );
 		}
 #else
-		texture_map.at( sampler_name_of_new_texture ).second = texture_to_be_set;
-		}
+		texture_map.at( sampler_name_of_new_texture ) = texture_to_be_set;
 #endif // _DEBUG
 	}
 
