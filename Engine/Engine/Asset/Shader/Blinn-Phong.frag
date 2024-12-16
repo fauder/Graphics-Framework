@@ -56,6 +56,7 @@ uniform sampler2D uniform_shadow_map_slot;
 uniform sampler2D uniform_parallax_height_map_slot;
 uniform float uniform_parallax_height_scale;
 uniform bool uniform_parallax_steep_enabled;
+uniform bool uniform_parallax_occlusion_enabled;
 uniform uvec2 uniform_parallax_steep_layer_count_min_max;
 #endif
 
@@ -219,11 +220,32 @@ vec2 ParallaxMappedTextureCoordinates( vec2 original_texture_coordinates, vec3 v
 
 		vec2 current_uv = original_texture_coordinates;
 
+		/* It's important to initialize previous_uv to current_uv, as the outermost (i.e., least "dented") fragments may skip the while loop due to having a bigger depth value than the initial heightmap sample. */
+		vec2 previous_uv = current_uv;
+		float previous_height_sample;
+		float previous_level_depth_value;
+
 		while( current_level_depth_value < height_sample )
 		{
-			current_uv                -= delta_uv;
-			height_sample              = texture( uniform_parallax_height_map_slot, current_uv ).r;
+			previous_uv = current_uv;
+			current_uv -= delta_uv;
+
+			previous_height_sample = height_sample;
+			height_sample          = texture( uniform_parallax_height_map_slot, current_uv ).r;
+
+			previous_level_depth_value = current_level_depth_value;
 			current_level_depth_value += layer_depth;
+		}
+
+		if( uniform_parallax_occlusion_enabled )
+		{
+			/* From similar triangles: */
+			float current_height_difference  = current_level_depth_value - height_sample; // Subtract order is adjusted so that the difference is positive.
+			float previous_height_difference = previous_height_sample - previous_level_depth_value;
+
+			float interpolation_weight = clamp( previous_height_difference / ( previous_height_difference + current_height_difference ), 0.0f, 1.0f ); // Clamp to avoid INFs when the divisor is zero.
+
+			current_uv = mix( previous_uv, current_uv, interpolation_weight );
 		}
 
 		return current_uv;
