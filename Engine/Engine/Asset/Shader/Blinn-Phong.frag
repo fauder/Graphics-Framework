@@ -55,9 +55,7 @@ uniform sampler2D uniform_shadow_map_slot;
 #ifdef PARALLAX_MAPPING_ENABLED
 uniform sampler2D uniform_parallax_height_map_slot;
 uniform float uniform_parallax_height_scale;
-uniform bool uniform_parallax_steep_enabled;
-uniform bool uniform_parallax_occlusion_enabled;
-uniform uvec2 uniform_parallax_steep_layer_count_min_max;
+uniform uvec2 uniform_parallax_depth_layer_count_min_max;
 #endif
 
 #ifdef SHADOWS_ENABLED
@@ -207,55 +205,43 @@ vec2 ParallaxMappedTextureCoordinates( vec2 original_texture_coordinates, vec3 v
 {
 	float height_sample = texture( uniform_parallax_height_map_slot, original_texture_coordinates ).r;
 
-	if( uniform_parallax_steep_enabled )
+	// Use the lerp. range max-min, as we want to minimize the sample count when the viewing direction aligns with the normal.
+	const float layer_count = float( mix( uniform_parallax_depth_layer_count_min_max.y, uniform_parallax_depth_layer_count_min_max.x,
+										  max( dot( vec3( 0.0f, 0.0f, +1.0f ), viewing_direction_tangent_space ), 0.0f ) ) );
+
+	const float layer_depth = 1.0f / layer_count;
+	float current_level_depth_value = 0.0f;
+
+	const vec2 delta_uv = viewing_direction_tangent_space.xy * uniform_parallax_height_scale / layer_count;
+
+	vec2 current_uv = original_texture_coordinates;
+
+	/* It's important to initialize previous_uv to current_uv, as the outermost (i.e., least "dented") fragments may skip the while loop due to having a bigger depth value than the initial heightmap sample. */
+	vec2 previous_uv = current_uv;
+	float previous_height_sample;
+	float previous_level_depth_value;
+
+	while( current_level_depth_value < height_sample )
 	{
-		// Use the lerp. range max-min, as we want to minimize the sample count when the viewing direction aligns with the normal.
-		const float layer_count = float( mix( uniform_parallax_steep_layer_count_min_max.y, uniform_parallax_steep_layer_count_min_max.x,
-											  max( dot( vec3( 0.0f, 0.0f, +1.0f ), viewing_direction_tangent_space ), 0.0f ) ) );
+		previous_uv = current_uv;
+		current_uv -= delta_uv;
 
-		const float layer_depth = 1.0f / layer_count;
-		float current_level_depth_value = 0.0f;
+		previous_height_sample = height_sample;
+		height_sample          = texture( uniform_parallax_height_map_slot, current_uv ).r;
 
-		const vec2 delta_uv = viewing_direction_tangent_space.xy * uniform_parallax_height_scale / layer_count;
-
-		vec2 current_uv = original_texture_coordinates;
-
-		/* It's important to initialize previous_uv to current_uv, as the outermost (i.e., least "dented") fragments may skip the while loop due to having a bigger depth value than the initial heightmap sample. */
-		vec2 previous_uv = current_uv;
-		float previous_height_sample;
-		float previous_level_depth_value;
-
-		while( current_level_depth_value < height_sample )
-		{
-			previous_uv = current_uv;
-			current_uv -= delta_uv;
-
-			previous_height_sample = height_sample;
-			height_sample          = texture( uniform_parallax_height_map_slot, current_uv ).r;
-
-			previous_level_depth_value = current_level_depth_value;
-			current_level_depth_value += layer_depth;
-		}
-
-		if( uniform_parallax_occlusion_enabled )
-		{
-			/* From similar triangles: */
-			float current_height_difference  = current_level_depth_value - height_sample; // Subtract order is adjusted so that the difference is positive.
-			float previous_height_difference = previous_height_sample - previous_level_depth_value;
-
-			float interpolation_weight = clamp( previous_height_difference / ( previous_height_difference + current_height_difference ), 0.0f, 1.0f ); // Clamp to avoid INFs when the divisor is zero.
-
-			current_uv = mix( previous_uv, current_uv, interpolation_weight );
-		}
-
-		return current_uv;
+		previous_level_depth_value = current_level_depth_value;
+		current_level_depth_value += layer_depth;
 	}
-	else
-	{
-		vec2 p = viewing_direction_tangent_space.xy / viewing_direction_tangent_space.z * ( height_sample * uniform_parallax_height_scale );
 
-		return original_texture_coordinates - p;
-	}
+	/* From similar triangles: */
+	float current_height_difference  = current_level_depth_value - height_sample; // Subtract order is adjusted so that the difference is positive.
+	float previous_height_difference = previous_height_sample - previous_level_depth_value;
+
+	float interpolation_weight = clamp( previous_height_difference / ( previous_height_difference + current_height_difference ), 0.0f, 1.0f ); // Clamp to avoid INFs when the divisor is zero.
+
+	current_uv = mix( previous_uv, current_uv, interpolation_weight );
+
+	return current_uv;
 }
 #endif
 
