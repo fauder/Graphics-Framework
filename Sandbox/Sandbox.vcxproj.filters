@@ -9,5 +9,6 @@
     <ClCompile Include="Source\ModelInstance.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="Asset\Resource\app_icon.rc" />
   </ItemGroup>
 </Project>

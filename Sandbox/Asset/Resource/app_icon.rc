@@ -1,0 +1,2 @@
+// app_icon.rc
+IDI_APP_ICON ICON "../Icon/app_icon.ico"
