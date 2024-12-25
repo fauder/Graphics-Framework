@@ -13,6 +13,7 @@ Personal graphics framework I'm developing, to study graphics programming topics
   - [Cem Yuksel](https://www.youtube.com/@cem_yuksel)'s awesome ["Introduction to Computer Graphics" playlist on YouTube](https://www.youtube.com/playlist?list=PLplnkTzzqsZTfYh4UbhLGpI5kGd5oW_Hh) on YouTube.
   - [Cem Yuksel](https://www.youtube.com/@cem_yuksel)'s awesome ["Interactive Computer Graphics" playlist on YouTube](https://www.youtube.com/playlist?list=PLplnkTzzqsZS3R5DjmCQsqupu43oS9CFN) on YouTube.
 - The book [3D Math Primer for Graphics and Game Development](https://gamemath.com) (along with various other sources) was used as the basis for math algorithms & classes.
+- [letheoblivion](https://www.artstation.com/letheoblivion)'s awesome Kakadu icon is used as the engine's main icon.
 - [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h) from the [stb](https://github.com/nothings/stb) library was used for texture i/o.
 - [stb_include](https://github.com/nothings/stb/blob/master/stb_include.h) from the [stb](https://github.com/nothings/stb) library was used to integrate #include support for shaders.
 - [Dear ImGui](https://github.com/ocornut/imgui) is used for the user interface.
