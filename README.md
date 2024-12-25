@@ -24,3 +24,9 @@ Personal graphics framework I'm developing, to study graphics programming topics
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is used as the font for ImGui.
 - [Font Awesome](https://github.com/FortAwesome/Font-Awesome) is used as the icon font for ImGui.
 - [IconFontCppHeaders](https://github.com/juliettef/IconFontCppHeaders) is used for accessing icons in icon fonts via simple C++ headers.
+
+## License
+
+The source code in this repository is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
+
+The icon image [Sandbox/Asset/Icon/app_icon.ico](Sandbox/Asset/Icon/app_icon.ico) is proprietary and may not be used, copied, modified, or distributed without explicit permission. See the [Sandbox/Asset/Icon/LICENSE](Sandbox/Asset/Icon/LICENSE) file for more information.
