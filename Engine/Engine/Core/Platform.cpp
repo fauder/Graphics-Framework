@@ -131,7 +131,7 @@ namespace Platform
 	void InitializeAndCreateWindow( const int width_pixels, const int height_pixels, const std::optional< int > msaa_sample_count )
 	{
 #ifdef _WIN32
-		SetConsoleTitle( L"Console" );
+		SetConsoleTitle( L"Kakadu Console" );
 #endif
 
 		glfwInit();
@@ -149,7 +149,7 @@ namespace Platform
 		if( msaa_sample_count.has_value() )
 			glfwWindowHint( GLFW_SAMPLES, *msaa_sample_count );
 
-		WINDOW = glfwCreateWindow( width_pixels, height_pixels, "TODO: CHANGE PROGRAM TITLE BY CALLING Platform::ChangeTitle()", nullptr, nullptr );
+		WINDOW = glfwCreateWindow( width_pixels, height_pixels, "Kakadu Application", nullptr, nullptr );
 		if( WINDOW == nullptr )
 		{
 			glfwTerminate();

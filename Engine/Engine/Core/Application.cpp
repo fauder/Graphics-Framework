@@ -47,7 +47,6 @@ namespace Engine
 		Engine::ServiceLocator< Engine::GLLogger >::Register( &gl_logger );
 
 		Platform::InitializeAndCreateWindow( 800, 600, msaa_sample_count );
-		Platform::ChangeTitle( "Graphics Framework" );
 
 		const auto version = glGetString( GL_VERSION );
 		std::cout << version << "\n\n";

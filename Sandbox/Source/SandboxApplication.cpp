@@ -65,7 +65,7 @@ SandboxApplication::~SandboxApplication()
 
 void SandboxApplication::Initialize()
 {
-	Platform::ChangeTitle( "Sandbox (Graphics Framework)" );
+	Platform::ChangeTitle( "Kakadu - Sandbox" );
 	
 	gl_logger.IgnoreID( 131185 );
 
