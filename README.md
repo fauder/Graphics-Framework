@@ -1,6 +1,6 @@
 (This project supersedes the https://github.com/fauder/OpenGL-Framework project, which is no longer maintained.)
 
-# Graphics-Framework
+# Kakadu
 Personal graphics framework I'm developing, to study graphics programming topics.
 
 ![](Gallery/screenshot-21-11-24.png)
