@@ -4,6 +4,7 @@
 #include <ShlObj_core.h>
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #include <Windows.h>
+#include "../Asset/Resource/Resource.h"
 #endif // _WIN32
 
 // Engine Includes.
@@ -175,6 +176,8 @@ namespace Platform
 		RegisterGLDebugOutputCallback();
 #endif // _DEBUG
 
+		SetWindowIcon();
+
 		ResizeWindow( width_pixels, height_pixels );
 
 		RegisterFrameBufferResizeCallback();
@@ -246,6 +249,75 @@ namespace Platform
 		const auto max_width = mode->width;
 		const auto max_height = mode->height;
 		glfwSetWindowMonitor( WINDOW, NULL, ( max_width / 2 ) - ( width_pixels / 2 ), ( max_height / 2 ) - ( height_pixels / 2 ), width_pixels, height_pixels, GLFW_DONT_CARE );
+	}
+
+	bool SetWindowIcon()
+	{
+#ifdef _WIN32
+		HINSTANCE instance_handle = GetModuleHandle( NULL ); // Get handle to the current module.
+		HICON icon_handle = ( HICON )LoadImage(
+			instance_handle,					// Use the current executable.
+			MAKEINTRESOURCE( ENGINE_ICON_ID ),	// The ID from the resource.
+			IMAGE_ICON,							// We're loading an icon.
+			0,									// Width (default).
+			0,									// Height (default).
+			LR_DEFAULTSIZE						// Default size.
+		);
+
+		if( !icon_handle ) {
+			DWORD error = GetLastError();
+			std::cout << "LoadImage failed with error: " << error << std::endl;
+		}
+
+		if( icon_handle )
+		{
+			ICONINFO icon_info;
+			if( GetIconInfo( icon_handle, &icon_info ) )
+			{
+				BITMAP bmp;
+				if( GetObject( icon_info.hbmColor, sizeof( bmp ), &bmp ) )
+				{
+					// Allocate buffer for icon pixels (RGBA, assuming 32bpp):
+					std::vector< unsigned char > pixels( bmp.bmWidth * bmp.bmHeight * 4 );
+
+					// Prepare to extract pixel data:
+					BITMAPINFO bmi              = {};
+					bmi.bmiHeader.biSize        = sizeof( BITMAPINFOHEADER );
+					bmi.bmiHeader.biWidth       = bmp.bmWidth;
+					bmi.bmiHeader.biHeight      = -bmp.bmHeight; // Negative height for top-down rows.
+					bmi.bmiHeader.biPlanes      = 1;
+					bmi.bmiHeader.biBitCount    = 32; // Request 32bpp (RGBA)
+					bmi.bmiHeader.biCompression = BI_RGB;
+
+					// Get pixel data in 32bpp format:
+					HDC hdc = GetDC( NULL );
+					if( GetDIBits( hdc, icon_info.hbmColor, 0, bmp.bmHeight, pixels.data(), &bmi, DIB_RGB_COLORS ) )
+					{
+						// Ensure the pixel format is RGBA (convert BGRA to RGBA if necessary):
+						for( size_t i = 0; i < pixels.size(); i += 4 )
+							std::swap( pixels[ i ], pixels[ i + 2 ] ); // Swap R and B.
+
+						GLFWimage icon[ 1 ];
+						icon[ 0 ].width  = bmp.bmWidth;
+						icon[ 0 ].height = bmp.bmHeight;
+						icon[ 0 ].pixels = pixels.data();
+
+						glfwSetWindowIcon( WINDOW, 1, icon );
+
+						ReleaseDC( NULL, hdc );
+
+						return true;
+					}
+
+					ReleaseDC( NULL, hdc );
+				}
+			}
+		}
+		
+		return false;
+#else
+		throw std::logic_error( "Setting the window icon is not implemented for OSes other than Windows yet!" );
+#endif
 	}
 
 	void SwapBuffers()

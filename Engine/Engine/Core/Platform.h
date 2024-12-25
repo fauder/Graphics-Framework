@@ -184,6 +184,8 @@ namespace Platform
 
 	void CenterWindow( const int width_pixels, const int height_pixels );
 
+	bool SetWindowIcon();
+
 	void SwapBuffers();
 
 	/* Events. */
