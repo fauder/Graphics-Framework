@@ -130,6 +130,10 @@ namespace Platform
 
 	void InitializeAndCreateWindow( const int width_pixels, const int height_pixels, const std::optional< int > msaa_sample_count )
 	{
+#ifdef _WIN32
+		SetConsoleTitle( L"Console" );
+#endif
+
 		glfwInit();
 
 #ifdef _DEBUG
