@@ -1,6 +1,13 @@
 # Kakadu
 
-Personal graphics framework I'm developing, to study graphics programming topics.
+<p align="center">
+  <img src="Gallery/banner.png" width="400" />
+</p>
+
+
+## What is it?
+
+It is a graphics framework I'm developing, to study graphics programming topics.
 
 ![](Gallery/screenshot-21-11-24.png)
 
@@ -26,6 +33,7 @@ Personal graphics framework I'm developing, to study graphics programming topics
 - [JetBrains Mono](https://www.jetbrains.com/lp/mono/) is used as the font for ImGui.
 - [Font Awesome](https://github.com/FortAwesome/Font-Awesome) is used as the icon font for ImGui.
 - [IconFontCppHeaders](https://github.com/juliettef/IconFontCppHeaders) is used for accessing icons in icon fonts via simple C++ headers.
+- [Google Fonts' Archivo Black](https://fonts.google.com/specimen/Archivo+Black) is used for the text in the banner image.
 
 ## License
 
